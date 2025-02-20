@@ -50,7 +50,7 @@ class DepartamentoController extends Controller
      */
     public function show($id)
     {
-        $departamentos = Departamento::where("IdDepartamento",$id)->first();
+        $departamentos = Departamento::where("IdDepartamento",$id)->get();
         return view("departamentos.dataTable",compact("departamentos"));
     }
 
@@ -68,25 +68,21 @@ class DepartamentoController extends Controller
      */
     public function update(Request $request)
     {
-        try{
-            $validated = $request->validate([
-                'DepNom' => 'required|string|max:255',
-                'DepNomMin' => 'required|string|max:255'
-            ]);
-    
-            $id = $request->input('IdDepartamento');
-    
-            $departamento = Departamento::where("IdDepartamento",$id)->first();
-    
-            $departamento->update([
-                'DepNom' => $validated['DepNom'],
-                'DepNomMin' => $validated['DepNomMin']
-            ]);
-    
-            return redirect()->route('departamentos.index');
-        } catch (\Exception $e) {
-            
-        }
+        $validated = $request->validate([
+            'DepNom' => 'required|string|max:255',
+            'DepNomMin' => 'required|string|max:255'
+        ]);
+
+        $id = $request->input('IdDepartamento');
+
+        $departamento = Departamento::where("IdDepartamento",$id)->first();
+
+        $departamento->update([
+            'DepNom' => $validated['DepNom'],
+            'DepNomMin' => $validated['DepNomMin']
+        ])->save();
+
+        return redirect()->route('departamentos.index');
     }
 
     /**
