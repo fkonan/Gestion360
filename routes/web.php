@@ -1,0 +1,28 @@
+<?php
+
+use App\Http\Controllers\DepartamentoController;
+use App\Http\Controllers\PersonaController;
+use App\Models\Departamento;
+use Illuminate\Support\Facades\Route;
+
+Route::get('/', function () {
+    return view('welcome');
+});
+
+Route::prefix("departamentos")->group(function(){
+    Route::get("/",[DepartamentoController::class,"index"])->name("departamentos.index");
+    Route::get("/form",[DepartamentoController::class,"create"])->name("departamentos.create");
+    Route::get("/{id}",[DepartamentoController::class,"show"])->name("departamentos.show");
+
+    Route::post("/",[DepartamentoController::class,"store"])->name("departamentos.store");
+    Route::post("/{id}",[DepartamentoController::class,"edit"])->name("departamentos.edit");
+
+    Route::delete("/{id}",[DepartamentoController::class,"destroy"])->name("departamentos.destroy");
+    Route::put("/{id}",[DepartamentoController::class,"update"])->name("departamentos.update");
+});
+
+
+Route::prefix("personas")->group(function(){
+    Route::get("/",[PersonaController::class,"index"])->name("persona.index");
+    Route::get("/{id}",[PersonaController::class,"show"])->name("persona.show");    
+});
