@@ -4,16 +4,22 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Departamento extends Model
 {
     use HasFactory;
     
     protected $table = "_departamentos";
-    protected $primarykey = "IdDepartamento";
+    protected $primaryKey = "IdDepartamento";
+    public $incrementing = false;
     public $timestamps = false;
 
     protected $fillable = [
         "IdDepartamento","DepNom","DepNomMin"
     ];
+
+    public function municipios(): HasMany{
+        return $this->hasMany(Municipio::class,'IdDepartamento','IdDepartamento');
+    }
 }

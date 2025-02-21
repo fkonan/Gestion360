@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Departamento;
 use App\Models\Persona;
+use App\Models\TipoDocumento;
 use Illuminate\Http\Request;
 
 class PersonaController extends Controller
@@ -21,7 +23,10 @@ class PersonaController extends Controller
      */
     public function create()
     {
-        //
+        $departamentos = Departamento::all();
+        $tiposDocumento = TipoDocumento::all();
+
+        return view("persona.createForm",compact("departamentos","tiposDocumento"));
     }
 
     /**

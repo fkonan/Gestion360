@@ -66,21 +66,19 @@ class DepartamentoController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request)
+    public function update(Request $request, $id)
     {
         $validated = $request->validate([
             'DepNom' => 'required|string|max:255',
             'DepNomMin' => 'required|string|max:255'
         ]);
 
-        $id = $request->input('IdDepartamento');
 
-        $departamento = Departamento::where("IdDepartamento",$id)->first();
-
-        $departamento->update([
+        Departamento::where("IdDepartamento",$id)
+        ->update([
             'DepNom' => $validated['DepNom'],
             'DepNomMin' => $validated['DepNomMin']
-        ])->save();
+        ]);
 
         return redirect()->route('departamentos.index');
     }
@@ -92,5 +90,10 @@ class DepartamentoController extends Controller
     {
         Departamento::where("IdDepartamento",$id)->delete();
         return redirect()->route('departamentos.index');
+    }
+
+    public function getMunici($idDepar){
+        $municipios = Departamento::where("IdDepartamento",$idDepar)->first()->municipios;
+        return response()->json($municipios);
     }
 }
