@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Departamento;
-use Error;
 use Exception;
 use Illuminate\Http\Request;
 

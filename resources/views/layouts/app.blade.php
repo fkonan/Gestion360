@@ -11,7 +11,6 @@
 
         <!-- Styles / Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
-
     </head>
     <body>
         @yield('content')
@@ -20,7 +19,6 @@
         
         <!-- jQuery Validation Plugin -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
-
         @yield('script')
     </body>
 

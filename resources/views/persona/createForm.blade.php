@@ -5,7 +5,7 @@
 
     <h2 class="mb-4 text-center">{{ isset($persona) ? 'Actualizar registro' : 'Formulario de registro' }}</h2>
 
-    <form  id="formPersona" action="{{ isset($persona) ? route('persona.update', ['id' => $persona->IdPersona]) : route('persona.store') }}" method="POST">
+    <form  id="{{ isset($persona) ? '': 'formPersona'}}" action="{{ isset($persona) ? route('persona.update', ['id' => $persona->IdPersona]) : route('persona.store') }}" method="POST">
         @csrf
         @isset($persona)
             @method('PUT')
@@ -148,8 +148,9 @@
 
 @section('script')
 <script>
-$(document).ready(function () {
+validateForm();
 
+$(document).ready(function () {
     //Reglas de validación nombres
     $.validator.addMethod("soloLetras", function (value, element) {
         return /^[A-Za-zÁÉÍÓÚáéíóúÑñ]+(?:\s[A-Za-zÁÉÍÓÚáéíóúÑñ]+)*$/.test(value);
@@ -232,8 +233,7 @@ function getMunicipios(depSelect, muniSelect){
             url: '/departamentos/municipios/' + departamento_id,
             type: 'GET',
             dataType: 'json',
-            success: function (data) {
-                
+            success: function (data) {               
                 $.each(data, function (key, municipio) {
                     municipioSelect.append('<option value="' + municipio.IdMunicipio + '" >' + municipio.MunNomMin + '</option>');
                 });
@@ -241,6 +241,5 @@ function getMunicipios(depSelect, muniSelect){
         });
     }
 }
-
 </script>
 @endsection
