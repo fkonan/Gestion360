@@ -6,34 +6,31 @@
 <div class="container mt-4">
     <h1 class="text-center">Lista de Departamentos</h1>
     <div class="row">
-        <table class="table table-striped">
+        <table
+            data-toggle="table"
+            data-pagination="true"
+            data-page-size="10"
+            data-search="true">
+        <thead>
         <tr>
             <th>Id Departamento</th>
             <th>Nombre Departamento</th>
             <th>Nombre Departamento minuscula</th>
             <th></th>
-            <th></th>
         </tr>
+        </thead>
+        <tbody>
         @foreach($departamentos as $departamento)
         <tr>
-            <th>{{ $departamento?->IdDepartamento }}</th>
-            <th>{{ $departamento?->DepNom }}</th>
-            <th>{{ $departamento?->DepNomMin }}</th>
-            <th>
-                <form method='POST' action="{{ route('departamentos.edit', ['id' => $departamento->IdDepartamento]) }}">
-                    @csrf
-                    <input type="submit" class="bg-primary text-light" value="Actualizar" />
-                </form>
-            </th>
-            <th>
-                <form method='POST' action="{{ route('departamentos.destroy', ['id' => $departamento->IdDepartamento]) }}">
-                    @csrf
-                    @method('DELETE')
-                    <input type="submit" class="bg-danger text-light" value="Borrar" />
-                </form>
-            </th>
+            <td>{{ $departamento?->IdDepartamento }}</td>
+            <td>{{ $departamento?->DepNom }}</td>
+            <td>{{ $departamento?->DepNomMin }}</td>
+            <td>
+                <a href="{{ route('departamentos.edit', ['id' => $departamento->IdDepartamento]) }}" class="btn btn-primary">Actualizar</a>
+            </td>
         </tr>
         @endforeach
+        </tbody>
         </table>
     </div>
 </div>

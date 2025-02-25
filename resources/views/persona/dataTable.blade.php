@@ -7,11 +7,14 @@
     <h1 class="text-center">Lista de personas</h1>
     <div class="row">
         <table
-            data-show-pagination-switch="true"
-            data-pagination="true">
+            data-toggle="table"
+            data-pagination="true"
+            data-page-size="10"
+            data-search="true"
+            data-search-highlight="true">   
             <thead>
                 <tr>
-                    <th>Id Persona</th>
+                    <th data-sortable="true">Id Persona</th>
                     <th>Tipo documento</th>
                     <th>Numero de documento</th>
                     <th>Apellidos</th>
@@ -19,22 +22,24 @@
                     <th>Departamento</th>
                     <th>Generos</th>    
                     <th>Estado</th>
+                    <th></th>
                 </tr>
             </thead>
-            @foreach($personas as $persona)
             <tbody>
+            @foreach($personas as $persona)
                 <tr>
-                    <th>{{ $persona?->IdPersona }}</th>
-                    <th>{{ $persona?->tipoDocumento->nomenclatura }}</th>
-                    <th>{{ $persona?->PerNumDoc }}</th>
-                    <th>{{ $persona?->PerApellidos }}</th>
-                    <th>{{ $persona?->PerNombres }}</th>
-                    <th>{{ $persona?->municipioNac->departamento->DepNomMin }}</th>
-                    <th>{{ $persona?->PerGenero }}</th>
-                    <th>{{ $persona?->PerEstado }}</th>
+                    <td>{{ $persona?->IdPersona }}</td>
+                    <td>{{ $persona?->tipoDocumento->nomenclatura }}</td>
+                    <td>{{ $persona?->PerNumDoc }}</td>
+                    <td>{{ $persona?->PerApellidos }}</td>
+                    <td>{{ $persona?->PerNombres }}</td>
+                    <td>{{ $persona?->municipioNac->departamento->DepNomMin }}</td>
+                    <td>{{ $persona?->PerGenero }}</td>
+                    <td>{{ $persona?->PerEstado }}</td>
+                    <td><a href="{{ route('persona.edit', ['id' => $persona->IdPersona]) }}" class="btn btn-primary">Actualizar</a></td>
                 </tr>
-            </tbody>
             @endforeach
+            </tbody>
         </table>
     </div>
 </div>

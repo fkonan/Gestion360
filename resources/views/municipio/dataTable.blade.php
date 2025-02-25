@@ -14,9 +14,9 @@
         </tr>
         @foreach($municipios as $municipio)
         <tr>
-            <th>{{ $municipio?->IdMunicipio }}</th>
-            <th>{{ $municipio?->MunNom }}</th>
-            <th>{{ $municipio->departamento->DepNomMin }}</th>
+            <td>{{ $municipio?->IdMunicipio }}</td>
+            <td>{{ $municipio?->MunNom }}</td>
+            <td>{{ $municipio->departamento->DepNomMin }}</td>
         </tr>
         @endforeach
         </table>

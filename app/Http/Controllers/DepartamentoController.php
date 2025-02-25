@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Departamento;
 use Error;
+use Exception;
 use Illuminate\Http\Request;
 
 class DepartamentoController extends Controller
@@ -29,20 +30,20 @@ class DepartamentoController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'IdDepartamento' => 'required|integer',
-            'DepNom' => 'required|string|max:255',
-            'DepNomMin' => 'required|string|max:255'
-        ]);
+    {   
+        try{
+            $validated = $request->validate([
+                'IdDepartamento' => 'required|integer|unique:_departamentos,IdDepartamento',
+                'DepNom' => 'required|string|max:255',
+                'DepNomMin' => 'required|string|max:255'
+            ]);
 
-        Departamento::create([
-            'IdDepartamento' => $validated['IdDepartamento'],
-            'DepNom' => $validated['DepNom'],
-            'DepNomMin' => $validated['DepNomMin']
-        ]);
+            Departamento::create($validated);
 
-        return redirect()->route('departamentos.index');
+            return redirect()->route('departamentos.index');
+        }catch(Exception $e){
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     /**
@@ -59,7 +60,7 @@ class DepartamentoController extends Controller
      */
     public function edit($id)
     {
-        $departamento = Departamento::where("IdDepartamento",$id)->first();
+        $departamento = Departamento::findOrFail($id);
         return view("departamentos.editForm",compact("departamento"));
     }
 
@@ -73,12 +74,7 @@ class DepartamentoController extends Controller
             'DepNomMin' => 'required|string|max:255'
         ]);
 
-
-        Departamento::where("IdDepartamento",$id)
-        ->update([
-            'DepNom' => $validated['DepNom'],
-            'DepNomMin' => $validated['DepNomMin']
-        ]);
+        Departamento::findOrFail($id)->update($validated);
 
         return redirect()->route('departamentos.index');
     }
@@ -88,12 +84,12 @@ class DepartamentoController extends Controller
      */
     public function destroy($id)
     {
-        Departamento::where("IdDepartamento",$id)->delete();
+        Departamento::findOrFail($id)->delete();
         return redirect()->route('departamentos.index');
     }
 
     public function getMunici($idDepar){
-        $municipios = Departamento::where("IdDepartamento",$idDepar)->first()->municipios;
+        $municipios = Departamento::findOrFail($idDepar)->municipios;
         return response()->json($municipios);
     }
 }
