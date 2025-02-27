@@ -154,6 +154,10 @@ $(document).ready(function () {
         return /^[A-Za-zÁÉÍÓÚáéíóúÑñ]+(?:\s[A-Za-zÁÉÍÓÚáéíóúÑñ]+)*$/.test(value);
     });
 
+    $.extend($.validator.messages, {
+        required: "Este campo es obligatorio.",
+    });
+
     $("#formPersona").validate({
         rules: {
             PerApellidos: { required:true, maxlength: 50, soloLetras:true },
@@ -161,28 +165,14 @@ $(document).ready(function () {
            
         },
         messages: {
-            PerTipoDoc: "Este campo es obligatorio",
-            PerNumDoc: "Este campo es obligatorio",
             PerApellidos: {
-                required: "Este campo es obligatorio",
                 maxlength: "El máximo de caracteres es 50",
                 soloLetras: "Solo letras y un espacio entre palabras"
             },
             PerNombres: {
-                required: "Este campo es obligatorio",
                 maxlength: "El máximo de caracteres es 50",
                 soloLetras: "Solo letras y un espacio entre palabras"
             },
-            PerGenero: "Este campo es obligatorio",
-            PerDepNac: "Este campo es obligatorio",
-            PerFecNac: "Este campo es obligatorio",
-            PerLugNac: "Este campo es obligatorio",
-            PerFecExp: "Este campo es obligatorio",
-            PerDepExp: "Este campo es obligatorio",
-            PerLugExp: "Este campo es obligatorio",
-            PerFechReg: "Este campo es obligatorio",
-            PerHorReg: "Este campo es obligatorio",
-            PerEstado: "Este campo es obligatorio"
         },
         errorClass: "text-danger fw-bold is-invalid",
         validClass: "is-valid",     

@@ -66,7 +66,7 @@
 @section('script')
     <script>
         $(document).ready(function () {
-            validarFormulario("#formFormato", "/formato");
+            validarFormulario("#formFormato");
         });
     </script>
 @endsection

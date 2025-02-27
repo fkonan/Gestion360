@@ -6,7 +6,8 @@
 <div class="container mt-4">
     <h1 class="text-center mb-4">Nueva Version</h1>
 
-    <form action="{{ route('formato.guardarVersionFormato') }}" method="POST" enctype="multipart/form-data">
+    <form id="formNuevaVersion" action="{{ route('formato.guardarVersionFormato') }}" method="POST" enctype="multipart/form-data">
+        
     @csrf
     <div class="row g-3">
         <div class="col-md-6">
@@ -35,18 +36,22 @@
             <div class="mb-3">
                 <label for="VerElaboro" class="form-label">Elaboró</label>
                 <input type="text" class="form-control" id="VerElaboro" name="VerElaboro" required>
+                <span class="error text-danger fw-bold" id="error-VerElaboro"></span>
             </div>
             <div class="mb-3">
                 <label for="VerReviso" class="form-label">Revisó</label>
                 <input type="text" class="form-control" id="VerReviso" name="VerReviso" required>
+                <span class="error text-danger fw-bold" id="error-VerReviso"></span>
             </div>
             <div class="mb-3">
                 <label for="VerAprobo" class="form-label">Aprobó</label>
                 <input type="text" class="form-control" id="VerAprobo" name="VerAprobo" required>
+                <span class="error text-danger fw-bold" id="error-VerAprobo"></span>
             </div>
             <div class="mb-3">
                 <label for="pdf" class="form-label">Archivo PDF</label>
                 <input type="file" accept="application/pdf" class="form-control" id="pdf" name="pdf" required>
+                <span class="error text-danger fw-bold" id="error-pdf"></span>
             </div>
         </div>
     </div>
@@ -56,4 +61,13 @@
     </div>
     </form>
 </div>
+@endsection
+
+@section('script')
+<script>
+    $(document).ready(function () {
+        validarFormulario("#formNuevaVersion");
+    });
+    
+</script>
 @endsection

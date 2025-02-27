@@ -59,9 +59,15 @@ class FormatoController extends Controller
         
         $validator = Validator::make($request->all(), [
             'pdf' => 'required|mimes:pdf|max:2048',
-            'VerElaboro' => 'required|string|max:255',
-            'VerReviso' => 'required|string|max:255',
-            'VerAprobo' => 'required|string|max:255'
+            'VerElaboro' => 'required|string|regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ]+(?:\s[A-Za-zÁÉÍÓÚáéíóúÑñ]+)*$/|max:255',
+            'VerReviso' => 'required|string|regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ]+(?:\s[A-Za-zÁÉÍÓÚáéíóúÑñ]+)*$/|max:255',
+            'VerAprobo' => 'required|string|regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ]+(?:\s[A-Za-zÁÉÍÓÚáéíóúÑñ]+)*$/|max:255'
+        ],[
+            'required' => 'El campo es obligatorio.',
+            'regex' => 'El campo solo puede contener letras y espacios.',
+            
+            'pdf.mimes' => 'El archivo debe ser un PDF.',
+            'pdf.max' => 'El archivo no debe pesar más de 2MB.'
         ]);
 
         //manejo de errores
@@ -95,36 +101,32 @@ class FormatoController extends Controller
         $validator = Validator::make($request->all(), [
             'pdf' => 'required|mimes:pdf|max:2048',
             'FormCod' => 'required|string|unique:_formatos,FormCod|max:50',
-            'FormNom' => 'required|string|max:50',
-            'FormTipo' => 'required|string|max:50',
-            'FormUbicacion' => 'required|string|max:50',
-            'VerElaboro' => 'required|string|max:50',
-            'VerReviso' => 'required|string|max:50',
-            'VerAprobo' => 'required|string|max:50'
+            'FormNom' => 'required|string|regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ]+(?:\s[A-Za-zÁÉÍÓÚáéíóúÑñ]+)*$/|max:50',
+            'FormTipo' => 'required|string|regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ]+(?:\s[A-Za-zÁÉÍÓÚáéíóúÑñ]+)*$/|max:50',
+            'FormUbicacion' => 'required|string|regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ]+(?:\s[A-Za-zÁÉÍÓÚáéíóúÑñ]+)*$/|max:50',
+            'VerElaboro' => 'required|string|regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ]+(?:\s[A-Za-zÁÉÍÓÚáéíóúÑñ]+)*$/|max:50',
+            'VerReviso' => 'required|string|regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ]+(?:\s[A-Za-zÁÉÍÓÚáéíóúÑñ]+)*$/|max:50',
+            'VerAprobo' => 'required|string|regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ]+(?:\s[A-Za-zÁÉÍÓÚáéíóúÑñ]+)*$/|max:50'
         ],[
             'pdf.required' => 'El archivo PDF es requerido',
             'pdf.mimes' => 'El archivo debe ser un PDF',
             'pdf.max' => 'El archivo PDF no debe pesar más de 2MB',
-            
+
+            'regex' => 'El campo solo puede contener letras y un espacio entre palabras',
+            'required' => 'Este campo es requerido',
+
             'FormCod.unique' => 'El código del formato ya existe',
-            'FormCod.required' => 'El código del formato es requerido',
-            'FormNom.required' => 'El nombre del formato es requerido',
-            'FormTipo.required' => 'El tipo de formato es requerido',
-            'FormUbicacion.required' => 'La ubicación del formato es requerida',
-            'VerElaboro.required' => 'Elaborado por es requerido',
-            'VerReviso.required' => 'Revisado por es requerido',
-            'VerAprobo.required' => 'Aprobado por es requerido'
         ]);
 
-        //guardar pdf en storage/app/pdfs/ 
-        $path = $this->guardarPDF($request->file('pdf'), 1, $request->FormNom);
-
-         //manejo de errores
+        //manejo de errores
          if ($validator->fails()) {
             return response()->json([
                 'errors' => $validator->errors()
             ], 422);
         }
+
+        //guardar pdf en storage/app/pdfs/ 
+        $path = $this->guardarPDF($request->file('pdf'), 1, $request->FormNom);
 
         $formato = new Formato();
         $formato->FormCod = $request->FormCod;
