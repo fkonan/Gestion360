@@ -148,8 +148,6 @@
 
 @section('script')
 <script>
-validateForm();
-
 $(document).ready(function () {
     //Reglas de validación nombres
     $.validator.addMethod("soloLetras", function (value, element) {

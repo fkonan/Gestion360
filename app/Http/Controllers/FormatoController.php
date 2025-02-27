@@ -1,0 +1,153 @@
+<?php
+
+namespace App\Http\Controllers;
+use App\Models\Formato;
+use App\Models\FormatoVersion;
+use setasign\Fpdi\Fpdi;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+
+class FormatoController extends Controller
+{
+    public function index(){
+        $formatos = Formato::with('ultimaVersion')->get();
+        return view('formato.listaFormatos', compact('formatos'));
+    }
+
+ 
+    public function llenarFormatoPDF($name){
+        $pdfPath = storage_path('app/pdfs/formulario.pdf'); // plantilla del PDF
+        $outputPath = storage_path('app/pdfs/formulario_completado.pdf'); // PDF generado
+    
+        $pdf = new Fpdi();
+        $pdf->AddPage();
+        $pdf->setSourceFile($pdfPath);
+        $tplIdx = $pdf->importPage(1);
+        $pdf->useTemplate($tplIdx, 0, 0, 210, 297); // Ajustar según tamaño del PDF
+    
+        // Configurar fuente y tamaño
+        $pdf->SetFont('Helvetica', '', 12);
+    
+        // Posicionar y escribir los datos en los campos del formulario
+        $pdf->SetXY(40, 40); 
+        $pdf->Write(10, "$name");
+    
+        return response($pdf->Output('', 'I'))->header('Content-Type', 'application/pdf');
+    
+        return response()->download($outputPath);
+    }
+
+    public function crearNuevoFormato(){
+        return view('formato.crearFormato');
+    }
+
+    public function crearVersionFormato($id){
+        $formato = Formato::find($id);
+        return view('formato.nuevaVersion', compact('formato'));
+    }
+
+    private function guardarPDF($file, $version, $nombre){
+        $nombreLimpio = preg_replace('/[^A-Za-z0-9\-]/', '_', $nombre); // Solo letras, números y guiones bajos
+        $nombreLimpio = strtolower($nombreLimpio); // Convertir a minúsculas
+
+        $filename = $nombreLimpio . '_v' . $version . '.pdf';
+        $path = $file->storeAs('pdfs', $filename, 'public');
+        return $path;
+    }
+
+    public function guardarVersionFormato(Request $request){
+        
+        $validator = Validator::make($request->all(), [
+            'pdf' => 'required|mimes:pdf|max:2048',
+            'VerElaboro' => 'required|string|max:255',
+            'VerReviso' => 'required|string|max:255',
+            'VerAprobo' => 'required|string|max:255'
+        ]);
+
+        //manejo de errores
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $formatoVersion = new FormatoVersion();
+        $formatoVersion->VerElaboro = $request->VerElaboro;
+        $formatoVersion->VerReviso = $request->VerReviso;
+        $formatoVersion->VerAprobo = $request->VerAprobo;
+
+        $version = FormatoVersion::where('IdFormato', $request->IdFormato)->max('Version') + 1;
+        $formatoVersion->Version = $version;
+
+        //guardar pdf en storage/app/pdfs/
+        $path = $this->guardarPDF($request->file('pdf'), $version, $request->FormNom);
+
+        $formatoVersion->Ruta = $path;
+        $formatoVersion->IdFormato = $request->IdFormato;
+        $formatoVersion->save();
+
+        return redirect()->route('formato.index')->with('success', 'Nueva version agregada correctamente');
+    }
+
+
+    public function guardarFormato(Request $request){
+
+        $validator = Validator::make($request->all(), [
+            'pdf' => 'required|mimes:pdf|max:2048',
+            'FormCod' => 'required|string|unique:_formatos,FormCod|max:50',
+            'FormNom' => 'required|string|max:50',
+            'FormTipo' => 'required|string|max:50',
+            'FormUbicacion' => 'required|string|max:50',
+            'VerElaboro' => 'required|string|max:50',
+            'VerReviso' => 'required|string|max:50',
+            'VerAprobo' => 'required|string|max:50'
+        ],[
+            'pdf.required' => 'El archivo PDF es requerido',
+            'pdf.mimes' => 'El archivo debe ser un PDF',
+            'pdf.max' => 'El archivo PDF no debe pesar más de 2MB',
+            
+            'FormCod.unique' => 'El código del formato ya existe',
+            'FormCod.required' => 'El código del formato es requerido',
+            'FormNom.required' => 'El nombre del formato es requerido',
+            'FormTipo.required' => 'El tipo de formato es requerido',
+            'FormUbicacion.required' => 'La ubicación del formato es requerida',
+            'VerElaboro.required' => 'Elaborado por es requerido',
+            'VerReviso.required' => 'Revisado por es requerido',
+            'VerAprobo.required' => 'Aprobado por es requerido'
+        ]);
+
+        //guardar pdf en storage/app/pdfs/ 
+        $path = $this->guardarPDF($request->file('pdf'), 1, $request->FormNom);
+
+         //manejo de errores
+         if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $formato = new Formato();
+        $formato->FormCod = $request->FormCod;
+        $formato->FormNom = $request->FormNom;
+        $formato->FormTipo = $request->FormTipo;
+        $formato->FormUbicacion = $request->FormUbicacion;
+        $formato->save();
+
+        $formatoVersion = new FormatoVersion();
+        $formatoVersion->VerElaboro = $request->VerElaboro;
+        $formatoVersion->VerReviso = $request->VerReviso;
+        $formatoVersion->VerAprobo = $request->VerAprobo;
+        $formatoVersion->Ruta = $path;
+        $formatoVersion->Version = 1;
+        $formatoVersion->IdFormato = $formato->IdFormato;
+        $formatoVersion->save();
+
+        return redirect()->route('formato.index')->with('success', 'Formato guardado correctamente');
+    }
+
+    public function versionesFormato($id){
+        $formato = Formato::find($id);
+        $versiones = FormatoVersion::where('IdFormato', $id)->get();
+        return view('formato.listaVersiones', compact('formato', 'versiones'));
+    }
+}
