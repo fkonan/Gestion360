@@ -65,7 +65,7 @@ class FormatoController extends Controller
         ],[
             'required' => 'El campo es obligatorio.',
             'regex' => 'El campo solo puede contener letras y espacios.',
-            
+
             'pdf.mimes' => 'El archivo debe ser un PDF.',
             'pdf.max' => 'El archivo no debe pesar más de 2MB.'
         ]);
@@ -92,7 +92,10 @@ class FormatoController extends Controller
         $formatoVersion->IdFormato = $request->IdFormato;
         $formatoVersion->save();
 
-        return redirect()->route('formato.index')->with('success', 'Nueva version agregada correctamente');
+         return response()->json([
+                'message' => 'Nueva versión creada exitosamente',
+                'redirect' => route('formato.index')
+            ]); 
     }
 
 

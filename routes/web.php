@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\DepartamentoController;
 use App\Http\Controllers\FormatoController;
+use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\PersonaController;
 use Illuminate\Support\Facades\Route;
 
@@ -34,14 +35,20 @@ Route::prefix("personas")->group(function(){
     
 });
 
+Route::prefix("usuarios")->group(function(){
+    Route::get("/",[UsuarioController::class,"index"])->name("usuario.index");
+    Route::get("/form",[UsuarioController::class,"crearNuevoUsuario"])->name("usuario.crearNuevoUsuario");
+});
+
 Route::get("/pdfCreate/{name}",[FormatoController::class,"llenarFormatoPDF"])->name("formato.llenarFormatoPDF");
 
 Route::prefix("formato")->group(function(){
     Route::get("/",[FormatoController::class,"index"])->name("formato.index");
     Route::get("/form",[FormatoController::class,"crearNuevoFormato"])->name("formato.crearNuevoFormato");
     Route::get("/{id}/versiones/",[FormatoController::class,"versionesFormato"])->name("formato.listaVersiones");
-    Route::post("/",[FormatoController::class,"guardarFormato"])->name("formato.guardarFormato");
     Route::get("/newversion/{id}",[FormatoController::class,"crearVersionFormato"])->name("formato.crearVersionFormato");
+
+    Route::post("/",[FormatoController::class,"guardarFormato"])->name("formato.guardarFormato");
     Route::post("/newversion",[FormatoController::class,"guardarVersionFormato"])->name("formato.guardarVersionFormato");
 });
 

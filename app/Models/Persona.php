@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Persona extends Model
 {
@@ -30,5 +31,9 @@ class Persona extends Model
 
     public function tipoDocumento(): BelongsTo{
         return $this->belongsTo(TipoDocumento::class,"PerTipoDoc","id");
+    }
+
+    public function usuario(): HasOne{
+        return $this->hasOne(Usuario::class,"idPersona","IdPersona");
     }
 }

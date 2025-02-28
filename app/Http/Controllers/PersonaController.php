@@ -26,7 +26,7 @@ class PersonaController extends Controller
     {
         $departamentos = Departamento::all();
         $tiposDocumento = TipoDocumento::all();     
-        return view("persona.createForm",compact("departamentos","tiposDocumento"));
+        return view("persona.crearPersona",compact("departamentos","tiposDocumento"));
     }
 
     /**
@@ -47,9 +47,6 @@ class PersonaController extends Controller
                 'PerFecExp' => 'required',  
                 'PerLugExp' => 'required',
                 'PerGruRh' => 'nullable',
-                'PerFechReg' => 'required',
-                'PerHorReg' => 'required',
-                'PerEstado' => 'required',
             ],[
                 'PerFecNac.required' => 'La fecha de nacimiento es requerida',
                 'PerFecExp.required' => 'La fecha de expedición es requerida',
@@ -60,8 +57,6 @@ class PersonaController extends Controller
                 'PerNombres.required' => 'Los nombres son requeridos',
                 'PerNombres.regex' => 'Los nombres solo pueden contener letras y espacios',
 
-                'PerFechReg.required' => 'La fecha de registro es requerida',
-                'PerHorReg.required' => 'La hora de registro es requerida',
                 'PerTipoDoc.required' => 'El tipo de documento es requerido',
                 'PerNumDoc.required' => 'El número de documento es requerido',
                 'PerGenero.required' => 'El género es requerido',
@@ -86,9 +81,6 @@ class PersonaController extends Controller
             $persona->PerFecExp = $request->PerFecExp;
             $persona->PerLugExp = $request->PerLugExp;
             $persona->PerGruRh = $request->PerGruRh;
-            $persona->PerFechReg = $request->PerFechReg;
-            $persona->PerHorReg = $request->PerHorReg;
-            $persona->PerEstado = $request->PerEstado;
             $persona->save();
             
             return response()->json([
@@ -119,7 +111,7 @@ class PersonaController extends Controller
         $departamentos = Departamento::all();
         $tiposDocumento = TipoDocumento::all();   
         
-        return view("persona.createForm",compact("persona","tiposDocumento","departamentos"));
+        return view("persona.editarPersona",compact("persona","tiposDocumento","departamentos"));
     }
 
     /**
@@ -128,7 +120,7 @@ class PersonaController extends Controller
     public function update(Request $request, $id)
     {   
         try{
-            $validated = $request->validate([
+            $validator = Validator::make($request->all(), [
                 'PerApellidos' => 'required|string|max:50',
                 'PerNombres' => 'required|string|max:50',
                 'PerGenero' => 'required|string|max:15',
@@ -137,12 +129,25 @@ class PersonaController extends Controller
                 'PerFecExp' => 'required',  
                 'PerLugExp' => 'required',
                 'PerGruRh' => 'nullable',
-                'PerFechReg' => 'required',
-                'PerHorReg' => 'required',
                 'PerEstado' => 'required'
             ]);
-            Persona::findOrFail($id)->update($validated);
+            
+            if ($validator->fails()) {
+                return response()->json([
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            Persona::findOrFail($id)->update($request->all());
+
+            /*
+            return response()->json([
+                'message' => 'Persona modificada exitosamente',
+                'redirect' => route('persona.index')
+            ]);*/
+
             return redirect()->route('persona.index')->with('success','Persona modificada exitosamente');
+
         }catch(\Exception $e){
             return response()->json(['error' => $e->getMessage()], 500);
         }

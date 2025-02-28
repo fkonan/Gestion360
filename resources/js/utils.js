@@ -1,4 +1,4 @@
-export function validarFormulario(form){
+export function validarFormulario(form, TYPE="POST") {
 
     $.extend($.validator.messages, {
         required: "Este campo es obligatorio.",
@@ -16,7 +16,7 @@ export function validarFormulario(form){
 
             $.ajax({
                 url: URL,
-                type: "POST",
+                type: TYPE,
                 data: formData,
                 processData: false,
                 contentType: false,
@@ -45,4 +45,25 @@ export function validarFormulario(form){
         $(this).removeClass("is-invalid");
         $("#error-" + $(this).attr("id")).text("");
     });
+}
+
+//Obtiene los municipios por departamento
+export function getMunicipios(depSelect, muniSelect, RUTA){
+    let departamento_id = $(depSelect).val();
+    let municipioSelect = $(muniSelect);
+
+    municipioSelect.empty().append('<option value="">Seleccione un municipio</option>');
+
+    if (departamento_id) {
+        $.ajax({
+            url: RUTA + departamento_id,
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {               
+                $.each(data, function (key, municipio) {
+                    municipioSelect.append('<option value="' + municipio.IdMunicipio + '" >' + municipio.MunNomMin + '</option>');
+                });
+            }
+        });
+    }
 }

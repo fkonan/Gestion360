@@ -1,11 +1,11 @@
 @extends('layouts.app')
-@section('title', isset($persona) ? 'Actualizar persona' : 'Registro persona')
+@section('title', 'Registro persona')
 @section('content')
 <div class="container my-5">
 
-    <h2 class="mb-4 text-center">{{ isset($persona) ? 'Actualizar registro' : 'Formulario de registro' }}</h2>
+    <h2 class="mb-4 text-center">{{ 'Formulario de registro' }}</h2>
 
-    <form  id="{{ isset($persona) ? '': 'formPersona'}}" action="{{ isset($persona) ? route('persona.update', ['id' => $persona->IdPersona]) : route('persona.store') }}" method="POST">
+    <form  id="formPersona" action=" route('persona.store') " method="POST">
         @csrf
         @isset($persona)
             @method('PUT')
@@ -13,16 +13,16 @@
         <div class="row">
             <div class="col-md-6 mb-3">
                 <label for="PerTipoDoc" class="form-label">Tipo de Documento</label>
-                <select class="form-select" id="PerTipoDoc" name="PerTipoDoc" {{ isset($persona) ? 'disabled' : '' }} required>
+                <select class="form-select" id="PerTipoDoc" name="PerTipoDoc" required>
                     @foreach($tiposDocumento as $tiposDocumento)
-                        <option value="{{ $tiposDocumento->id }}"  @selected(isset($persona) && $persona->PerTipoDoc == $tiposDocumento->id)>{{ $tiposDocumento->nombre }}</option>
+                        <option value="{{ $tiposDocumento->id }}">{{ $tiposDocumento->nombre }}</option>
                     @endforeach
                 </select>
                 <span class="error text-danger fw-bold" id="error-PerTipoDoc"></span>
             </div>
             <div class="col-md-6 mb-3">
                 <label for="PerNumDoc" class="form-label">Número de Documento</label>
-                <input type="number" class="form-control" id="PerNumDoc" name="PerNumDoc" value="{{isset($persona) ? $persona->PerNumDoc: '' }}" {{ isset($persona) ? 'disabled' : '' }} required>
+                <input type="number" class="form-control" id="PerNumDoc" name="PerNumDoc" required>
                 <span class="error text-danger fw-bold" id="error-PerNumDoc"></span>
             </div>
         </div>
@@ -30,12 +30,12 @@
         <div class="row">
             <div class="col-md-6 mb-3">
                 <label for="PerApellidos" class="form-label">Apellidos</label>
-                <input type="text" class="form-control" id="PerApellidos" name="PerApellidos" value="{{isset($persona) ? $persona->PerApellidos: ''}}" required>
+                <input type="text" class="form-control" id="PerApellidos" name="PerApellidos" required>
                 <span class="error text-danger fw-bold" id="error-PerApellidos"></span>
             </div>
             <div class="col-md-6 mb-3">
                 <label for="PerNombres" class="form-label">Nombres</label>
-                <input type="text" class="form-control" id="PerNombres" name="PerNombres" value="{{isset($persona) ? $persona->PerNombres: ''}}" required>
+                <input type="text" class="form-control" id="PerNombres" name="PerNombres" required>
                 <span class="error text-danger fw-bold" id="error-PerNombres"></span>
             </div>
         </div>
@@ -45,15 +45,15 @@
                 <label for="PerGenero" class="form-label">Género</label>
                 <select class="form-select" id="PerGenero" name="PerGenero" required>
                     <option value="">Seleccione</option>
-                    <option value="MASCULINO" @selected(isset($persona) && $persona->PerGenero == 'MASCULINO')>Masculino</option>    
-                    <option value="FEMENINO" @selected(isset($persona) && $persona->PerGenero == 'FEMENINO')>Femenino</option>
-                    <option value="OTRO" @selected(isset($persona) && $persona->PerGenero == 'OTRO')>Otro</option>
+                    <option value="MASCULINO">Masculino</option>    
+                    <option value="FEMENINO">Femenino</option>
+                    <option value="OTRO">Otro</option>
                 </select>
                 <span class="error text-danger fw-bold" id="error-PerGenero"></span>
             </div>
             <div class="col-md-6 mb-3">
                 <label for="PerFecNac" class="form-label">Fecha de Nacimiento</label>
-                <input type="date" class="form-control" id="PerFecNac" name="PerFecNac" value="{{isset($persona) ? $persona->PerFecNac:''}}" required>
+                <input type="date" class="form-control" id="PerFecNac" name="PerFecNac" required>
                 <span class="error text-danger fw-bold" id="error-PerFecNac"></span>
             </div>
         </div>
@@ -61,11 +61,10 @@
         <div class="row">
             <div class="col-md-6 mb-3">
                 <label for="PerDepNac" class="form-label">Departamento nacimiento</label>
-                <select class="form-select" id="PerDepNac" name="PerDepNac" onchange="getMunicipios(this,`#PerLugNac`)" required>
+                <select class="form-select" id="PerDepNac" name="PerDepNac" onchange="getMunicipios(this,`#PerLugNac`,'/departamentos/municipios/')" required>
                     <option value="">Seleccione un departamento</option>
                     @foreach($departamentos as $departamento)
-                        <option value="{{ $departamento->IdDepartamento }}" @selected(isset($persona) && 
-                            $persona->municipioNac->departamento->IdDepartamento === $departamento->IdDepartamento)>{{ $departamento->DepNomMin }}
+                        <option value="{{ $departamento->IdDepartamento }}"> {{ $departamento->DepNomMin }}
                         </option>
                     @endforeach
                 </select>
@@ -75,9 +74,6 @@
                 <label for="PerLugNac" class="form-label">Municipio nacimiento</label>
                 <select class="form-select" id="PerLugNac" name="PerLugNac" required>
                     <option value="">Seleccione un municipio</option>
-                    @isset($persona)
-                        <option value="{{ $persona->municipioNac->IdMunicipio }}" selected>{{ $persona->municipioNac->MunNomMin }}</option>
-                    @endisset
                 </select>
                 <span class="error text-danger fw-bold" id="error-PerLugNac"></span>
             </div>
@@ -86,23 +82,22 @@
         <div class="row">
             <div class="col-md-6 mb-3">
                 <label for="PerGruRh" class="form-label">Grupo Sanguíneo</label>
-                <input type="text" class="form-control" id="PerGruRh" name="PerGruRh" value="{{ isset($persona) ? $persona->PerGruRh : ''}}">
+                <input type="text" class="form-control" id="PerGruRh" name="PerGruRh">
                 <span class="error text-danger fw-bold" id="error-PerGruRh"></span>
             </div>
             <div class="col-md-6 mb-3">
                 <label for="PerFecExp" class="form-label">Fecha de Expedición</label>
-                <input type="date" class="form-control" id="PerFecExp" name="PerFecExp" value="{{ isset($persona) ? $persona->PerFecExp: ''}}" required>
+                <input type="date" class="form-control" id="PerFecExp" name="PerFecExp" required>
                 <span class="error text-danger fw-bold" id="error-PerFecExp"></span>
             </div>
         </div>
         <div class="row">
             <div class="col-md-6 mb-3">
                 <label for="PerDepExp" class="form-label">Departamento expedición documento</label>
-                <select class="form-select" id="PerDepExp" name="PerDepExp" onchange="getMunicipios(this,`#PerLugExp`)" required>
+                <select class="form-select" id="PerDepExp" name="PerDepExp" onchange="getMunicipios(this,`#PerLugExp`,'/departamentos/municipios/')" required>
                     <option value="">Seleccione un departamento</option>
                     @foreach($departamentos as $departamento)
-                        <option value="{{ $departamento->IdDepartamento }}" @selected(isset($persona) && 
-                            $persona->minicipioExp->departamento->IdDepartamento === $departamento->IdDepartamento)>{{ $departamento->DepNomMin }}
+                        <option value="{{ $departamento->IdDepartamento }}">{{ $departamento->DepNomMin }}
                         </option>
                     @endforeach
                 </select>
@@ -112,36 +107,12 @@
                 <label for="PerLugExp" class="form-label">Municipio de expedición documento</label>
                 <select class="form-select" id="PerLugExp" name="PerLugExp" required>
                     <option value="">Seleccione un municipio</option>
-                    @isset($persona)
-                        <option value="{{ $persona->minicipioExp->IdMunicipio }}" selected>{{ $persona->minicipioExp->MunNomMin }}</option>
-                    @endisset
                 </select>
                 <span class="error text-danger fw-bold" id="error-PerLugExp"></span>
             </div>
         </div>
-
-        <div class="row">
-            <div class="col-md-4 mb-2">
-                <label for="PerFechReg" class="form-label">Fecha de Registro</label>
-                <input type="date" class="form-control" id="PerFechReg" name="PerFechReg" value="{{ isset($persona) ? $persona->PerFechReg : ''}}" required>
-                <span class="error text-danger fw-bold" id="error-PerFechReg"></span>
-            </div>
-            <div class="col-md-4 mb-2">
-                <label for="PerHorReg" class="form-label">Hora de Registro</label>
-                <input type="time" class="form-control" id="PerHorReg" name="PerHorReg" value="{{ isset($persona) ? $persona->PerHorReg : '' }}" required>
-                <span class="error text-danger fw-bold" id="error-PerHorReg"></span>
-            </div>
-            <div class="col-md-4 mb-2">
-                <label for="PerEstado" class="form-label">Estado</label>
-                <select class="form-select" id="PerEstado" name="PerEstado" required>
-                    <option value="Activo" @selected(isset($persona) && $persona->PerEstado == 'ACTIVO')>Activo</option> 
-                    <option value="Inactivo" @selected(isset($persona) && $persona->PerEstado == 'INACTIVO')>Inactivo</option>
-                </select>
-                <span class="error text-danger fw-bold" id="error-PerEstado"></span>
-            </div>
-        </div>
-        
-        <button type="submit" class="btn btn-primary">{{ isset($persona) ? 'Actualizar' : 'Enviar'}}</button>
+ 
+        <button type="submit" class="btn btn-primary">Enviar</button>
     </form>
 </div>
 @endsection
@@ -149,6 +120,7 @@
 @section('script')
 <script>
 $(document).ready(function () {
+
     //Reglas de validación nombres
     $.validator.addMethod("soloLetras", function (value, element) {
         return /^[A-Za-zÁÉÍÓÚáéíóúÑñ]+(?:\s[A-Za-zÁÉÍÓÚáéíóúÑñ]+)*$/.test(value);
@@ -208,26 +180,5 @@ $(document).ready(function () {
         $("#error-" + $(this).attr("id")).text("");
     });
 });
-
- //Carga los municipios según el departamento seleccionado
-function getMunicipios(depSelect, muniSelect){
-    let departamento_id = $(depSelect).val();
-    let municipioSelect = $(muniSelect);
-
-    municipioSelect.empty().append('<option value="">Seleccione un municipio</option>');
-
-    if (departamento_id) {
-        $.ajax({
-            url: '/departamentos/municipios/' + departamento_id,
-            type: 'GET',
-            dataType: 'json',
-            success: function (data) {               
-                $.each(data, function (key, municipio) {
-                    municipioSelect.append('<option value="' + municipio.IdMunicipio + '" >' + municipio.MunNomMin + '</option>');
-                });
-            }
-        });
-    }
-}
 </script>
 @endsection
