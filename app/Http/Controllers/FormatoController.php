@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 use App\Models\Formato;
 use App\Models\FormatoVersion;
+use App\Models\TipoProceso;
+use App\Models\TipoDocProceso;
 use setasign\Fpdi\Fpdi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -14,7 +16,6 @@ class FormatoController extends Controller
         return view('formato.listaFormatos', compact('formatos'));
     }
 
- 
     public function llenarFormatoPDF($name){
         $pdfPath = storage_path('app/pdfs/formulario.pdf'); // plantilla del PDF
         $outputPath = storage_path('app/pdfs/formulario_completado.pdf'); // PDF generado
@@ -38,12 +39,16 @@ class FormatoController extends Controller
     }
 
     public function crearNuevoFormato(){
-        return view('formato.crearFormato');
+        $tipoProcesos = TipoProceso::all();
+        $tipoDocProcesos = TipoDocProceso::all();
+        return view('formato.crearFormato', compact('tipoProcesos', 'tipoDocProcesos'));
     }
 
     public function crearVersionFormato($id){
         $formato = Formato::find($id);
-        return view('formato.nuevaVersion', compact('formato'));
+        $tipoProcesos = TipoProceso::all();
+        $tipoDocProcesos = TipoDocProceso::all();
+        return view('formato.nuevaVersion', compact('formato', 'tipoProcesos', 'tipoDocProcesos'));
     }
 
     private function guardarPDF($file, $version, $nombre){
@@ -92,10 +97,10 @@ class FormatoController extends Controller
         $formatoVersion->IdFormato = $request->IdFormato;
         $formatoVersion->save();
 
-         return response()->json([
+        return response()->json([
                 'message' => 'Nueva versión creada exitosamente',
                 'redirect' => route('formato.index')
-            ]); 
+        ]); 
     }
 
 
@@ -105,7 +110,6 @@ class FormatoController extends Controller
             'pdf' => 'required|mimes:pdf|max:2048',
             'FormCod' => 'required|string|unique:_formatos,FormCod|max:50',
             'FormNom' => 'required|string|regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ]+(?:\s[A-Za-zÁÉÍÓÚáéíóúÑñ]+)*$/|max:50',
-            'FormTipo' => 'required|string|regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ]+(?:\s[A-Za-zÁÉÍÓÚáéíóúÑñ]+)*$/|max:50',
             'FormUbicacion' => 'required|string|regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ]+(?:\s[A-Za-zÁÉÍÓÚáéíóúÑñ]+)*$/|max:50',
             'VerElaboro' => 'required|string|regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ]+(?:\s[A-Za-zÁÉÍÓÚáéíóúÑñ]+)*$/|max:50',
             'VerReviso' => 'required|string|regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ]+(?:\s[A-Za-zÁÉÍÓÚáéíóúÑñ]+)*$/|max:50',
@@ -130,11 +134,12 @@ class FormatoController extends Controller
 
         //guardar pdf en storage/app/pdfs/ 
         $path = $this->guardarPDF($request->file('pdf'), 1, $request->FormNom);
-
+    
         $formato = new Formato();
         $formato->FormCod = $request->FormCod;
         $formato->FormNom = $request->FormNom;
-        $formato->FormTipo = $request->FormTipo;
+        $formato->FormTipProc = $request->FormTipProc;
+        $formato->FormTipDoc = $request->FormTipDoc;
         $formato->FormUbicacion = $request->FormUbicacion;
         $formato->save();
 
@@ -147,7 +152,10 @@ class FormatoController extends Controller
         $formatoVersion->IdFormato = $formato->IdFormato;
         $formatoVersion->save();
 
-        return redirect()->route('formato.index')->with('success', 'Formato guardado correctamente');
+        return response()->json([
+            'message' => 'Formato creado exitosamente',
+            'redirect' => route('formato.index')
+        ]);
     }
 
     public function versionesFormato($id){

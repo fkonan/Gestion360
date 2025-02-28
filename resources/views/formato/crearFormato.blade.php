@@ -21,14 +21,29 @@
                 <span class="error text-danger fw-bold" id="error-FormNom"></span>
             </div>
             <div class="mb-3">
-                <label for="FormTipo" class="form-label">Tipo</label>
-                <input type="text" class="form-control" id="FormTipo" name="FormTipo" required>
-                <span class="error text-danger fw-bold" id="error-FormTipo"></span>
+                <label for="FormTipProc" class="form-label">Tipo proceso</label>
+                <select class="form-select" id="FormTipProc" name="FormTipProc" required>
+                    <option value="">Seleccione un tipo de proceso</option>
+                    @foreach($tipoProcesos as $tp)
+                        <option value="{{$tp->Id}}">{{$tp->Nombre}}</option>
+                    @endforeach
+                </select>
+                <span class="error text-danger fw-bold" id="error-FormTipProc"></span>
             </div>
             <div class="mb-3">
-                <label for="FormUbicacion" class="form-label">Ubicación</label>
-                <input type="text" class="form-control" id="FormUbicacion" name="FormUbicacion" required>
-                <span class="error text-danger fw-bold" id="error-FormUbicacion"></span>
+                <label for="FormTipDoc" class="form-label">Tipo documento</label>
+                <select class="form-select" class="form-control" id="FormTipDoc" name="FormTipDoc" required>
+                    <option value="">Seleccione un tipo de documento</option>
+                    @foreach($tipoDocProcesos as $td)
+                        <option value="{{$td->Id}}">{{$td->Nombre}}</option>
+                    @endforeach
+                </select>
+                <span class="error text-danger fw-bold" id="error-FormTipDoc"></span>
+            </div>
+            <div class="mb-3">
+                <label for="pdf" class="form-label">Archivo PDF</label>
+                <input type="file" accept="application/pdf" class="form-control" id="pdf" name="pdf" required>
+                <span class="error text-danger fw-bold" id="error-pdf"></span>
             </div>
         </div>
         
@@ -49,9 +64,9 @@
                 <span class="error text-danger fw-bold" id="error-VerAprobo"></span>
             </div>
             <div class="mb-3">
-                <label for="pdf" class="form-label">Archivo PDF</label>
-                <input type="file" accept="application/pdf" class="form-control" id="pdf" name="pdf" required>
-                <span class="error text-danger fw-bold" id="error-pdf"></span>
+                <label for="FormUbicacion" class="form-label">Ubicación</label>
+                <input type="text" class="form-control" id="FormUbicacion" name="FormUbicacion" required>
+                <span class="error text-danger fw-bold" id="error-FormUbicacion"></span>
             </div>
         </div>
     </div>

@@ -17,7 +17,8 @@
         <tr>
             <th>Código</th>
             <th>Nombre</th>
-            <th>Tipo</th>
+            <th>Tipo documento</th>
+            <th>Tipo proceso</th>
             <th>Ubicación</th>
             <th>Elaboró</th>
             <th>Revisó</th>
@@ -32,7 +33,8 @@
         <tr>
             <td class="text-nowrap">{{ $formato?->FormCod }}</td>
             <td>{{ $formato?->FormNom }}</td>
-            <td>{{ $formato?->FormTipo }}</td>
+            <td>{{ $formato?->tipoDocumento->Nombre }}</td>
+            <td>{{ $formato?->tipoProceso->Nombre }}</td>
             <td>{{ $formato?->FormUbicacion }}</td>
             <td>{{ $formato?->ultimaVersion?->VerElaboro }}</td>
             <td>{{ $formato?->ultimaVersion?->VerReviso }}</td>

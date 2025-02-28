@@ -14,7 +14,7 @@ class Formato extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        "IdFormato","FormCod","FormNom","FormTipo","FormUbicacion"
+        "IdFormato","FormCod","FormNom","FormTipProc", "FormTipDoc","FormUbicacion"
     ];
 
     public function versiones(){
@@ -24,4 +24,12 @@ class Formato extends Model
     public function ultimaVersion(){
         return $this->hasOne(FormatoVersion::class,'IdFormato','IdFormato')->orderBy('Version','desc');
     }
+
+    public function tipoProceso(){
+        return $this->belongsTo(TipoProceso::class,'FormTipProc','Id');
+    }
+
+    public function tipoDocumento(){
+        return $this->belongsTo(TipoDocProceso::class,'FormTipDoc','Id');
+    }	
 }
