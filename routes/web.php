@@ -8,11 +8,11 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
-})->name("main");
+})->name("home");
 
 Route::prefix("departamentos")->group(function(){
     Route::get("/",[DepartamentoController::class,"index"])->name("departamentos.index");
-    Route::get("/form",[DepartamentoController::class,"create"])->name("departamentos.create");
+    Route::get("/create",[DepartamentoController::class,"create"])->name("departamentos.create");
     Route::get("/{id}",[DepartamentoController::class,"show"])->name("departamentos.show");
     Route::get("/edit/{id}",[DepartamentoController::class,"edit"])->name("departamentos.edit");
     Route::get("/municipios/{id}",[DepartamentoController::class,"getMunici"])->name("departamentos.municipios");
@@ -25,7 +25,7 @@ Route::prefix("departamentos")->group(function(){
 
 Route::prefix("personas")->group(function(){
     Route::get("/",[PersonaController::class,"index"])->name("persona.index");
-    Route::get("/form",[PersonaController::class,"create"])->name("persona.create");
+    Route::get("/create",[PersonaController::class,"create"])->name("persona.create");
     Route::get("/{id}",[PersonaController::class,"show"])->name("persona.show");   
     Route::get("/edit/{id}",[PersonaController::class,"edit"])->name("persona.edit"); 
 
@@ -36,20 +36,22 @@ Route::prefix("personas")->group(function(){
 });
 
 Route::prefix("usuarios")->group(function(){
-    Route::get("/",[UsuarioController::class,"index"])->name("usuario.index");
-    Route::get("/form",[UsuarioController::class,"crearNuevoUsuario"])->name("usuario.crearNuevoUsuario");
+    Route::get("/",[UsuarioController::class,"index"])->name("usuarios.index");
+    Route::get("/create",[UsuarioController::class,"crearNuevoUsuario"])->name("usuarios.crearNuevoUsuario");
 });
 
-Route::get("/pdfCreate/{name}",[FormatoController::class,"llenarFormatoPDF"])->name("formato.llenarFormatoPDF");
+//Route::get("/pdfCreate/{name}",[FormatoController::class,"llenarFormatoPDF"])->name("formato.llenarFormatoPDF");
 
-Route::prefix("formato")->group(function(){
-    Route::get("/",[FormatoController::class,"index"])->name("formato.index");
-    Route::get("/form",[FormatoController::class,"crearNuevoFormato"])->name("formato.crearNuevoFormato");
-    Route::get("/{id}/versiones/",[FormatoController::class,"versionesFormato"])->name("formato.listaVersiones");
-    Route::get("/newversion/{id}",[FormatoController::class,"crearVersionFormato"])->name("formato.crearVersionFormato");
-
-    Route::post("/",[FormatoController::class,"guardarFormato"])->name("formato.guardarFormato");
-    Route::post("/newversion",[FormatoController::class,"guardarVersionFormato"])->name("formato.guardarVersionFormato");
+Route::prefix("formatos")->name("formatos.")->group(function(){
+    Route::get("/",[FormatoController::class,"index"])->name("index");
+    Route::get("/create",[FormatoController::class,"crearNuevoFormato"])->name("create");
+    Route::post("/",[FormatoController::class,"guardarFormato"])->name("store");
+    
+    Route::prefix("/{id}/versions")->name("versions.")->group(function(){
+        Route::get("/",[FormatoController::class,"versionesFormato"])->name("index");
+        Route::get("/create",[FormatoController::class,"crearVersionFormato"])->name("create");
+        Route::post("/",[FormatoController::class,"guardarVersionFormato"])->name("store");
+    });
 });
 
 

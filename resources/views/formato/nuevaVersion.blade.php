@@ -6,7 +6,7 @@
 <div class="container mt-4">
     <h1 class="text-center mb-4">Nueva Version</h1>
 
-    <form id="formNuevaVersion" action="{{ route('formato.guardarVersionFormato') }}" method="POST" enctype="multipart/form-data">
+    <form id="formNuevaVersion" action="{{ route('formatos.versions.store', ['id' => $formato?->IdFormato]) }}" method="POST" enctype="multipart/form-data">
         
     @csrf
     <div class="row g-3">

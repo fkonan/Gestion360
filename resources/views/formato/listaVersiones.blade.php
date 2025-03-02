@@ -5,7 +5,7 @@
 @section('content')
 <div class="container mt-4">
     <h1 class="text-center">Historial versiones</h1>
-    <a class="btn btn-primary my-4" href="{{ route('formato.crearVersionFormato', ['id' => $formato->IdFormato]) }}">Nueva Version</a>
+    <a class="btn btn-primary my-4" href="{{ route('formatos.versions.create', ['id' => $formato->IdFormato]) }}">Nueva Version</a>
         
     <div class="row text-center">
         <table

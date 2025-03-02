@@ -5,7 +5,7 @@
 @section('content')
 <div class="container mt-4">
     <h1 class="text-center">Lista de formatos</h1>
-    <a class="btn btn-primary my-4" href="{{ route('formato.crearNuevoFormato') }}">Nuevo formato</a>
+    <a class="btn btn-primary my-4" href="{{ route('formatos.create') }}">Nuevo formato</a>
     
     <div class="row text-center">
         <table
@@ -44,7 +44,7 @@
                 <i class="fas fa-file-pdf fa-2x text-danger"></i></a>
             </th>
             <td>
-                <a href="{{ route('formato.listaVersiones', ['id' => $formato?->IdFormato]) }}">
+                <a href="{{ route('formatos.versions.index', ['id' => $formato?->IdFormato]) }}">
                 <i class="fas fa-list-alt fa-2x"></i>
                 </a>
             </td>

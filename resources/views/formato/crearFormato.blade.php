@@ -6,7 +6,7 @@
 <div class="container mt-4">
     <h1 class="text-center mb-4">Nuevo Formato</h1>
 
-    <form id="formFormato" action="{{ route('formato.guardarFormato') }}" method="POST" enctype="multipart/form-data">
+    <form id="formFormato" action="{{ route('formatos.store') }}" method="POST" enctype="multipart/form-data">
     @csrf
     <div class="row g-3">
         <div class="col-md-6">
