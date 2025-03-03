@@ -34,8 +34,6 @@ class FormatoController extends Controller
         $pdf->Write(10, "$name");
     
         return response($pdf->Output('', 'I'))->header('Content-Type', 'application/pdf');
-    
-        return response()->download($outputPath);
     }
 
     public function crearNuevoFormato(){
@@ -86,6 +84,8 @@ class FormatoController extends Controller
         $formatoVersion->VerElaboro = $request->VerElaboro;
         $formatoVersion->VerReviso = $request->VerReviso;
         $formatoVersion->VerAprobo = $request->VerAprobo;
+        $formatoVersion->VerFecReg = now();
+        $formatoVersion->VerHorReg = now();
 
         $version = FormatoVersion::where('IdFormato', $request->IdFormato)->max('Version') + 1;
         $formatoVersion->Version = $version;
@@ -99,7 +99,7 @@ class FormatoController extends Controller
 
         return response()->json([
                 'message' => 'Nueva versión creada exitosamente',
-                'redirect' => route('formato.index')
+                'redirect' => route('formatos.index')
         ]); 
     }
 
@@ -147,6 +147,8 @@ class FormatoController extends Controller
         $formatoVersion->VerElaboro = $request->VerElaboro;
         $formatoVersion->VerReviso = $request->VerReviso;
         $formatoVersion->VerAprobo = $request->VerAprobo;
+        $formatoVersion->VerFecReg = now();
+        $formatoVersion->VerHorReg = now();
         $formatoVersion->Ruta = $path;
         $formatoVersion->Version = 1;
         $formatoVersion->IdFormato = $formato->IdFormato;
@@ -154,7 +156,7 @@ class FormatoController extends Controller
 
         return response()->json([
             'message' => 'Formato creado exitosamente',
-            'redirect' => route('formato.index')
+            'redirect' => route('formatos.index')
         ]);
     }
 
