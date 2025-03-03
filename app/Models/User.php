@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Usuario extends Model
+class User extends Authenticatable
 {
     use HasFactory;
 
@@ -22,5 +22,10 @@ class Usuario extends Model
     
     public function persona(): BelongsTo{
         return $this->belongsTo(Persona::class,'idPersona','IdPersona');
+    }
+
+    public function getAuthPassword()
+    {
+        return $this->Password;
     }
 }

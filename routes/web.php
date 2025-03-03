@@ -1,14 +1,21 @@
 <?php
 
+use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DepartamentoController;
 use App\Http\Controllers\FormatoController;
-use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\PersonaController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
 })->name("home");
+
+
+Route::get('/login', [LoginController::class, 'showLoginForm'])->name('loginIndex');
+Route::post('/login', [LoginController::class, 'login'])->name('login');
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+
 
 Route::prefix("departamentos")->group(function(){
     Route::get("/",[DepartamentoController::class,"index"])->name("departamentos.index");
@@ -36,8 +43,8 @@ Route::prefix("personas")->group(function(){
 });
 
 Route::prefix("usuarios")->group(function(){
-    Route::get("/",[UsuarioController::class,"index"])->name("usuarios.index");
-    Route::get("/create",[UsuarioController::class,"crearNuevoUsuario"])->name("usuarios.crearNuevoUsuario");
+    Route::get("/",[UserController::class,"index"])->name("usuarios.index");
+    Route::get("/create",[UserController::class,"crearNuevoUsuario"])->name("usuarios.crearNuevoUsuario");
 });
 
 //Route::get("/pdfCreate/{name}",[FormatoController::class,"llenarFormatoPDF"])->name("formato.llenarFormatoPDF");
