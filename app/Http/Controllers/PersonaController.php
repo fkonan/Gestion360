@@ -81,6 +81,8 @@ class PersonaController extends Controller
             $persona->PerFecExp = $request->PerFecExp;
             $persona->PerLugExp = $request->PerLugExp;
             $persona->PerGruRh = $request->PerGruRh;
+            $persona->PerFechReg = now();
+            $persona->PerHorReg = now();
             $persona->save();
             
             return response()->json([

@@ -21,7 +21,7 @@ class LoginController extends Controller
             'password' => 'required|string',
         ]);
 
-        $user = Persona::where('PerNumDoc', $request->documento)->first()->usuario;
+        $user = Persona::where('PerNumDoc', $request->documento)->first()?->usuario;
 
         if (!$user || !password_verify($request->password, $user->Password)) {
             return back()->withErrors(['documento' => 'Documento o contraseña incorrectos']);

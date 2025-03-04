@@ -8,7 +8,6 @@
         <h3 class="text-center">Iniciar Sesión</h3>
         <form method="POST" action="{{ route('login') }}">
             @csrf
-
             <div class="mb-3">
                 <label for="documento" class="form-label">Documento</label>
                 <input type="text" class="form-control" id="documento" name="documento" value="{{ old('documento') }}" required>
