@@ -3,11 +3,15 @@
 @section('title','Lista versiones')
 
 @section('content')
-<div class="container-fluid p-4">
-    <h1 class="text-center">Historial versiones</h1>
-    <a class="btn btn-primary my-4" href="{{ route('formatos.versions.create', ['id' => $formato->IdFormato]) }}">Nueva Version</a>
+<div class="container-fluid p-0 bg-white border rounded">
+
+    <div class="border rounded-top" style="background-color: #2C3643">
+        <h5 class="text-left text-light p-2 ps-4">Versiones</h5>
+    </div>
+    
+    <a class="btn btn-warning fw-bold ms-4 mt-4" href="{{ route('formatos.versions.create', ['id' => $formato->IdFormato]) }}">Nueva Version</a>
         
-    <div class="row text-center">
+    <div class="row p-4 text-center">
         <table
             class="table table-striped"
             data-toggle="table"

@@ -68,15 +68,6 @@ export function getMunicipios(depSelect, muniSelect, RUTA){
     }
 }
 
-export function togglePasswordVisibility() {
-    let passwordField = document.getElementById("password");
-    if (passwordField.type === "password") {
-        passwordField.type = "text";
-    } else {
-        passwordField.type = "password";
-    }
-}
-
 export function actualizarReloj() {
     const now = new Date();
     let horas = now.getHours();
@@ -91,13 +82,19 @@ export function actualizarReloj() {
         horas = 12;  
     }
 
-    document.getElementById('horas').innerText = String(horas).padStart(2, '0');
-    document.getElementById('minutos').innerText = String(minutos).padStart(2, '0');
-    document.getElementById('segundos').innerText = String(segundos).padStart(2, '0');
-    document.getElementById('ampm').innerText = ampm;
+    let horaLocal = document.getElementById('horas');
+    let minutosLocal = document.getElementById('minutos');
+    let segundosLocal = document.getElementById('segundos');
+    let ampmLocal = document.getElementById('ampm');
+
+    if(horaLocal) horaLocal.innerText = String(horas).padStart(2, '0');	
+    if(minutosLocal) minutosLocal.innerText = String(minutos).padStart(2, '0');
+    if(segundosLocal) segundosLocal.innerText = String(segundos).padStart(2, '0');
+    if(ampmLocal) ampmLocal.innerText = ampm;
 }
 
 setInterval(actualizarReloj, 1000);
+actualizarReloj();
 
 
 

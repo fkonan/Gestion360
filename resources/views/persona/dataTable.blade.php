@@ -3,9 +3,13 @@
 @section('title','Lista personas')
 
 @section('content')
-<div class="container-fluid p-4">
-    <h1 class="text-center">Lista de personas</h1>
-    <div class="row mt-3">
+<div class="container-fluid p-0 bg-white border rounded">
+
+    <div class="border rounded-top" style="background-color: #2C3643">
+        <h5 class="text-left text-light p-2 ps-4">Personas</h5>
+    </div>
+
+    <div class="row p-4">
         <table
             class="table table-striped"
             data-toggle="table"

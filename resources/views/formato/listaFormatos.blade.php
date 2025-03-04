@@ -3,10 +3,14 @@
 @section('title','Lista procesos')
 
 @section('content')
-<div class="container-fluid p-4">
-    <h1 class="text-center">Lista de procesos</h1>
-    <a class="btn btn-primary my-4" href="{{ route('formatos.create') }}">Nuevo proceso</a>
-    <div class="row">
+<div class="container-fluid p-0 bg-white border rounded">
+
+    <div class="border rounded-top" style="background-color: #2C3643">
+        <h5 class="text-left text-light p-2 ps-4">Procesos</h5>
+    </div>
+    
+    <a class="btn btn-warning fw-bold ms-4 mt-4" href="{{ route('formatos.create') }}">Crear Proceso</a>
+    <div class="row p-4">
         <table
             class="table table-striped"
             data-toggle="table"
@@ -14,7 +18,7 @@
             data-page-list="[]"
             data-page-size="10"
             data-pagination-parts="['pageSize', 'pageList', 'pageNext', 'pagePrev']">
-        <thead class="text-center">
+        <thead style="background-color:#0070C0;color: white; text-align:center;">
         <tr>
             <th>Código</th>
             <th>Nombre</th>

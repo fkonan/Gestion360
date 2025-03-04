@@ -9,13 +9,11 @@ use Illuminate\Support\Facades\Auth;
 
 class LoginController extends Controller
 {
-    public function showLoginForm()
-    {
+    public function showLoginForm(){
         return view('auth.login'); 
     }
 
-    public function login(Request $request)
-    {
+    public function login(Request $request){
         $request->validate([
             'documento' => 'required|numeric',
             'password' => 'required|string',
@@ -23,24 +21,36 @@ class LoginController extends Controller
 
         $user = Persona::where('PerNumDoc', $request->documento)->first()?->usuario;
 
-        if (!$user || !password_verify($request->password, $user->Password)) {
-            return back()->withErrors(['documento' => 'Documento o contraseña incorrectos']);
+        if (!$user) {
+            session()->flash('alert', ['type' => 'warning', 'title' => 'Documento o contraseña incorrectos']);
+            return back();
+        }
+
+        if(!password_verify($request->password, $user->Password)){
+            session()->flash('alert', ['type' => 'error','title' => 'Contraseña incorrecta']);
+            return back();  
         }
 
         if($user->persona->PerEstado == "INACTIVO"){
-            return back()->withErrors(['documento' => 'Persona inactiva']);
+            session()->flash('alert', ['type' => 'warning','title' => 'Persona inactiva']);
+            return back();
         }
 
         if($user->UsuarioEstado == "INACTIVO"){
-            return back()->withErrors(['documento' => 'Usuario inactivo']);
+            session()->flash('alert', ['type' => 'warning','title' => 'Usuario inactivo']);
+            return back();
+        }
+
+        if($user->UsuarioEstado == "SUSPENDIDO"){
+            session()->flash('alert', ['type' => 'warning','title' => 'Usuario suspendido']);
+            return back();
         }
 
         Auth::login($user);
-        return redirect()->route('home');
+        return redirect()->intended(route('home'));
     }
 
-    public function logout()
-    {
+    public function logout(){
         Auth::logout();
         return redirect()->route('login');
     }
