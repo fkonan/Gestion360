@@ -1,21 +1,10 @@
 <?php
 
-use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DepartamentoController;
 use App\Http\Controllers\FormatoController;
 use App\Http\Controllers\PersonaController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
-
-Route::get('/', function () {
-    return view('welcome');
-})->name("home");
-
-
-Route::get('/login', [LoginController::class, 'showLoginForm'])->name('loginIndex');
-Route::post('/login', [LoginController::class, 'login'])->name('login');
-Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
-
 
 Route::prefix("departamentos")->group(function(){
     Route::get("/",[DepartamentoController::class,"index"])->name("departamentos.index");
@@ -60,5 +49,8 @@ Route::prefix("formatos")->name("formatos.")->group(function(){
         Route::post("/",[FormatoController::class,"guardarVersionFormato"])->name("store");
     });
 });
+
+
+require __DIR__.'/auth.php';
 
 
