@@ -16,7 +16,7 @@ class PersonaController extends Controller
     public function index()
     {
         $personas = Persona::all();
-        return view("persona.dataTable",compact("personas"));
+        return view("persona.listaPersonas",compact("personas"));
     }
 
     /**
@@ -100,7 +100,7 @@ class PersonaController extends Controller
     public function show($id)
     {
         $personas = Persona::where("IdPersona",$id)->get();
-        return view("persona.dataTable",compact("personas"));
+        return view("persona.listaPersonas",compact("personas"));
     }
 
     

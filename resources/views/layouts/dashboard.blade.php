@@ -24,16 +24,16 @@
             display: flex;
             flex-direction: column;
             min-height: 100vh;
-            background-color: #f4f6f9; /* Fondo típico de AdminLTE */
+            background-color: #f4f6f9; 
         }
         .content {
-            flex: 1; /* Para que ocupe todo el espacio disponible */
+            flex: 1; 
         }
         .user-panel {
             text-align: center;
         }
         .nav-treeview {
-            background-color: #f8f9fa; /* Color más claro para submenús */
+            background-color: #f8f9fa; 
         }
     </style>
 </head>
@@ -144,5 +144,6 @@
         }
     </script>
 
+    @yield('script')
 </body>
 </html>
