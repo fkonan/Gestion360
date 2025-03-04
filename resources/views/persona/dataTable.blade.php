@@ -1,18 +1,19 @@
-@extends('layouts.app')
+@extends('layouts.dashboard')
 
 @section('title','Lista personas')
 
 @section('content')
-<div class="container mt-4 text-center">
+<div class="container-fluid p-4">
     <h1 class="text-center">Lista de personas</h1>
-    <div class="row">
+    <div class="row mt-3">
         <table
+            class="table table-striped"
             data-toggle="table"
             data-pagination="true"
             data-page-size="10"
-            data-search="true"
-            data-search-highlight="true">   
-            <thead>
+            data-page-list="[]"
+            data-pagination-parts="['pageSize', 'pageList', 'pageNext', 'pagePrev']">   
+            <thead class="text-center">
                 <tr>
                     <th data-sortable="true">Id Persona</th>
                     <th>Tipo documento</th>
@@ -36,7 +37,7 @@
                     <td>{{ $persona?->municipioNac->departamento->DepNomMin }}</td>
                     <td>{{ $persona?->PerGenero }}</td>
                     <td>{{ $persona?->PerEstado }}</td>
-                    <td><a href="{{ route('persona.edit', ['id' => $persona->IdPersona]) }}" class="btn btn-primary">Actualizar</a></td>
+                    <td class="text-center"><a href="{{ route('persona.edit', ['id' => $persona->IdPersona]) }}" class="btn btn-primary">Actualizar</a></td>
                 </tr>
             @endforeach
             </tbody>

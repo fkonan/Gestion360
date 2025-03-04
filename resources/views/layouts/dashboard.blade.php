@@ -12,14 +12,21 @@
         <!--Vite -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body style="margin: 0; padding: 0;">
+    <body class="m-0 p-0">
+        <div>
+            @auth
+                @include('layouts.menu')
+            @endauth
 
-        <section>
-            @yield('content')
-        </section>
-        
-         <!-- jQuery -->
-         <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script> 
+            <div class="flex-grow-1 pt-4" style="margin-left: 250px; padding: 1rem; width: calc(100% - 250px);">
+                <section>
+                    @yield('content')
+                </section>
+            </div>
+        </div>
+
+        <!-- jQuery -->
+        <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
         @yield('script')
     </body>
 </html>

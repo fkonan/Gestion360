@@ -1,19 +1,20 @@
-@extends('layouts.app')
+@extends('layouts.dashboard')
 
-@section('title','Lista formatos')
+@section('title','Lista procesos')
 
 @section('content')
-<div class="container mt-4">
-    <h1 class="text-center">Lista de formatos</h1>
-    <a class="btn btn-primary my-4" href="{{ route('formatos.create') }}">Nuevo formato</a>
-    
-    <div class="row text-center">
+<div class="container-fluid p-4">
+    <h1 class="text-center">Lista de procesos</h1>
+    <a class="btn btn-primary my-4" href="{{ route('formatos.create') }}">Nuevo proceso</a>
+    <div class="row">
         <table
+            class="table table-striped"
             data-toggle="table"
             data-pagination="true"
+            data-page-list="[]"
             data-page-size="10"
             data-pagination-parts="['pageSize', 'pageList', 'pageNext', 'pagePrev']">
-        <thead>
+        <thead class="text-center">
         <tr>
             <th>Código</th>
             <th>Nombre</th>
@@ -39,7 +40,7 @@
             <td>{{ $formato?->ultimaVersion?->VerElaboro }}</td>
             <td>{{ $formato?->ultimaVersion?->VerReviso }}</td>
             <td>{{ $formato?->ultimaVersion?->VerAprobo }}</td>
-            <td>{{ $formato?->ultimaVersion?->Version }}</td>
+            <td class="text-center">{{ $formato?->ultimaVersion?->Version }}</td>
             <th><a href="{{ asset('storage/' . $formato?->ultimaVersion?->Ruta) }}" target="_blank">
                 <i class="fas fa-file-pdf fa-2x text-danger"></i></a>
             </th>

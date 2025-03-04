@@ -1,8 +1,8 @@
-@extends('layouts.app')
+@extends('layouts.dashboard')
 @section('title', 'Actualizar persona')
 @section('content')
-<div class="container my-5">
 
+<div class="container-fluid p-4">
     <h2 class="mb-4 text-center">Actualizar registro</h2>
 
     <form id="formEditPersona" action="{{  route('persona.update', ['id' => $persona->IdPersona])  }}" method="POST">

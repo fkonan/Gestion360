@@ -1,10 +1,10 @@
-@extends('layouts.app')
+@extends('layouts.dashboard')
 
 @section('title','Nuevo Formato')
 
 @section('content')
-<div class="container mt-4">
-    <h1 class="text-center mb-4">Nuevo Formato</h1>
+<div class="container-fluid p-4">
+    <h1 class="text-center mb-4">Nuevo proceso</h1>
 
     <form id="formFormato" action="{{ route('formatos.store') }}" method="POST" enctype="multipart/form-data">
     @csrf

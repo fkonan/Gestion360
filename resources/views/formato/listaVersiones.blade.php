@@ -1,17 +1,19 @@
-@extends('layouts.app')
+@extends('layouts.dashboard')
 
 @section('title','Lista versiones')
 
 @section('content')
-<div class="container mt-4">
+<div class="container-fluid p-4">
     <h1 class="text-center">Historial versiones</h1>
     <a class="btn btn-primary my-4" href="{{ route('formatos.versions.create', ['id' => $formato->IdFormato]) }}">Nueva Version</a>
         
     <div class="row text-center">
         <table
+            class="table table-striped"
             data-toggle="table"
             data-pagination="true"
             data-page-size="10"
+            data-page-list="[]"
             data-pagination-parts="['pageSize', 'pageList', 'pageNext', 'pagePrev']">
         <thead>
         <tr>

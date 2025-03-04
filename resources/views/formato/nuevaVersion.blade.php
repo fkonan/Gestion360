@@ -1,9 +1,9 @@
-@extends('layouts.app')
+@extends('layouts.dashboard')
 
 @section('title','Nueva Version')
 
 @section('content')
-<div class="container mt-4">
+<div class="container-fluid p-4">
     <h1 class="text-center mb-4">Nueva Version</h1>
 
     <form id="formNuevaVersion" action="{{ route('formatos.versions.store', ['id' => $formato?->IdFormato]) }}" method="POST" enctype="multipart/form-data">

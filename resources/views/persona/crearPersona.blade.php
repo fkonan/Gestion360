@@ -1,10 +1,9 @@
-@extends('layouts.app')
+@extends('layouts.dashboard')
 @section('title', 'Registro persona')
 @section('content')
-<div class="container my-5">
 
+<div class="container-fluid p-4">
     <h2 class="mb-4 text-center">{{ 'Formulario de registro' }}</h2>
-
     <form  id="formPersona" action=" route('persona.store') " method="POST">
         @csrf
         @isset($persona)
