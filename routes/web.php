@@ -8,8 +8,8 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::get('/', function () {
-    return view('welcome');
-})->name('home');
+    return view('home');
+})->middleware('auth')->name('home');
 
 Route::prefix("departamentos")->middleware('auth')->group(function(){
     Route::get("/",[DepartamentoController::class,"index"])->name("departamentos.index");

@@ -1,6 +1,6 @@
-@extends('layouts.app')
+@extends('layouts.dashboard')
 
-@section('title','Welcome')
+@section('title','Home')
 
 @section('content')
 <div class="container text-center">
