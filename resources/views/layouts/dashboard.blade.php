@@ -39,9 +39,7 @@
 </head>
 
 <body class="sidebar-mini layout-fixed">
-
     <div class="wrapper">
-
         <!-- Sidebar -->
         <aside class="main-sidebar sidebar-dark-primary elevation-4 text-dark bg-light">
 
@@ -114,9 +112,9 @@
 
         <!-- Contenido Principal -->
         <div class="content-wrapper">
-            <section class="content-header">
+            <section class="content-header mb-4" style="background-color: #005EB8;">
                 <div class="container-fluid">
-                    <button class="btn btn-primary btn-sm" onclick="toggleSidebar()">
+                    <button class="btn btn-sm text-light" onclick="toggleSidebar()">
                         ☰ 
                     </button>
                 </div>

@@ -3,12 +3,15 @@
 @section('title','Nuevo Formato')
 
 @section('content')
-<div class="container-fluid p-4">
-    <h1 class="text-center mb-4">Nuevo proceso</h1>
+<div class="container-fluid p-0 bg-white border rounded">
+    <div class="border rounded-top d-flex justify-content-between align-items-center" style="background-color: #2C3643">
+        <h5 class="text-left text-light p-2 ps-4">Nuevo proceso</h5>
+        <a class="btn btn-warning fw-bold m-2" onclick="window.history.back()" >Volver</a>
+    </div>
 
     <form id="formFormato" action="{{ route('formatos.store') }}" method="POST" enctype="multipart/form-data">
     @csrf
-    <div class="row g-3">
+    <div class="row g-3 p-4">
         <div class="col-md-6">
             <div class="mb-3">
                 <label for="FormCod" class="form-label">Código</label>
@@ -71,7 +74,7 @@
         </div>
     </div>
 
-    <div class="text-end mt-3">
+    <div class="text-start ms-4 mb-4">
         <button type="submit" class="btn btn-primary">Guardar</button>
     </div>
     </form>
