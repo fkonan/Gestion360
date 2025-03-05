@@ -84,10 +84,12 @@ class PersonaController extends Controller
             $persona->PerFechReg = now();
             $persona->PerHorReg = now();
             $persona->save();
-            
+
             return response()->json([
                 'message' => 'Persona creada exitosamente',
-                'redirect' => route('persona.index')
+                'redirect' => route('persona.index'),
+                'type' => 'success', 
+                'title' => 'Persona creada exitosamente'
             ]); 
         }catch(\Exception $e){
             return response()->json(['error' => $e->getMessage()], 500);
@@ -148,7 +150,12 @@ class PersonaController extends Controller
                 'redirect' => route('persona.index')
             ]);*/
 
-            return redirect()->route('persona.index')->with('success','Persona modificada exitosamente');
+            return response()->json([
+                'message' => 'Persona modificada exitosamente',
+                'redirect' => route('persona.index'),
+                'type' => 'success', 
+                'title' => 'Persona modificada exitosamente'
+            ]); 
 
         }catch(\Exception $e){
             return response()->json(['error' => $e->getMessage()], 500);

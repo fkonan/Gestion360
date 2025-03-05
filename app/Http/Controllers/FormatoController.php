@@ -98,8 +98,10 @@ class FormatoController extends Controller
         $formatoVersion->save();
 
         return response()->json([
-                'message' => 'Nueva versión creada exitosamente',
-                'redirect' => route('formatos.index')
+            'message' => 'Nueva versión creada exitosamente',
+            'redirect' => route('formatos.index'),
+            'type' => 'success', 
+            'title' => 'Nueva versión creada exitosamente'
         ]); 
     }
 
@@ -156,8 +158,10 @@ class FormatoController extends Controller
 
         return response()->json([
             'message' => 'Formato creado exitosamente',
-            'redirect' => route('formatos.index')
-        ]);
+            'redirect' => route('formatos.index'),
+            'type' => 'success', 
+            'title' => 'Formato creado exitosamente'
+        ]); 
     }
 
     public function versionesFormato($id){

@@ -1,16 +1,16 @@
 @extends('layouts.dashboard')
 
-@section('title','Lista personas')
+@section('title','Lista usuarios')
 
 @section('content')
 <div class="container-fluid p-0 bg-white border rounded">
 
     <div class="border rounded-top d-flex justify-content-between align-items-center" style="background-color: #2C3643">
-        <h5 class="text-left text-light p-2 ps-4">Personas registradas</h5>
+        <h5 class="text-left text-light p-2 ps-4">Usuarios registrados</h5>
         <a class="btn btn-warning fw-bold m-2" onclick="window.history.back()" >Volver</a>
     </div>
 
-    <a class="btn btn-warning fw-bold ms-4 mt-4" style="position: absolute; top:150px" href="{{ route('persona.create') }}">Crear Persona</a>
+    <a class="btn btn-warning fw-bold ms-4 mt-4" style="position: absolute; top:150px">Crear Usuario</a>
 
     <div class="row p-4">
         <table
@@ -25,22 +25,22 @@
                 <tr>
                     <th>Identificación</th>
                     <th>Nombre Completo</th>
-                    <th>Departamento</th>
-                    <th>Genero</th>    
-                    <th>Estado</th>
+                    <th>Fecha registro</th>
+                    <th>Hora registro</th>
+                    <th>Estado</th>    
                     <th>Opciones</th>
                 </tr>
             </thead>
             <tbody>
-            @foreach($personas as $persona)
+            @foreach($usuarios as $usuario)
                 <tr>
-                    <td>{{ $persona?->PerNumDoc }}</td>
-                    <td>{{ $persona?->PerNombres }} {{ $persona?->PerApellidos }}</td>
-                    <td>{{ $persona?->municipioNac->departamento->DepNomMin }}</td>
-                    <td>{{ $persona?->PerGenero }}</td>
-                    <td>{{ $persona?->PerEstado }}</td>
+                    <td>{{ $usuario?->persona->PerNumDoc }}</td>
+                    <td>{{ $usuario?->persona->PerNombres }} {{ $usuario?->persona->PerApellidos }}</td>
+                    <td>{{ $usuario?->UsuFecReg }}</td>
+                    <td>{{ $usuario?->UsuHorReg }}</td>
+                    <td>{{ $usuario?->UsuarioEstado }}</td>
                     <td class="text-center" style="width: 100px;">
-                        <a href="{{ route('persona.edit', ['id' => $persona->IdPersona]) }}" class="btn btn-primary p-0 px-2">
+                        <a class="btn btn-primary p-0 px-2">
                             <i class="nav-icon fas fa-edit"></i>
                         </a>
                     </td>

@@ -31,8 +31,7 @@ Route::prefix("personas")->middleware('auth')->group(function(){
     Route::get("/edit/{id}",[PersonaController::class,"edit"])->name("persona.edit"); 
 
     Route::post("/",[PersonaController::class,"store"])->name("persona.store");
-    
-    Route::put("/{id}",[PersonaController::class,"update"])->name("persona.update");
+    Route::post("/{id}",[PersonaController::class,"update"])->name("persona.update");
     
 });
 

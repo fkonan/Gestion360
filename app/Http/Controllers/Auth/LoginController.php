@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\Persona;
+use App\Models\Sesion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -46,12 +47,33 @@ class LoginController extends Controller
             return back();
         }
 
-        Auth::login($user);
-        return redirect()->intended(route('home'));
+        if($this->registrarLogin($user->IdUsuario)){
+            Auth::login($user);
+            return redirect()->intended(route('home'));
+        }
+        
+    }
+
+    private function registrarLogin($IdUser){
+        $sesion = new Sesion();
+        $sesion->IdUser = $IdUser;
+        $sesion->SesionFechReg = now();
+        $sesion->SesionHorReg = now();
+        $sesion->SesionTipo = "LOGIN";
+        return $sesion->save();
     }
 
     public function logout(){
+        $session = new Sesion();
+        $session->IdUser = Auth::id();
+        $session->SesionFechReg = now();
+        $session->SesionHorReg = now();
+        $session->SesionTipo = "LOGOUT";
+        $session->save();
+
         Auth::logout();
+        session()->flash('alert', ['type' => 'success','title' => 'Sesion cerrada exitosamente']);
+        
         return redirect()->route('login');
     }
 }

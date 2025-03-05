@@ -22,8 +22,14 @@ export function validarFormulario(form, TYPE="POST") {
                 contentType: false,
                 dataType: "json",
                 success: function (response) {
-                    alert(response.message);
-                    window.location.href = response.redirect;
+                    Swal.fire({
+                        icon: response.type,
+                        title: response.title,
+                        confirmButtonColor: "#3366CC",
+                        confirmButtonText: "Aceptar"
+                    }).then(() => {
+                        window.location.href = response.redirect;
+                    });
                 },
                 error: function (xhr) {
                     $(".error").text("");

@@ -9,11 +9,12 @@
         <a class="btn btn-warning fw-bold m-2" onclick="window.history.back()" >Volver</a>
     </div>
     
-    <a class="btn btn-warning fw-bold ms-4 mt-4" href="{{ route('formatos.create') }}">Crear Proceso</a>
+    <a class="btn btn-warning fw-bold ms-4 mt-4" style="position: absolute; top:150px" href="{{ route('formatos.create') }}">Crear Proceso</a>
     <div class="row p-4">
         <table
             class="table table-striped"
             data-toggle="table"
+            data-search="true"
             data-pagination="true"
             data-page-list="[]"
             data-page-size="10"
