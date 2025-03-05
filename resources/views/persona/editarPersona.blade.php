@@ -5,7 +5,7 @@
 <div class="container-fluid p-0 bg-white border rounded">
 
     <div class="border rounded-top d-flex justify-content-between align-items-center" style="background-color: #2C3643">
-        <h5 class="text-left text-light p-2 ps-4">Actualizar registro</h5>
+        <h5 class="text-left text-light p-2 ps-4">Actualizar Persona</h5>
         <a class="btn btn-warning fw-bold m-2" onclick="window.history.back()" >Volver</a>
     </div>
 

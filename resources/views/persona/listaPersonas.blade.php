@@ -10,7 +10,7 @@
         <a class="btn btn-warning fw-bold m-2" onclick="window.history.back()" >Volver</a>
     </div>
 
-    <a class="btn btn-warning fw-bold ms-4 mt-4" style="position: absolute; top:150px" href="{{ route('persona.create') }}">Crear Persona</a>
+    <a class="btn btn-warning fw-bold ms-4 mt-4" style="position: absolute; top:150px" href="{{ route('persona.create') }}">Registrar persona</a>
 
     <div class="row p-4">
         <table

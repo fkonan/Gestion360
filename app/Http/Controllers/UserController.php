@@ -17,4 +17,8 @@ class UserController extends Controller
     {
         return view("usuario.crearUsuario");
     }
+
+    public function store(Request $request){
+
+    }
 }

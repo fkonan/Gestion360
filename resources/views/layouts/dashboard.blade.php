@@ -48,7 +48,8 @@
                 <div class="user-panel mt-3 pb-3 mb-3 d-flex flex-column align-items-center">
                     <div class="info">
                         <span style="user-select: none; color: #000; font-weight: bold;">
-                            {{ auth()->user()->persona->PerNombres }} {{ auth()->user()->persona->PerApellidos }}
+                            {{ auth()->user()->persona->PerNombres }} <br>
+                            {{ auth()->user()->persona->PerApellidos }}
                         </span>
                     </div>
                     <div class="info">

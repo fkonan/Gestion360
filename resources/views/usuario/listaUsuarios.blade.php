@@ -10,7 +10,7 @@
         <a class="btn btn-warning fw-bold m-2" onclick="window.history.back()" >Volver</a>
     </div>
 
-    <a class="btn btn-warning fw-bold ms-4 mt-4" style="position: absolute; top:150px">Crear Usuario</a>
+    <a class="btn btn-warning fw-bold ms-4 mt-4" style="position: absolute; top:150px">Registrar usuario</a>
 
     <div class="row p-4">
         <table
