@@ -45,69 +45,23 @@
 
             <div class="sidebar">
             <!-- Usuario -->
-                <div class="user-panel mt-3 pb-3 mb-3 d-flex flex-column align-items-center">
-                    <div class="info">
-                        <span style="user-select: none; color: #000; font-weight: bold;">
-                            {{ auth()->user()->persona->PerNombres }} <br>
-                            {{ auth()->user()->persona->PerApellidos }}
+                <div class="user-panel my-3 pt-3 pb-2 d-flex flex-column text-left">
+                    <div class="info fw-bold">
+                        <span style="user-select: none; color: #000;">
+                            {{ auth()->user()->persona->PerNombres }} {{ auth()->user()->persona->PerApellidos }}
                         </span>
                     </div>
                     <div class="info">
+                        <span style="font-size:.8em">Ultima sesión</span><br>
+                        <span style="font-size:.8em">Fecha: {{ auth()->user()->ultimaSesion->first()->SesionFechReg }}  {{ auth()->user()->ultimaSesion->first()->SesionHorReg }} </span>                       
+                    </div>
+                    <div class="info text-primary fw-bold">
                         <span id="horas"></span>:<span id="minutos"></span>:<span id="segundos"></span>&nbsp;<span id="ampm"></span>
                     </div>
                 </div>
 
                 <!-- Menú de Navegación -->
-                <nav class="mt-2">
-                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
-                        <li class="nav-item">
-                            <a style="background-color:#EAE9E9; color:#6c757d;" href="{{ route('formatos.index') }}" class="nav-link">
-                                <i class="nav-icon fas fa-map" style="color: #0E2146;"></i>
-                                <p><b>Procesos</b></p>
-                            </a>
-                        </li>
-                       
-                        <li class="nav-item has-treeview">
-                            <a style="background-color:#EAE9E9; color:#6c757d; font-size:16px;" href="#" class="nav-link">
-                                <i class="nav-icon fas fa-user-tie" style="color: #0E2146;"></i>
-                                <p><b>Administración</b><i class="right fas fa-angle-left"></i></p>
-                            </a>
-                            <ul class="nav nav-treeview">
-                                <li class="nav-item">
-                                    <a style="color:#6c757d;" href="{{ route('persona.index') }}" class="nav-link">
-                                        <i class="nav-icon fas fa-people-arrows"></i>
-                                        <p><b>Personas</b></p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a style="color:#6c757d;" href="{{ route('usuarios.index') }}" class="nav-link">
-                                        <i class="nav-icon fas fa-user-tie"></i>
-                                        <p><b>Usuarios</b></p>
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-
-                        
-                        <li class="nav-item has-treeview">
-                            <a style="background-color:#D0CCFA; color:#000000; font-size:16px;" href="#" class="nav-link">
-                                <i class="nav-icon fas fa-cloud"></i>
-                                <p><b>Sesión</b><i class="right fas fa-angle-left"></i></p>
-                            </a>
-                            <ul class="nav nav-treeview">
-                                <li class="nav-item">
-                                    <a href="#" onclick="document.getElementById('logoutForm').submit();" class="nav-link bg-danger">
-                                        <i class="fas fa-sign-out-alt"></i>
-                                        <p>Cerrar sesión</p>
-                                    </a>
-                                    <form id="logoutForm" action="{{ route('logout') }}" method="POST" style="display: none;">
-                                        @csrf
-                                    </form>
-                                </li>
-                            </ul>
-                        </li>
-                    </ul>
-                </nav>
+                @include('menu2')
             </div>
         </aside>
 

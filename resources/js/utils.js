@@ -80,9 +80,9 @@ export function actualizarReloj() {
     const minutos = now.getMinutes();
     const segundos = now.getSeconds();
 
-    let ampm = 'AM';
+    let ampm = 'a.m.';
     if (horas >= 12) {
-        ampm = 'PM';
+        ampm = 'p.m.';
         if (horas > 12) horas -= 12;  
     } else if (horas == 0) {
         horas = 12;  

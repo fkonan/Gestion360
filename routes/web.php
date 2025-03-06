@@ -32,7 +32,6 @@ Route::prefix("personas")->middleware('auth')->group(function(){
 
     Route::post("/",[PersonaController::class,"store"])->name("persona.store");
     Route::post("/{id}",[PersonaController::class,"update"])->name("persona.update");
-    
 });
 
 Route::prefix("usuarios")->middleware('auth')->group(function(){

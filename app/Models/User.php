@@ -6,6 +6,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
@@ -25,12 +26,15 @@ class User extends Authenticatable
         return $this->belongsTo(Persona::class,'idPersona','IdPersona');
     }
 
-    public function sesion(): HasOne{
-        return $this->HasOne(Sesion::class,"IdUsuario","IdUser");
+    public function sesion(): HasMany{
+        return $this->HasMany(Sesion::class,"IdUser","IdUsuario");
     }
 
-    public function getAuthPassword()
-    {
+    public function ultimaSesion(): HasMany{
+        return $this->HasMany(Sesion::class,"IdUser","IdUsuario")->orderByDesc('IdSesion');
+    }
+
+    public function getAuthPassword(){
         return $this->Password;
     }
 }
