@@ -25,7 +25,7 @@ Route::prefix("departamentos")->middleware('auth')->group(function(){
 });
 
 Route::prefix("personas")->middleware('auth')->group(function(){
-    Route::get("/",[PersonaController::class,"index"])->name("persona.index");
+    Route::get("/",[PersonaController::class,"index"])->name("admin.personas");
     Route::get("/create",[PersonaController::class,"create"])->name("persona.create");
     Route::get("/{id}",[PersonaController::class,"show"])->name("persona.show");   
     Route::get("/edit/{id}",[PersonaController::class,"edit"])->name("persona.edit"); 
@@ -35,7 +35,7 @@ Route::prefix("personas")->middleware('auth')->group(function(){
 });
 
 Route::prefix("usuarios")->middleware('auth')->group(function(){
-    Route::get("/",[UserController::class,"index"])->name("usuarios.index");
+    Route::get("/",[UserController::class,"index"])->name("admin.usuarios");
     Route::get("/create",[UserController::class,"crearNuevoUsuario"])->name("usuarios.crearNuevoUsuario");
 });
 

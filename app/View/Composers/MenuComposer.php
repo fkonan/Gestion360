@@ -9,7 +9,7 @@ class MenuComposer
 {
     public function compose(View $view): void
     {
-        $modulos = Modulo::with('hijos')->whereNull('Mod_Padre_Id')->get();
+        $modulos = Modulo::with('submodulos')->whereNull('Mod_Padre_Id')->get();
         $view->with('modulos', $modulos);
     }
 }
