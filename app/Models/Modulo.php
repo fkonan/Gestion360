@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Modulo extends Model
 {
@@ -19,5 +20,9 @@ class Modulo extends Model
 
     public function submodulos(): HasMany{
         return $this->hasMany(Modulo::class, 'Mod_Padre_Id');
+    }
+
+    public function padre(): belongsTo{
+        return $this->belongsTo(Modulo::class, 'Mod_Padre_Id');
     }
 }

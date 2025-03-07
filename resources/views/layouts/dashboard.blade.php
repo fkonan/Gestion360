@@ -13,14 +13,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
 
     <!--Vite -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-
-    <style>
-    .nav-sidebar .nav-link p {
-        white-space: nowrap;   
-        text-overflow: ellipsis; 
-    }
-    </style>
+    @vite(['resources/css/app.css', 'resources/js/app.js','resources/css/custom.css'])
 </head>
 
 <body class="sidebar-mini layout-fixed">
@@ -46,7 +39,7 @@
                 </div>
 
                 <!-- Menú de Navegación -->
-                @include('menu2')
+                @include('menu')
             </div>
         </aside>
 

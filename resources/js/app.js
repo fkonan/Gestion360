@@ -12,8 +12,3 @@ import 'jquery-validation';
 import { validarFormulario, getMunicipios } from './utils';
 window.validarFormulario = validarFormulario;
 window.getMunicipios = getMunicipios;
-
-
-$('.mySelect2').select2({
-    dropdownParent: $('.myModal')
-});

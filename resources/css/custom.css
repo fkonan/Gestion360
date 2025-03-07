@@ -1,0 +1,32 @@
+.nav-sidebar .nav-link p {
+    white-space: nowrap;   
+    text-overflow: ellipsis; 
+}
+.nav-sidebar .nav-link.active {
+    background-color: #005EB8 !important;  
+    color: white !important;    
+    border: 1px solid white;                                   
+    transition: all 0.3s;                     
+}
+.nav-sidebar .nav-link.active i{
+    color: white !important;                                     
+    transition: all 0.3s;                     
+}
+.nav-sidebar .nav-treeview .nav-link.active {
+    background-color:#cecbcb !important;   
+    color: #0E2146 !important;
+    font-weight: bold;
+}
+
+body:not(.sidebar-collapse) .nav-item .nav-treeview .nav-link {
+    padding-left: 20px;
+}
+
+body:not(.sidebar-collapse) .nav-item .nav-treeview .sangriaSegundoNivel{
+    padding-left: 30px;
+}
+
+
+
+
+

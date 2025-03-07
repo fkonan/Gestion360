@@ -1,53 +1,68 @@
 <nav class="mt-2">
     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
 
-        <li class="nav-item has-treeview">
-            <a style="background-color:#EAE9E9; color:#6c757d; font-size:16px;" href="#" class="nav-link">
-                <i class="nav-icon fas fa-cog" style="color: #0E2146;"></i>
-                <p><b>Configuración</b><i class="right fas fa-angle-left"></i></p>
-            </a>
-            <ul class="nav nav-treeview">
-                <li class="nav-item">
-                    <a style="color:#6c757d;" class="nav-link">
-                        <i class="nav-icon fas fa-desktop"></i>
-                        <p><b>Gestión Sistema</b></p>
-                    </a>
-                </li>
-            </ul>
-        </li>
+        <!-- Modulos principales -->
+        @foreach($modulos as $modulo)
+            @php
+            $isParentActive = request()->routeIs($modulo->ModRuta) || $modulo->submodulos->contains(function($submodulo) {
+                return request()->routeIs($submodulo->ModRuta) || $submodulo->submodulos->contains(function($submodulo_segundoNivel) {
+                    return request()->routeIs($submodulo_segundoNivel->ModRuta);
+                });
+            });
+            @endphp
 
-        <li class="nav-item has-treeview">
-            <a style="background-color:#EAE9E9; color:#6c757d; font-size:16px;" href="#" class="nav-link">
-                <i class="nav-icon fas fa-user-tie" style="color: #0E2146;"></i>
-                <p><b>Administración</b><i class="right fas fa-angle-left"></i></p>
-            </a>
-            <ul class="nav nav-treeview">
-                <li class="nav-item">
-                    <a style="color:#6c757d;" href="{{ route('persona.index') }}" class="nav-link">
-                        <i class="nav-icon fas fa-people-arrows"></i>
-                        <p><b>Personas</b></p>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a style="color:#6c757d;" href="{{ route('usuarios.index') }}" class="nav-link">
-                        <i class="nav-icon fas fa-user-tie"></i>
-                        <p><b>Usuarios</b></p>
-                    </a>
-                </li>
-            </ul>
-        </li>
+            <li class="nav-item has-treeview {{ $isParentActive ? 'menu-open' : '' }}">
+                <a  href="{{ $modulo->ModRuta ? route($modulo->ModRuta) : '#' }}" style="background-color:#EAE9E9;" class="nav-link text-secondary {{ $isParentActive ? 'active' : '' }}">
+                    <i class="nav-icon fas {{ $modulo->ModIcono  }}" style="color: #0E2146;"></i>
+                    <p><b>{{ Str::title($modulo->ModNom) }}</b></p>
+                    @if($modulo->submodulos->count())   
+                        <p><i class="right fas fa-angle-left"></i></p>
+                    @endif
+                </a>
 
-        <li class="nav-item">
-            <a style="background-color:#EAE9E9; color:#6c757d;" href="{{ route('formatos.index') }}" class="nav-link">
-                <i class="nav-icon fas fa-map" style="color: #0E2146;"></i>
-                <p><b>Procesos</b></p>
-            </a>
-        </li>
+                <!--Submodulos de primer nivel -->
+                @if($modulo->submodulos->count())
+                <ul class="nav nav-treeview">
+                    @foreach($modulo->submodulos as $submodulo)
+                    @php
+                    $isSubmoduloActive = request()->routeIs($submodulo->ModRuta) || $submodulo->submodulos->contains(function($submodulo_segundoNivel) {
+                        return request()->routeIs($submodulo_segundoNivel->ModRuta);
+                    });
+                    @endphp
+                    <li class="nav-item {{ $isSubmoduloActive ? 'menu-open' : '' }}">
+                        <a class="nav-link text-black {{ $isSubmoduloActive ? 'active' : '' }}" href="{{ $submodulo->ModRuta ? route($submodulo->ModRuta) : '#' }}">
+                            <i class="nav-icon fas {{ $submodulo->ModIcono }} " style="color: #0E2146;"></i>
+                            <p>{{ Str::title($submodulo->ModNom) }}</p>
+                            @if($submodulo->submodulos->count())   
+                                <p><i class="right fas fa-angle-left"></i></p>
+                            @endif
+                        </a>
+
+                        <!--Submodulos de segundo nivel -->
+                        @if($submodulo->submodulos->count())
+                        <ul class="nav nav-treeview">
+                            @foreach($submodulo->submodulos as $submodulo_segundoNivel)
+                            <li class="nav-item">
+                                <a class="nav-link text-black {{ $isSubmoduloActive ? 'active' : '' }} sangriaSegundoNivel" href="{{ $submodulo_segundoNivel->ModRuta ? route($submodulo_segundoNivel->ModRuta) : '#' }}">
+                                    <i class="nav-icon fas {{ $submodulo_segundoNivel->ModIcono }} " style="color: #0E2146;"></i>
+                                    <p>{{ Str::title($submodulo_segundoNivel->ModNom) }}</p>
+                                </a>
+                            </li>
+                            @endforeach
+                        </ul>
+                        @endif
+                    </li>
+                    @endforeach
+                </ul>
+                @endif
+            </li>
+        @endforeach
 
         <li class="nav-item has-treeview">
             <a style="background-color:#D0CCFA; color:#000000; font-size:16px;" href="#" class="nav-link">
                 <i class="nav-icon fas fa-cloud"></i>
-                <p><b>Sesión</b><i class="right fas fa-angle-left"></i></p>
+                <p><b>Sesion</b></p>
+                <p><i class="right fas fa-angle-left"></i></p>
             </a>
             <ul class="nav nav-treeview">
                 <li class="nav-item">
@@ -63,3 +78,5 @@
         </li>
     </ul>
 </nav>
+
+
