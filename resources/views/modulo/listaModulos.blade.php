@@ -35,14 +35,14 @@
             <tbody>
             @foreach($modulos as $modulo)
                 <tr>
-                   <th>{{ $modulo->ModNom}}</th>
+                   <th class="text-nowrap">{{ $modulo->ModNom}}</th>
                    <th>{{ $modulo->ModDesc}}</th>
                    <th>{{ $modulo->ModEstado}}</th>
                    <th>{{ $modulo->padre->ModNom ?? "PRINCIPAL" }}</th>
                    <th>{{ $modulo->ModFechReg}}</th>
                    <th>{{ $modulo->ModHorReg}}</th>
                    <td class="text-center" style="width: 80px;">
-                        <a class="btn btn-primary ">
+                        <a class="btn btn-primary"  href="{{ route('configuracion.sistema.modulos.edit', ['id' => $modulo->IdModulo]) }}">
                             <i class="nav-icon fas fa-edit"></i>
                         </a>
                     </td>

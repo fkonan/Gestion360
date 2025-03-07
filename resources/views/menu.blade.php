@@ -43,7 +43,8 @@
                         <ul class="nav nav-treeview">
                             @foreach($submodulo->submodulos as $submodulo_segundoNivel)
                             <li class="nav-item">
-                                <a class="nav-link text-black {{ $isSubmoduloActive ? 'active' : '' }} sangriaSegundoNivel" href="{{ $submodulo_segundoNivel->ModRuta ? route($submodulo_segundoNivel->ModRuta) : '#' }}">
+                                <a class="nav-link text-black {{ request()->routeIs($submodulo_segundoNivel->ModRuta) ? 'active' : '' }} sangriaSegundoNivel" 
+                                        href="{{ $submodulo_segundoNivel->ModRuta ? route($submodulo_segundoNivel->ModRuta) : '#' }}">
                                     <i class="nav-icon fas {{ $submodulo_segundoNivel->ModIcono }} " style="color: #0E2146;"></i>
                                     <p>{{ Str::title($submodulo_segundoNivel->ModNom) }}</p>
                                 </a>

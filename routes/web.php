@@ -61,6 +61,8 @@ Route::prefix("configuracion")->middleware('auth')->name("configuracion.")->grou
             Route::get("/",[ModuloController::class,"index"])->name("index");
             Route::get("/create",[ModuloController::class,"create"])->name("create");
             Route::post("/",[ModuloController::class,"store"])->name("store");
+            Route::get("/{id}",[ModuloController::class,"edit"])->name("edit");
+            Route::post("/{id}",[ModuloController::class,"update"])->name("update"); //cambiar a PUT
         });
        
     });

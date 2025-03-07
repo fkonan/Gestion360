@@ -19,7 +19,6 @@ class ModuloController extends Controller
     }
 
     public function store(Request $request){
-
         $validator = Validator::make($request->all(), [
             'ModNom' =>'required|string|max:50',
             'ModDesc' =>'nullable|string|max:300',
@@ -29,7 +28,6 @@ class ModuloController extends Controller
             'Mod_Padre_Id' =>'nullable|integer'
         ]);
 
-        //manejo de errores
         if ($validator->fails()) {
             return response()->json([
                 'errors' => $validator->errors()
@@ -49,6 +47,38 @@ class ModuloController extends Controller
 
         return response()->json([
             'title' => 'Modulo creado exitosamente',
+            'redirect' => route('configuracion.sistema.modulos.index'),
+            'type' => 'success', 
+        ]); 
+    }
+
+    public function edit($id){
+        $modulos = Modulo::all();
+        $moduloEdit = Modulo::findOrFail($id);  
+        return view('modulo.editarModulo', compact('modulos', 'moduloEdit'));
+    }
+
+    public function update(Request $request, $id){
+
+        $validator = Validator::make($request->all(), [
+            'ModNom' =>'required|string|max:50',
+            'ModDesc' =>'nullable|string|max:300',
+            'ModEstado' =>'required',
+            'ModRuta' =>'nullable|string|max:255',
+            'ModIcono' =>'nullable|string|max:255',
+            'Mod_Padre_Id' =>'nullable|integer'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $modulo = Modulo::findOrFail($id)->update($request->all());
+
+        return response()->json([
+            'title' => 'Modulo actualizado exitosamente',
             'redirect' => route('configuracion.sistema.modulos.index'),
             'type' => 'success', 
         ]); 

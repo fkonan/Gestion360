@@ -14,14 +14,12 @@
 }
 .nav-sidebar .nav-treeview .nav-link.active {
     background-color:#cecbcb !important;   
-    color: #0E2146 !important;
+    color: #0E2146 !important;    
     font-weight: bold;
 }
-
 body:not(.sidebar-collapse) .nav-item .nav-treeview .nav-link {
     padding-left: 20px;
 }
-
 body:not(.sidebar-collapse) .nav-item .nav-treeview .sangriaSegundoNivel{
     padding-left: 30px;
 }
