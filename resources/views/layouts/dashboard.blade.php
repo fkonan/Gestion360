@@ -16,26 +16,10 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
-        body {
-            height: 100vh;
-            overflow: hidden;
-        }
-        .content-wrapper {
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            background-color: #f4f6f9; 
-        }
-        .content {
-            flex: 1; 
-        }
-        .user-panel {
-            text-align: center;
-        }
-        .nav-treeview {
-            background-color: #f8f9fa; 
-        }
-        
+    .nav-sidebar .nav-link p {
+        white-space: nowrap;   
+        text-overflow: ellipsis; 
+    }
     </style>
 </head>
 

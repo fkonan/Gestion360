@@ -26,7 +26,8 @@
         <li class="nav-item has-treeview">
             <a style="background-color:#D0CCFA; color:#000000; font-size:16px;" href="#" class="nav-link">
                 <i class="nav-icon fas fa-cloud"></i>
-                <p><b>Sesión</b><i class="right fas fa-angle-left"></i></p>
+                <p><b>Sesion</b></p>
+                <p><i class="right fas fa-angle-left"></i></p>
             </a>
             <ul class="nav nav-treeview">
                 <li class="nav-item">
