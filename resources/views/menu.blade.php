@@ -3,6 +3,9 @@
 
         <!-- Modulos principales -->
         @foreach($modulos as $modulo)
+        
+            <!-- Modulos permisos -->
+            @if(!$modulo->ModPermiso || auth()->user()->hasPermissionTo($modulo->ModPermiso))
             @php
             $isParentActive = request()->routeIs($modulo->ModRuta) || $modulo->submodulos->contains(function($submodulo) {
                 return request()->routeIs($submodulo->ModRuta) || $submodulo->submodulos->contains(function($submodulo_segundoNivel) {
@@ -24,39 +27,48 @@
                 @if($modulo->submodulos->count())
                 <ul class="nav nav-treeview">
                     @foreach($modulo->submodulos as $submodulo)
-                    @php
-                    $isSubmoduloActive = request()->routeIs($submodulo->ModRuta) || $submodulo->submodulos->contains(function($submodulo_segundoNivel) {
-                        return request()->routeIs($submodulo_segundoNivel->ModRuta);
-                    });
-                    @endphp
-                    <li class="nav-item {{ $isSubmoduloActive ? 'menu-open' : '' }}">
-                        <a class="nav-link text-black {{ $isSubmoduloActive ? 'active' : '' }}" href="{{ $submodulo->ModRuta ? route($submodulo->ModRuta) : '#' }}">
-                            <i class="nav-icon fas {{ $submodulo->ModIcono }} " style="color: #0E2146;"></i>
-                            <p>{{ Str::title($submodulo->ModNom) }}</p>
-                            @if($submodulo->submodulos->count())   
-                                <p><i class="right fas fa-angle-left"></i></p>
-                            @endif
-                        </a>
 
-                        <!--Submodulos de segundo nivel -->
-                        @if($submodulo->submodulos->count())
-                        <ul class="nav nav-treeview">
-                            @foreach($submodulo->submodulos as $submodulo_segundoNivel)
-                            <li class="nav-item">
-                                <a class="nav-link text-black {{ request()->routeIs($submodulo_segundoNivel->ModRuta) ? 'active' : '' }} sangriaSegundoNivel" 
-                                        href="{{ $submodulo_segundoNivel->ModRuta ? route($submodulo_segundoNivel->ModRuta) : '#' }}">
-                                    <i class="nav-icon fas {{ $submodulo_segundoNivel->ModIcono }} " style="color: #0E2146;"></i>
-                                    <p>{{ Str::title($submodulo_segundoNivel->ModNom) }}</p>
-                                </a>
-                            </li>
-                            @endforeach
-                        </ul>
-                        @endif
-                    </li>
+                        <!-- Submodulos permisos -->
+                        <!--@if(! $submodulo->ModPermiso || auth()->user()->hasPermissionTo($submodulo->ModPermiso))  -->
+                        @php
+                        $isSubmoduloActive = request()->routeIs($submodulo->ModRuta) || $submodulo->submodulos->contains(function($submodulo_segundoNivel) {
+                            return request()->routeIs($submodulo_segundoNivel->ModRuta);
+                        });
+                        @endphp
+                        <li class="nav-item {{ $isSubmoduloActive ? 'menu-open' : '' }}">
+                            <a class="nav-link text-black {{ $isSubmoduloActive ? 'active' : '' }}" href="{{ $submodulo->ModRuta ? route($submodulo->ModRuta) : '#' }}">
+                                <i class="nav-icon fas {{ $submodulo->ModIcono }} " style="color: #0E2146;"></i>
+                                <p>{{ Str::title($submodulo->ModNom) }}</p>
+                                @if($submodulo->submodulos->count())   
+                                    <p><i class="right fas fa-angle-left"></i></p>
+                                @endif
+                            </a>
+
+                            <!--Submodulos de segundo nivel -->
+                            <!--@if($submodulo->submodulos->count()) -->
+                            <ul class="nav nav-treeview">
+                                @foreach($submodulo->submodulos as $submodulo_segundoNivel)
+
+                                    <!-- Submodulos permisos -->
+                                    @if(! $submodulo_segundoNivel->ModPermiso || auth()->user()->hasPermissionTo($submodulo_segundoNivel->ModPermiso)) 
+                                        <li class="nav-item">
+                                            <a class="nav-link text-black {{ request()->routeIs($submodulo_segundoNivel->ModRuta) ? 'active' : '' }} sangriaSegundoNivel" 
+                                                    href="{{ $submodulo_segundoNivel->ModRuta ? route($submodulo_segundoNivel->ModRuta) : '#' }}">
+                                                <i class="nav-icon fas {{ $submodulo_segundoNivel->ModIcono }} " style="color: #0E2146;"></i>
+                                                <p>{{ Str::title($submodulo_segundoNivel->ModNom) }}</p>
+                                            </a>
+                                        </li>
+                                    @endif
+                                @endforeach
+                            </ul>
+                            <!--@endif-->
+                        </li>
+                        <!--@endif-->
                     @endforeach
                 </ul>
                 @endif
             </li>
+            @endif
         @endforeach
 
         <li class="nav-item has-treeview">

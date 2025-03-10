@@ -154,7 +154,7 @@ $(document).ready(function () {
         
         submitHandler: function (form) {
             $.ajax({
-                url: "/personas", 
+                url: "/administracion/personas", 
                 type: "POST",
                 data: $(form).serialize(),
                 dataType: "json",

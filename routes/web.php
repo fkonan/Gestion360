@@ -22,37 +22,41 @@ Route::prefix("departamentos")->middleware('auth')->group(function(){
     Route::put("/{id}",[DepartamentoController::class,"update"])->name("departamentos.update");
 });
 
-Route::prefix("personas")->middleware('auth')->group(function(){
-    Route::get("/",[PersonaController::class,"index"])->name("admin.personas");
-    Route::get("/create",[PersonaController::class,"create"])->name("persona.create");
-    Route::get("/{id}",[PersonaController::class,"show"])->name("persona.show");   
-    Route::get("/edit/{id}",[PersonaController::class,"edit"])->name("persona.edit"); 
 
-    Route::post("/",[PersonaController::class,"store"])->name("persona.store");
-    Route::post("/{id}",[PersonaController::class,"update"])->name("persona.update");
-});
-
-Route::prefix("usuarios")->middleware('auth')->group(function(){
-    Route::get("/",[UserController::class,"index"])->name("admin.usuarios");
-    Route::get("/create",[UserController::class,"crearNuevoUsuario"])->name("usuarios.crearNuevoUsuario");
-});
-
-
-Route::prefix("formatos")->middleware('auth')->name("formatos.")->group(function(){
+Route::prefix("formatos")->middleware(['auth', 'permisos:acceso-gestion-documental'])->name("formatos.")->group(function(){
     Route::get("/",[FormatoController::class,"index"])->name("index");
     Route::get("/create",[FormatoController::class,"crearNuevoFormato"])->name("create");
     Route::post("/",[FormatoController::class,"guardarFormato"])->name("store");
     
-    Route::prefix("/{id}/versions")->middleware('auth')->name("versions.")->group(function(){
+    Route::prefix("/{id}/versions")->name("versions.")->group(function(){
         Route::get("/",[FormatoController::class,"versionesFormato"])->name("index");
         Route::get("/create",[FormatoController::class,"crearVersionFormato"])->name("create");
         Route::post("/",[FormatoController::class,"guardarVersionFormato"])->name("store");
     });
 });
 
+//Ruta Modelo administración
+Route::prefix("administracion")->middleware(['auth', 'permisos:acceso-administracion'])->group(function(){
+
+    Route::prefix("personas")->group(function(){
+        Route::get("/",[PersonaController::class,"index"])->name("admin.personas");
+        Route::get("/create",[PersonaController::class,"create"])->name("persona.create");
+        Route::get("/{id}",[PersonaController::class,"show"])->name("persona.show");   
+        Route::get("/edit/{id}",[PersonaController::class,"edit"])->name("persona.edit"); 
+        Route::post("/",[PersonaController::class,"store"])->name("persona.store");
+        Route::post("/{id}",[PersonaController::class,"update"])->name("persona.update");
+    });
+
+    Route::prefix("usuarios")->group(function(){
+        Route::get("/",[UserController::class,"index"])->name("admin.usuarios");
+        Route::get("/create",[UserController::class,"crearNuevoUsuario"])->name("usuarios.crearNuevoUsuario");
+    });
+    
+});
+
 
 //Rutas Modulo Configuracion
-Route::prefix("configuracion")->middleware('auth')->group(function(){
+Route::prefix("configuracion")->middleware(['auth', 'permisos:acceso-configuracion'])->group(function(){
 
     Route::prefix("sistema")->group(function(){
 

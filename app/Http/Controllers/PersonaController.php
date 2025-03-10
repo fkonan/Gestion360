@@ -87,7 +87,7 @@ class PersonaController extends Controller
 
             return response()->json([
                 'message' => 'Persona creada exitosamente',
-                'redirect' => route('persona.index'),
+                'redirect' => route('admin.personas'),
                 'type' => 'success', 
                 'title' => 'Persona creada exitosamente'
             ]); 

@@ -79,7 +79,7 @@ class ModuloController extends Controller
 
         return response()->json([
             'title' => 'Modulo actualizado exitosamente',
-            'redirect' => route('configuracion.sistema.modulos.index'),
+            'redirect' => route('modulos.index'),
             'type' => 'success', 
         ]); 
     }
