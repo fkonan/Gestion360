@@ -9,7 +9,7 @@
         <a class="btn btn-warning fw-bold m-2" onclick="window.history.back()">Volver</a>
     </div>
 
-    <form id="formFormato" action="{{  route('configuracion.sistema.modulos.update', ['id' => $moduloEdit->IdModulo])  }}" method="POST" enctype="multipart/form-data">
+    <form id="formFormato" action="{{  route('modulos.update', ['id' => $moduloEdit->IdModulo])  }}" method="POST" enctype="multipart/form-data">
         @csrf
         <div class="row g-3 p-4">       
             <div class="col-md-3">

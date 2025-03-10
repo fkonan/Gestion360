@@ -75,7 +75,7 @@ class ModuloController extends Controller
             ], 422);
         }
 
-        $modulo = Modulo::findOrFail($id)->update($request->all());
+        Modulo::findOrFail($id)->update($request->all());
 
         return response()->json([
             'title' => 'Modulo actualizado exitosamente',

@@ -9,7 +9,7 @@
         <a class="btn btn-warning fw-bold m-2" onclick="window.history.back()">Volver</a>
     </div>
 
-    <form id="formFormato" action="{{ route('configuracion.sistema.modulos.store') }}" method="POST" enctype="multipart/form-data">
+    <form id="formFormato" action="{{ route('modulos.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
         <div class="row g-3 p-4">       
             <div class="col-md-3">
@@ -21,6 +21,7 @@
             <div class="col-md-2">
                 <label for="Mod_Padre_Id" class="form-label">Modulo Padre</label>
                 <select class="form-select" id="Mod_Padre_Id" name="Mod_Padre_Id" placeholder="Seleccione si es parte de otro modulo">
+                    <option value="">Modulo Principal</option>
                     @foreach($modulos as $modulo)
                         <option value="{{ $modulo->IdModulo }}">{{ $modulo->ModNom }}</option>
                     @endforeach

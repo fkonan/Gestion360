@@ -7,8 +7,7 @@ use App\Http\Controllers\PersonaController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
-
-Route::get('/', function () {
+Route::get('/home', function () {
     return view('home');
 })->middleware('auth')->name('home');
 
@@ -53,16 +52,16 @@ Route::prefix("formatos")->middleware('auth')->name("formatos.")->group(function
 
 
 //Rutas Modulo Configuracion
-Route::prefix("configuracion")->middleware('auth')->name("configuracion.")->group(function(){
+Route::prefix("configuracion")->middleware('auth')->group(function(){
 
-    Route::prefix("sistema")->middleware('auth')->name("sistema.")->group(function(){
+    Route::prefix("sistema")->group(function(){
 
-        Route::prefix("modulos")->middleware('auth')->name("modulos.")->group(function(){
+        Route::prefix("modulos")->name("modulos.")->group(function(){
             Route::get("/",[ModuloController::class,"index"])->name("index");
             Route::get("/create",[ModuloController::class,"create"])->name("create");
             Route::post("/",[ModuloController::class,"store"])->name("store");
             Route::get("/{id}",[ModuloController::class,"edit"])->name("edit");
-            Route::post("/{id}",[ModuloController::class,"update"])->name("update"); //cambiar a PUT
+            Route::post("/{id}",[ModuloController::class,"update"])->name("update");
         });
        
     });

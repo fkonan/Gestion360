@@ -10,7 +10,7 @@
         <a class="btn btn-warning fw-bold m-2" onclick="window.history.back()" >Volver</a>
     </div>
 
-    <a class="btn btn-warning fw-bold ms-4 mt-4" style="position: absolute; top:150px" href="{{ route('configuracion.sistema.modulos.create') }}">Crear Modulo</a>
+    <a class="btn btn-warning fw-bold ms-4 mt-4" style="position: absolute; top:150px" href="{{ route('modulos.create') }}">Crear Modulo</a>
 
     <div class="row p-4">
         <table
@@ -42,7 +42,7 @@
                    <th>{{ $modulo->ModFechReg}}</th>
                    <th>{{ $modulo->ModHorReg}}</th>
                    <td class="text-center" style="width: 80px;">
-                        <a class="btn btn-primary"  href="{{ route('configuracion.sistema.modulos.edit', ['id' => $modulo->IdModulo]) }}">
+                        <a class="btn btn-primary"  href="{{ route('modulos.edit', ['id' => $modulo->IdModulo]) }}">
                             <i class="nav-icon fas fa-edit"></i>
                         </a>
                     </td>
