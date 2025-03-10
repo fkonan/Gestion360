@@ -24,6 +24,7 @@ class ModuloController extends Controller
             'ModDesc' =>'nullable|string|max:300',
             'ModEstado' =>'required',
             'ModRuta' =>'nullable|string|max:255',
+            'ModPermiso' =>'nullable|string|max:255',
             'ModIcono' =>'nullable|string|max:255',
             'Mod_Padre_Id' =>'nullable|integer'
         ]);
@@ -41,6 +42,7 @@ class ModuloController extends Controller
         $modulo->ModRuta = $request->ModRuta;
         $modulo->ModIcono = $request->ModIcono;
         $modulo->Mod_Padre_Id = $request->Mod_Padre_Id;
+        $modulo->ModPermiso = $request->ModPermiso;
         $modulo->ModFechReg = now();
         $modulo->ModHorReg = now();
         $modulo->save();
@@ -64,6 +66,7 @@ class ModuloController extends Controller
             'ModNom' =>'required|string|max:50',
             'ModDesc' =>'nullable|string|max:300',
             'ModEstado' =>'required',
+            'ModPermiso' =>'nullable|string|max:255',
             'ModRuta' =>'nullable|string|max:255',
             'ModIcono' =>'nullable|string|max:255',
             'Mod_Padre_Id' =>'nullable|integer'

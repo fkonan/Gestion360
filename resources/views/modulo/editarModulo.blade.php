@@ -12,7 +12,7 @@
     <form id="formFormato" action="{{  route('modulos.update', ['id' => $moduloEdit->IdModulo])  }}" method="POST" enctype="multipart/form-data">
         @csrf
         <div class="row g-3 p-4">       
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label for="ModNom" class="form-label">Nombre</label>
                 <input type="text" class="form-control" id="ModNom" name="ModNom" maxlength="100" value="{{ $moduloEdit->ModNom }}" required>
                 <span class="error text-danger fw-bold" id="error-ModNom"></span>
@@ -40,10 +40,16 @@
                 <span class="error text-danger fw-bold" id="error-ModEstado"></span>
             </div>   
 
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label for="ModRuta" class="form-label">Ruta</label>
                 <input type="text" class="form-control" id="ModRuta" name="ModRuta" value="{{ $moduloEdit->ModRuta }}">
                 <span class="error text-danger fw-bold" id="error-ModRuta"></span>
+            </div>
+
+            <div class="col-md-2">
+                <label for="ModPermiso" class="form-label">Permiso</label>
+                <input type="text" class="form-control" id="ModPermiso" name="ModPermiso" value="{{ $moduloEdit->ModPermiso }}">
+                <span class="error text-danger fw-bold" id="error-ModPermiso"></span>
             </div>
 
             <div class="col-md-2">

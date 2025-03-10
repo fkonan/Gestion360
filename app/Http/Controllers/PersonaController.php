@@ -10,18 +10,12 @@ use Illuminate\Support\Facades\Validator;
 
 class PersonaController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         $personas = Persona::all();
         return view("persona.listaPersonas",compact("personas"));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         $departamentos = Departamento::all();
@@ -29,9 +23,6 @@ class PersonaController extends Controller
         return view("persona.crearPersona",compact("departamentos","tiposDocumento"));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request){
     try{       
         //reglas de validación
@@ -96,19 +87,12 @@ class PersonaController extends Controller
         } 
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show($id)
     {
         $personas = Persona::where("IdPersona",$id)->get();
         return view("persona.listaPersonas",compact("personas"));
     }
 
-    
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit($id)
     {
         $persona = Persona::findOrFail($id);
@@ -118,9 +102,6 @@ class PersonaController extends Controller
         return view("persona.editarPersona",compact("persona","tiposDocumento","departamentos"));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, $id)
     {   
         try{
@@ -142,17 +123,10 @@ class PersonaController extends Controller
                 ], 422);
             }
 
-            Persona::findOrFail($id)->update($request->all());
-
-            /*
-            return response()->json([
-                'message' => 'Persona modificada exitosamente',
-                'redirect' => route('persona.index')
-            ]);*/
+            Persona::findOrFail($id)->update($request->all());     
 
             return response()->json([
-                'message' => 'Persona modificada exitosamente',
-                'redirect' => route('persona.index'),
+                'redirect' => route('admin.personas'),
                 'type' => 'success', 
                 'title' => 'Persona modificada exitosamente'
             ]); 

@@ -35,7 +35,7 @@ Route::prefix("formatos")->middleware(['auth', 'permisos:acceso-gestion-document
     });
 });
 
-//Ruta Modelo administración
+//Ruta Modulo administración
 Route::prefix("administracion")->middleware(['auth', 'permisos:acceso-administracion'])->group(function(){
 
     Route::prefix("personas")->group(function(){
