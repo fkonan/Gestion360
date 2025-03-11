@@ -59,6 +59,11 @@ class ModuloController extends Controller
         $modulos = Modulo::all();
         $moduloEdit = Modulo::findOrFail($id);  
         $permisos = Permission::all();
+
+        if (request()->ajax()) {
+            return view('modulo.editarModulo', compact('modulos', 'moduloEdit', 'permisos'))->render();
+        }
+
         return view('modulo.editarModulo', compact('modulos', 'moduloEdit', 'permisos'));
     }
 

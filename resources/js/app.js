@@ -1,14 +1,15 @@
-import $ from 'jquery';
+//import $ from 'jquery';
 
-window.$ = window.jQuery = $; 
+//window.$ = window.jQuery = $; 
 
 import 'bootstrap';
 import 'bootstrap-table/dist/bootstrap-table.min.js';
 import 'bootstrap-table/dist/bootstrap-table.min.css';
 
 // jQuery Validation
-import 'jquery-validation';
+//import 'jquery-validation';
 
-import { validarFormulario, getMunicipios } from './utils';
+import { validarFormulario, getMunicipios, cargarModal } from './utils';
 window.validarFormulario = validarFormulario;
 window.getMunicipios = getMunicipios;
+window.cargarModal = cargarModal;

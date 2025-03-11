@@ -104,3 +104,13 @@ actualizarReloj();
 
 
 
+//Carga un modal con el contenido de una URL y valida el formulario al abrirlo
+export function cargarModal(url, modalId, formularioId = null) {
+    $.get(url, function(response) {
+        $(`#${modalId} #modalContent`).html(response); 
+        $(`#${modalId}`).modal("show"); 
+        validarFormulario(formularioId);
+    }).fail(function() {
+        alert("Error al cargar el contenido.");
+    });
+}

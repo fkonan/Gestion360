@@ -45,17 +45,21 @@
                    <th>{{ $modulo->padre->ModNom ?? "PRINCIPAL" }}</th>
                    <th>{{ $modulo->ModFechReg}}</th>
                    <th>{{ $modulo->ModHorReg}}</th>
-                   @if(auth()->user()->can('editar-gestion-modulos'))
-                    <th class="text-center" style="width: 80px;">
-                        <a class="btn btn-primary"  href="{{ route('modulos.edit', ['id' => $modulo->IdModulo]) }}">
-                            <i class="nav-icon fas fa-edit"></i>
-                        </a>
-                    </th>
+                    @if(auth()->user()->can('editar-gestion-modulos'))
+                        <th class="text-center" style="width: 80px;">
+                            <a class="btn btn-primary" onclick="cargarModal(`{{ route('modulos.edit', ['id' => $modulo->IdModulo]) }}`, 'editModal', '#formFormato')">
+                                <i class="nav-icon fas fa-edit"></i>
+                            </a>
+                        </th>
                     @endif
                 </tr>
             @endforeach
             </tbody>
         </table>
     </div>
+
+    <!-- modales -->
+    <x-modal id="editModal" title="Editar Módulo" />
+
 </div>
 @endsection
