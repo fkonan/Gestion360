@@ -40,4 +40,25 @@ class User extends Authenticatable
     public function getAuthPassword(){
         return $this->Password;
     }
+
+    public function can($ability, $arguments = []){
+    if ($this->hasRole('Super Admin')) {
+        return true;
+    }
+    return $this->hasPermissionTo($ability);
+    }
+
+    public function canAny($abilities, $arguments = []){
+        if ($this->hasRole('Super Admin')) {
+            return true;
+        }
+
+        foreach ($abilities as $ability) {
+            if ($this->hasAnyPermission($ability)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

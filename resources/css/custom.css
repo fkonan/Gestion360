@@ -2,10 +2,14 @@
     white-space: nowrap;   
     text-overflow: ellipsis; 
 }
+
+.nav-sidebar .nav-link:hover{
+    background-color: #D6D6D6 !important;  
+}
+
 .nav-sidebar .nav-link.active {
     background-color: #005EB8 !important;  
-    color: white !important;    
-    border: 1px solid white;                                   
+    color: white !important;                                
     transition: all 0.3s;                     
 }
 .nav-sidebar .nav-link.active i{

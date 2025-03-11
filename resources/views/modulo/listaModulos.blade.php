@@ -10,7 +10,9 @@
         <a class="btn btn-warning fw-bold m-2" onclick="window.history.back()" >Volver</a>
     </div>
 
+    @if(auth()->user()->can('crear-gestion-modulos'))
     <a class="btn btn-warning fw-bold ms-4 mt-4" style="position: absolute; top:150px" href="{{ route('modulos.create') }}">Crear Modulo</a>
+    @endif
 
     <div class="row p-4">
         <table
@@ -29,7 +31,9 @@
                     <th>Modulo Padre</th>    
                     <th>Fecha Registro</th>
                     <th>Hora Registro</th>
-                    <th>Opciones</th>
+                    @if(auth()->user()->can('editar-gestion-modulos'))
+                        <th>Opciones</th>
+                    @endif
                 </tr>
             </thead>
             <tbody>
@@ -41,11 +45,13 @@
                    <th>{{ $modulo->padre->ModNom ?? "PRINCIPAL" }}</th>
                    <th>{{ $modulo->ModFechReg}}</th>
                    <th>{{ $modulo->ModHorReg}}</th>
-                   <td class="text-center" style="width: 80px;">
+                   @if(auth()->user()->can('editar-gestion-modulos'))
+                    <th class="text-center" style="width: 80px;">
                         <a class="btn btn-primary"  href="{{ route('modulos.edit', ['id' => $modulo->IdModulo]) }}">
                             <i class="nav-icon fas fa-edit"></i>
                         </a>
-                    </td>
+                    </th>
+                    @endif
                 </tr>
             @endforeach
             </tbody>

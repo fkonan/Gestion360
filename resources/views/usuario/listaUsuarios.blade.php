@@ -27,7 +27,8 @@
                     <th>Nombre Completo</th>
                     <th>Fecha registro</th>
                     <th>Hora registro</th>
-                    <th>Estado</th>    
+                    <th>Estado</th>   
+                    <th>Permisos</th> 
                     <th>Opciones</th>
                 </tr>
             </thead>
@@ -39,6 +40,11 @@
                     <td>{{ $usuario?->UsuFecReg }}</td>
                     <td>{{ $usuario?->UsuHorReg }}</td>
                     <td>{{ $usuario?->UsuarioEstado }}</td>
+                    <td class="text-center" style="width: 100px;">
+                        <a class="btn btn-secondary p-0 px-2">
+                            <i class="nav-icon fas fa-unlock-alt"></i>
+                        </a>
+                    </td>
                     <td class="text-center" style="width: 100px;">
                         <a class="btn btn-primary p-0 px-2">
                             <i class="nav-icon fas fa-edit"></i>

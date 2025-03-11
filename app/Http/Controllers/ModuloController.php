@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Modulo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Spatie\Permission\Models\Permission;
 
 class ModuloController extends Controller
 {
@@ -49,7 +50,7 @@ class ModuloController extends Controller
 
         return response()->json([
             'title' => 'Modulo creado exitosamente',
-            'redirect' => route('configuracion.sistema.modulos.index'),
+            'redirect' => route('modulos.index'),
             'type' => 'success', 
         ]); 
     }
@@ -57,7 +58,8 @@ class ModuloController extends Controller
     public function edit($id){
         $modulos = Modulo::all();
         $moduloEdit = Modulo::findOrFail($id);  
-        return view('modulo.editarModulo', compact('modulos', 'moduloEdit'));
+        $permisos = Permission::all();
+        return view('modulo.editarModulo', compact('modulos', 'moduloEdit', 'permisos'));
     }
 
     public function update(Request $request, $id){

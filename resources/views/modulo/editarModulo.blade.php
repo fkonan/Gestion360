@@ -48,7 +48,12 @@
 
             <div class="col-md-2">
                 <label for="ModPermiso" class="form-label">Permiso</label>
-                <input type="text" class="form-control" id="ModPermiso" name="ModPermiso" value="{{ $moduloEdit->ModPermiso }}">
+                <select class="form-select" id="ModPermiso" name="ModPermiso">
+                    <option value="">Sin permiso</option>
+                    @foreach ($permisos as $permiso)
+                        <option value="{{ $permiso->name }}" @selected($permiso->name == $moduloEdit->ModPermiso)>{{ $permiso->name }}</option>
+                    @endforeach
+                </select>
                 <span class="error text-danger fw-bold" id="error-ModPermiso"></span>
             </div>
 
