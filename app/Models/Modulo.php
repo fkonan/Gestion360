@@ -6,8 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+
 class Modulo extends Model
 {
+
     protected $table = "modulos";
     protected $primaryKey = "IdModulo";
     protected $fillable = [
@@ -24,5 +26,11 @@ class Modulo extends Model
 
     public function padre(): belongsTo{
         return $this->belongsTo(Modulo::class, 'Mod_Padre_Id');
+    }
+
+    public function getNombreFormateadoAttribute() {
+        $nombreFormateado = mb_convert_case(mb_strtolower($this->ModNom, 'UTF-8'), MB_CASE_TITLE, "UTF-8");
+        $nombreFormateado = str_replace('Rr-Hh', 'RR-HH', $nombreFormateado);
+        return $nombreFormateado;
     }
 }

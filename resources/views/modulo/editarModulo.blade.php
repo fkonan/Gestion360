@@ -59,7 +59,7 @@
 
         <div class="row gx-3 px-4">
             <div class="mb-3">
-                <label for="comentario" class="form-label">Descripción</label>
+                <label for="ModDesc" class="form-label">Descripción</label>
                 <textarea class="form-control" id="ModDesc" name="ModDesc" maxlength="300" rows="5">{{ $moduloEdit->ModDesc }}</textarea>
                 <div class="form-text">Máximo 300 caracteres.</div>
                 <!--<div id="contador" class="text-end text-muted" style="font-size: 0.875rem;">0/300</div>-->
@@ -69,6 +69,7 @@
 
         <div class="text-start ms-4 mb-4">
             <button type="submit" class="btn btn-primary">Guardar</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
         </div>
     </form>
 </div>

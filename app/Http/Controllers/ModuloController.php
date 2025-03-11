@@ -16,7 +16,13 @@ class ModuloController extends Controller
 
     public function create(){
         $modulos = Modulo::all();  
-        return view('modulo.crearModulo', compact('modulos'));
+
+        if (request()->ajax()) {
+            return view('modulo.crearModulo', compact('modulos'))->render();
+        }else{
+            return view('modulo.listaModulos',compact('modulos'));
+        }
+        //return view('modulo.crearModulo', compact('modulos'));
     }
 
     public function store(Request $request){
@@ -62,9 +68,11 @@ class ModuloController extends Controller
 
         if (request()->ajax()) {
             return view('modulo.editarModulo', compact('modulos', 'moduloEdit', 'permisos'))->render();
+        }else{
+            return view('modulo.listaModulos', compact('modulos'));
         }
 
-        return view('modulo.editarModulo', compact('modulos', 'moduloEdit', 'permisos'));
+        //return view('modulo.editarModulo', compact('modulos', 'moduloEdit', 'permisos'));
     }
 
     public function update(Request $request, $id){

@@ -11,7 +11,11 @@
     </div>
 
     @if(auth()->user()->can('crear-gestion-modulos'))
-    <a class="btn btn-warning fw-bold ms-4 mt-4" style="position: absolute; top:150px" href="{{ route('modulos.create') }}">Crear Modulo</a>
+        <a class="btn btn-warning fw-bold ms-4 mt-4" 
+            style="position: absolute; top:150px" 
+            onclick="cargarModal(`{{ route('modulos.create') }}`, 'crearModuloModal', '#formFormato')">
+                Crear Modulo
+        </a>
     @endif
 
     <div class="row p-4">
@@ -40,14 +44,14 @@
             @foreach($modulos as $modulo)
                 <tr>
                    <th class="text-nowrap">{{ $modulo->ModNom}}</th>
-                   <th>{{ $modulo->ModDesc}}</th>
+                   <th>{{ ucfirst(mb_strtolower($modulo->ModDesc)) }}</th>
                    <th>{{ $modulo->ModEstado}}</th>
                    <th>{{ $modulo->padre->ModNom ?? "PRINCIPAL" }}</th>
                    <th>{{ $modulo->ModFechReg}}</th>
                    <th>{{ $modulo->ModHorReg}}</th>
                     @if(auth()->user()->can('editar-gestion-modulos'))
                         <th class="text-center" style="width: 80px;">
-                            <a class="btn btn-primary" onclick="cargarModal(`{{ route('modulos.edit', ['id' => $modulo->IdModulo]) }}`, 'editModal', '#formFormato')">
+                            <a class="btn btn-primary" onclick="cargarModal(`{{ route('modulos.edit', ['id' => $modulo->IdModulo]) }}`, 'editModuloModal', '#formFormato')">
                                 <i class="nav-icon fas fa-edit"></i>
                             </a>
                         </th>
@@ -59,7 +63,8 @@
     </div>
 
     <!-- modales -->
-    <x-modal id="editModal" title="Editar Módulo" />
+    <x-modal id="editModuloModal" title="Editar Módulo" />
+    <x-modal id="crearModuloModal" title="Crear Módulo" />
 
 </div>
 @endsection

@@ -1,5 +1,6 @@
-<div class="modal fade" id="{{ $id }}" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+<!-- Modal estructura -->
+<div class="modal fade" id="{{ $id }}" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header bg-dark">
                 <h5 class="modal-title">{{ $title }}</h5>
