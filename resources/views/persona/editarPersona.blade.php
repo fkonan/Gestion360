@@ -45,33 +45,43 @@
                     </select>
                     <span class="error text-danger fw-bold" id="error-PerGenero"></span>
                 </div>
+
                 <div class="col-md-6 mb-3">
-                    <label for="PerFecNac" class="form-label">Fecha de Nacimiento</label>
-                    <input type="date" class="form-control" id="PerFecNac" name="PerFecNac" value="{{ $persona->PerFecNac }}" required>
-                    <span class="error text-danger fw-bold" id="error-PerFecNac"></span>
+                    <label for="PerLugNac" class="form-label">Lugar nacimiento</label>
+                    <select class="form-select select2" id="PerLugNac" name="PerLugNac" required>
+                        <option value="">Seleccione un lugar</option>
+                        @foreach($departamentos as $departamento)
+                            <optgroup label="{{ $departamento->DepNom }}">
+                            @foreach($departamento->municipios as $municipio)
+                                <option value="{{ $municipio->IdMunicipio }}"> {{ $municipio->MunNomMin }}
+                            @endforeach
+                            </optgroup>
+                        @endforeach
+                    </select>
+                    <span class="error text-danger fw-bold" id="error-PerLugNac"></span>
                 </div>
             </div>
 
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label for="PerDepNac" class="form-label">Departamento nacimiento</label>
-                    <select class="form-select" id="PerDepNac" name="PerDepNac" onchange="getMunicipios(this,`#PerLugNac`,'/departamentos/municipios/')" required>
-                        <option value="">Seleccione un departamento</option>
-                        @foreach($departamentos as $departamento)
-                            <option value="{{ $departamento->IdDepartamento }}" @selected($persona->municipioNac->departamento->IdDepartamento 
-                                === $departamento->IdDepartamento)>{{ $departamento->DepNomMin }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <span class="error text-danger fw-bold" id="error-PerDepNac"></span>
+                    <label for="PerFecNac" class="form-label">Fecha de Nacimiento</label>
+                    <input type="date" class="form-control" id="PerFecNac" name="PerFecNac" value="{{ $persona->PerFecNac }}" required>
+                    <span class="error text-danger fw-bold" id="error-PerFecNac"></span>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label for="PerLugNac" class="form-label">Municipio nacimiento</label>
-                    <select class="form-select" id="PerLugNac" name="PerLugNac" required>
-                        <option value="">Seleccione un municipio</option>
-                            <option value="{{ $persona->municipioNac->IdMunicipio }}" selected>{{ $persona->municipioNac->MunNomMin }}</option>
-                    </select>
-                    <span class="error text-danger fw-bold" id="error-PerLugNac"></span>
+
+                 <div class="col-md-6 mb-3">
+                    <label for="PerLugExp" class="form-label">Lugar expedición documento</label>
+                    <select class="form-select select2" id="PerLugExp" name="PerLugExp" required>
+                        <option value="">Seleccione un lugar</option>
+                            @foreach($departamentos as $departamento)
+                                <optgroup label="{{ $departamento->DepNom }}">
+                                @foreach($departamento->municipios as $municipio)
+                                    <option value="{{ $municipio->IdMunicipio }}"> {{ $municipio->MunNomMin }}
+                                @endforeach
+                                </optgroup>
+                            @endforeach
+                        </select>
+                    <span class="error text-danger fw-bold" id="error-PerLugExp"></span>
                 </div>
             </div>
 
@@ -87,28 +97,7 @@
                     <span class="error text-danger fw-bold" id="error-PerFecExp"></span>
                 </div>
             </div>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="PerDepExp" class="form-label">Departamento expedición documento</label>
-                    <select class="form-select" id="PerDepExp" name="PerDepExp" onchange="getMunicipios(this,`#PerLugExp`,'/departamentos/municipios/')" required>
-                        <option value="">Seleccione un departamento</option>
-                        @foreach($departamentos as $departamento)
-                            <option value="{{ $departamento->IdDepartamento }}" @selected($persona->minicipioExp->departamento->IdDepartamento === $departamento->IdDepartamento)>
-                                {{ $departamento->DepNomMin }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <span class="error text-danger fw-bold" id="error-PerDepExp"></span>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="PerLugExp" class="form-label">Municipio de expedición documento</label>
-                    <select class="form-select" id="PerLugExp" name="PerLugExp" required>
-                        <option value="">Seleccione un municipio</option>
-                            <option value="{{ $persona->minicipioExp->IdMunicipio }}" selected>{{ $persona->minicipioExp->MunNomMin }}</option>
-                    </select>
-                    <span class="error text-danger fw-bold" id="error-PerLugExp"></span>
-                </div>
-            </div>
+            
             
             <div class="row">
                 <div class="col-md-4 mb-4">

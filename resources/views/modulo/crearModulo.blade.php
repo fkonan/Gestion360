@@ -11,10 +11,10 @@
             </div>
             <div class="col-md-4">
                 <label for="Mod_Padre_Id" class="form-label">Modulo Padre</label>
-                <select class="form-select" id="Mod_Padre_Id" name="Mod_Padre_Id" placeholder="Seleccione si es parte de otro modulo">
-                    <option value="">Modulo Principal</option>
+                <select class="form-select select2" id="Mod_Padre_Id" name="Mod_Padre_Id" placeholder="Seleccione si es parte de otro modulo">
+                    <option value="">ES PRINCIPAL</option>
                     @foreach($modulos as $modulo)
-                        <option value="{{ $modulo->IdModulo }}">{{ $modulo->ModNom }}</option>
+                        <option value="{{ $modulo->IdModulo }}">{{ strtoupper($modulo->ModNom) }}</option>
                     @endforeach
                 </select>
                 <span class="error text-danger fw-bold" id="error-Mod_Padre_Id"></span>

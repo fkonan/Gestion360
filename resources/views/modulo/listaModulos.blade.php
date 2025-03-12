@@ -46,7 +46,7 @@
                    <th class="text-nowrap">{{ $modulo->ModNom}}</th>
                    <th>{{ ucfirst(mb_strtolower($modulo->ModDesc)) }}</th>
                    <th>{{ $modulo->ModEstado}}</th>
-                   <th>{{ $modulo->padre->ModNom ?? "PRINCIPAL" }}</th>
+                   <th>{{ $modulo->padre->ModNom ?? "ES PRINCIPAL" }}</th>
                    <th>{{ $modulo->ModFechReg}}</th>
                    <th>{{ $modulo->ModHorReg}}</th>
                     @if(auth()->user()->can('editar-gestion-modulos'))
@@ -63,8 +63,8 @@
     </div>
 
     <!-- modales -->
-    <x-modal id="editModuloModal" title="Editar Módulo" />
-    <x-modal id="crearModuloModal" title="Crear Módulo" />
+    <x-modal id="editModuloModal" titulo="Editar Módulo" size="xl"/>
+    <x-modal id="crearModuloModal" titulo="Crear Módulo" size="xl"/>
 
 </div>
 @endsection

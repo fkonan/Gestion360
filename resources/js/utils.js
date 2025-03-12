@@ -53,27 +53,6 @@ export function validarFormulario(form, TYPE="POST") {
     });
 }
 
-//Obtiene los municipios por departamento
-export function getMunicipios(depSelect, muniSelect, RUTA){
-    let departamento_id = $(depSelect).val();
-    let municipioSelect = $(muniSelect);
-
-    municipioSelect.empty().append('<option value="">Seleccione un municipio</option>');
-
-    if (departamento_id) {
-        $.ajax({
-            url: RUTA + departamento_id,
-            type: 'GET',
-            dataType: 'json',
-            success: function (data) {              
-                $.each(data, function (key, municipio) {
-                    municipioSelect.append('<option value="' + municipio.IdMunicipio + '" >' + municipio.MunNomMin + '</option>');
-                });
-            }
-        });
-    }
-}
-
 export function actualizarReloj() {
     const now = new Date();
     let horas = now.getHours();
@@ -104,13 +83,34 @@ actualizarReloj();
 
 
 
-//Carga un modal con el contenido de una URL y valida el formulario al abrirlo
+//Carga un modal con el contenido de una URL y carga funciones requerias
 export function cargarModal(url, modalId, formularioId = null) {
-    $.get(url, function(response) {
-        $(`#${modalId} #modalContent`).html(response); 
-        $(`#${modalId}`).modal("show"); 
-        validarFormulario(formularioId);
-    }).fail(function() {
+$.get(url)
+    .done(function(response) {
+        let $modal = $(`#${modalId}`);
+        let $modalContent = $modal.find("#modalContent");
+
+        if ($modalContent.length) {
+            $modalContent.html(response);
+            $modal.modal("show");
+
+            if (formularioId) {
+                validarFormulario(formularioId);
+            }
+
+            if ($modal.find('.select2').length) {
+                $('.select2').select2({
+                    dropdownParent: $modal,
+                    width: '100%'
+                });
+            }
+        } else {
+            console.error("No se encontró el contenedor #modalContent en el modal.");
+        }
+    })
+    .fail(function() {
         alert("Error al cargar el contenido.");
     });
 }
+
+

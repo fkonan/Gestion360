@@ -6,7 +6,7 @@
         <div class="p-4">
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label for="idPersona" class="form-label">Persona Nombre</label>
+                    <label for="idPersona" class="form-label">Nombre Persona</label>
                     <input class="form-control" id="idPersona" name="idPersona" value="{{ $usuario->persona->PerNombres }} {{ $usuario->persona->PerApellidos }}" disabled required>
                     <span class="error text-danger fw-bold" id="error-idPersona"></span>
                 </div>
@@ -39,7 +39,7 @@
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-primary">Actualizar</button>
+            <button type="submit" class="btn btn-primary">Guardar</button>
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
         </div>
     </form>

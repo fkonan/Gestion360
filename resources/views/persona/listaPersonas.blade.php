@@ -59,8 +59,8 @@
     </div>
 
     <!-- modales -->
-    <x-modal id="editPersonaModal" title="Editar Persona" />
-    <x-modal id="crearPersonaModal" title="Crear Persona" />
+    <x-modal id="editPersonaModal" titulo="Editar Persona" size="xl" />
+    <x-modal id="crearPersonaModal" titulo="Crear Persona" size="xl" />
    
 
 </div>

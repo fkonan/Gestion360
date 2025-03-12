@@ -8,7 +8,6 @@ import 'bootstrap-table/dist/bootstrap-table.min.css';
 // jQuery Validation
 //import 'jquery-validation';
 
-import { validarFormulario, getMunicipios, cargarModal } from './utils';
+import { validarFormulario, cargarModal } from './utils';
 window.validarFormulario = validarFormulario;
-window.getMunicipios = getMunicipios;
 window.cargarModal = cargarModal;

@@ -86,7 +86,7 @@ class PersonaController extends Controller
 
             return response()->json([
                 'message' => 'Persona creada exitosamente',
-                'redirect' => route('admin.personas'),
+                'redirect' => route('persona.index'),
                 'type' => 'success', 
                 'title' => 'Persona creada exitosamente'
             ]); 
@@ -139,7 +139,7 @@ class PersonaController extends Controller
             Persona::findOrFail($id)->update($request->all());     
 
             return response()->json([
-                'redirect' => route('admin.personas'),
+                'redirect' => route('persona.index'),
                 'type' => 'success', 
                 'title' => 'Persona modificada exitosamente'
             ]); 

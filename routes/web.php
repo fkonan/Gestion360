@@ -38,7 +38,7 @@ Route::prefix("formatos")->middleware(['auth', 'permisos:acceso-gestion-document
 //Ruta Modulo administración
 Route::prefix("administracion")->middleware(['auth', 'permisos:acceso-administracion'])->group(function(){
     Route::prefix("personas")->group(function(){
-        Route::get("/",[PersonaController::class,"index"])->name("admin.personas");
+        Route::get("/",[PersonaController::class,"index"])->name("persona.index");
         Route::get("/create",[PersonaController::class,"create"])->name("persona.create");
         Route::get("/{id}",[PersonaController::class,"show"])->name("persona.show");   
         Route::get("/edit/{id}",[PersonaController::class,"edit"])->name("persona.edit"); 
@@ -46,9 +46,10 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:acceso-administra
         Route::post("/{id}",[PersonaController::class,"update"])->name("persona.update");
     });
     Route::prefix("usuarios")->group(function(){
-        Route::get("/",[UserController::class,"index"])->name("admin.usuarios");
-        Route::get("/create",[UserController::class,"crearNuevoUsuario"])->name("usuarios.crearNuevoUsuario");
+        Route::get("/",[UserController::class,"index"])->name("usuarios.index");
+        Route::get("/create",[UserController::class,"create"])->name("usuarios.create");
         Route::get("/edit/{id}",[UserController::class,"edit"])->name("usuarios.edit");
+        Route::post("/",[UserController::class,"store"])->name("usuarios.store");
         Route::post("/{id}",[UserController::class,"update"])->name("usuarios.update");
     }); 
 });

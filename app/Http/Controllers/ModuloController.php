@@ -77,7 +77,7 @@ class ModuloController extends Controller
     public function update(Request $request, $id){
 
         $validator = Validator::make($request->all(), [
-            'ModNom' =>'unique:modulos,ModNom|required|string|max:50',
+            'ModNom' =>'required|string|max:50',
             'ModDesc' =>'nullable|string|max:300',
             'ModEstado' =>'required',
             'ModPermiso' =>'nullable|string|max:255',
