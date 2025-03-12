@@ -46,7 +46,7 @@
                         </a>
                     </td>
                     <td class="text-center" style="width: 100px;">
-                        <a class="btn btn-primary p-0 px-2">
+                        <a class="btn btn-primary p-0 px-2" onclick="cargarModal(`{{ route('usuarios.edit', ['id' => $usuario->IdUsuario]) }}`, 'editUsuarioModal', '#formEditUsuario')">
                             <i class="nav-icon fas fa-edit"></i>
                         </a>
                     </td>
@@ -54,6 +54,9 @@
             @endforeach
             </tbody>
         </table>
+        
+        <!-- modales -->
+        <x-modal id="editUsuarioModal" title="Editar Usuario" />
     </div>
 </div>
 @endsection

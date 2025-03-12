@@ -18,9 +18,15 @@ class PersonaController extends Controller
 
     public function create()
     {
+        $personas = Persona::all();
+        if(!request()->ajax()){
+            return view("persona.listaPersonas",compact("personas"));
+        }
+
         $departamentos = Departamento::all();
-        $tiposDocumento = TipoDocumento::all();     
-        return view("persona.crearPersona",compact("departamentos","tiposDocumento"));
+        $tiposDocumento = TipoDocumento::all();    
+        
+        return view("persona.crearPersona",compact("departamentos","tiposDocumento"))->render();
     }
 
     public function store(Request $request){
@@ -29,10 +35,10 @@ class PersonaController extends Controller
         $validator=Validator::make(
             $request->all(),[
                 'PerTipoDoc' => 'required',
-                'PerNumDoc' => 'required|string|max:20',
+                'PerNumDoc' => 'unique:_personas,PerNumDoc|required|string|max:10',
                 'PerApellidos' => 'required|string|regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ]+(?:\s[A-Za-zÁÉÍÓÚáéíóúÑñ]+)*$/|max:50',
                 'PerNombres' => 'required|string|regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ]+(?:\s[A-Za-zÁÉÍÓÚáéíóúÑñ]+)*$/|max:50',
-                'PerGenero' => 'required|string|max:15',
+                'PerGenero' => 'required',
                 'PerFecNac' => 'required',
                 'PerLugNac' => 'required',
                 'PerFecExp' => 'required',  
@@ -51,6 +57,8 @@ class PersonaController extends Controller
                 'PerTipoDoc.required' => 'El tipo de documento es requerido',
                 'PerNumDoc.required' => 'El número de documento es requerido',
                 'PerGenero.required' => 'El género es requerido',
+
+                'PerNumDoc.unique' => 'El número de documento ya esta registrado',
             ]
             );
             
@@ -95,11 +103,16 @@ class PersonaController extends Controller
 
     public function edit($id)
     {
+        $personas = Persona::all();
+        if(!request()->ajax()){
+            return view("persona.listaPersonas",compact("personas"));
+        }
+
         $persona = Persona::findOrFail($id);
         $departamentos = Departamento::all();
         $tiposDocumento = TipoDocumento::all();   
         
-        return view("persona.editarPersona",compact("persona","tiposDocumento","departamentos"));
+        return view("persona.editarPersona",compact("persona","tiposDocumento","departamentos"))->render();
     }
 
     public function update(Request $request, $id)

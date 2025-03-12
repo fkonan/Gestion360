@@ -10,7 +10,11 @@
         <a class="btn btn-warning fw-bold m-2" onclick="window.history.back()" >Volver</a>
     </div>
 
-    <a class="btn btn-warning fw-bold ms-4 mt-4" style="position: absolute; top:150px" href="{{ route('persona.create') }}">Registrar persona</a>
+    <a class="btn btn-warning fw-bold ms-4 mt-4" 
+        style="position: absolute; top:150px"
+        onclick="cargarModal(`{{ route('persona.create') }}`, 'crearPersonaModal', '#formPersonaCrear')">
+        Registrar persona
+    </a>
 
     <div class="row p-4">
         <table
@@ -28,7 +32,9 @@
                     <th>Departamento</th>
                     <th>Genero</th>    
                     <th>Estado</th>
-                    <th>Opciones</th>
+                    @if(auth()->user()->can('editar-admin-personas'))
+                        <th>Opciones</th>
+                    @endif
                 </tr>
             </thead>
             <tbody>
@@ -39,15 +45,23 @@
                     <td>{{ $persona?->municipioNac->departamento->DepNomMin }}</td>
                     <td>{{ $persona?->PerGenero }}</td>
                     <td>{{ $persona?->PerEstado }}</td>
-                    <td class="text-center" style="width: 100px;">
-                        <a href="{{ route('persona.edit', ['id' => $persona->IdPersona]) }}" class="btn btn-primary p-0 px-2">
-                            <i class="nav-icon fas fa-edit"></i>
-                        </a>
-                    </td>
+                    @if(auth()->user()->can('editar-admin-personas'))
+                        <td class="text-center" style="width: 100px;">
+                            <a class="btn btn-primary p-0 px-2" onclick="cargarModal(`{{ route('persona.edit', ['id' => $persona->IdPersona]) }}`, 'editPersonaModal', '#formEditPersona')">
+                                <i class="nav-icon fas fa-edit"></i>
+                            </a>
+                        </td>
+                    @endif
                 </tr>
             @endforeach
             </tbody>
         </table>
     </div>
+
+    <!-- modales -->
+    <x-modal id="editPersonaModal" title="Editar Persona" />
+    <x-modal id="crearPersonaModal" title="Crear Persona" />
+   
+
 </div>
 @endsection

@@ -48,6 +48,8 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:acceso-administra
     Route::prefix("usuarios")->group(function(){
         Route::get("/",[UserController::class,"index"])->name("admin.usuarios");
         Route::get("/create",[UserController::class,"crearNuevoUsuario"])->name("usuarios.crearNuevoUsuario");
+        Route::get("/edit/{id}",[UserController::class,"edit"])->name("usuarios.edit");
+        Route::post("/{id}",[UserController::class,"update"])->name("usuarios.update");
     }); 
 });
 

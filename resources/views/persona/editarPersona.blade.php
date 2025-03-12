@@ -1,14 +1,6 @@
-@extends('layouts.dashboard')
-@section('title', 'Actualizar persona')
-@section('content')
+<!-- Modal editar persona -->
 
 <div class="container-fluid p-0 bg-white border rounded">
-
-    <div class="border rounded-top d-flex justify-content-between align-items-center" style="background-color: #2C3643">
-        <h5 class="text-left text-light p-2 ps-4">Actualizar Persona</h5>
-        <a class="btn btn-warning fw-bold m-2" onclick="window.history.back()" >Volver</a>
-    </div>
-
     <form id="formEditPersona" action="{{  route('persona.update', ['id' => $persona->IdPersona])  }}" method="POST">
         @csrf
         <div class="p-4">
@@ -119,7 +111,7 @@
             </div>
             
             <div class="row">
-                <div class="col-md-4 mb-2">
+                <div class="col-md-4 mb-4">
                     <label for="PerEstado" class="form-label">Estado</label>
                     <select class="form-select" id="PerEstado" name="PerEstado" required>
                         <option value="Activo" @selected($persona->PerEstado == 'ACTIVO')>Activo</option> 
@@ -129,17 +121,8 @@
                 </div>
             </div>
             
-            <button type="submit" class="btn btn-primary mt-3">Actualizar</button>
+            <button type="submit" class="btn btn-primary">Actualizar</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
         </div>
     </form>
 </div>
-@endsection
-
-@section('script')
-<script>
-$(document).ready(function () {
-    validarFormulario("#formEditPersona");
-});
-
-</script>
-@endsection

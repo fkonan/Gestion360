@@ -1,15 +1,7 @@
-@extends('layouts.dashboard')
-@section('title', 'Registro persona')
-@section('content')
+<!--  Modal crear persona -->
 
 <div class="container-fluid p-0 bg-white border rounded">
-
-    <div class="border rounded-top d-flex justify-content-between align-items-center" style="background-color: #2C3643">
-        <h5 class="text-left text-light p-2 ps-4">Crear persona</h5>
-        <a class="btn btn-warning fw-bold m-2" onclick="window.history.back()" >Volver</a>
-    </div>
-
-    <form  id="formPersona" action=" route('persona.store') " method="POST">
+    <form  id="formPersonaCrear" action="{{ route('persona.store') }}" method="POST">
         @csrf
         <div class="p-4">
             <div class="row">
@@ -115,79 +107,7 @@
             </div>
     
             <button type="submit" class="btn btn-primary">Enviar</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
         </div>
     </form>
 </div>
-@endsection
-
-@section('script')
-<script>
-$(document).ready(function () {
-
-    //Reglas de validación nombres
-    $.validator.addMethod("soloLetras", function (value, element) {
-        return /^[A-Za-zÁÉÍÓÚáéíóúÑñ]+(?:\s[A-Za-zÁÉÍÓÚáéíóúÑñ]+)*$/.test(value);
-    });
-
-    $.extend($.validator.messages, {
-        required: "Este campo es obligatorio.",
-    });
-
-    $("#formPersona").validate({
-        rules: {
-            PerApellidos: { required:true, maxlength: 50, soloLetras:true },
-            PerNombres: { required:true, maxlength: 50, soloLetras:true },  
-           
-        },
-        messages: {
-            PerApellidos: {
-                maxlength: "El máximo de caracteres es 50",
-                soloLetras: "Solo letras y un espacio entre palabras"
-            },
-            PerNombres: {
-                maxlength: "El máximo de caracteres es 50",
-                soloLetras: "Solo letras y un espacio entre palabras"
-            },
-        },
-        errorClass: "text-danger fw-bold is-invalid",
-        validClass: "is-valid",     
-        
-        submitHandler: function (form) {
-            $.ajax({
-                url: "/administracion/personas", 
-                type: "POST",
-                data: $(form).serialize(),
-                dataType: "json",
-                success: function (response) {
-                    Swal.fire({
-                        icon: response.type,
-                        title: response.title,
-                        confirmButtonColor: "#3366CC",
-                        confirmButtonText: "Aceptar"
-                    }).then(() => {
-                        window.location.href = response.redirect;
-                    });
-                },
-                error: function (xhr) {
-                    $(".error").text(""); 
-
-                    if (xhr.status === 422) {
-                        let errors = xhr.responseJSON.errors;
-                        $.each(errors, function (key, value) {
-                            $("#error-" + key).text(value[0]); 
-                            $("#" + key).addClass("is-invalid");
-                        });
-                    }
-                }
-            });
-        }
-    });
-
-    //Limpia los errores al editar o agregar un nuevo registro
-    $("input, select").on("input", function () {
-        $(this).removeClass("is-invalid");
-        $("#error-" + $(this).attr("id")).text("");
-    });
-});
-</script>
-@endsection

@@ -65,7 +65,7 @@ export function getMunicipios(depSelect, muniSelect, RUTA){
             url: RUTA + departamento_id,
             type: 'GET',
             dataType: 'json',
-            success: function (data) {               
+            success: function (data) {              
                 $.each(data, function (key, municipio) {
                     municipioSelect.append('<option value="' + municipio.IdMunicipio + '" >' + municipio.MunNomMin + '</option>');
                 });
