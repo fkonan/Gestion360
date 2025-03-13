@@ -46,7 +46,7 @@
                     <td>{{ $usuario?->UsuHorReg }}</td>
                     <td>{{ $usuario?->UsuarioEstado }}</td>
                     <td class="text-center" style="width: 80px;">
-                        <a class="btn btn-secondary p-0 px-2">
+                        <a class="btn btn-secondary p-0 px-2" onclick="cargarModal(`{{ route('permisos.edit', ['id' => $usuario->IdUsuario]) }}`, 'permisosUsuarioModal')">
                             <i class="nav-icon fas fa-unlock-alt"></i>
                         </a>
                     </td>
@@ -63,6 +63,7 @@
         <!-- modales -->
         <x-modal id="editUsuarioModal" titulo="Editar Usuario" size="lg"/>
         <x-modal id="crearUsuarioModal" titulo="Crear Usuario" size="lg"/>
+        <x-modal id="permisosUsuarioModal" titulo="Permisos Usuario" size="lg"/>
     </div>
 </div>
 @endsection

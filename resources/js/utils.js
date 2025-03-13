@@ -104,6 +104,28 @@ $.get(url)
                     width: '100%'
                 });
             }
+
+            if ($modal.find('#permissions').length){
+                $('#permissions').bootstrapDualListbox({
+                    nonSelectedListLabel: 'Permisos disponibles',
+                    selectedListLabel: 'Permisos del usuario',
+                    moveOnSelect: false, 
+                    preserveSelectionOnMove: 'moved', 
+                    moveAllLabel: 'Mover todos', 
+                    removeAllLabel: 'Quitar todos',
+                    infoText: 'Mostrando {0} permisos',
+                    infoTextEmpty: 'No hay permisos disponibles',
+                    infoTextFiltered: '<span class="badge bg-warning">Filtrados</span> {0} de {1}'
+                });
+
+                setTimeout(() => {
+                    $('.move').text('➜ Agregar');
+                    $('.remove').text('❌ Quitar');
+                    $('.moveall').text('» Agregar todos');
+                    $('.removeall').text('« Quitar todos');
+                }, 100);
+            }
+
         } else {
             console.error("No se encontró el contenedor #modalContent en el modal.");
         }

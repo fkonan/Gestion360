@@ -3,6 +3,7 @@
 use App\Http\Controllers\DepartamentoController;
 use App\Http\Controllers\FormatoController;
 use App\Http\Controllers\ModuloController;
+use App\Http\Controllers\PermisosController;
 use App\Http\Controllers\PersonaController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -34,6 +35,9 @@ Route::prefix("formatos")->middleware(['auth', 'permisos:acceso-gestion-document
         Route::post("/",[FormatoController::class,"guardarVersionFormato"])->name("store");
     });
 });
+
+//Ruta para editar/asignar permisos
+Route::get("/permisos/edit/{id}",[PermisosController::class,"edit"])->name("permisos.edit");
 
 //Ruta Modulo administración
 Route::prefix("administracion")->middleware(['auth', 'permisos:acceso-administracion'])->group(function(){
