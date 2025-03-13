@@ -1,7 +1,7 @@
 <!--  Modal crear persona -->
 
 <div class="container-fluid p-0 bg-white border rounded">
-    <form  id="formPersonaCrear" action="{{ route('persona.store') }}" method="POST">
+    <form  id="formPersonaCrear" action="{{ route('personas.store') }}" method="POST">
         @csrf
         <div class="p-4">
             <div class="row">

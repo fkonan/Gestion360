@@ -40,22 +40,37 @@ body:not(.sidebar-collapse) .nav-item .nav-treeview .sangriaSegundoNivel{
 }
 
 /* Dual select bootstrap */
-.bootstrap-duallistbox-container .box1 select,
+
+.bootstrap-duallistbox-container select option {
+    padding: 10px; 
+    margin-bottom: 13px; 
+    font-size: 16px; 
+    background-color: #D6D6D6;
+}
+
+.bootstrap-duallistbox-container select {
+    min-height: 300px; 
+}
+
+ 
+.bootstrap-duallistbox-container .box1 select {
+    text-align: right;
+}
+
 .bootstrap-duallistbox-container .box2 select {
-    height: 300px !important; 
+    text-align: left;
 }
 
-.bootstrap-duallistbox-container .move,
-.bootstrap-duallistbox-container .remove {
-    background-color: #007bff; 
-    border-radius: 5px;
-    padding: 8px 15px;
-    font-size: 14px;
-    transition: 0.3s;
+.bootstrap-duallistbox-container .moveall {
+    background-color: #007bff;
+    font-weight: bold;
+    color: white;
+    margin: 20px 0 5px 0;
 }
 
-.bootstrap-duallistbox-container .move:hover,
-.bootstrap-duallistbox-container .remove:hover {
-    background-color: #0056b3; 
+.bootstrap-duallistbox-container .removeall {
+    background-color: #ffc107;
+    font-weight: bold; 
+    color: black;
+    margin: 20px 0 5px 0;
 }
-

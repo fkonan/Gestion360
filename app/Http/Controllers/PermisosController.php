@@ -10,10 +10,24 @@ class PermisosController extends Controller
 {
     public function edit($id){
 
-        $usuario = User::find($id);
+        $usuario = User::findOrFail($id);
 
         $permisosDisponibles = Permission::all();
-        $permisosUsuario = $usuario->getAllPermissions();
+        $permisosUsuario = $usuario->getDirectPermissions();  //Solo permisos directos (No de roles)
         return view("permisos.permisosUsuario",compact("usuario","permisosUsuario","permisosDisponibles"))->render();
+    }
+
+    public function update(Request $request, $id){
+
+        $usuario = User::findOrFail($id);
+   
+        $usuario->syncPermissions($request->permissions);
+       
+        return response()->json([
+            'redirect' => route('usuarios.index'),
+            'type' => 'success', 
+            'title' => 'Permisos actualizados correctamente'
+        ]); 
+
     }
 }

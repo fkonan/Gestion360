@@ -36,26 +36,16 @@ Route::prefix("formatos")->middleware(['auth', 'permisos:acceso-gestion-document
     });
 });
 
-//Ruta para editar/asignar permisos
-Route::get("/permisos/edit/{id}",[PermisosController::class,"edit"])->name("permisos.edit");
+
 
 //Ruta Modulo administración
 Route::prefix("administracion")->middleware(['auth', 'permisos:acceso-administracion'])->group(function(){
-    Route::prefix("personas")->group(function(){
-        Route::get("/",[PersonaController::class,"index"])->name("persona.index");
-        Route::get("/create",[PersonaController::class,"create"])->name("persona.create");
-        Route::get("/{id}",[PersonaController::class,"show"])->name("persona.show");   
-        Route::get("/edit/{id}",[PersonaController::class,"edit"])->name("persona.edit"); 
-        Route::post("/",[PersonaController::class,"store"])->name("persona.store");
-        Route::put("/{id}",[PersonaController::class,"update"])->name("persona.update");
-    });
+    //Resources -> index, create, store, edit, update, delete
+    Route::resource("personas",PersonaController::class)->except(["destroy"]);
+    Route::resource("usuarios",UserController::class)->except(["show","destroy"]);
     Route::prefix("usuarios")->group(function(){
-        Route::get("/",[UserController::class,"index"])->name("usuarios.index");
-        Route::get("/create",[UserController::class,"create"])->name("usuarios.create");
-        Route::get("/edit/{id}",[UserController::class,"edit"])->name("usuarios.edit");
-        Route::post("/",[UserController::class,"store"])->name("usuarios.store");
-        Route::put("/{id}",[UserController::class,"update"])->name("usuarios.update");
-    }); 
+        Route::resource("permisos", PermisosController::class)->only(["edit", "update"]);
+    });
 });
 
 //Rutas Modulo Configuracion
