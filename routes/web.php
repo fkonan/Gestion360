@@ -40,7 +40,7 @@ Route::prefix("formatos")->middleware(['auth', 'permisos:acceso-gestion-document
 
 //Ruta Modulo administración
 Route::prefix("administracion")->middleware(['auth', 'permisos:acceso-administracion'])->group(function(){
-    //Resources -> index, create, store, edit, update, delete
+    //Resources -> index, create, store, edit, update, delete, show
     Route::resource("personas",PersonaController::class)->except(["destroy"]);
     Route::resource("usuarios",UserController::class)->except(["show","destroy"]);
     Route::prefix("usuarios")->group(function(){
