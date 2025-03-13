@@ -13,7 +13,7 @@ class FormatoController extends Controller
 {
     public function index(){
         $formatos = Formato::with('ultimaVersion')->get();
-        return view('formato.listaFormatos', compact('formatos'));
+        return view('formatos.listaFormatos', compact('formatos'));
     }
 
     public function llenarFormatoPDF($name){
@@ -39,14 +39,14 @@ class FormatoController extends Controller
     public function crearNuevoFormato(){
         $tipoProcesos = TipoProceso::all();
         $tipoDocProcesos = TipoDocProceso::all();
-        return view('formato.crearFormato', compact('tipoProcesos', 'tipoDocProcesos'));
+        return view('formatos.crearFormato', compact('tipoProcesos', 'tipoDocProcesos'));
     }
 
     public function crearVersionFormato($id){
         $formato = Formato::find($id);
         $tipoProcesos = TipoProceso::all();
         $tipoDocProcesos = TipoDocProceso::all();
-        return view('formato.nuevaVersion', compact('formato', 'tipoProcesos', 'tipoDocProcesos'));
+        return view('formatos.nuevaVersion', compact('formato', 'tipoProcesos', 'tipoDocProcesos'));
     }
 
     private function guardarPDF($file, $version, $nombre){
@@ -167,6 +167,6 @@ class FormatoController extends Controller
     public function versionesFormato($id){
         $formato = Formato::find($id);
         $versiones = FormatoVersion::where('IdFormato', $id)->get();
-        return view('formato.listaVersiones', compact('formato', 'versiones'));
+        return view('formatos.listaVersiones', compact('formato', 'versiones'));
     }
 }

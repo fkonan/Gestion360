@@ -3,13 +3,17 @@
 @section('title','Lista versiones')
 
 @section('content')
-<div class="container-fluid p-0 bg-white border rounded">
-    <div class="border rounded-top d-flex justify-content-between align-items-center" style="background-color: #2C3643">
-        <h5 class="text-left text-light p-2 ps-4">Versiones</h5>
-        <a class="btn btn-warning fw-bold m-2" onclick="window.history.back()" >Volver</a>
+<div class="container-fluid p-0 border rounded">
+    <div class="border rounded-top d-flex justify-content-between align-items-center px-4" style="background-color: #2C3643">
+        <span class="text-left text-light fs-4 fw-medium">Versiones</span>
+        <a class="btn fw-bold my-2 text-light" style="background-color: #007BFF" onclick="window.history.back()" >Volver</a>
     </div>
 
-    <a class="btn btn-warning fw-bold ms-4 mt-4" href="{{ route('formatos.versions.create', ['id' => $formato->IdFormato]) }}">Nueva Version</a>
+    <a class="btn fw-bold ms-4 mt-4 text-light" 
+        style="background-color: #007BFF"
+        href="{{ route('formatos.versions.create', ['id' => $formato->IdFormato]) }}">
+        Nueva Version
+    </a>
         
     <div class="row p-4 text-center">
         <table

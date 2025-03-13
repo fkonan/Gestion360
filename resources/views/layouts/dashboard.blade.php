@@ -32,10 +32,6 @@
                             {{ auth()->user()->persona->PerNombres }} {{ auth()->user()->persona->PerApellidos }}
                         </span>
                     </div>
-                    <div class="info">
-                        <span style="font-size:.8em">Ultima sesión</span><br>
-                        <span style="font-size:.8em">Fecha: {{ auth()->user()->ultimaSesion->first()->SesionFechReg }}  {{ auth()->user()->ultimaSesion->first()->SesionHorReg }} </span>                       
-                    </div>
                     <div class="info text-primary fw-bold">
                         <span id="horas"></span>:<span id="minutos"></span>:<span id="segundos"></span>&nbsp;<span id="ampm"></span>
                     </div>
@@ -48,11 +44,18 @@
 
         <!-- Contenido Principal -->
         <div class="content-wrapper">
-            <section class="content-header mb-4" style="background-color: #005EB8;">
+            <section class="content-header mb-4 p-2 d-flex justify-content-between align-items-center" style="background-color: #0B5ED7;">
                 <div class="container-fluid">
                     <button class="btn btn-sm text-light" onclick="toggleSidebar()">
                         ☰ 
                     </button>
+                </div>
+                <div class="info pe-4 text-light">
+                    <span>Ultima sesión</span><br>
+                    <span style="font-size: .8em;" class="text-nowrap">
+                        {{ auth()->user()->ultimaSesion->first()->SesionFechReg }}  /
+                        {{ auth()->user()->ultimaSesion->first()->SesionHorReg }} 
+                    </span>                       
                 </div>
             </section>
 

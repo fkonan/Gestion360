@@ -11,12 +11,12 @@ class UserController extends Controller
 {
     public function index(){
         $usuarios = User::all();
-        return view("usuario.listaUsuarios",compact("usuarios"));
+        return view("usuarios.listaUsuarios",compact("usuarios"));
     }
 
     public function create(){
         $personas = Persona::all();
-        return view("usuario.crearUsuario", compact("personas"));
+        return view("usuarios.crearUsuario", compact("personas"));
     }
 
     public function store(Request $request){
@@ -58,12 +58,12 @@ class UserController extends Controller
         $usuarios = User::all();
 
         if(!request()->ajax()){
-            return view("usuario.listaUsuarios",compact("usuarios"));
+            return view("usuarios.listaUsuarios",compact("usuarios"));
         }
 
         $usuario = User::findOrFail($id);
     
-        return view("usuario.editarUsuario",compact("usuario"))->render();
+        return view("usuarios.editarUsuario",compact("usuario"))->render();
     }
 
     public function update(Request $request, $id){

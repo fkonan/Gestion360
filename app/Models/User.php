@@ -45,7 +45,7 @@ class User extends Authenticatable
     if ($this->hasRole('Super Admin')) {
         return true;
     }
-    return $this->hasPermissionTo($ability);
+        return $this->hasPermissionTo($ability);
     }
 
     public function canAny($abilities, $arguments = []){

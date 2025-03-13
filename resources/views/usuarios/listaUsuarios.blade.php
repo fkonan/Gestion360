@@ -3,15 +3,16 @@
 @section('title','Lista usuarios')
 
 @section('content')
-<div class="container-fluid p-0 bg-white border rounded">
+<div class="container-fluid p-0 border rounded">
 
-    <div class="border rounded-top d-flex justify-content-between align-items-center" style="background-color: #2C3643">
-        <h5 class="text-left text-light p-2 ps-4">Usuarios registrados</h5>
-        <a class="btn btn-warning fw-bold m-2" onclick="window.history.back()" >Volver</a>
+    <div class="border rounded-top d-flex justify-content-between align-items-center px-4" style="background-color: #2C3643">
+        <span class="text-left text-light fs-4 fw-medium">Usuarios registrados</span>
+        <a class="btn fw-bold my-2 text-light" style="background-color: #007BFF" onclick="window.history.back()" >Volver</a>
     </div>
 
-    <a class="btn btn-warning fw-bold ms-4 mt-4" 
-        style="position: absolute; top:150px"
+
+    <a class="btn fw-bold ms-4 mt-4 text-light" 
+        style="position: absolute; top:150px; background-color: #007BFF"
         onclick="cargarModal(`{{ route('usuarios.create') }}`, 'crearUsuarioModal', '#formCrearUsuario')">
         Registrar usuario
     </a>
@@ -44,12 +45,12 @@
                     <td>{{ $usuario?->UsuFecReg }}</td>
                     <td>{{ $usuario?->UsuHorReg }}</td>
                     <td>{{ $usuario?->UsuarioEstado }}</td>
-                    <td class="text-center" style="width: 100px;">
+                    <td class="text-center" style="width: 80px;">
                         <a class="btn btn-secondary p-0 px-2">
                             <i class="nav-icon fas fa-unlock-alt"></i>
                         </a>
                     </td>
-                    <td class="text-center" style="width: 100px;">
+                    <td class="text-center" style="width: 80px;">
                         <a class="btn btn-primary p-0 px-2" onclick="cargarModal(`{{ route('usuarios.edit', ['id' => $usuario->IdUsuario]) }}`, 'editUsuarioModal', '#formEditUsuario')">
                             <i class="nav-icon fas fa-edit"></i>
                         </a>

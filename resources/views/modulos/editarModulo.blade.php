@@ -3,6 +3,7 @@
     
     <form id="formFormato" action="{{  route('modulos.update', ['id' => $moduloEdit->IdModulo])  }}" method="POST" enctype="multipart/form-data">
         @csrf
+        @method('PUT')
         <div class="row g-3 p-4">       
             <div class="col-md-4">
                 <label for="ModNom" class="form-label">Nombre</label>

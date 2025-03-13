@@ -3,6 +3,7 @@
 <div class="container-fluid p-0 bg-white border rounded">
     <form id="formEditUsuario" action="{{  route('usuarios.update', ['id' => $usuario->IdUsuario])  }}" method="POST">
         @csrf
+        @method('PUT')
         <div class="p-4">
             <div class="row">
                 <div class="col-md-6 mb-3">

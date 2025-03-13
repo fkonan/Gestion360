@@ -3,6 +3,7 @@
 <div class="container-fluid p-0 bg-white border rounded">
     <form id="formEditPersona" action="{{  route('persona.update', ['id' => $persona->IdPersona])  }}" method="POST">
         @csrf
+        @method('PUT')
         <div class="p-4">
             <div class="row">
                 <div class="col-md-6 mb-3">
@@ -53,7 +54,7 @@
                         @foreach($departamentos as $departamento)
                             <optgroup label="{{ $departamento->DepNom }}">
                             @foreach($departamento->municipios as $municipio)
-                                <option value="{{ $municipio->IdMunicipio }}"> {{ $municipio->MunNomMin }}
+                                <option value="{{ $municipio->IdMunicipio }}" @selected($persona->PerLugNac == $municipio->IdMunicipio)> {{ $municipio->MunNomMin }}
                             @endforeach
                             </optgroup>
                         @endforeach
@@ -76,7 +77,7 @@
                             @foreach($departamentos as $departamento)
                                 <optgroup label="{{ $departamento->DepNom }}">
                                 @foreach($departamento->municipios as $municipio)
-                                    <option value="{{ $municipio->IdMunicipio }}"> {{ $municipio->MunNomMin }}
+                                    <option value="{{ $municipio->IdMunicipio }}" @selected($persona->PerLugExp == $municipio->IdMunicipio)> {{ $municipio->MunNomMin }}
                                 @endforeach
                                 </optgroup>
                             @endforeach

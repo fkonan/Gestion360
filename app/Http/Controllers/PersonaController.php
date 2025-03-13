@@ -13,20 +13,20 @@ class PersonaController extends Controller
     public function index()
     {
         $personas = Persona::all();
-        return view("persona.listaPersonas",compact("personas"));
+        return view("personas.listaPersonas",compact("personas"));
     }
 
     public function create()
     {
         $personas = Persona::all();
         if(!request()->ajax()){
-            return view("persona.listaPersonas",compact("personas"));
+            return view("personas.listaPersonas",compact("personas"));
         }
 
         $departamentos = Departamento::all();
         $tiposDocumento = TipoDocumento::all();    
         
-        return view("persona.crearPersona",compact("departamentos","tiposDocumento"))->render();
+        return view("personas.crearPersona",compact("departamentos","tiposDocumento"))->render();
     }
 
     public function store(Request $request){
@@ -98,21 +98,21 @@ class PersonaController extends Controller
     public function show($id)
     {
         $personas = Persona::where("IdPersona",$id)->get();
-        return view("persona.listaPersonas",compact("personas"));
+        return view("personas.listaPersonas",compact("personas"));
     }
 
     public function edit($id)
     {
         $personas = Persona::all();
         if(!request()->ajax()){
-            return view("persona.listaPersonas",compact("personas"));
+            return view("personas.listaPersonas",compact("personas"));
         }
 
         $persona = Persona::findOrFail($id);
         $departamentos = Departamento::all();
         $tiposDocumento = TipoDocumento::all();   
         
-        return view("persona.editarPersona",compact("persona","tiposDocumento","departamentos"))->render();
+        return view("personas.editarPersona",compact("persona","tiposDocumento","departamentos"))->render();
     }
 
     public function update(Request $request, $id)
