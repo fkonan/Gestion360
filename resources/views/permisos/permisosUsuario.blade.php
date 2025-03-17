@@ -3,11 +3,11 @@
     <form id="formPermisoUsuario" action="{{ route('permisos.update', ['permiso' => $usuario->IdUsuario])}}" method="POST">
         @csrf
         @method('PUT')
-        <div class="row">
+        <div class="row pb-3">
             <div class="col-md-12">
                 <select multiple="multiple" id="permissions" name="permissions[]" class="form-control">
                     @foreach ($permisosDisponibles as $permiso)
-                        <option value="{{ $permiso->name }}"
+                        <option class="fw-medium" value="{{ $permiso->name }}"
                             @if ($permisosUsuario->contains('id', $permiso->id)) selected @endif>
                             {{ $permiso->name }}
                         </option>

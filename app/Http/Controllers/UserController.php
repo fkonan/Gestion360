@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Validator;
 class UserController extends Controller
 {
     public function index(){
-        $usuarios = User::all();
+        $usuarios = User::with('persona')->get();
         return view("usuarios.listaUsuarios",compact("usuarios"));
     }
 
@@ -55,14 +55,12 @@ class UserController extends Controller
     }
 
     public function edit($id){
-        $usuarios = User::all();
 
         if(!request()->ajax()){
-            return view("usuarios.listaUsuarios",compact("usuarios"));
+            return $this->index();
         }
 
         $usuario = User::findOrFail($id);
-    
         return view("usuarios.editarUsuario",compact("usuario"))->render();
     }
 

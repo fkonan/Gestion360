@@ -73,7 +73,6 @@ class LoginController extends Controller
 
         Auth::logout();
         session()->flash('alert', ['type' => 'success','title' => 'Sesion cerrada exitosamente']);
-        
         return redirect()->route('login');
     }
 }

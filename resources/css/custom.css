@@ -18,8 +18,8 @@
     transition: all 0.3s;                     
 }
 .nav-sidebar .nav-treeview .nav-link.active {
-    background-color:#cecbcb !important;   
-    color: #0E2146 !important;    
+    background-color: #a2aeb9 !important;   
+    color: #1a1a1a !important;    
     font-weight: bold;
 }
 body:not(.sidebar-collapse) .nav-item .nav-treeview .nav-link {
@@ -40,12 +40,15 @@ body:not(.sidebar-collapse) .nav-item .nav-treeview .sangriaSegundoNivel{
 }
 
 /* Dual select bootstrap */
-
 .bootstrap-duallistbox-container select option {
-    padding: 10px; 
-    margin-bottom: 13px; 
-    font-size: 16px; 
+    padding: 5px; 
+    margin-bottom: 11px; 
+    font-size: 1em; 
     background-color: #D6D6D6;
+}
+
+.bootstrap-duallistbox-container select option:hover{
+    background-color: #c0bcbc;
 }
 
 .bootstrap-duallistbox-container select {

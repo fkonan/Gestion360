@@ -10,20 +10,17 @@ use Illuminate\Support\Facades\Validator;
 
 class PersonaController extends Controller
 {
-    public function index()
-    {
-        $personas = Persona::all();
+    public function index(){
+        $personas = Persona::with('municipioNac')->get();
         return view("personas.listaPersonas",compact("personas"));
     }
 
-    public function create()
-    {
-        $personas = Persona::all();
+    public function create(){
         if(!request()->ajax()){
-            return view("personas.listaPersonas",compact("personas"));
+            return $this->index();
         }
 
-        $departamentos = Departamento::all();
+        $departamentos = Departamento::with('municipios')->get();
         $tiposDocumento = TipoDocumento::all();    
         
         return view("personas.crearPersona",compact("departamentos","tiposDocumento"))->render();
@@ -95,17 +92,14 @@ class PersonaController extends Controller
         } 
     }
 
-    public function show($id)
-    {
+    public function show($id){
         $personas = Persona::where("IdPersona",$id)->get();
         return view("personas.listaPersonas",compact("personas"));
     }
 
-    public function edit($id)
-    {
-        $personas = Persona::all();
+    public function edit($id){
         if(!request()->ajax()){
-            return view("personas.listaPersonas",compact("personas"));
+            return $this->index();
         }
 
         $persona = Persona::findOrFail($id);

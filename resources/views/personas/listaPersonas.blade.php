@@ -47,7 +47,7 @@
                     <td>{{ $persona?->PerEstado }}</td>
                     @if(auth()->user()->can('editar-admin-personas'))
                         <td class="text-center" style="width: 100px;">
-                            <a class="btn btn-primary p-0 px-2" onclick="cargarModal(`{{ route('personas.edit', ['persona' => $persona->IdPersona]) }}`, 'editPersonaModal', '#formEditPersona')">
+                            <a class="btn btn-secondary p-0 px-2" onclick="cargarModal(`{{ route('personas.edit', ['persona' => $persona->IdPersona]) }}`, 'editPersonaModal', '#formEditPersona')">
                                 <i class="nav-icon fas fa-edit"></i>
                             </a>
                         </td>

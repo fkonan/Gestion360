@@ -46,12 +46,14 @@
                     <td>{{ $usuario?->UsuHorReg }}</td>
                     <td>{{ $usuario?->UsuarioEstado }}</td>
                     <td class="text-center" style="width: 80px;">
-                        <a class="btn btn-secondary p-0 px-2" onclick="cargarModal(`{{ route('permisos.edit', ['permiso' => $usuario->IdUsuario]) }}`, 'permisosUsuarioModal', '#formPermisoUsuario')">
-                            <i class="nav-icon fas fa-unlock-alt"></i>
+                        <a class="btn btn-dark p-0 px-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Permisos usuario"
+                            onclick="cargarModal(`{{ route('permisos.edit', ['permiso' => $usuario->IdUsuario]) }}`, 'permisosUsuarioModal', '#formPermisoUsuario')">
+                            <i class="nav-icon fas fa-lock"></i>
                         </a>
                     </td>
                     <td class="text-center" style="width: 80px;">
-                        <a class="btn btn-primary p-0 px-2" onclick="cargarModal(`{{ route('usuarios.edit', ['usuario' => $usuario->IdUsuario]) }}`, 'editUsuarioModal', '#formEditUsuario')">
+                        <a class="btn btn-secondary p-0 px-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Editar usuario"
+                            onclick="cargarModal(`{{ route('usuarios.edit', ['usuario' => $usuario->IdUsuario]) }}`, 'editUsuarioModal', '#formEditUsuario')">
                             <i class="nav-icon fas fa-edit"></i>
                         </a>
                     </td>

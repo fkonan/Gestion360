@@ -11,7 +11,6 @@
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-duallistbox/dist/bootstrap-duallistbox.min.css">
 
-
     <!--Vite -->
     @vite(['resources/css/app.css', 'resources/js/app.js','resources/css/custom.css'])
 </head>
@@ -24,12 +23,12 @@
             <div class="sidebar">
             <!-- Usuario -->
                 <div class="user-panel my-3 pt-3 pb-2 d-flex flex-column text-left">
-                    <div class="info fw-bold">
-                        <span style="user-select: none; color: #000;">
+                    <div class="info">
+                        <span style="user-select: none" class="fw-medium text-dark">
                             {{ auth()->user()->persona->PerNombres }} {{ auth()->user()->persona->PerApellidos }}
                         </span>
                     </div>
-                    <div class="info text-primary fw-bold">
+                    <div class="info text-primary fw-medium">
                         <span id="horas"></span>:<span id="minutos"></span>:<span id="segundos"></span>&nbsp;<span id="ampm"></span>
                     </div>
                 </div>
@@ -66,15 +65,12 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap-duallistbox/dist/jquery.bootstrap-duallistbox.min.js"></script>
-
-    <!-- Script adicional -->
+    
     <script>
         function toggleSidebar() {
             document.body.classList.toggle('sidebar-collapse');
