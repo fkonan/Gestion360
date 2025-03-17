@@ -19,9 +19,10 @@ class ModuloController extends Controller
             return $this->index();
         }
 
+        $permisos = Permission::all();
         $modulos = Modulo::with('padre')->get(); 
 
-        return view('modulos.crearModulo', compact('modulos'))->render();
+        return view('modulos.crearModulo', compact('modulos','permisos'))->render();
     }
 
     public function store(Request $request){

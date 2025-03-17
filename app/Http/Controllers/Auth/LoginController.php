@@ -24,27 +24,27 @@ class LoginController extends Controller
 
         if (!$user) {
             session()->flash('alert', ['type' => 'warning', 'title' => 'Documento o contraseña incorrectos']);
-            return back();
+            return back()->withInput();
         }
 
         if(!password_verify($request->password, $user->Password)){
             session()->flash('alert', ['type' => 'error','title' => 'Contraseña incorrecta']);
-            return back();  
+            return back()->withInput();
         }
 
         if($user->persona->PerEstado == "INACTIVO"){
             session()->flash('alert', ['type' => 'warning','title' => 'Persona inactiva']);
-            return back();
+            return back()->withInput();
         }
 
         if($user->UsuarioEstado == "INACTIVO"){
             session()->flash('alert', ['type' => 'warning','title' => 'Usuario inactivo']);
-            return back();
+            return back()->withInput();
         }
 
         if($user->UsuarioEstado == "SUSPENDIDO"){
             session()->flash('alert', ['type' => 'warning','title' => 'Usuario suspendido']);
-            return back();
+            return back()->withInput();
         }
 
         if($this->registrarLogin($user->IdUsuario)){

@@ -38,8 +38,12 @@
             </div>
             <div class="col-md-4">
                 <label for="ModPermiso" class="form-label">Permiso</label>
-                <input type="text" class="form-control" id="ModPermiso" name="ModPermiso">
-                <span class="error text-danger fw-bold" id="error-ModPermiso"></span>
+                <select class="form-select select2" id="ModPermiso" name="ModPermiso">
+                <option value="">Sin permiso</option>
+                    @foreach ($permisos as $permiso)
+                        <option value="{{ $permiso->name }}">{{ $permiso->name }}</option>
+                    @endforeach
+                </select>
             </div>
             <div class="col-md-4">
                 <label for="ModIcono" class="form-label">Icono</label>
