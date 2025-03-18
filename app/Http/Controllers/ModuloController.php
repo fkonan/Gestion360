@@ -20,7 +20,7 @@ class ModuloController extends Controller
         }
 
         $permisos = Permission::all();
-        $modulos = Modulo::with('padre')->get(); 
+        $modulos = Modulo::with('submodulos')->whereNull('Mod_Padre_Id')->get();
 
         return view('modulos.crearModulo', compact('modulos','permisos'))->render();
     }
@@ -68,7 +68,7 @@ class ModuloController extends Controller
             return $this->index();
         }
 
-        $modulos = Modulo::with('padre')->get(); 
+        $modulos = Modulo::with('submodulos')->whereNull('Mod_Padre_Id')->get();
         $moduloEdit = Modulo::findOrFail($id);  
         $permisos = Permission::all();
 

@@ -4,7 +4,7 @@
         <div class="modal-content">
             <div class="modal-header bg-dark">
                 <h5 class="modal-title">{{ $titulo }}</h5>
-                <!--<button type="button" class="btn-close bg-white" data-bs-dismiss="modal" aria-label="Close"></button>-->
+                <button type="button" class="btn-close bg-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div id="modalContent">

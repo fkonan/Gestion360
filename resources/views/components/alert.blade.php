@@ -1,3 +1,4 @@
+<!-- Swal alert componente -->
 @if(session('alert'))
 <script>
     document.addEventListener("DOMContentLoaded", function() {

@@ -39,6 +39,12 @@ body:not(.sidebar-collapse) .nav-item .nav-treeview .sangriaSegundoNivel{
     border-radius: 0.375rem; 
 }
 
+.select2-container--default .select2-results > .select2-results__options {
+	max-height: 400px !important;
+    padding: 0.5em;
+}
+
+
 /* Dual select bootstrap */
 .bootstrap-duallistbox-container select option {
     padding: 5px; 

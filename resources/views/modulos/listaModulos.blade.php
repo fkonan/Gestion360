@@ -46,7 +46,7 @@
                    <th class="text-nowrap">{{ mb_strtoupper($modulo->ModNom) }}</th>
                    <th title="{{ ucfirst(mb_strtolower($modulo->ModDesc)) }}">{{ Str::limit(ucfirst(mb_strtolower($modulo->ModDesc)), 50, '...') }}</th>
                    <th>{{ $modulo->ModEstado}}</th>
-                   <th>{{ $modulo->padre->ModNom ?? "ES PRINCIPAL" }}</th>
+                   <th>{{ $modulo->padre->ModNom ?? "MODULO PRINCIPAL" }}</th>
                    <th>{{ $modulo->ModFechReg}}</th>
                    <th>{{ $modulo->ModHorReg}}</th>
                     @if(auth()->user()->can('editar-gestion-modulos'))

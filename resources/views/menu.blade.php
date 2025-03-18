@@ -28,6 +28,10 @@
                 <ul class="nav nav-treeview">
                     @foreach($modulo->submodulos as $submodulo)
 
+                        @if ($submodulo->ModEstado !== 'ACTIVO')
+                            @continue
+                        @endif
+
                         <!-- Submodulos permisos -->
                         @if(! $submodulo->ModPermiso || auth()->user()->can($submodulo->ModPermiso))  
                         @php
@@ -48,6 +52,10 @@
                             @if($submodulo->submodulos->count()) 
                             <ul class="nav nav-treeview">
                                 @foreach($submodulo->submodulos as $submodulo_segundoNivel)
+
+                                    @if ($submodulo_segundoNivel->ModEstado !== 'ACTIVO')
+                                        @continue
+                                    @endif
 
                                     <!-- Submodulos permisos -->
                                     @if(! $submodulo_segundoNivel->ModPermiso || auth()->user()->can($submodulo_segundoNivel->ModPermiso)) 

@@ -14,6 +14,7 @@ class User extends Authenticatable
     use HasRoles;
 
     protected $guard_name = 'web';
+    private const SUPER_ADMIN_ROLE = 'Super Admin';
 
     protected $table = "_usuarios";
     protected $primaryKey = "IdUsuario";
@@ -42,23 +43,21 @@ class User extends Authenticatable
     }
 
     public function can($ability, $arguments = []){
-    if ($this->hasRole('Super Admin')) {
-        return true;
-    }
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
         return $this->hasPermissionTo($ability);
     }
 
     public function canAny($abilities, $arguments = []){
-        if ($this->hasRole('Super Admin')) {
+        if ($this->isSuperAdmin()) {
             return true;
         }
+        return $this->hasAnyPermission($abilities);
+    }
 
-        foreach ($abilities as $ability) {
-            if ($this->hasAnyPermission($ability)) {
-                return true;
-            }
-        }
-        return false;
+    private function isSuperAdmin(){
+        return $this->hasRole(self::SUPER_ADMIN_ROLE);
     }
 
 }
