@@ -106,20 +106,11 @@ $.get(url)
             }
 
             if ($modal.find('#permissions').length){
-                $('#permissions').bootstrapDualListbox({
-                    nonSelectedListLabel: 'Permisos disponibles',
-                    selectedListLabel: 'Permisos del usuario',
-                    preserveSelectionOnMove: 'moved', 
-                    moveAllLabel: 'Mover todos', 
-                    removeAllLabel: 'Quitar todos',
-                    infoText: 'Mostrando {0} permisos',
-                    infoTextEmpty: 'No hay permisos disponibles',
-                    infoTextFiltered: '<span class="badge bg-warning">Filtrados</span> {0} de {1}'
-                });
+                bootstrapDualListInit('#permissions','Permisos');
+            }
 
-                $('.moveall').text('» Agregar todos');
-                $('.removeall').text('« Quitar todos');
-                
+            if ($modal.find('#roles').length){
+                bootstrapDualListInit('#roles','Roles');
             }
 
         } else {
@@ -131,4 +122,18 @@ $.get(url)
     });
 }
 
+function bootstrapDualListInit(id, nombre){
+    $(id).bootstrapDualListbox({
+        nonSelectedListLabel: nombre + ' disponibles',
+        selectedListLabel: nombre + ' del usuario',
+        preserveSelectionOnMove: 'moved', 
+        moveAllLabel: 'Mover todos', 
+        removeAllLabel: 'Quitar todos',
+        infoText: 'Mostrando {0} ' + nombre,
+        infoTextEmpty: 'No hay ' + nombre + ' disponibles',
+        infoTextFiltered: '<span class="badge bg-warning">Filtrados</span> {0} de {1}'
+    });
 
+    $('.moveall').text('» Agregar todos');
+    $('.removeall').text('« Quitar todos');    
+}

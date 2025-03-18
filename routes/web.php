@@ -5,6 +5,7 @@ use App\Http\Controllers\FormatoController;
 use App\Http\Controllers\ModuloController;
 use App\Http\Controllers\PermisosController;
 use App\Http\Controllers\PersonaController;
+use App\Http\Controllers\RolController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -44,7 +45,8 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:acceso-administra
     Route::resource("personas",PersonaController::class)->except(["destroy"]);
     Route::resource("usuarios",UserController::class)->except(["show","destroy"]);
     Route::prefix("usuarios")->group(function(){
-        Route::resource("permisos", PermisosController::class)->only(["edit", "update"]);
+        Route::resource("permisos",PermisosController::class)->only(["edit", "update"]);
+        Route::resource("roles",RolController::class)->only(["edit", "update"]);
     });
 });
 

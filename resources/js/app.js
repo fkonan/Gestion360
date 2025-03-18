@@ -1,18 +1,34 @@
-//import $ from 'jquery';
-//window.$ = window.jQuery = $; 
+// jQuery
+import $ from 'jquery';
+import 'jquery-validation';
+window.$ = window.jQuery = $;
 
+// Select2 jQuery
+import select2 from 'select2';
+select2();
+
+// Bootstrap;
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+
+// Bootstrap table
 import 'bootstrap-table/dist/bootstrap-table.min.js';
 import 'bootstrap-table/dist/bootstrap-table.min.css';
 
+// Bootstrap modal
+import { Modal } from 'bootstrap';
+$.fn.modal = function (...args) {
+    return this.each(function () {
+        const modal = Modal.getOrCreateInstance(this);
+        if (typeof args[0] === 'string') {
+            modal[args[0]]();
+        }
+    });
+};
+
+// SweetAlert2
 import Swal from 'sweetalert2';
 window.Swal = Swal; 
-
-
-// jQuery Validation
-//import 'jquery-validation';
 
 import { validarFormulario, cargarModal } from './utils';
 window.validarFormulario = validarFormulario;
 window.cargarModal = cargarModal;
-

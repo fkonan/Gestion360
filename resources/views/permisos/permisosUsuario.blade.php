@@ -8,7 +8,7 @@
                 <select multiple="multiple" id="permissions" name="permissions[]" class="form-control">
                     @foreach ($permisosDisponibles as $permiso)
                         <option class="fw-medium" value="{{ $permiso->name }}"
-                            @if ($permisosUsuario->contains('id', $permiso->id)) selected @endif>
+                            @if ($permisosUsuario->contains($permiso->id)) selected @endif>
                             {{ $permiso->name }}
                         </option>
                     @endforeach

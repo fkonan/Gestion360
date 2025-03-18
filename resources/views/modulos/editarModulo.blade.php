@@ -1,6 +1,5 @@
 <!-- modal para listarModulos-->
 <div class="container-fluid p-0 bg-white border rounded">
-    
     <form id="formFormato" action="{{  route('modulos.update', ['id' => $moduloEdit->IdModulo])  }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')

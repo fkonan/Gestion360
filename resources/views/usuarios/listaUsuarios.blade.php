@@ -34,6 +34,7 @@
                     <th>Hora registro</th>
                     <th>Estado</th>   
                     <th>Permisos</th> 
+                    <th>Roles</th>
                     <th>Opciones</th>
                 </tr>
             </thead>
@@ -45,14 +46,20 @@
                     <td>{{ $usuario?->UsuFecReg }}</td>
                     <td>{{ $usuario?->UsuHorReg }}</td>
                     <td>{{ $usuario?->UsuarioEstado }}</td>
-                    <td class="text-center" style="width: 80px;">
-                        <a class="btn btn-dark p-0 px-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Permisos usuario"
+                    <td class="text-center" style="width: 70px;">
+                        <a class="btn btn-dark btn-sm p-0 px-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Permisos usuario"
                             onclick="cargarModal(`{{ route('permisos.edit', ['permiso' => $usuario->IdUsuario]) }}`, 'permisosUsuarioModal', '#formPermisoUsuario')">
                             <i class="nav-icon fas fa-lock"></i>
                         </a>
                     </td>
-                    <td class="text-center" style="width: 80px;">
-                        <a class="btn btn-secondary p-0 px-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Editar usuario"
+                    <td class="text-center" style="width: 70px;">
+                        <a class="btn btn-dark btn-sm p-0 px-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Roles usuario"
+                            onclick="cargarModal(`{{ route('roles.edit', ['role' => $usuario->IdUsuario]) }}`, 'rolesUsuarioModal', '#formRolUsuario')">
+                            <i class="nav-icon fas fa-user"></i>
+                        </a>
+                    </td>
+                    <td class="text-center" style="width: 70px;">
+                        <a class="btn btn-secondary btn-sm p-0 px-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Editar usuario"
                             onclick="cargarModal(`{{ route('usuarios.edit', ['usuario' => $usuario->IdUsuario]) }}`, 'editUsuarioModal', '#formEditUsuario')">
                             <i class="nav-icon fas fa-edit"></i>
                         </a>
@@ -66,6 +73,7 @@
         <x-modal id="editUsuarioModal" titulo="Editar Usuario" size="lg"/>
         <x-modal id="crearUsuarioModal" titulo="Crear Usuario" size="lg"/>
         <x-modal id="permisosUsuarioModal" titulo="Permisos Usuario" size="lg"/>
+        <x-modal id="rolesUsuarioModal" titulo="Roles usuario" size="lg"/>
     </div>
 </div>
 @endsection
