@@ -12,7 +12,7 @@
 
     <a class="btn fw-bold ms-4 mt-4 text-light" 
         style="position: absolute; top:150px; background-color: #007BFF"
-        onclick="cargarModal(`{{ route('personas.create') }}`, 'crearPersonaModal', '#formPersonaCrear')">
+        onclick="cargarModal(`{{ route('personas.create') }}`, 'Crear Persona', '#formPersonaCrear')">
         Registrar persona
     </a>
 
@@ -22,6 +22,7 @@
             data-toggle="table"
             data-search="true"
             data-pagination="true"
+            data-side-pagination=""
             data-page-size="10"
             data-page-list="[]"
             data-pagination-parts="['pageSize', 'pageList', 'pageNext', 'pagePrev']">   
@@ -47,7 +48,7 @@
                     <td>{{ $persona?->PerEstado }}</td>
                     @if(auth()->user()->can('editar-admin-personas'))
                         <td class="text-center" style="width: 100px;">
-                            <a class="btn btn-secondary p-0 px-2" onclick="cargarModal(`{{ route('personas.edit', ['persona' => $persona->IdPersona]) }}`, 'editPersonaModal', '#formEditPersona')">
+                            <a class="btn btn-secondary p-0 px-2" onclick="cargarModal(`{{ route('personas.edit', ['persona' => $persona->IdPersona]) }}`, 'Editar Persona', '#formEditPersona')">
                                 <i class="nav-icon fas fa-edit"></i>
                             </a>
                         </td>
@@ -56,11 +57,6 @@
             @endforeach
             </tbody>
         </table>
-    </div>
-
-    <!-- modales -->
-    <x-modal id="editPersonaModal" titulo="Editar Persona" size="xl" />
-    <x-modal id="crearPersonaModal" titulo="Crear Persona" size="xl" />
-   
+    </div> 
 </div>
 @endsection

@@ -13,7 +13,7 @@
     @if(auth()->user()->can('crear-gestion-modulos'))
         <a class="btn fw-bold ms-4 mt-4 text-light" 
             style="position: absolute; top:150px; background-color: #007BFF" 
-            onclick="cargarModal(`{{ route('modulos.create') }}`, 'crearModuloModal', '#formFormato')">
+            onclick="cargarModal(`{{ route('modulos.create') }}`, 'Crear Modulo', '#formFormato')">
                 Crear Modulo
         </a>
     @endif
@@ -51,7 +51,7 @@
                    <th>{{ $modulo->ModHorReg}}</th>
                     @if(auth()->user()->can('editar-gestion-modulos'))
                         <th class="text-center" style="width: 80px;">
-                            <a class="btn btn-secondary p-0 px-2" onclick="cargarModal(`{{ route('modulos.edit', ['id' => $modulo->IdModulo]) }}`, 'editModuloModal', '#formFormato')">
+                            <a class="btn btn-secondary p-0 px-2" onclick="cargarModal(`{{ route('modulos.edit', ['id' => $modulo->IdModulo]) }}`, 'Editar Modulo', '#formFormato')">
                                 <i class="nav-icon fas fa-edit"></i>
                             </a>
                         </th>
@@ -61,10 +61,5 @@
             </tbody>
         </table>
     </div>
-
-    <!-- modales -->
-    <x-modal id="editModuloModal" titulo="Editar Módulo" size="xl"/>
-    <x-modal id="crearModuloModal" titulo="Crear Módulo" size="xl"/>
-
 </div>
 @endsection

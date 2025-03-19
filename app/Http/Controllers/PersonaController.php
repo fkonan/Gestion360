@@ -21,7 +21,7 @@ class PersonaController extends Controller
         }
 
         $departamentos = Departamento::with('municipios')->get();
-        $tiposDocumento = TipoDocumento::all();    
+        $tiposDocumento = TipoDocumento::select('id','nombre')->get();    
         
         return view("personas.crearPersona",compact("departamentos","tiposDocumento"))->render();
     }
@@ -103,8 +103,8 @@ class PersonaController extends Controller
         }
 
         $persona = Persona::findOrFail($id);
-        $departamentos = Departamento::all();
-        $tiposDocumento = TipoDocumento::all();   
+        $departamentos = Departamento::with('municipios')->get();
+        $tiposDocumento = TipoDocumento::select('id','nombre')->get();   
         
         return view("personas.editarPersona",compact("persona","tiposDocumento","departamentos"))->render();
     }

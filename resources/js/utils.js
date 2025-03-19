@@ -84,43 +84,64 @@ actualizarReloj();
 
 
 //Carga un modal con el contenido de una URL y carga funciones requerias
-export function cargarModal(url, modalId, formularioId = null) {
-$.get(url)
-    .done(function(response) {
-        let $modal = $(`#${modalId}`);
-        let $modalContent = $modal.find("#modalContent");
+export function cargarModal(url, titulo = "", formularioId = null, size = null) {
+    const $modal = $("#globalModal");
+    const $modalContent = $("#globalModalContent");
+    const $modalTitle = $("#globalModalTitle");
+    const $modalDialog = $modal.find(".modal-dialog");
 
-        if ($modalContent.length) {
-            $modalContent.html(response);
-            $modal.modal("show");
+    // Asignar tamaño del modal
+    if(size != null){
+        $modalDialog.removeClass("modal-xl");
+        $modalDialog.addClass(size);
+    }
+   
+    if ($modalContent.data("loaded") === url) {
+        $modal.modal("show");
+        return;
+    }
 
-            if (formularioId) {
-                validarFormulario(formularioId);
+    $modalTitle.text(titulo);
+
+    $.get(url)
+        .done((response) => {
+            if (!$modalContent.length) {
+                console.error("No se encontró el contenedor #modalContent en el modal.");
+                return;
             }
 
-            if ($modal.find('.select2').length) {
+            // Agregar contenido y guardar URL cargada
+            $modalContent.html(response);
+            $modalContent.data("loaded", url);
+            $modal.modal("show");
+
+            // Inicializar select2 solo si aún no está activado
+            if ($('.select2').data('select2') === undefined) {
                 $('.select2').select2({
                     dropdownParent: $modal,
                     width: '100%'
                 });
             }
 
+            // Validar formulario si se proporciona
+            if (formularioId) {
+                validarFormulario(formularioId);
+            }
+
+            // Inicializar listas duales solo si existen en el DOM
             if ($modal.find('#permissions').length){
                 bootstrapDualListInit('#permissions','Permisos');
             }
-
             if ($modal.find('#roles').length){
                 bootstrapDualListInit('#roles','Roles');
             }
-
-        } else {
-            console.error("No se encontró el contenedor #modalContent en el modal.");
-        }
-    })
-    .fail(function() {
-        alert("Error al cargar el contenido.");
-    });
+        })
+        .fail((textStatus, errorThrown) => {
+            console.error("Error al cargar el contenido:", textStatus, errorThrown);
+            alert("Error al cargar el contenido.");
+        });
 }
+
 
 function bootstrapDualListInit(id, nombre){
     $(id).bootstrapDualListbox({
