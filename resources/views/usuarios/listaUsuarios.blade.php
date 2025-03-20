@@ -3,6 +3,9 @@
 @section('title','Lista usuarios')
 
 @section('content')
+<!-- Spinner component -->
+<x-spinner />
+
 <div class="container-fluid p-0 border rounded">
 
     <div class="border rounded-top d-flex justify-content-between align-items-center px-4" style="background-color: #2C3643">
@@ -19,6 +22,7 @@
 
     <div class="row p-4">
         <table
+            id="usuariosDataTable"
             class="table table-striped"
             data-toggle="table"
             data-search="true"
@@ -72,4 +76,16 @@
 </div>
 @endsection
 
+@pushOnce('script')
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    let table = document.getElementById("usuariosDataTable");
 
+    //Cargar spinner
+    $(table).on('post-body.bs.table', function () {
+        document.getElementById("loadingSpinner").classList.add("d-none"); 
+        table.classList.remove("d-none"); 
+    });
+});
+</script>
+@endpushOnce

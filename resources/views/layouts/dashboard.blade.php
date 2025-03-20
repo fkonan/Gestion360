@@ -83,10 +83,18 @@
         function toggleSidebar() {
             document.body.classList.toggle('sidebar-collapse');
         }
+
+        //Modal (evita errores de focus)
+        document.addEventListener('hidden.bs.modal', function (event) {
+            if (document.activeElement) {
+                document.activeElement.blur();
+            }
+        });
     </script>
 
     <!-- Alertas de swal (components/alert)-->
     <x-alert /> 
+
 
     @stack('script')
 </body>
