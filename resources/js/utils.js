@@ -158,3 +158,9 @@ function bootstrapDualListInit(id, nombre){
     $('.moveall').text('» Agregar todos');
     $('.removeall').text('« Quitar todos');    
 }
+
+//Evitar dobles click en forms
+export function deshabilitarSubmit(form) {
+    const submitButton = form.querySelector('button[type="submit"], input[type="submit"]');
+    submitButton.disabled = true;
+}

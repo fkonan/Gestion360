@@ -13,11 +13,11 @@
                 <div class="card">
                 <div class="card-body login-card-body">
                     <p class="login-box-msg" style="text-align: left; font-size: 30px;"><b>!Hola de nuevo¡</b></p>
-                    <form method="POST" action="{{ route('login') }}">
+                    <form method="POST" action="{{ route('login') }}" onsubmit="deshabilitarSubmit(this)">
                     @csrf
                     <div class="d-flex flex-column mb-3">
                         <div class="input-group">
-                            <input type="text" class="form-control" id="documento" name="documento" placeholder="Usuario" value="{{ old('documento') }}" required>
+                            <input type="text" class="form-control" id="documento" name="documento" placeholder="Documento" value="{{ old('documento') }}" required>
                             <div class="input-group-text">
                                 <span class="fas fa-user"></span>
                             </div>
@@ -59,7 +59,7 @@
 @endsection
 
 
-@section('script')
+@pushOnce('script')
 <script>
 function togglePasswordVisibility() {
     let passwordField = document.getElementById("password");
@@ -70,7 +70,7 @@ function togglePasswordVisibility() {
     }
 }
 </script>
-@endsection
+@endpushOnce
 
 
 

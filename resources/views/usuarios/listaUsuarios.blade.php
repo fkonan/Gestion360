@@ -48,7 +48,7 @@
                     <td>{{ $usuario?->UsuarioEstado }}</td>
                     <td class="text-center" style="width: 70px;">
                         <a class="btn btn-dark btn-sm p-0 px-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Permisos usuario"
-                            onclick="cargarModal(`{{ route('permisos.edit', ['permiso' => $usuario->IdUsuario]) }}`, 'Permisos usuario', '#formPermisoUsuario'), 'modal-lg'">
+                            onclick="cargarModal(`{{ route('permisos.edit', ['permiso' => $usuario->IdUsuario]) }}`, 'Permisos usuario', '#formPermisoUsuario', 'modal-lg')">
                             <i class="nav-icon fas fa-lock"></i>
                         </a>
                     </td>

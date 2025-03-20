@@ -25,10 +25,12 @@ $.fn.modal = function (...args) {
     });
 };
 
+
 // SweetAlert2
 import Swal from 'sweetalert2';
 window.Swal = Swal; 
 
-import { validarFormulario, cargarModal } from './utils';
+import { validarFormulario, cargarModal, deshabilitarSubmit } from './utils';
 window.validarFormulario = validarFormulario;
 window.cargarModal = cargarModal;
+window.deshabilitarSubmit = deshabilitarSubmit;

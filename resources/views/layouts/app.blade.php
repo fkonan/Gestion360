@@ -18,7 +18,7 @@
             @yield('content')
         </section>
         
-        @yield('script')
+        @stack('script')
 
         <!-- Alertas de swal (components/alert)-->
         <x-alert /> 

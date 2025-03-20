@@ -81,10 +81,10 @@
 </div>
 @endsection
 
-@section('script')
+@pushOnce('script')
     <script>
         $(document).ready(function () {
             validarFormulario("#formFormato");
         });
     </script>
-@endsection
+@pushOnce

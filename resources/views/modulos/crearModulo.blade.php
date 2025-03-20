@@ -1,7 +1,11 @@
 <!-- modal para crearModulos-->
 <div class="container-fluid p-0 bg-white border rounded">
-    
-    <form id="formFormato" action="{{ route('modulos.store') }}" method="POST" enctype="multipart/form-data">
+    <form 
+        id="formFormato" 
+        action="{{ route('modulos.store') }}" 
+        method="POST" enctype="multipart/form-data"
+        onsubmit="deshabilitarSubmit(this)">
+
         @csrf
         <div class="row g-3 p-4">       
             <div class="col-md-4">

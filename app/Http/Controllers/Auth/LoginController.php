@@ -18,17 +18,15 @@ class LoginController extends Controller
         $request->validate([
             'documento' => 'required|numeric',
             'password' => 'required|string',
+        ],[
+            'documento.required' => 'El campo documento es obligatorio.',
+            'password.required' => 'La contraseña es obligatoria.',
         ]);
 
         $user = Persona::where('PerNumDoc', $request->documento)->first()?->usuario;
 
-        if (!$user) {
-            session()->flash('alert', ['type' => 'warning', 'title' => 'Documento o contraseña incorrectos']);
-            return back()->withInput();
-        }
-
-        if(!password_verify($request->password, $user->Password)){
-            session()->flash('alert', ['type' => 'error','title' => 'Contraseña incorrecta']);
+        if (!$user || !password_verify($request->password, $user->Password)) {
+            session()->flash('alert', ['type' => 'error', 'title' => 'Documento o contraseña incorrectos']);
             return back()->withInput();
         }
 
@@ -47,11 +45,10 @@ class LoginController extends Controller
             return back()->withInput();
         }
 
-        if($this->registrarLogin($user->IdUsuario)){
-            Auth::login($user);
-            return redirect()->intended(route('home'));
-        }
-        
+        $this->registrarLogin($user->IdUsuario);
+
+        Auth::login($user);
+        return redirect()->intended(route('home')); 
     }
 
     private function registrarLogin($IdUser){

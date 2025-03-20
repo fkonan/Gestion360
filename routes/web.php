@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\DepartamentoController;
 use App\Http\Controllers\FormatoController;
 use App\Http\Controllers\ModuloController;
 use App\Http\Controllers\PermisosController;
@@ -12,17 +11,6 @@ use Illuminate\Support\Facades\Route;
 Route::get('/home', function () {
     return view('home');
 })->middleware('auth')->name('home');
-
-Route::prefix("departamentos")->middleware('auth')->group(function(){
-    Route::get("/",[DepartamentoController::class,"index"])->name("departamentos.index");
-    Route::get("/create",[DepartamentoController::class,"create"])->name("departamentos.create");
-    Route::get("/{id}",[DepartamentoController::class,"show"])->name("departamentos.show");
-    Route::get("/edit/{id}",[DepartamentoController::class,"edit"])->name("departamentos.edit");
-    Route::get("/municipios/{id}",[DepartamentoController::class,"getMunici"])->name("departamentos.municipios");
-    Route::post("/",[DepartamentoController::class,"store"])->name("departamentos.store");
-    Route::delete("/{id}",[DepartamentoController::class,"destroy"])->name("departamentos.destroy");
-    Route::put("/{id}",[DepartamentoController::class,"update"])->name("departamentos.update");
-});
 
 
 Route::prefix("formatos")->middleware(['auth', 'permisos:acceso-gestion-documental'])->name("formatos.")->group(function(){
@@ -36,7 +24,6 @@ Route::prefix("formatos")->middleware(['auth', 'permisos:acceso-gestion-document
         Route::post("/",[FormatoController::class,"guardarVersionFormato"])->name("store");
     });
 });
-
 
 
 //Ruta Modulo administración

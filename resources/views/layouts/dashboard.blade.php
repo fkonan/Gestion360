@@ -88,6 +88,6 @@
     <!-- Alertas de swal (components/alert)-->
     <x-alert /> 
 
-    @yield('script')
+    @stack('script')
 </body>
 </html>
