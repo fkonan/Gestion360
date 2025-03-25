@@ -1,3 +1,28 @@
+export function actualizarReloj() {
+    const now = new Date();
+    let horas = now.getHours();
+    const minutos = now.getMinutes();
+    const segundos = now.getSeconds();
+
+    let ampm = 'a.m.';
+    if (horas >= 12) {
+        ampm = 'p.m.';
+        if (horas > 12) horas -= 12;  
+    } else if (horas == 0) {
+        horas = 12;  
+    }
+
+    let horaLocal = document.getElementById('horas');
+    let minutosLocal = document.getElementById('minutos');
+    let segundosLocal = document.getElementById('segundos');
+    let ampmLocal = document.getElementById('ampm');
+
+    if(horaLocal) horaLocal.innerText = String(horas).padStart(2, '0');	
+    if(minutosLocal) minutosLocal.innerText = String(minutos).padStart(2, '0');
+    if(segundosLocal) segundosLocal.innerText = String(segundos).padStart(2, '0');
+    if(ampmLocal) ampmLocal.innerText = ampm;
+}
+
 export function validarFormulario(form, TYPE="POST") {
 
     $.extend($.validator.messages, {
@@ -52,35 +77,6 @@ export function validarFormulario(form, TYPE="POST") {
         $("#error-" + $(this).attr("id")).text("");
     });
 }
-
-export function actualizarReloj() {
-    const now = new Date();
-    let horas = now.getHours();
-    const minutos = now.getMinutes();
-    const segundos = now.getSeconds();
-
-    let ampm = 'a.m.';
-    if (horas >= 12) {
-        ampm = 'p.m.';
-        if (horas > 12) horas -= 12;  
-    } else if (horas == 0) {
-        horas = 12;  
-    }
-
-    let horaLocal = document.getElementById('horas');
-    let minutosLocal = document.getElementById('minutos');
-    let segundosLocal = document.getElementById('segundos');
-    let ampmLocal = document.getElementById('ampm');
-
-    if(horaLocal) horaLocal.innerText = String(horas).padStart(2, '0');	
-    if(minutosLocal) minutosLocal.innerText = String(minutos).padStart(2, '0');
-    if(segundosLocal) segundosLocal.innerText = String(segundos).padStart(2, '0');
-    if(ampmLocal) ampmLocal.innerText = ampm;
-}
-
-setInterval(actualizarReloj, 1000);
-actualizarReloj();
-
 
 
 //Carga un modal con el contenido de una URL y carga funciones requerias
@@ -155,7 +151,7 @@ function bootstrapDualListInit(id, nombre){
         infoTextFiltered: '<span class="badge bg-warning">Filtrados</span> {0} de {1}'
     });
 
-    $('.moveall').text('» Agregar todos');
+    $('.moveall').text('Agregar todos »');
     $('.removeall').text('« Quitar todos');    
 }
 

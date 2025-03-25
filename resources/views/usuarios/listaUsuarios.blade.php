@@ -6,7 +6,7 @@
 <!-- Spinner component -->
 <x-spinner />
 
-<div class="container-fluid p-0 border rounded">
+<div class="container-fluid p-0 border rounded" style="min-height:150px">
 
     <div class="border rounded-top d-flex justify-content-between align-items-center px-4" style="background-color: #2C3643">
         <span class="text-left text-light fs-4 fw-medium">Usuarios registrados</span>
@@ -23,12 +23,12 @@
     <div class="row p-4">
         <table
             id="usuariosDataTable"
-            class="table table-striped"
+            class="table table-striped d-none"
             data-toggle="table"
-            data-search="true"
-            data-pagination="true"
             data-page-size="10"
-            data-page-list="[]"
+            data-search="true"
+            data-locale="es-ES"
+            data-pagination="true"
             data-pagination-parts="['pageSize', 'pageList', 'pageNext', 'pagePrev']">   
             <thead>
                 <tr>

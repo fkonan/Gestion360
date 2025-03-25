@@ -19,7 +19,8 @@
 
     <div class="row p-4">
         <table
-            class="table table-striped"
+            class="table table-sm table-striped"
+            data-page-size="10"
             data-toggle="table"
             data-search="true"
             data-pagination="true"

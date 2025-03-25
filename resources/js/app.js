@@ -12,6 +12,7 @@ import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
 // Bootstrap table
 import 'bootstrap-table/dist/bootstrap-table.min.js';
+import 'bootstrap-table/dist/locale/bootstrap-table-es-ES.min.js';
 import 'bootstrap-table/dist/bootstrap-table.min.css';
 
 // Bootstrap modal
@@ -30,7 +31,10 @@ $.fn.modal = function (...args) {
 import Swal from 'sweetalert2';
 window.Swal = Swal; 
 
-import { validarFormulario, cargarModal, deshabilitarSubmit } from './utils';
+import { validarFormulario, cargarModal, deshabilitarSubmit, actualizarReloj } from './utils';
 window.validarFormulario = validarFormulario;
 window.cargarModal = cargarModal;
 window.deshabilitarSubmit = deshabilitarSubmit;
+
+setInterval(actualizarReloj, 1000);
+actualizarReloj();

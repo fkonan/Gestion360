@@ -7,9 +7,16 @@
             <div class="col-md-12">
                 <select multiple="multiple" id="permissions" name="permissions[]" class="form-control">
                     @foreach ($permisosDisponibles as $permiso)
-                        <option class="fw-medium" value="{{ $permiso->name }}"
-                            @if ($permisosUsuario->contains($permiso->id)) selected @endif>
-                            {{ $permiso->name }}
+                        @php
+                            $isDirect = in_array($permiso->id, $permisosDirectos);
+                            $isInherited = in_array($permiso->id, $permisosHeredados);
+                        @endphp
+                        <option 
+                            class="fw-medium {{ $isInherited ? 'text-muted' : '' }}" 
+                            value="{{ $permiso->name }}"
+                            @if ($isInherited) disabled @endif
+                            @if ($isDirect || $isInherited) selected @endif>
+                            {{ $permiso->name }} {{ $isInherited ? '(Heredado)' : '' }}
                         </option>
                     @endforeach
                 </select>

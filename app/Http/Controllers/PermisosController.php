@@ -13,8 +13,13 @@ class PermisosController extends Controller
         $usuario = User::findOrFail($id);
 
         $permisosDisponibles = Permission::all();
-        $permisosUsuario = $usuario->getDirectPermissions();  //Solo permisos directos (No de roles)
-        return view("permisos.permisosUsuario",compact("usuario","permisosUsuario","permisosDisponibles"))->render();
+        //$permisosUsuario = $usuario->getDirectPermissions();  //Solo permisos directos (No de roles)
+        //$permisosUsuario = $usuario->getAllPermissions();  
+
+        $permisosDirectos = $usuario->permissions->pluck('id')->toArray();
+        $permisosHeredados = $usuario->getAllPermissions()->pluck('id')->diff($permisosDirectos)->toArray();
+
+        return view("permisos.permisosUsuario",compact("usuario","permisosDirectos","permisosHeredados","permisosDisponibles"))->render();
     }
 
     public function update(Request $request, $id){
