@@ -15,7 +15,10 @@
             @endphp
 
             <li class="nav-item has-treeview {{ $isParentActive ? 'menu-open' : '' }}">
-                <a  href="{{ $modulo->ModRuta ? route($modulo->ModRuta) : '#' }}" style="background-color:#EAE9E9;" class="nav-link text-secondary {{ $isParentActive ? 'active' : '' }}">
+                <a  href="{{ $modulo->ModRuta ? route($modulo->ModRuta) : '#' }}" 
+                    class="nav-link text-dark {{ $isParentActive ? 'active' : '' }}"
+                    style="background-color: #D6D6D6">
+                    
                     <i class="nav-icon fas {{ $modulo->ModIcono  }}" style="color: #0E2146;"></i>
                     <p><b>{{ $modulo->nombre_formateado }}</b></p>
                     @if($modulo->submodulos->count())   

@@ -28,8 +28,9 @@
 }
 
 .nav-sidebar .nav-link:hover{
-    background-color: #D6D6D6 !important;  
+    background-color: #9d9fa1 !important;  
 }
+
 
 .nav-sidebar .nav-link.active {
     background-color: var(--bs-primary) !important;  
