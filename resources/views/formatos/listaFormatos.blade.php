@@ -4,14 +4,14 @@
 
 @section('content')
 <div class="container-fluid p-0 border rounded">
-    <div class="border rounded-top d-flex justify-content-between align-items-center px-4" style="background-color: #2C3643">
+    <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-secondary">
         <span class="text-left text-light fs-4 fw-medium">Procesos</span>
-        <a class="btn fw-bold my-2 text-light" style="background-color: #007BFF" onclick="window.history.back()" >Volver</a>
+        <a class="btn fw-bold my-2 text-light bg-primary" onclick="window.history.back()" >Volver</a>
     </div>
     
     @if(auth()->user()->can('crear-gestion-documental'))
-    <a class="btn fw-bold text-light ms-4 mt-4" 
-        style="position: absolute; top:150px; background-color: #007BFF" 
+    <a class="btn fw-bold text-light ms-4 mt-4 bg-primary" 
+        style="position: absolute; top:150px;" 
         href="{{ route('formatos.create') }}">
         Crear Proceso
     </a>

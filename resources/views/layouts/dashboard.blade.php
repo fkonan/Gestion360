@@ -39,7 +39,7 @@
 
         <!-- Contenido Principal -->
         <div class="content-wrapper">
-            <section class="content-header mb-4 p-2 d-flex justify-content-between align-items-center" style="background-color: #0B5ED7;">
+            <section class="content-header mb-4 p-2 d-flex justify-content-between align-items-center bg-primary">
                 <div class="container-fluid">
                     <button class="btn btn-sm text-light" onclick="toggleSidebar()">
                         ☰ 

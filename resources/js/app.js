@@ -8,7 +8,7 @@ import select2 from 'select2';
 select2();
 
 // Bootstrap;
-import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+import 'bootstrap';
 
 // Bootstrap table
 import 'bootstrap-table/dist/bootstrap-table.min.js';
@@ -25,7 +25,6 @@ $.fn.modal = function (...args) {
         }
     });
 };
-
 
 // SweetAlert2
 import Swal from 'sweetalert2';

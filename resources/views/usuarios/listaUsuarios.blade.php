@@ -8,14 +8,14 @@
 
 <div class="container-fluid p-0 border rounded" style="min-height:150px">
 
-    <div class="border rounded-top d-flex justify-content-between align-items-center px-4" style="background-color: #2C3643">
+    <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-secondary">
         <span class="text-left text-light fs-4 fw-medium">Usuarios registrados</span>
-        <a class="btn fw-bold my-2 text-light" style="background-color: #007BFF" onclick="window.history.back()" >Volver</a>
+        <a class="btn fw-bold my-2 text-light bg-primary" onclick="window.history.back()" >Volver</a>
     </div>
 
 
-    <a class="btn fw-bold ms-4 mt-4 text-light" 
-        style="position: absolute; top:150px; background-color: #007BFF"
+    <a class="btn fw-bold ms-4 mt-4 text-light bg-primary" 
+        style="position: absolute; top:150px;"
         onclick="cargarModal(`{{ route('usuarios.create') }}`, 'Crear Usuario', '#formCrearUsuario', 'modal-lg')">
         Registrar usuario
     </a>
@@ -52,7 +52,7 @@
                     <td>{{ $usuario?->UsuarioEstado }}</td>
                     <td class="text-center" style="width: 70px;">
                         <a class="btn btn-dark btn-sm p-0 px-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Permisos usuario"
-                            onclick="cargarModal(`{{ route('permisos.edit', ['permiso' => $usuario->IdUsuario]) }}`, 'Permisos usuario', '#formPermisoUsuario', 'modal-lg')">
+                            onclick="cargarModal(`{{ route('permisos.edit', ['permiso' => $usuario->IdUsuario]) }}`, 'Permisos usuario', '#formPermisoUsuario', 'modal-xl')">
                             <i class="nav-icon fas fa-lock"></i>
                         </a>
                     </td>

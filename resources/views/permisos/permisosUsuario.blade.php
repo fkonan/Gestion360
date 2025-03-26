@@ -12,11 +12,12 @@
                             $isInherited = in_array($permiso->id, $permisosHeredados);
                         @endphp
                         <option 
-                            class="fw-medium {{ $isInherited ? 'text-muted' : '' }}" 
+                            class="fw-medium {{ $isInherited ? 'text-danger' : '' }}" 
                             value="{{ $permiso->name }}"
                             @if ($isInherited) disabled @endif
                             @if ($isDirect || $isInherited) selected @endif>
-                            {{ $permiso->name }} {{ $isInherited ? '(Heredado)' : '' }}
+                            {{ $permiso->name }} {{ $isInherited ? '(Permiso de rol)' : '' }}
+                            <i class="nav-icon fas fa-edit"></i>
                         </option>
                     @endforeach
                 </select>

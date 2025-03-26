@@ -20,6 +20,7 @@ class LoginController extends Controller
             'password' => 'required|string',
         ],[
             'documento.required' => 'El campo documento es obligatorio.',
+            'documento.numeric' => 'El campo documento debe ser numérico.',
             'password.required' => 'La contraseña es obligatoria.',
         ]);
 

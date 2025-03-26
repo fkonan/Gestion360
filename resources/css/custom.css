@@ -1,3 +1,26 @@
+:root {
+    --bs-primary: #0E2146; 
+    --bs-primary-rgb: 14, 33, 70; 
+}
+
+
+/* Estilos bootstrap table */
+.pagination .page-item.active .page-link {
+    background-color: var(--bs-primary) !important;
+    border-color: var(--bs-primary) !important;
+    color: white !important;
+}
+
+.pagination .page-link {
+    color: var(--bs-primary) !important;
+}
+
+.pagination .page-link:hover {
+    background-color: rgba(var(--bs-primary-rgb), 0.1) !important;
+    border-color: var(--bs-primary) !important;
+}
+
+
 /* Estilos menu lateral */
 .nav-sidebar .nav-link p {
     white-space: nowrap;   
@@ -9,7 +32,7 @@
 }
 
 .nav-sidebar .nav-link.active {
-    background-color: #0B5ED7 !important;  
+    background-color: var(--bs-primary) !important;  
     color: white !important;                                
     transition: all 0.3s;                     
 }
@@ -71,7 +94,7 @@ body:not(.sidebar-collapse) .nav-item .nav-treeview .sangriaSegundoNivel{
 }
 
 .bootstrap-duallistbox-container .moveall {
-    background-color: #007bff;
+    background-color: var(--bs-primary) !important;
     font-weight: bold;
     color: white;
     margin: 20px 0 5px 0;
