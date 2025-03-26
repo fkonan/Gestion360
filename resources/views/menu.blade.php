@@ -18,7 +18,7 @@
                 <a  href="{{ $modulo->ModRuta ? route($modulo->ModRuta) : '#' }}" 
                     class="nav-link text-dark {{ $isParentActive ? 'active' : '' }}"
                     style="background-color: #D6D6D6">
-                    
+
                     <i class="nav-icon fas {{ $modulo->ModIcono  }}" style="color: #0E2146;"></i>
                     <p><b>{{ $modulo->nombre_formateado }}</b></p>
                     @if($modulo->submodulos->count())   
