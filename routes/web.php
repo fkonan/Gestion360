@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\FormatoController;
+use App\Http\Controllers\IncapacidadController;
 use App\Http\Controllers\ModuloController;
 use App\Http\Controllers\PermisosController;
 use App\Http\Controllers\PersonaController;
@@ -47,6 +48,13 @@ Route::prefix("configuracion")->middleware(['auth', 'permisos:acceso-configuraci
             Route::get("/{id}",[ModuloController::class,"edit"])->middleware('permisos:editar-gestion-modulos')->name("edit");
             Route::put("/{id}",[ModuloController::class,"update"])->name("update");
         });
+    });
+});
+
+//Rutas Modulo Gestion RRHH
+Route::prefix("gestionRRHH")->group(function(){
+    Route::prefix("gestion-empleado")->name("gestion-incapacidades.")->group(function(){
+        Route::get("/",[IncapacidadController::class,"index"])->name("index");
     });
 });
 

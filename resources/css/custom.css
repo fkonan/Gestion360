@@ -128,3 +128,10 @@ body:not(.sidebar-collapse) .nav-item .nav-treeview .sangriaSegundoNivel{
     color: white;
     font-size: 18px;
 }
+
+
+/* Estilos card componente */
+.card:hover{
+    transform: translateY(-4px);
+    transition: all 0.1s ease-in-out;
+}
