@@ -1,6 +1,6 @@
 <!-- Modal para asignar permisos a un usuario -->
 <div class="container-fluid px-5 py-4 border rounded">
-    <form id="formPermisoUsuario" action="{{ route('permisos.update', ['permiso' => $usuario->IdUsuario])}}" method="POST">
+    <form id="formPermisoUsuario" action="{{ route('permisos.update', ['id' => $usuario->IdUsuario])}}" method="POST">
         @csrf
         @method('PUT')
         <div class="row pb-3">

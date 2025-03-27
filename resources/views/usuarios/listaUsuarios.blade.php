@@ -30,7 +30,7 @@
             data-locale="es-ES"
             data-pagination="true"
             data-pagination-parts="['pageSize', 'pageList', 'pageNext', 'pagePrev']">   
-            <thead>
+            <thead class="table-primary">
                 <tr>
                     <th>Identificación</th>
                     <th>Nombre Completo</th>
@@ -52,13 +52,13 @@
                     <td>{{ $usuario?->UsuarioEstado }}</td>
                     <td class="text-center" style="width: 70px;">
                         <a class="btn btn-dark btn-sm p-0 px-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Permisos usuario"
-                            onclick="cargarModal(`{{ route('permisos.edit', ['permiso' => $usuario->IdUsuario]) }}`, 'Permisos usuario', '#formPermisoUsuario', 'modal-xl')">
+                            onclick="cargarModal(`{{ route('permisos.edit', ['id' => $usuario->IdUsuario]) }}`, 'Permisos usuario', '#formPermisoUsuario', 'modal-xl')">
                             <i class="nav-icon fas fa-lock"></i>
                         </a>
                     </td>
                     <td class="text-center" style="width: 70px;">
                         <a class="btn btn-dark btn-sm p-0 px-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Roles usuario"
-                            onclick="cargarModal(`{{ route('roles.edit', ['role' => $usuario->IdUsuario]) }}`, 'Roles usuario', '#formRolUsuario', 'modal-lg')">
+                            onclick="cargarModal(`{{ route('roles.edit', ['id' => $usuario->IdUsuario]) }}`, 'Roles usuario', '#formRolUsuario', 'modal-lg')">
                             <i class="nav-icon fas fa-user"></i>
                         </a>
                     </td>

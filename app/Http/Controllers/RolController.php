@@ -8,7 +8,7 @@ use Spatie\Permission\Models\Role;
 
 class RolController extends Controller
 {
-    public function edit($id){
+    public function editRolUsuario($id){
 
         $usuario = User::findOrFail($id);
         $rolesDisponibles = Role::where('name', '!=', 'Super Admin')->get();
@@ -16,7 +16,7 @@ class RolController extends Controller
         return view("usuarios.rolesUsuario",compact("usuario","rolesUsuario","rolesDisponibles"))->render();
     }
 
-    public function update(Request $request, $id){
+    public function updateRolUsuario(Request $request, $id){
 
         $usuario = User::findOrFail($id);
         $usuario->syncRoles($request->roles);

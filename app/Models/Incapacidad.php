@@ -7,9 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class Incapacidad extends Model
 {
     protected $connection = 'mysql-gestion-humana';
-
     protected $table = "incapacidades";
     protected $primaryKey = "IdIncapacidad";
 
     public $timestamps = false;
+
+    public function causaIncapacidad(){
+        return $this->belongsTo(Parametros::class,'CausaId','IdParametro')
+            ->where('ParNomGru','CAUSA-INCAPACIDAD');
+    }
 }

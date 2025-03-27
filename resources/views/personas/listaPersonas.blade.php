@@ -28,7 +28,7 @@
             data-search="true"
             data-pagination="true"
             data-pagination-parts="['pageSize', 'pageList', 'pageNext', 'pagePrev']">   
-            <thead>
+            <thead class="table-primary">
                 <tr>
                     <th>Identificación</th>
                     <th>Nombre Completo</th>
