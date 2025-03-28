@@ -64,3 +64,8 @@
     </div>
 </div>
 @endsection
+
+@pushOnce('script')
+    @vite(['resources/js/cargarModal.js'])
+@endpushOnce
+

@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Incapacidad extends Model
 {
@@ -12,8 +14,31 @@ class Incapacidad extends Model
 
     public $timestamps = false;
 
-    public function causaIncapacidad(){
+    public function causaIncapacidad(): BelongsTo{
         return $this->belongsTo(Parametros::class,'CausaId','IdParametro')
             ->where('ParNomGru','CAUSA-INCAPACIDAD');
+    }
+
+    public function diagnostico(): BelongsTo{
+        return $this->belongsTo(Enfermedades::class,'Diagnostico','IdEnfermedad')
+            ->select('IdEnfermedad','DescCie');
+    }
+
+    public function eps(): BelongsTo{
+        return $this->belongsTo(Eps::class,'EPSId','IdEPS')
+            ->select('IdEPS','EPSNombre');
+    }
+
+    public function arl(): BelongsTo{
+        return $this->belongsTo(Arl::class,'ARLId','IdARL')
+            ->select('IdARL','ARLNombre');
+    }
+
+    public function seguimiento(): HasMany{
+        return $this->hasMany(incapacidadesSeguimiento::class, 'IncapacidadId', 'IdIncapacidad');
+    }
+
+    public function documentos(): HasMany{
+        return $this->hasMany(IncapacidadesDocumentos::class, 'IncapacidadId', 'IdIncapacidad');
     }
 }

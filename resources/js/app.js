@@ -30,9 +30,7 @@ $.fn.modal = function (...args) {
 import Swal from 'sweetalert2';
 window.Swal = Swal; 
 
-import { validarFormulario, cargarModal, deshabilitarSubmit, actualizarReloj } from './utils';
-window.validarFormulario = validarFormulario;
-window.cargarModal = cargarModal;
+import { deshabilitarSubmit, actualizarReloj } from './utils';
 window.deshabilitarSubmit = deshabilitarSubmit;
 
 setInterval(actualizarReloj, 1000);

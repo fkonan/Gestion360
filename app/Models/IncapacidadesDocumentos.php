@@ -3,16 +3,17 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class incapacidadesSeguimiento extends Model
+class IncapacidadesDocumentos extends Model
 {
     protected $connection = 'mysql-gestion-humana';
-    protected $table = 'incapacidades_seguimiento';
-    protected $primaryKey = 'idSeguimiento';
+    protected $table = "incapacidades_documentos";
+    protected $primaryKey = "IdDocumento";
+
     public $timestamps = false;
 
-    public function incapacidad(): BelongsTo{
+    public function incapacidad(){
         return $this->belongsTo(Incapacidad::class, 'IncapacidadId', 'IdIncapacidad');
     }
+
 }

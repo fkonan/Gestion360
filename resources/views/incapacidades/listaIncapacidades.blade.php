@@ -23,6 +23,9 @@
                     <th>Nombre</th>
                     <th>Documento</th>
                     <th>Causa Incapacidad</th>
+                    <th>Diagnostico</th>
+                    <th>EPS</th>
+                    <th>ARL</th>
                     <th>Observación</th>    
                     <th>Fecha Inicio</th>
                     <th>Fecha Fin</th>
@@ -35,6 +38,9 @@
                     <td>{{ $incapacidad->IncPerNom }}</td>
                     <td>{{ $incapacidad->PerNumDoc }}</td>
                     <td>{{ $incapacidad->causaIncapacidad->ParDes }}</td>
+                    <td>{{ $incapacidad->diagnostico->DescCie }}</td>
+                    <td>{{ $incapacidad->eps->EPSNombre }}</td>
+                    <td>{{ $incapacidad->arl->ARLNombre }}</td>
                     <td>{{ $incapacidad->Observacion }}</td>
                     <td>{{ $incapacidad->IncFecIni }}</td>
                     <td>{{ $incapacidad->IncFecFin }}</td>

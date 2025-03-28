@@ -18,7 +18,7 @@
     <div class="wrapper">
         <!-- Pantalla de carga -->
         <div class="preloader flex-column justify-content-center align-items-center">
-            <img class="animation__shake text-primary" src="{{ asset('img/copetranLogo.png') }}" alt="Logo" height="150" width="150">
+            <div class="spinner-border text-primary mt-2" role="status"></div>
             <p class="mt-1 fw-medium text-muted">Cargando...</p>
         </div>
         

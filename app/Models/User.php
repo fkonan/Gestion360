@@ -60,4 +60,8 @@ class User extends Authenticatable
         return $this->hasRole(self::SUPER_ADMIN_ROLE);
     }
 
+    public function enfermedadesRegistradas(): HasMany{
+        return $this->hasMany(Enfermedades::class,'IdUserReg','IdUsuario');
+    }
+
 }

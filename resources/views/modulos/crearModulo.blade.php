@@ -18,18 +18,9 @@
                 <select class="form-select select2" id="Mod_Padre_Id" name="Mod_Padre_Id">
                     <option value="">Sin módulo padre (Módulo principal)</option>
                     @foreach($modulos as $modulo)
-                        <optgroup label="{{ strtoupper($modulo->ModNom) }}" class="optgroup-title">
-                            <option value="{{ $modulo->IdModulo }}" class="grupo-option">
-                                - {{ ucfirst(mb_strtolower($modulo->ModNom)) }} (Principal)
-                            </option>
-                            @if($modulo->submodulos->count()) 
-                                @foreach($modulo->submodulos as $submodulo)
-                                    <option value="{{ $submodulo->IdModulo }}" class="submodulo-option">
-                                        - {{ ucfirst(mb_strtolower($submodulo->ModNom)) }}
-                                    </option>
-                                @endforeach
-                            @endif
-                        </optgroup>
+                        <option value="{{ $modulo->IdModulo }}" >
+                            {{ ucfirst(mb_strtolower($modulo->ModNom)) }}
+                        </option>
                     @endforeach
                 </select>
                 <span class="error text-danger fw-bold" id="error-Mod_Padre_Id"></span>

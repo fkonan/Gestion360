@@ -69,8 +69,8 @@ class ModuloController extends Controller
         }
 
         $modulos = Modulo::with('submodulos')->whereNull('Mod_Padre_Id')->get();
-        $moduloEdit = Modulo::findOrFail($id);  
-        $permisos = Permission::all();
+        $moduloEdit = $modulos->firstWhere('IdModulo', $id) ?? Modulo::findOrFail($id);  
+        $permisos = Permission::select('id', 'name')->get();
 
         return view('modulos.editarModulo', compact('modulos', 'moduloEdit', 'permisos'))->render();
     }
@@ -102,4 +102,16 @@ class ModuloController extends Controller
             'type' => 'success', 
         ]); 
     }
+
+    //Vista principal del modulo Gestion sistema
+    public function getGestionSistema(){
+        return view('modulos.gestionSistema');
+    }
+
+    public function getGestionEmpleado(){
+        return view('modulos.gestionEmpleado');
+    }
 }
+
+
+ 

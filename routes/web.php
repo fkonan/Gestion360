@@ -26,13 +26,11 @@ Route::prefix("formatos")->middleware(['auth', 'permisos:acceso-gestion-document
     });
 });
 
-
 //Ruta Modulo administración
 Route::prefix("administracion")->middleware(['auth', 'permisos:acceso-administracion'])->group(function(){
     //Resources -> index, create, store, edit, update, delete, show
     Route::resource("personas",PersonaController::class)->except(["destroy"]);
     Route::resource("usuarios",UserController::class)->except(["show","destroy"]);
-    
     Route::prefix("usuarios")->group(function(){
         Route::get("/roles/{id}",[RolController::class,"editRolUsuario"])->name("roles.edit");
         Route::put("/roles/{id}",[RolController::class,"updateRolUsuario"])->name("roles.update");
@@ -44,6 +42,7 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:acceso-administra
 //Rutas Modulo Configuracion
 Route::prefix("configuracion")->middleware(['auth', 'permisos:acceso-configuracion'])->group(function(){
     Route::prefix("sistema")->group(function(){
+        Route::get("/",[ModuloController::class,"getGestionSistema"])->name("gestion-sistema.index");
         Route::prefix("modulos")->name("modulos.")->group(function(){
             Route::get("/",[ModuloController::class,"index"])->name("index");
             Route::get("/create",[ModuloController::class,"create"])->middleware('permisos:crear-gestion-modulos')->name("create");
@@ -55,9 +54,9 @@ Route::prefix("configuracion")->middleware(['auth', 'permisos:acceso-configuraci
 });
 
 //Rutas Modulo Gestion RRHH
-Route::prefix("gestionRRHH")->group(function(){
+Route::prefix("gestionRRHH")->middleware(['auth', 'permisos:acceso-gestionRRHH'])->group(function(){
     Route::prefix("gestion-empleado")->name("gestion-incapacidades.")->group(function(){
-        Route::get("/",[IncapacidadController::class,"index"])->name("index");
+        Route::get("/",[ModuloController::class,"getGestionEmpleado"])->name("index");
         Route::get("/incapacidades",[IncapacidadController::class,"listaIncapacidades"])->name("incapacidades");
         Route::get("/seguimiento",[IncapacidadController::class,"incapacidadesSeguimiento"])->name("seguimiento");
     });
