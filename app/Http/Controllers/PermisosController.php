@@ -29,6 +29,5 @@ class PermisosController extends Controller
             'type' => 'success', 
             'title' => 'Permisos actualizados correctamente'
         ]); 
-
     }
 }
