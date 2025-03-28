@@ -1,5 +1,5 @@
 <nav class="mt-2">
-    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
+    <ul class="nav nav-pills nav-collapse-hide-child nav-sidebar flex-column" data-widget="treeview" role="menu">
 
         <!-- Modulos principales -->
         @foreach($modulos as $modulo)

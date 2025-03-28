@@ -3,9 +3,6 @@
 @section('title','Lista personas')
 
 @section('content')
-<!-- Spinner component -->
-<x-spinner />
-
 <div class="container-fluid p-0 border rounded" style="min-height:150px">
 
     <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-secondary">
@@ -22,7 +19,7 @@
     <div class="row p-4">
         <table
             id="personasDataTable"
-            class="table table-sm table-striped d-none"
+            class="table table-sm table-striped"
             data-page-size="25"
             data-toggle="table"
             data-search="true"
@@ -62,17 +59,3 @@
     </div> 
 </div>
 @endsection
-
-@pushOnce('script')
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    let table = document.getElementById("personasDataTable");
-
-    //Cargar spinner
-    $(table).on('post-body.bs.table', function () {
-        document.getElementById("loadingSpinner").classList.add("d-none"); 
-        table.classList.remove("d-none"); 
-    });
-});
-</script>
-@endpushOnce

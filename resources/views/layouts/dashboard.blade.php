@@ -16,6 +16,12 @@
 
 <body class="sidebar-mini layout-fixed">
     <div class="wrapper">
+        <!-- Pantalla de carga -->
+        <div class="preloader flex-column justify-content-center align-items-center">
+            <img class="animation__shake text-primary" src="{{ asset('img/copetranLogo.png') }}" alt="Logo" height="150" width="150">
+            <p class="mt-1 fw-medium text-muted">Cargando...</p>
+        </div>
+        
         <!-- Sidebar -->
         <aside class="main-sidebar sidebar-dark-primary elevation-4 text-dark bg-light">
 
@@ -41,9 +47,13 @@
         <div class="content-wrapper">
             <section class="content-header mb-4 p-2 d-flex justify-content-between align-items-center bg-primary">
                 <div class="container-fluid">
-                    <button class="btn btn-sm text-light" onclick="toggleSidebar()">
-                        ☰ 
-                    </button>
+                    <a class="pushmenu btn btn-sm text-light" 
+                        data-widget="pushmenu" 
+                        data-enable-remember="true" 
+                        href="#" 
+                        role="button">
+                        <i class="fas fa-bars"></i>
+                    </a>      
                 </div>
                 <div class="info pe-4 text-light">
                     <span>Ultima sesión</span><br>
@@ -70,10 +80,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap-duallistbox/dist/jquery.bootstrap-duallistbox.min.js" defer></script>
     
     <script>
-        function toggleSidebar() {
-            document.body.classList.toggle('sidebar-collapse');
-        }
-
         //Modal (evita errores de focus)
         document.addEventListener('hidden.bs.modal', function (event) {
             if (document.activeElement) {
