@@ -28,3 +28,4 @@ export function deshabilitarSubmit(form) {
     const submitButton = form.querySelector('button[type="submit"], input[type="submit"]');
     submitButton.disabled = true;
 }
+

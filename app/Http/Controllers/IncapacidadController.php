@@ -8,8 +8,12 @@ use Illuminate\Http\Request;
 class IncapacidadController extends Controller
 {
     public function listaIncapacidades(){
-        $incapacidades = Incapacidad::with("causaIncapacidad")->get();
-        return view("incapacidades.listaIncapacidades",compact("incapacidades"));
+        return view("incapacidades.listaIncapacidades");
+    }
+
+    public function cargarDatos(){
+        $incapacidades = Incapacidad::with(['causa', 'diagnostico', 'eps', 'arl'])->get();
+        return $incapacidades;
     }
 
     public function incapacidadesSeguimiento(){

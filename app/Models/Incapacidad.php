@@ -14,7 +14,7 @@ class Incapacidad extends Model
 
     public $timestamps = false;
 
-    public function causaIncapacidad(): BelongsTo{
+    public function causa(): BelongsTo{
         return $this->belongsTo(Parametros::class,'CausaId','IdParametro')
             ->where('ParNomGru','CAUSA-INCAPACIDAD');
     }

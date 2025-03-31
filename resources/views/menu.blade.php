@@ -1,5 +1,5 @@
 <nav class="mt-2">
-    <!-- clase: nav-collapse-hide-child  -->
+    <!-- clase ocultar sub modulos al cerrar: nav-collapse-hide-child  -->
     <ul class="nav nav-pills  nav-sidebar flex-column" data-widget="treeview" role="menu">
 
         <!-- Modulos principales -->

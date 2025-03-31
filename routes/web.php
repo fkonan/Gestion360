@@ -7,11 +7,20 @@ use App\Http\Controllers\PermisosController;
 use App\Http\Controllers\PersonaController;
 use App\Http\Controllers\RolController;
 use App\Http\Controllers\UserController;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/home', function () {
     return view('home');
 })->middleware('auth')->name('home');
+
+Route::get('/clear', function () {
+    Artisan::call('storage:link');
+    Artisan::call('cache:clear');
+    Artisan::call('config:cache');
+    Artisan::call('view:clear');
+    return "Cleared!";
+ });
 
 
 Route::prefix("formatos")->middleware(['auth', 'permisos:acceso-gestion-documental'])->name("formatos.")->group(function(){
@@ -58,6 +67,7 @@ Route::prefix("gestionRRHH")->middleware(['auth', 'permisos:acceso-gestionRRHH']
     Route::prefix("gestion-empleado")->name("gestion-incapacidades.")->group(function(){
         Route::get("/",[ModuloController::class,"getGestionEmpleado"])->name("index");
         Route::get("/incapacidades",[IncapacidadController::class,"listaIncapacidades"])->name("incapacidades");
+        Route::get("/incapacidades/cargarDatos",[IncapacidadController::class,"cargarDatos"])->name("incapacidades.cargarDatos");
         Route::get("/seguimiento",[IncapacidadController::class,"incapacidadesSeguimiento"])->name("seguimiento");
     });
 });
