@@ -10,8 +10,12 @@ use Illuminate\Support\Facades\Validator;
 class UserController extends Controller
 {
     public function index(){
+        return view("usuarios.listaUsuarios");
+    }
+
+    public function cargarDatos(){
         $usuarios = User::with('persona')->get();
-        return view("usuarios.listaUsuarios",compact("usuarios"));
+        return $usuarios;
     }
 
     public function create(){

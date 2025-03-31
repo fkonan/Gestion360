@@ -32,9 +32,7 @@
                     <th>Departamento</th>
                     <th>Genero</th>    
                     <th>Estado</th>
-                    @if(auth()->user()->can('editar-admin-personas'))
-                        <th>Opciones</th>
-                    @endif
+                    <th>Opciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -45,13 +43,11 @@
                     <td>{{ $persona?->municipioNac->departamento->DepNomMin }}</td>
                     <td>{{ $persona?->PerGenero }}</td>
                     <td>{{ $persona?->PerEstado }}</td>
-                    @if(auth()->user()->can('editar-admin-personas'))
-                        <td class="text-center" style="width: 100px;">
-                            <a class="btn btn-secondary p-0 px-2" onclick="cargarModal(`{{ route('personas.edit', ['persona' => $persona->IdPersona]) }}`, 'Editar Persona', '#formEditPersona')">
-                                <i class="nav-icon fas fa-edit"></i>
-                            </a>
-                        </td>
-                    @endif
+                    <td class="text-center" style="width: 100px;">
+                        <a class="btn btn-secondary p-0 px-2" onclick="cargarModal(`{{ route('personas.edit', ['persona' => $persona->IdPersona]) }}`, 'Editar Persona', '#formEditPersona')">
+                            <i class="nav-icon fas fa-edit"></i>
+                        </a>
+                    </td>   
                 </tr>
             @endforeach
             </tbody>

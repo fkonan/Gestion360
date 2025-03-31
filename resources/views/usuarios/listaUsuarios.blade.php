@@ -27,54 +27,66 @@
             data-search="true"
             data-locale="es-ES"
             data-pagination="true"
+            data-detail-view="true"
+            data-detail-formatter="detalleUsuarios"
+            data-url="{{ route('usuarios.cargarDatos') }}" 
             data-pagination-parts="['pageSize', 'pageList', 'pageNext', 'pagePrev']">   
             <thead class="table-primary">
                 <tr>
-                    <th>Identificación</th>
-                    <th>Nombre Completo</th>
-                    <th>Fecha registro</th>
-                    <th>Hora registro</th>
-                    <th>Estado</th>   
-                    <th>Permisos</th> 
-                    <th>Roles</th>
-                    <th>Opciones</th>
+                    <th data-field="persona.PerNumDoc">Identificación</th>
+                    <th data-field="nombreCompleto" data-formatter="nombreCompletoFormatter">Nombre Completo</th>
+                    <th data-field="UsuFecReg" data-sortable="true">Fecha registro</th>
+                    <th data-field="UsuHorReg" data-sortable="true">Hora registro</th>
+                    <th data-field="UsuarioEstado" data-sortable="true">Estado</th>   
                 </tr>
             </thead>
-            <tbody>
-            @foreach($usuarios as $usuario)
-                <tr>
-                    <td>{{ $usuario?->persona->PerNumDoc }}</td>
-                    <td>{{ $usuario?->persona->PerNombres }} {{ $usuario?->persona->PerApellidos }}</td>
-                    <td>{{ $usuario?->UsuFecReg }}</td>
-                    <td>{{ $usuario?->UsuHorReg }}</td>
-                    <td>{{ $usuario?->UsuarioEstado }}</td>
-                    <td class="text-center" style="width: 70px;">
-                        <a class="btn btn-dark btn-sm p-0 px-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Permisos usuario"
-                            onclick="cargarModal(`{{ route('permisos.edit', ['id' => $usuario->IdUsuario]) }}`, 'Permisos usuario', '#formPermisoUsuario', 'modal-xl')">
-                            <i class="nav-icon fas fa-lock"></i>
-                        </a>
-                    </td>
-                    <td class="text-center" style="width: 70px;">
-                        <a class="btn btn-dark btn-sm p-0 px-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Roles usuario"
-                            onclick="cargarModal(`{{ route('roles.edit', ['id' => $usuario->IdUsuario]) }}`, 'Roles usuario', '#formRolUsuario', 'modal-lg')">
-                            <i class="nav-icon fas fa-user"></i>
-                        </a>
-                    </td>
-                    <td class="text-center" style="width: 70px;">
-                        <a class="btn btn-secondary btn-sm p-0 px-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Editar usuario"
-                            onclick="cargarModal(`{{ route('usuarios.edit', ['usuario' => $usuario->IdUsuario]) }}`, 'Editar Usuario', '#formEditUsuario', 'modal-lg')">
-                            <i class="nav-icon fas fa-edit"></i>
-                        </a>
-                    </td>
-                </tr>
-            @endforeach
-            </tbody>
+           
         </table>
     </div>
 </div>
 @endsection
 
+
 @pushOnce('script')
     @vite(['resources/js/cargarModal.js'])
+    <script>
+     var rutas = {
+        permisos: "{{ route('permisos.edit', ['id' => ':id']) }}",
+        roles: "{{ route('roles.edit', ['id' => ':id']) }}",
+        usuarios: "{{ route('usuarios.edit', ['usuario' => ':id']) }}"
+    };
+
+    function detalleUsuarios(index, row) {
+        let urlPermisos = rutas.permisos.replace(':id', row.IdUsuario);
+        let urlRoles = rutas.roles.replace(':id', row.IdUsuario);
+        let urlUsuarios = rutas.usuarios.replace(':id', row.IdUsuario);
+
+        return `
+          <div class="p-3 border rounded bg-light">
+            <div class="row">
+                 <div class="col-md-12">
+                    <strong class="mb-2 me-4">Opciones:</strong>
+                    <a class="btn btn-dark btn-sm m-1" 
+                        onclick="cargarModal('${urlPermisos}', 'Permisos usuario', '#formPermisoUsuario', 'modal-xl')">
+                        <i class="fas fa-lock"></i> Permisos
+                    </a>
+                    <a class="btn btn-dark btn-sm m-1" 
+                        onclick="cargarModal('${urlRoles}', 'Roles usuario', '#formRolUsuario', 'modal-lg')">
+                        <i class="fas fa-user"></i> Roles
+                    </a>
+                    <a class="btn btn-dark btn-sm m-1" 
+                        onclick="cargarModal('${urlUsuarios}', 'Editar Usuario', '#formEditUsuario', 'modal-lg')">
+                        <i class="fas fa-edit"></i> Editar
+                    </a>
+                </div>
+            </div>
+        </div>
+        `;
+    }
+
+    function nombreCompletoFormatter(value, row) {
+        return row.persona.PerNombres + ' ' + row.persona.PerApellidos;
+    }
+</script>
 @endpushOnce
 

@@ -40,6 +40,8 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:acceso-administra
     //Resources -> index, create, store, edit, update, delete, show
     Route::resource("personas",PersonaController::class)->except(["destroy"]);
     Route::resource("usuarios",UserController::class)->except(["show","destroy"]);
+    Route::get("usuarios/cargarDatos",[UserController::class,"cargarDatos"])->name("usuarios.cargarDatos");
+
     Route::prefix("usuarios")->group(function(){
         Route::get("/roles/{id}",[RolController::class,"editRolUsuario"])->name("roles.edit");
         Route::put("/roles/{id}",[RolController::class,"updateRolUsuario"])->name("roles.update");
@@ -69,6 +71,7 @@ Route::prefix("gestionRRHH")->middleware(['auth', 'permisos:acceso-gestionRRHH']
         Route::get("/incapacidades",[IncapacidadController::class,"listaIncapacidades"])->name("incapacidades");
         Route::get("/incapacidades/cargarDatos",[IncapacidadController::class,"cargarDatos"])->name("incapacidades.cargarDatos");
         Route::get("/seguimiento",[IncapacidadController::class,"incapacidadesSeguimiento"])->name("seguimiento");
+        Route::get("/seguimiento/{id}/adjuntos",[IncapacidadController::class,"incapacidadAdjuntos"])->name("seguimiento.adjuntos");
     });
 });
 

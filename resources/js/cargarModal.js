@@ -61,14 +61,14 @@ function cargarModal(url, titulo = "", formularioId = null, size = null) {
     const $modalTitle = $("#globalModalTitle");
     const $modalDialog = $modal.find(".modal-dialog");
 
-    // Mostrar un loader mientras se carga el contenido
+    /* Mostrar un loader mientras se carga el contenido
     $modalContent.html(`
         <div class="d-flex flex-column align-items-center justify-content-center p-4">
             <i class="fas fa-spinner fa-spin fa-2x mb-2 text-primary"></i>
             <p class="fw-bold text-primary">Cargando, por favor espera...</p>
         </div>
     `);
-    $modal.modal("show");
+    $modal.modal("show");*/
 
     // Asignar tamaño del modal
     if (size) {
@@ -92,6 +92,7 @@ function cargarModal(url, titulo = "", formularioId = null, size = null) {
             // Agregar contenido y guardar URL cargada
             $modalContent.html(response);
             $modalContent.data("loaded", url);
+            $modal.modal("show");
 
             // Inicializar select2 solo si aún no está activado
             if ($('.select2').data('select2') === undefined) {

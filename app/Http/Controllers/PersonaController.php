@@ -28,7 +28,6 @@ class PersonaController extends Controller
 
     public function store(Request $request){
     try{       
-        //reglas de validación
         $validator=Validator::make(
             $request->all(),[
                 'PerTipoDoc' => 'required',

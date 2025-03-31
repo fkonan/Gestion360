@@ -20,4 +20,10 @@ class IncapacidadController extends Controller
         $incapacidadesSeguimiento = Incapacidad::all();
         return view("incapacidades.seguimiento",compact("incapacidadesSeguimiento"));
     }
+
+    public function incapacidadAdjuntos($id){
+        $incapacidad = Incapacidad::findOrFail($id);
+        $incapacidadDocumentos = $incapacidad->documentos()->get();
+        return view("incapacidades.adjuntos",compact("incapacidadDocumentos"));
+    }
 }
