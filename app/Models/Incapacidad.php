@@ -14,6 +14,26 @@ class Incapacidad extends Model
 
     public $timestamps = false;
 
+    protected $fillable = [
+        'IdIncapacidad',
+        'IncPerNom',
+        'PerNumDoc',
+        'IdPerOracle',
+        'CausaId',
+        'Diagnostico',
+        'EPSId',
+        'ARLId',
+        'IncTipo',
+        'IncapacidadEstado',
+        'Observacion',
+        'RevisionDatos',
+        'IncFecIni',
+        'IncFecFin',
+        'IncFechReg',
+        'IncHorReg'
+       
+    ];
+
     public function causa(): BelongsTo{
         return $this->belongsTo(Parametros::class,'CausaId','IdParametro')
             ->where('ParNomGru','CAUSA-INCAPACIDAD');

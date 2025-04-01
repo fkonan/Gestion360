@@ -76,6 +76,7 @@ class ModuloController extends Controller
     }
 
     public function update(Request $request, $id){
+
         $validator = Validator::make($request->all(), [
             'ModNom' =>'required|string|max:50',
             'ModDesc' =>'nullable|string|max:300',
@@ -103,7 +104,7 @@ class ModuloController extends Controller
         ]); 
     }
 
-    //Vista principal del modulo Gestion sistema
+    //Carga de las opciones disponibles en el modulo
     public function getGestionSistema(){
         return view('modulos.gestionSistema');
     }

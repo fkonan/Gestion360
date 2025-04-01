@@ -27,10 +27,9 @@
                     <th data-field="IncPerNom">Nombre</th>
                     <th data-field="PerNumDoc">Documento</th>
                     <th data-field="causa.ParDes">Causa Incapacidad</th>
-                    <th data-field="diagnostico.DescCie">Diagnostico</th>
                     <th data-field="eps.EPSNombre">EPS</th>
                     <th data-field="arl.ARLNombre">ARL</th>
-                    <th data-field="IncFecIni">Fecha Inicio</th>
+                    <th data-field="IncFecIni" style="display: none">Fecha Inicio</th>
                     <th data-field="IncFecFin">Fecha Fin</th>
                 </tr>
             </thead>
@@ -40,20 +39,73 @@
 @endsection 
 
 @pushOnce('script')
-<script>
-    function detalleIncapacidad(index, row) {
-        return `
-          <div class="p-3 border rounded bg-light">
-            <div class="row">
-                <div class="col-md-12">
-                    <p><strong>Observación:</strong> ${row.Observacion}</p>
-                    <p><strong>Estado:</strong> ${row.IncapacidadEstado}</p>
-                    <p><strong>Fecha Registro:</strong> ${row.IncFecReg}</p>
-                    <p><strong>Hora Registro:</strong> ${row.IncHorReg}</p>
+    @vite(['resources/js/cargarModal.js'])
+    <script>
+        //Rutas para cargar los modales
+        var rutas = {
+            adjuntos: "{{ route('gestion-incapacidades.seguimiento.adjuntos', ['id' => ':id']) }}",
+            datos: "{{ route('gestion-incapacidades.incapacidades.edit', ['id' => ':id']) }}",
+            gestion: "{{ route('gestion-incapacidades.incapacidades.gestion', ['id' => ':id']) }}"
+        };
+
+        function detalleIncapacidad(index, row) {
+            let fechaInicio = new Date(row.IncFecIni);
+            let fechaFin = new Date(row.IncFecFin);
+            let diasIncapacidad = Math.ceil((fechaFin - fechaInicio) / (1000 * 60 * 60 * 24));
+
+            // Ruta para cargar los adjuntos de la incapacidad con el ID correspondiente
+            let urlAdjuntos = rutas.adjuntos.replace(':id', row.IdIncapacidad);
+            let urlDatos = rutas.datos.replace(':id', row.IdIncapacidad);
+            let urlGestion = rutas.gestion.replace(':id', row.IdIncapacidad);
+
+            return `
+            <div class="p-3 border rounded bg-light">
+                <div class="row">
+                    <div class="col-md-12">
+                        <p><strong>Diagnóstico:</strong> ${row.diagnostico.DescCie}</p>
+                        <p><strong>Días de Incapacidad:</strong> ${diasIncapacidad}</p>
+                        <p><strong>Fecha Registro:</strong> ${row.IncFecReg}</p>
+                        <p><strong>Hora Registro:</strong> ${row.IncHorReg}</p>
+                        <div>
+                            <strong>Acciones:</strong> 
+                            <a class="ms-3 text-decoration-none" 
+                                title="Haga click para ver los adjuntos"
+                                onclick="cargarModal('${urlAdjuntos}', 'Documentos Incapacidad', '', 'modal-lg')">     
+                                <i class="fas fa-file fs-2"></i>
+                            </a>
+                            <a class="ms-3 text-decoration-none" 
+                                title="Haga click para editar la incapacidad"
+                                onclick="cargarModal('${urlDatos}', 'Revisión datos incapacidad', '#formIncapacidad', 'modal-xl')">
+                                <i class="fas fa-edit fs-2"></i> 
+                            </a>
+                            ${row.RevisionDatos == 1 ? `
+                            <a class="ms-3 text-decoration-none" 
+                                title="Haga click para gestionar el radicado"
+                                onclick="cargarModal('${urlGestion}', 'Gestion Incapacidad', '', 'modal-md')">
+                                <i class="fas fa-clipboard-list fs-2 text-success"></i> 
+                            </a>` : ''}
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-        `;
+            </div>`;
+        }
+
+        function habilitarInputs() {
+            document.querySelectorAll('#formIncapacidad input, #formIncapacidad select').forEach(element => {
+                if (element.id === 'IdIncapacidad') { return; }
+                element.disabled = false;
+        });
+
+        function mostrarObservacion() {
+            const selectedOption = document.querySelector('input[name="IncapacidadEstado"]:checked').value;
+            
+            if (selectedOption === 'RECHAZADO') {
+                document.getElementById('observacionDiv').style.display = 'block';
+            } else {
+                document.getElementById('observacionDiv').style.display = 'none';
+            }
+        }
     }
-</script>
+    </script>
 @endpushOnce
+

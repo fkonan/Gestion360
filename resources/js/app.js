@@ -15,6 +15,7 @@ import 'bootstrap-table/dist/bootstrap-table.min.js';
 import 'bootstrap-table/dist/locale/bootstrap-table-es-ES.min.js';
 import 'bootstrap-table/dist/bootstrap-table.min.css';
 
+
 // Bootstrap modal
 import { Modal } from 'bootstrap';
 $.fn.modal = function (...args) {

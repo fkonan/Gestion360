@@ -1,5 +1,5 @@
 <!-- Modal documentos adjuntos -->
-<div class="container-fluid p-3 " style="min-height:150px">
+<div class="container-fluid p-3">
     <table
         id="adjuntosDataTable"
         class="table table-sm table-striped"

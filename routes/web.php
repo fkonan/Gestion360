@@ -70,7 +70,11 @@ Route::prefix("gestionRRHH")->middleware(['auth', 'permisos:acceso-gestionRRHH']
         Route::get("/",[ModuloController::class,"getGestionEmpleado"])->name("index");
         Route::get("/incapacidades",[IncapacidadController::class,"listaIncapacidades"])->name("incapacidades");
         Route::get("/incapacidades/cargarDatos",[IncapacidadController::class,"cargarDatos"])->name("incapacidades.cargarDatos");
+        Route::get("/incapacidades/{id}/datos",[IncapacidadController::class,"editIncapacidad"])->name("incapacidades.edit");
+        Route::put("/incapacidades/{id}/datos",[IncapacidadController::class,"updateIncapacidad"])->name("incapacidades.update");
+        Route::get("/incapacidades/{id}/gestion",[IncapacidadController::class,"gestionIncapacidad"])->name("incapacidades.gestion");
         Route::get("/seguimiento",[IncapacidadController::class,"incapacidadesSeguimiento"])->name("seguimiento");
+        Route::get("/seguimiento/cargarDatos",[IncapacidadController::class,"cargarDatosSeguimiento"])->name("seguimiento.cargarDatos");
         Route::get("/seguimiento/{id}/adjuntos",[IncapacidadController::class,"incapacidadAdjuntos"])->name("seguimiento.adjuntos");
     });
 });

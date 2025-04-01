@@ -20,7 +20,7 @@
             data-pagination="true"
             data-detail-view="true"
             data-detail-formatter="detalleIncapacidad"
-            data-url="{{ route('gestion-incapacidades.incapacidades.cargarDatos') }}"        
+            data-url="{{ route('gestion-incapacidades.seguimiento.cargarDatos') }}"        
             data-pagination-parts="['pageSize', 'pageList', 'pageNext', 'pagePrev']">   
             <thead class="table-primary">
                 <tr class="bg-primary">
@@ -42,12 +42,15 @@
 @pushOnce('script')
     @vite(['resources/js/cargarModal.js'])
     <script>
-        
         var rutas = {
             adjuntos: "{{ route('gestion-incapacidades.seguimiento.adjuntos', ['id' => ':id']) }}",
         };
 
         function detalleIncapacidad(index, row) {
+            let fechaInicio = new Date(row.IncFecIni);
+            let fechaFin = new Date(row.IncFecFin);
+
+            let diasIncapacidad = Math.ceil((fechaFin - fechaInicio) / (1000 * 60 * 60 * 24));
             let urlAdjuntos = rutas.adjuntos.replace(':id', row.IdIncapacidad);
 
             return `
@@ -55,6 +58,7 @@
                 <div class="row">
                     <div class="col-md-12">
                         <p><strong>Observación:</strong> ${row.Observacion}</p>
+                        <p><strong>Días de Incapacidad:</strong> ${diasIncapacidad}</p>
                         <p><strong>Estado:</strong> ${row.IncapacidadEstado}</p>
                         <p><strong>Fecha Registro:</strong> ${row.IncFecReg}</p>
                         <p><strong>Hora Registro:</strong> ${row.IncHorReg}</p>
@@ -62,7 +66,7 @@
                             <strong>Acciones:</strong> 
                             <a class="ms-3 text-decoration-none" 
                                 title="Haga click para ver los adjuntos"
-                                onclick="cargarModal('${urlAdjuntos}', 'Adjuntos', '', 'modal-lg')">     
+                                onclick="cargarModal('${urlAdjuntos}', 'Documentos Incapacidad', '', 'modal-lg')">     
                                 <i class="fas fa-file fs-3"></i>
                             </a>
                             <a class="ms-3" 
