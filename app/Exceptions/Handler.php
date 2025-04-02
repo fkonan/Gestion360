@@ -2,6 +2,7 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Spatie\Permission\Exceptions\UnauthorizedException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Throwable;
@@ -37,16 +38,15 @@ class Handler extends ExceptionHandler
     /**
      * Renderiza una excepción en una respuesta HTTP.
      */
-    public function render($request, Throwable $exception)
-    {
-    if ($exception instanceof MethodNotAllowedHttpException) {
-        return response()->view('errors.405', [], 405);
-    }
+    public function render($request, Throwable $exception){
+        if ($exception instanceof MethodNotAllowedHttpException) {
+            return response()->view('errors.405', [], 405);
+        }
 
-    if ($exception instanceof NotFoundHttpException) {
-        return response()->view('errors.404');
-    }
+        if ($exception instanceof NotFoundHttpException) {
+            return response()->view('errors.404');
+        }
 
-    return parent::render($request, $exception);
-}
+        return parent::render($request, $exception);
+    }
 }

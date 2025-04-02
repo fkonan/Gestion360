@@ -93,4 +93,44 @@ class IncapacidadController extends Controller
         $incapacidad = Incapacidad::findOrFail($id);
         return view("incapacidades.gestionIncapacidad",compact("incapacidad"));
     }
+
+    public function updateEstadoIncapacidad(Request $request, $id){
+        $incapacidad = Incapacidad::findOrFail($id);
+        
+        if ($request->IncapacidadEstado == "RECHAZADO") {
+            $validator = Validator::make($request->all(), [
+                'Observacion' => 'required|max:255',
+            ],[
+                'Observacion.required' => 'El campo observación es obligatorio.',
+                'Observacion.max' => 'La observación no puede exceder los 255 caracteres.',
+            ]);
+    
+            if ($validator->fails()) {
+                return response()->json([
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $incapacidad->update($request->all());
+
+            return response()->json([
+                'title' => 'El radicado ha sido rechazado exitosamente',
+                'redirect' => route('gestion-incapacidades.incapacidades'),
+                'type' => 'success', 
+            ]);
+        }
+
+        $incapacidad->update($request->all());
+
+        return response()->json([
+            'title' => 'El radicado ha sido aprobado exitosamente',
+            'redirect' => route('gestion-incapacidades.incapacidades'),
+            'type' => 'success', 
+        ]);
+    }
+
+    public function seguimientoDetalle($id){
+        $listaSeguimiento = Incapacidad::findOrFail($id)->seguimiento;
+        return view("incapacidades.seguimientoDetalle",compact("listaSeguimiento"));
+    }
 }

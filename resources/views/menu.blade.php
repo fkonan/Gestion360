@@ -1,21 +1,15 @@
 <nav class="mt-2">
     <!-- clase ocultar sub modulos al cerrar: nav-collapse-hide-child  -->
-    <ul class="nav nav-pills  nav-sidebar flex-column" data-widget="treeview" role="menu">
+    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
 
         <!-- Modulos principales -->
         @foreach($modulos as $modulo)
         
-            <!-- Modulos permisos -->
+            <!-- Modulos permiso de visualizacion -->
             @if(! $modulo->ModPermiso || auth()->user()->can($modulo->ModPermiso))
-            @php
-            $isParentActive = request()->routeIs($modulo->ModRuta) || $modulo->submodulos->contains(function($submodulo) {
-                return request()->routeIs($submodulo->ModRuta);
-            });
-            @endphp
-
-            <li class="nav-item has-treeview {{ $isParentActive ? 'menu-open' : '' }}">
+            <li class="nav-item has-treeview">
                 <a  href="{{ $modulo->ModRuta ? route($modulo->ModRuta) : '#' }}" 
-                    class="nav-link text-dark {{ $isParentActive ? 'active' : '' }}"
+                    class="nav-link text-dark"
                     style="background-color: #D6D6D6">
 
                     <i class="nav-icon fas {{ $modulo->ModIcono  }}" style="color: #0E2146;"></i>
@@ -25,7 +19,7 @@
                     @endif
                 </a>
 
-                <!--Submodulos de primer nivel -->
+                <!-- Submodulos -->
                 @if($modulo->submodulos->count())
                 <ul class="nav nav-treeview">
                     @foreach($modulo->submodulos as $submodulo)
@@ -35,12 +29,9 @@
                         @endif
 
                         <!-- Submodulos permisos -->
-                        @if(! $submodulo->ModPermiso || auth()->user()->can($submodulo->ModPermiso))  
-                        @php
-                            $isSubmoduloActive = request()->routeIs($submodulo->ModRuta);
-                        @endphp
-                        <li class="nav-item {{ $isSubmoduloActive ? 'menu-open' : '' }}">
-                            <a class="nav-link text-black {{ $isSubmoduloActive ? 'active' : '' }}"  href="{{ $submodulo->ModRuta ? route($submodulo->ModRuta) : '#' }}">
+                        @if(! $submodulo->ModPermiso || auth()->user()->can($submodulo->ModPermiso))     
+                        <li class="nav-item">
+                            <a class="nav-link text-black"  href="{{ $submodulo->ModRuta ? route($submodulo->ModRuta) : '#' }}">
                                 <i class="nav-icon fas {{ $submodulo->ModIcono }} " style="color: #0E2146;"></i>
                                 <p>{{ Str::title($submodulo->ModNom) }}</p>
                             </a>

@@ -3,11 +3,16 @@
 @section('title','Incapacidades')
     
 @section('content')
-<div class="container-fluid p-0 border rounded" style="min-height:150px">
+<div class="container-fluid p-0 border rounded bg-white" style="min-height:150px;">
     <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-secondary">
         <span class="text-left text-light fs-5 fw-bold">Incapacidades</span>
         <a class="btn fw-bold my-2 text-light bg-primary" onclick="window.history.back()" >Volver</a>
     </div>
+
+    <a class="btn fw-bold ms-4 mt-4 bg-warning" 
+        style="position: absolute; top:150px;"> 
+            Nuevo Registro
+    </a>
 
     <div class="row p-4">
         <table
@@ -81,7 +86,7 @@
                             ${row.RevisionDatos == 1 ? `
                             <a class="ms-3 text-decoration-none" 
                                 title="Haga click para gestionar el radicado"
-                                onclick="cargarModal('${urlGestion}', 'Gestion Incapacidad', '', 'modal-md')">
+                                onclick="cargarModal('${urlGestion}', 'Gestion Incapacidad', '#formGestionIncapacidad', 'modal-lg')">
                                 <i class="fas fa-clipboard-list fs-2 text-success"></i> 
                             </a>` : ''}
                         </div>
@@ -94,18 +99,21 @@
             document.querySelectorAll('#formIncapacidad input, #formIncapacidad select').forEach(element => {
                 if (element.id === 'IdIncapacidad') { return; }
                 element.disabled = false;
-        });
+            });
+        }
 
         function mostrarObservacion() {
             const selectedOption = document.querySelector('input[name="IncapacidadEstado"]:checked').value;
             
             if (selectedOption === 'RECHAZADO') {
                 document.getElementById('observacionDiv').style.display = 'block';
+                document.getElementById('observacionDiv').required = true;
             } else {
                 document.getElementById('observacionDiv').style.display = 'none';
+                document.getElementById('observacionDiv').required = false;
             }
         }
-    }
+    
     </script>
 @endpushOnce
 

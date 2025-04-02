@@ -23,7 +23,7 @@ Route::get('/clear', function () {
  });
 
 
-Route::prefix("formatos")->middleware(['auth', 'permisos:acceso-gestion-documental'])->name("formatos.")->group(function(){
+Route::prefix("formatos")->middleware(['auth', 'permisos:acceso-gestion-documental','modulo.activo:21'])->name("formatos.")->group(function(){
     Route::get("/",[FormatoController::class,"index"])->name("index");
     Route::get("/create",[FormatoController::class,"crearNuevoFormato"])->middleware('permisos:crear-gestion-documental')->name("create");
     Route::post("/",[FormatoController::class,"guardarFormato"])->name("store");
@@ -36,7 +36,7 @@ Route::prefix("formatos")->middleware(['auth', 'permisos:acceso-gestion-document
 });
 
 //Ruta Modulo administración
-Route::prefix("administracion")->middleware(['auth', 'permisos:acceso-administracion'])->group(function(){
+Route::prefix("administracion")->middleware(['auth', 'permisos:acceso-administracion','modulo.activo:7'])->group(function(){
     //Resources -> index, create, store, edit, update, delete, show
     Route::resource("personas",PersonaController::class)->except(["destroy"]);
     Route::resource("usuarios",UserController::class)->except(["show","destroy"]);
@@ -51,7 +51,7 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:acceso-administra
 });
 
 //Rutas Modulo Configuracion
-Route::prefix("configuracion")->middleware(['auth', 'permisos:acceso-configuracion'])->group(function(){
+Route::prefix("configuracion")->middleware(['auth', 'permisos:acceso-configuracion','modulo.activo:6'])->group(function(){
     Route::prefix("sistema")->group(function(){
         Route::get("/",[ModuloController::class,"getGestionSistema"])->name("gestion-sistema.index");
         Route::prefix("modulos")->name("modulos.")->group(function(){
@@ -65,7 +65,7 @@ Route::prefix("configuracion")->middleware(['auth', 'permisos:acceso-configuraci
 });
 
 //Rutas Modulo Gestion RRHH
-Route::prefix("gestionRRHH")->middleware(['auth', 'permisos:acceso-gestionRRHH'])->group(function(){
+Route::prefix("gestionRRHH")->middleware(['auth', 'permisos:acceso-gestion-rh','modulo.activo:2'])->group(function(){
     Route::prefix("gestion-empleado")->name("gestion-incapacidades.")->group(function(){
         Route::get("/",[ModuloController::class,"getGestionEmpleado"])->name("index");
         Route::get("/incapacidades",[IncapacidadController::class,"listaIncapacidades"])->name("incapacidades");
@@ -73,9 +73,11 @@ Route::prefix("gestionRRHH")->middleware(['auth', 'permisos:acceso-gestionRRHH']
         Route::get("/incapacidades/{id}/datos",[IncapacidadController::class,"editIncapacidad"])->name("incapacidades.edit");
         Route::put("/incapacidades/{id}/datos",[IncapacidadController::class,"updateIncapacidad"])->name("incapacidades.update");
         Route::get("/incapacidades/{id}/gestion",[IncapacidadController::class,"gestionIncapacidad"])->name("incapacidades.gestion");
+        Route::put("/incapacidades/{id}/estado",[IncapacidadController::class,"updateEstadoIncapacidad"])->name("incapacidades.estado");
         Route::get("/seguimiento",[IncapacidadController::class,"incapacidadesSeguimiento"])->name("seguimiento");
         Route::get("/seguimiento/cargarDatos",[IncapacidadController::class,"cargarDatosSeguimiento"])->name("seguimiento.cargarDatos");
         Route::get("/seguimiento/{id}/adjuntos",[IncapacidadController::class,"incapacidadAdjuntos"])->name("seguimiento.adjuntos");
+        Route::get("/seguimiento/{id}/detalle",[IncapacidadController::class,"seguimientoDetalle"])->name("seguimiento.detalle");
     });
 });
 

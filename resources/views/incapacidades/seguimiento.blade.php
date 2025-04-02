@@ -3,7 +3,7 @@
 @section('title','Seguimiento incapacidades')
     
 @section('content')
-<div class="container-fluid p-0 border rounded" style="min-height:150px">
+<div class="container-fluid p-0 border rounded" style="min-height:150px; background-color: white">
     <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-secondary">
         <span class="text-left text-light fs-5 fw-bold">Seguimiento incapacidades</span>
         <a class="btn fw-bold my-2 text-light bg-primary" onclick="window.history.back()" >Volver</a>
@@ -44,6 +44,8 @@
     <script>
         var rutas = {
             adjuntos: "{{ route('gestion-incapacidades.seguimiento.adjuntos', ['id' => ':id']) }}",
+            datos: "{{ route('gestion-incapacidades.incapacidades.edit', ['id' => ':id']) }}",
+            seguimientoDetalle: "{{ route('gestion-incapacidades.seguimiento.detalle', ['id' => ':id']) }}"
         };
 
         function detalleIncapacidad(index, row) {
@@ -51,7 +53,9 @@
             let fechaFin = new Date(row.IncFecFin);
 
             let diasIncapacidad = Math.ceil((fechaFin - fechaInicio) / (1000 * 60 * 60 * 24));
+            let urlDatos = rutas.datos.replace(':id', row.IdIncapacidad);
             let urlAdjuntos = rutas.adjuntos.replace(':id', row.IdIncapacidad);
+            let urlSeguimientoDetalle = rutas.seguimientoDetalle.replace(':id', row.IdIncapacidad);
 
             return `
             <div class="p-3 border rounded bg-light">
@@ -69,9 +73,15 @@
                                 onclick="cargarModal('${urlAdjuntos}', 'Documentos Incapacidad', '', 'modal-lg')">     
                                 <i class="fas fa-file fs-3"></i>
                             </a>
-                            <a class="ms-3" 
-                                title="Haga click para editar la incapacidad">
-                                <i class="fas fa-edit fs-3"></i> 
+                            <a class="ms-3 text-decoration-none" 
+                                title="Haga click para editar la incapacidad"
+                                onclick="cargarModal('${urlDatos}', 'Revisión datos incapacidad', '#formIncapacidad', 'modal-xl')">
+                                <i class="fas fa-edit fs-2"></i> 
+                            </a>
+                             <a class="ms-3 text-decoration-none" 
+                                title="Haga click para ver el seguimiento a la incapacidad"
+                                href="${urlSeguimientoDetalle}">
+                                <i class="fas fa-file-medical fs-2"></i> 
                             </a>
                         </div>
                     </div>

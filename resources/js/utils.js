@@ -29,3 +29,16 @@ export function deshabilitarSubmit(form) {
     submitButton.disabled = true;
 }
 
+export function handleMenuActive() {
+    var url = window.location.href; 
+   
+    $('ul.nav-sidebar a').filter(function() {
+        let href = this.href;
+        return href !== window.location.origin + "/#" && url.startsWith(href);
+    }).addClass('active');
+
+    $('ul.nav-treeview a').filter(function() {
+        let href = this.href;
+        return href !== window.location.origin + "/#" && url.startsWith(href);
+    }).parentsUntil(".nav-sidebar > .nav-treeview").addClass('menu-open').prev('a').addClass('active');
+}

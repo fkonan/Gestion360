@@ -1,4 +1,4 @@
-// jQuery
+//jQuery
 import $ from 'jquery';
 import 'jquery-validation';
 window.$ = window.jQuery = $;
@@ -31,8 +31,11 @@ $.fn.modal = function (...args) {
 import Swal from 'sweetalert2';
 window.Swal = Swal; 
 
-import { deshabilitarSubmit, actualizarReloj } from './utils';
+import { deshabilitarSubmit, actualizarReloj, handleMenuActive } from './utils';
 window.deshabilitarSubmit = deshabilitarSubmit;
 
+
+//Inicializar funciones
 setInterval(actualizarReloj, 1000);
 actualizarReloj();
+handleMenuActive();

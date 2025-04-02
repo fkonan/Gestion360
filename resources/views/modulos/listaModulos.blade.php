@@ -3,7 +3,7 @@
 @section('title','Lista modulos')
 
 @section('content')
-<div class="container-fluid p-0 border rounded" style="min-height:150px">
+<div class="container-fluid p-0 border rounded" style="min-height:150px; background-color: white">
 
     <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-secondary">
         <span class="text-left text-light fs-5 fw-bold">Módulos</span>
@@ -11,8 +11,8 @@
     </div>
 
     @if(auth()->user()->can('crear-gestion-modulos'))
-        <a class="btn fw-bold ms-4 mt-4 text-light bg-primary" 
-            style="position: absolute; top:150px" 
+        <a class="btn fw-bold ms-4 mt-4 bg-warning" 
+            style="position: absolute; top:150px;" 
             onclick="cargarModal(`{{ route('modulos.create') }}`, 'Crear Modulo', '#formFormato')">
                 Crear Modulo
         </a>
@@ -21,7 +21,7 @@
     <div class="row p-4">
         <table
             id="modulosDataTable"
-            class="table table-md table-striped"
+            class="table table-sm table-striped"
             data-page-size="10"
             data-toggle="table"
             data-locale="es-ES"
