@@ -29,16 +29,17 @@ export function deshabilitarSubmit(form) {
     submitButton.disabled = true;
 }
 
+//Esta funcion lleva control de cuando un elemento de menu debe ser active segun las rutas
 export function handleMenuActive() {
-    var url = window.location.href; 
+    var url = window.location.href.split('#')[0];
    
     $('ul.nav-sidebar a').filter(function() {
         let href = this.href;
-        return href !== window.location.origin + "/#" && url.startsWith(href);
+        return href !== window.location.origin + "/" && url.startsWith(href);
     }).addClass('active');
 
     $('ul.nav-treeview a').filter(function() {
         let href = this.href;
-        return href !== window.location.origin + "/#" && url.startsWith(href);
+        return href !== window.location.origin + "/" && url.startsWith(href);
     }).parentsUntil(".nav-sidebar > .nav-treeview").addClass('menu-open').prev('a').addClass('active');
 }

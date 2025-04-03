@@ -30,6 +30,7 @@
                                 id="IncapacidadEstadoAprobado"
                                 name="IncapacidadEstado" 
                                 value="APROBADO" 
+                                checked="checked"
                                 onchange="mostrarObservacion()"/>
                         <label class="form-check-label" for="IncapacidadEstadoAprobado">Aprobado</label>
                     </div>

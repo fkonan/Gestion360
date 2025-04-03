@@ -21,6 +21,10 @@ class Persona extends Model
         "PerFechReg", "PerHorReg", "PerEstado"
     ];
 
+    public function nombreCompleto(){
+        return mb_strtoupper($this->PerNombres.' '.$this->PerApellidos, 'UTF-8');
+    }
+
     public function municipioNac(): BelongsTo{
         return $this->belongsTo(Municipio::class,"PerLugNac","IdMunicipio");
     }

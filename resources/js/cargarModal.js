@@ -1,5 +1,13 @@
+// Esta función puede ser llamada desde cualquier página en el proyecto (al ser cargarda con vite en el archivo en el archivo),
+// para mostrar un modal con el contenido de una URL específica y carga funciones requerias.
+//
+// Parámetros:
+// - url: La URL de la página que se quiere mostrar en el modal.
+// - titulo: (Opcional) El título del modal. Por defecto, se muestra como "Contenido".
+// - formularioId: (Opcional) El ID del formulario para activar las validaciones (solo si el modal contiene un formulario).
+// - size: (Opcional) El tamaño del modal. Puede ser "modal-xl", "modal-lg", "modal-sm" o ninguno (para tamaño normal).
 
-//Carga un modal con el contenido de una URL y carga funciones requerias
+
 function cargarModal(url, titulo = "", formularioId = null, size = null) {
     const $modal = $("#globalModal");
     const $modalContent = $("#globalModalContent");
@@ -71,7 +79,6 @@ function cargarModal(url, titulo = "", formularioId = null, size = null) {
         $modalContent.removeData("loaded");
     });
 }
-
 
 
 function bootstrapDualListInit(id, nombre){

@@ -77,7 +77,9 @@ Route::prefix("gestionRRHH")->middleware(['auth', 'permisos:acceso-gestion-rh','
         Route::get("/seguimiento",[IncapacidadController::class,"incapacidadesSeguimiento"])->name("seguimiento");
         Route::get("/seguimiento/cargarDatos",[IncapacidadController::class,"cargarDatosSeguimiento"])->name("seguimiento.cargarDatos");
         Route::get("/seguimiento/{id}/adjuntos",[IncapacidadController::class,"incapacidadAdjuntos"])->name("seguimiento.adjuntos");
-        Route::get("/seguimiento/{id}/detalle",[IncapacidadController::class,"seguimientoDetalle"])->name("seguimiento.detalle");
+        Route::get("/seguimiento/{id}/registro",[IncapacidadController::class,"seguimientoDetalle"])->name("seguimiento.detalle");
+        Route::get("/seguimiento/{id}/nuevo-seguimiento",[IncapacidadController::class,"nuevoSeguimiento"])->name("seguimiento.detalle.crear");
+        Route::post("/seguimiento/{id}/nuevo-seguimiento",[IncapacidadController::class,"guardarSeguimiento"])->name("seguimiento.detalle.store");
     });
 });
 

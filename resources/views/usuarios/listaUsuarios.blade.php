@@ -61,21 +61,24 @@
         let urlUsuarios = rutas.usuarios.replace(':id', row.IdUsuario);
 
         return `
-          <div class="p-3 border rounded bg-light">
+          <div class="p-2 border rounded bg-light">
             <div class="row">
                  <div class="col-md-12">
-                    <strong class="mb-2 me-4">Opciones:</strong>
+                    <strong class="mb-2 me-2">Acciones:</strong>
                     <a class="btn btn-dark btn-sm m-1" 
+                        title="Haga click para gestionar los permisos del usuario"
                         onclick="cargarModal('${urlPermisos}', 'Permisos usuario', '#formPermisoUsuario', 'modal-xl')">
-                        <i class="fas fa-lock"></i> Permisos
+                        <i class="fas fa-lock"></i>
                     </a>
                     <a class="btn btn-dark btn-sm m-1" 
+                        title="Haga click para gestionar los roles del usuario"
                         onclick="cargarModal('${urlRoles}', 'Roles usuario', '#formRolUsuario', 'modal-lg')">
-                        <i class="fas fa-user"></i> Roles
+                        <i class="fas fa-user"></i>
                     </a>
                     <a class="btn btn-dark btn-sm m-1" 
+                        title="Haga click para editar el usuario"
                         onclick="cargarModal('${urlUsuarios}', 'Editar Usuario', '#formEditUsuario', 'modal-lg')">
-                        <i class="fas fa-edit"></i> Editar
+                        <i class="fas fa-edit"></i>
                     </a>
                 </div>
             </div>

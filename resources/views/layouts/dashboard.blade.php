@@ -66,6 +66,7 @@
 
             <section class="content">
                 <div class="container-fluid pb-4">
+                    @yield('breadcrumb')
                     @yield('content')
                 </div>
             </section>

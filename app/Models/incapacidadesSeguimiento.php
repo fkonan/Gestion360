@@ -12,6 +12,15 @@ class incapacidadesSeguimiento extends Model
     protected $primaryKey = 'idSeguimiento';
     public $timestamps = false;
 
+    protected $fillable = [
+        "IncapacidadId",
+        "Observacion",
+        "SegFecReg",
+        "SegHoReg",
+        "UserRegistra",
+        "Estado"
+    ];
+
     public function incapacidad(): BelongsTo{
         return $this->belongsTo(Incapacidad::class, 'IncapacidadId', 'IdIncapacidad');
     }

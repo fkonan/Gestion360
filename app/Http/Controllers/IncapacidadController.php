@@ -5,8 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Arl;
 use App\Models\Eps;
 use App\Models\Incapacidad;
+use App\Models\incapacidadesSeguimiento;
 use App\Models\Parametros;
+use App\Rules\IncapacidadMaxima;
+use Illuminate\Foundation\Exceptions\Renderer\Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class IncapacidadController extends Controller
@@ -35,7 +39,7 @@ class IncapacidadController extends Controller
             session()->flash('alert', ['type' => 'success','title' => 'No hay incapacidades para hacer seguimiento']);  
             return back();
         }
-        return view("incapacidades.seguimiento",compact("incapacidadesSeguimiento"));
+        return view("incapacidades.listaSeguimiento",compact("incapacidadesSeguimiento"));
     }
 
     public function cargarDatosSeguimiento() {
@@ -68,9 +72,16 @@ class IncapacidadController extends Controller
         $incapacidad = Incapacidad::findOrFail($id);
 
         $validator = Validator::make($request->all(), [
-            'IncFecFin' => 'after_or_equal:IncFecIni',
+            'IncFecIni' => 'date',
+            'IncFecFin' => [
+                'date',
+                'after_or_equal:IncFecIni',
+                new IncapacidadMaxima($request->IncFecIni),
+            ],
         ],[
             'IncFecFin.after_or_equal' => 'La fecha de fin debe ser posterior o igual a la fecha de inicio.',  
+            'IncFecIni.date' => 'La fecha de fin debe ser una fecha válida.',
+            'IncFecFin.date' => 'La fecha de fin debe ser una fecha válida.',  
         ]);
 
         if ($validator->fails()) {
@@ -85,8 +96,7 @@ class IncapacidadController extends Controller
             'title' => 'Se han actualizado los datos del radicado exitosamente',
             'redirect' => route('gestion-incapacidades.incapacidades'),
             'type' => 'success', 
-        ]);
-       
+        ]); 
     }
 
     public function gestionIncapacidad($id){
@@ -130,7 +140,58 @@ class IncapacidadController extends Controller
     }
 
     public function seguimientoDetalle($id){
-        $listaSeguimiento = Incapacidad::findOrFail($id)->seguimiento;
-        return view("incapacidades.seguimientoDetalle",compact("listaSeguimiento"));
+        $incapacidad = Incapacidad::findOrFail($id);
+        $listaSeguimiento = $incapacidad->seguimiento()
+            ->orderBy('SegFecReg', 'desc')
+            ->orderBy('SegHorReg', 'desc')
+            ->get();  
+        return view("incapacidades.registroSeguimiento",compact("incapacidad","listaSeguimiento"));
+    }
+
+    public function nuevoSeguimiento($id){
+        $incapacidad = Incapacidad::findOrFail($id);
+        return view("incapacidades.nuevoSeguimiento",compact("incapacidad"));
+    }
+
+    public function guardarSeguimiento(Request $request, $id){
+
+        try{
+            $validator = Validator::make($request->all(), [
+                'Observacion' =>'required|max:255',
+            ],[
+                'Observacion.required' => 'El campo observación es obligatorio.',
+                'Observacion.max' => 'La observación no puede exceder los 255 caracteres.',
+            ]);
+    
+            if ($validator->fails()) {
+                return response()->json([
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $user = Auth::user();
+    
+            $incapacidadSeguimiento = new incapacidadesSeguimiento();
+            $incapacidadSeguimiento->IncapacidadId = $id;
+            $incapacidadSeguimiento->Observacion = $request->Observacion;
+            $incapacidadSeguimiento->SegFecReg = now();
+            $incapacidadSeguimiento->SegHorReg = now();
+            $incapacidadSeguimiento->UserRegistra = $user->persona->nombreCompleto();
+            $incapacidadSeguimiento->Estado = "ACTIVO";
+            $incapacidadSeguimiento->save();
+    
+            return response()->json([
+                'title' => 'Seguimiento registrado exitosamente',
+                'redirect' => route('gestion-incapacidades.seguimiento.detalle', ['id' => $incapacidadSeguimiento->IncapacidadId]),
+                'type' => 'success', 
+            ]);
+        }catch(Exception $e){
+            return response()->json([
+                'title' => 'Error al registrar el seguimiento',
+                'redirect' => route('gestion-incapacidades.seguimiento.detalle', ['id' => $incapacidadSeguimiento->IncapacidadId]),
+                'type' => 'danger', 
+            ]);
+        }
+        
     }
 }

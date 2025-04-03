@@ -23,11 +23,10 @@
             data-url="{{ route('gestion-incapacidades.seguimiento.cargarDatos') }}"        
             data-pagination-parts="['pageSize', 'pageList', 'pageNext', 'pagePrev']">   
             <thead class="table-primary">
-                <tr class="bg-primary">
+                <tr>
                     <th data-field="IncPerNom">Nombre</th>
                     <th data-field="PerNumDoc">Documento</th>
                     <th data-field="causa.ParDes">Causa Incapacidad</th>
-                    <th data-field="diagnostico.DescCie">Diagnostico</th>
                     <th data-field="eps.EPSNombre">EPS</th>
                     <th data-field="arl.ARLNombre">ARL</th>
                     <th data-field="IncFecIni">Fecha Inicio</th>
@@ -61,7 +60,7 @@
             <div class="p-3 border rounded bg-light">
                 <div class="row">
                     <div class="col-md-12">
-                        <p><strong>Observación:</strong> ${row.Observacion}</p>
+                        <p><strong>Diagnóstico:</strong> ${row.diagnostico.DescCie}</p>
                         <p><strong>Días de Incapacidad:</strong> ${diasIncapacidad}</p>
                         <p><strong>Estado:</strong> ${row.IncapacidadEstado}</p>
                         <p><strong>Fecha Registro:</strong> ${row.IncFecReg}</p>
@@ -88,6 +87,13 @@
                 </div>
             </div>
             `;
+        }
+
+        function habilitarInputs() {
+            document.querySelectorAll('#formIncapacidad input, #formIncapacidad select').forEach(element => {
+                if (element.id === 'IdIncapacidad') { return; }
+                element.disabled = false;
+            });
         }
     </script>
 @endpushOnce
