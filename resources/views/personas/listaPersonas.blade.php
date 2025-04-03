@@ -2,6 +2,14 @@
 
 @section('title','Lista personas')
 
+@section('breadcrumb')
+<x-breadcrumb :items="[
+        ['name' => 'Home', 'url' => route('home')],
+        ['name' => 'Personas'],
+    ]" />
+<br>
+@endsection
+
 @section('content')
 <div class="container-fluid p-0 border rounded bg-white" style="min-height:150px;">
 
@@ -10,8 +18,7 @@
         <a class="btn fw-bold my-2 text-light bg-primary" onclick="window.history.back()" >Volver</a>
     </div>
 
-    <a class="btn fw-bold ms-4 mt-4 text-light bg-warning" 
-        style="position: absolute; top:150px;"
+    <a class="btn fw-bold ms-4 mt-4 text-light bg-warning botonBoostrapTable" 
         onclick="cargarModal(`{{ route('personas.create') }}`, 'Crear Persona', '#formPersonaCrear')">
         Registrar persona
     </a>

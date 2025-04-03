@@ -1,6 +1,15 @@
 @extends('layouts.dashboard')
 
 @section('title','Incapacidades')
+
+@section('breadcrumb')
+<x-breadcrumb :items="[
+        ['name' => 'Home', 'url' => route('home')],
+        ['name' => 'Gestión Empleado', 'url' => route('gestion-incapacidades.index')],
+        ['name' => 'Incapacidades'],
+    ]" />
+<br>
+@endsection
     
 @section('content')
 <div class="container-fluid p-0 border rounded bg-white" style="min-height:150px;">
@@ -9,10 +18,7 @@
         <a class="btn fw-bold my-2 text-light bg-primary" onclick="window.history.back()" >Volver</a>
     </div>
 
-    <a class="btn fw-bold ms-4 mt-4 bg-warning" 
-        style="position: absolute; top:150px;"> 
-            Nuevo Registro
-    </a>
+    <a class="btn fw-bold ms-4 mt-4 bg-warning botonBoostrapTable"> Nuevo Registro</a>
 
     <div class="row p-4">
         <table

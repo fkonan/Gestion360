@@ -2,6 +2,16 @@
 
 @section('title','Lista modulos')
 
+@section('breadcrumb')
+<x-breadcrumb :items="[
+        ['name' => 'Home', 'url' => route('home')],
+        ['name' => 'Gestión Sistema', 'url' => route('gestion-sistema.index')],
+        ['name' => 'Administrar Modulos']
+    ]" />
+<br>
+@endsection
+
+
 @section('content')
 <div class="container-fluid p-0 border rounded" style="min-height:150px; background-color: white">
 
@@ -11,8 +21,7 @@
     </div>
 
     @if(auth()->user()->can('crear-gestion-modulos'))
-        <a class="btn fw-bold ms-4 mt-4 bg-warning" 
-            style="position: absolute; top:150px;" 
+        <a class="btn fw-bold ms-4 mt-4 bg-warning botonBoostrapTable"  
             onclick="cargarModal(`{{ route('modulos.create') }}`, 'Crear Modulo', '#formFormato')">
                 Crear Modulo
         </a>

@@ -135,3 +135,8 @@ body:not(.sidebar-collapse) .nav-item .nav-treeview .sangriaSegundoNivel{
     transform: translateY(-4px);
     transition: all 0.1s ease-in-out;
 }
+
+.botonBoostrapTable{
+    position: absolute;
+    top: 215px;
+}

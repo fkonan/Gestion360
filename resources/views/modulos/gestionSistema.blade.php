@@ -2,6 +2,13 @@
 
 @section('title','Gestión Sistema')
     
+@section('breadcrumb')
+<x-breadcrumb :items="[
+        ['name' => 'Home', 'url' => route('home')],
+        ['name' => 'Gestión Sistema'],
+    ]" />
+@endsection
+
 @section('content')
 <div class="container-fluid pt-4" style="min-height:150px">
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4">

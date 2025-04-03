@@ -1,6 +1,15 @@
 @extends('layouts.dashboard')
 
 @section('title','Seguimiento incapacidades')
+
+@section('breadcrumb')
+<x-breadcrumb :items="[
+        ['name' => 'Home', 'url' => route('home')],
+        ['name' => 'Gestión Empleado', 'url' => route('gestion-incapacidades.index')],
+        ['name' => 'Seguimiento Incapacidades'],
+    ]" />
+<br>
+@endsection
     
 @section('content')
 <div class="container-fluid p-0 border rounded" style="min-height:150px; background-color: white">

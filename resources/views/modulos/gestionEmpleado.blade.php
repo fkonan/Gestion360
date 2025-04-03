@@ -3,12 +3,10 @@
 @section('title','Incapacidades')
 
 @section('breadcrumb')
-<nav aria-label="breadcrumb">
-  <ol class="breadcrumb">
-    <li class="breadcrumb-item"><a class="text-decoration-none" href="#">Home</a></li>
-    <li class="breadcrumb-item active" aria-current="page">Gestion Empleado</li>
-  </ol>
-</nav>
+<x-breadcrumb :items="[
+        ['name' => 'Home', 'url' => route('home')],
+        ['name' => 'Gestión Empleado'],
+    ]" />
 @endsection
     
 @section('content')

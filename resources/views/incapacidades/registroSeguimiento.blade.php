@@ -1,6 +1,16 @@
 @extends('layouts.dashboard')
 
 @section('title','Registro Seguimiento')
+
+@section('breadcrumb')
+<x-breadcrumb :items="[
+        ['name' => 'Home', 'url' => route('home')],
+        ['name' => 'Gestión Empleado', 'url' => route('gestion-incapacidades.index')],
+        ['name' => 'Seguimiento Incapacidades', 'url' => route('gestion-incapacidades.seguimiento')],
+        ['name' => 'Registro Seguimiento']
+    ]" />
+<br>
+@endsection
     
 @section('content')
 <div class="container-fluid p-0 border rounded" style="min-height:150px; background-color: white">
@@ -9,8 +19,7 @@
         <a class="btn fw-bold my-2 text-light bg-primary" onclick="window.history.back()">Volver</a>
     </div>
 
-    <a class="btn fw-bold ms-4 mt-4 bg-warning"
-        style="position: absolute; top:150px;"
+    <a class="btn fw-bold ms-4 mt-4 bg-warning botonBoostrapTable"
         onclick="cargarModal(`{{ route('gestion-incapacidades.seguimiento.detalle.crear', ['id' => $incapacidad->IdIncapacidad]) }}`, 'Nuevo Seguimiento','#formNuevoSeguimiento','modal-lg')"> 
             Nuevo Seguimiento
     </a>
