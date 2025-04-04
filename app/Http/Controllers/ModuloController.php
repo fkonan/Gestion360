@@ -116,6 +116,10 @@ class ModuloController extends Controller
     public function getGestionEmpleado(){
         return view('modulos.gestionEmpleado');
     }
+
+    public function getReportes(){
+        return view('modulos.reportes');
+    }
 }
 
 

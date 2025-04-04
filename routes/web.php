@@ -48,6 +48,10 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:acceso-administra
         Route::get("/permisos/{id}",[PermisosController::class,"edit"])->name("permisos.edit");
         Route::put("/permisos/{id}",[PermisosController::class,"update"])->name("permisos.update");
     });
+
+    Route::prefix("reportes")->group(function(){
+        Route::get("/",[ModuloController::class,"getReportes"])->name("reportes.index");
+    });
 });
 
 //Rutas Modulo Configuracion
