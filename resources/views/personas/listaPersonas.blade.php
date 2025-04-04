@@ -36,6 +36,8 @@
                 <tr>
                     <th>Identificación</th>
                     <th>Nombre Completo</th>
+                    <th>Correo</th>
+                    <th>Telefono</th>
                     <th>Departamento</th>
                     <th>Genero</th>    
                     <th>Estado</th>
@@ -47,6 +49,8 @@
                 <tr>
                     <td>{{ $persona?->PerNumDoc }}</td>
                     <td>{{ $persona?->PerNombres }} {{ $persona?->PerApellidos }}</td>
+                    <td>{{ $persona?->datos?->PerEmail ?? "-"}}</td>
+                    <td>{{ $persona?->datos?->PerTelefono ?? "-"}}</td>
                     <td>{{ $persona?->municipioNac->departamento->DepNomMin }}</td>
                     <td>{{ $persona?->PerGenero }}</td>
                     <td>{{ $persona?->PerEstado }}</td>

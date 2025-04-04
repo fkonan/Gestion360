@@ -28,6 +28,10 @@ export function deshabilitarSubmit(form) {
     const submitButton = form.querySelector('button[type="submit"], input[type="submit"]');
     submitButton.disabled = true;
 }
+export function habilitarSubmit(form) {
+    const submitButton = form.querySelector('button[type="submit"], input[type="submit"]');
+    submitButton.disabled = false;
+}
 
 //Esta funcion lleva control de cuando un elemento de menu debe ser active segun las rutas
 export function handleMenuActive() {

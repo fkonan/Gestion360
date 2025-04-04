@@ -25,10 +25,10 @@ Route::get('/clear', function () {
 
 Route::prefix("formatos")->middleware(['auth', 'permisos:acceso-gestion-documental','modulo.activo:21'])->name("formatos.")->group(function(){
     Route::get("/",[FormatoController::class,"index"])->name("index");
-    Route::get("/create",[FormatoController::class,"crearNuevoFormato"])->middleware('permisos:crear-gestion-documental')->name("create");
+    Route::get("/create",[FormatoController::class,"crearNuevoFormato"])->name("create");
     Route::post("/",[FormatoController::class,"guardarFormato"])->name("store");
     
-    Route::prefix("/{id}/versions")->middleware('permisos:editar-gestion-documental')->name("versions.")->group(function(){
+    Route::prefix("/{id}/versions")->name("versions.")->group(function(){
         Route::get("/",[FormatoController::class,"versionesFormato"])->name("index");
         Route::get("/create",[FormatoController::class,"crearVersionFormato"])->name("create");
         Route::post("/",[FormatoController::class,"guardarVersionFormato"])->name("store");
@@ -56,8 +56,8 @@ Route::prefix("configuracion")->middleware(['auth', 'permisos:acceso-configuraci
         Route::get("/",[ModuloController::class,"getGestionSistema"])->name("gestion-sistema.index");
         Route::prefix("modulos")->name("modulos.")->group(function(){
             Route::get("/",[ModuloController::class,"index"])->name("index");
-            Route::get("/create",[ModuloController::class,"create"])->middleware('permisos:crear-gestion-modulos')->name("create");
-            Route::get("/{id}",[ModuloController::class,"edit"])->middleware('permisos:editar-gestion-modulos')->name("edit");
+            Route::get("/create",[ModuloController::class,"create"])->name("create");
+            Route::get("/{id}",[ModuloController::class,"edit"])->name("edit");
             Route::post("/",[ModuloController::class,"store"])->name("store");
             Route::put("/{id}",[ModuloController::class,"update"])->name("update");
         });

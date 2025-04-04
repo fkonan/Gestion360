@@ -11,7 +11,6 @@
 <br>
 @endsection
 
-
 @section('content')
 <div class="container-fluid p-0 border rounded" style="min-height:150px; background-color: white">
 
@@ -20,13 +19,11 @@
         <a class="btn fw-bold my-2 text-light bg-primary" onclick="window.history.back()" >Volver</a>
     </div>
 
-    @if(auth()->user()->can('crear-gestion-modulos'))
-        <a class="btn fw-bold ms-4 mt-4 bg-warning botonBoostrapTable"  
-            onclick="cargarModal(`{{ route('modulos.create') }}`, 'Crear Modulo', '#formFormato')">
-                Crear Modulo
-        </a>
-    @endif
-
+    <a class="btn fw-bold ms-4 mt-4 bg-warning botonBoostrapTable"  
+        onclick="cargarModal(`{{ route('modulos.create') }}`, 'Crear Modulo', '#formFormato')">
+            Crear Modulo
+    </a>
+    
     <div class="row p-4">
         <table
             id="modulosDataTable"
@@ -45,9 +42,7 @@
                     <th>Modulo Padre</th>    
                     <th>Fecha Registro</th>
                     <th>Hora Registro</th>
-                    @if(auth()->user()->can('editar-gestion-modulos'))
-                        <th>Opciones</th>
-                    @endif
+                    <th>Opciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -59,13 +54,11 @@
                    <th>{{ $modulo->padre->ModNom ?? "MODULO PRINCIPAL" }}</th>
                    <th>{{ $modulo->ModFechReg}}</th>
                    <th>{{ $modulo->ModHorReg}}</th>
-                    @if(auth()->user()->can('editar-gestion-modulos'))
-                        <th class="text-center" style="width: 80px;">
-                            <a class="btn btn-secondary p-0 px-2" onclick="cargarModal(`{{ route('modulos.edit', ['id' => $modulo->IdModulo]) }}`, 'Editar Modulo', '#formFormato')">
-                                <i class="nav-icon fas fa-edit"></i>
-                            </a>
-                        </th>
-                    @endif
+                    <th class="text-center" style="width: 80px;">
+                        <a class="btn btn-secondary p-0 px-2" onclick="cargarModal(`{{ route('modulos.edit', ['id' => $modulo->IdModulo]) }}`, 'Editar Modulo', '#formFormato')">
+                            <i class="nav-icon fas fa-edit"></i>
+                        </a>
+                    </th>
                 </tr>
             @endforeach
             </tbody>

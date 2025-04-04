@@ -140,6 +140,8 @@ function validarFormulario(form, TYPE="POST") {
                             $("#" + key).addClass("is-invalid");
                         });
                     }
+                    //Se habilita nuvamente el submit al usuario
+                    habilitarSubmit(form);
                 }
             });
         }

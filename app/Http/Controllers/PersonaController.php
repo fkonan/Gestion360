@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Validator;
 class PersonaController extends Controller
 {
     public function index(){
-        $personas = Persona::with('municipioNac')->get();
+        $personas = Persona::with(['municipioNac','datos'])->get();
         return view("personas.listaPersonas",compact("personas"));
     }
 

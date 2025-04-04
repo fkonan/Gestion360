@@ -18,8 +18,6 @@
         <a class="btn fw-bold my-2 text-light bg-primary" onclick="window.history.back()" >Volver</a>
     </div>
 
-    <a class="btn fw-bold ms-4 mt-4 bg-warning botonBoostrapTable"> Nuevo Registro</a>
-
     <div class="row p-4">
         <table
             id="incapacidadesDataTable"

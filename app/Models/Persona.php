@@ -40,4 +40,8 @@ class Persona extends Model
     public function usuario(): HasOne{
         return $this->hasOne(User::class,"idPersona","IdPersona");
     }
+
+    public function datos(): HasOne{
+        return $this->hasOne(PersonaDatos::class,"IdPersona","IdPersona");
+    }
 }

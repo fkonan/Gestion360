@@ -8,7 +8,7 @@
             <!-- Modulos permiso de visualizacion -->
             @if(! $modulo->ModPermiso || auth()->user()->can($modulo->ModPermiso))
             <li class="nav-item has-treeview">
-                <a  href="{{ $modulo->ModRuta ? route($modulo->ModRuta) : '#' }}" 
+                <a  href="{{ $modulo->ModRuta && Route::has($modulo->ModRuta) ? route($modulo->ModRuta) : '#' }}" 
                     class="nav-link text-dark"
                     style="background-color: #D6D6D6">
 
@@ -31,7 +31,7 @@
                         <!-- Submodulos permisos -->
                         @if(! $submodulo->ModPermiso || auth()->user()->can($submodulo->ModPermiso))     
                         <li class="nav-item">
-                            <a class="nav-link text-black"  href="{{ $submodulo->ModRuta ? route($submodulo->ModRuta) : '#' }}">
+                            <a class="nav-link text-black"  href="{{ $submodulo->ModRuta && Route::has($submodulo->ModRuta) ? route($submodulo->ModRuta) : '#' }}">
                                 <i class="nav-icon fas {{ $submodulo->ModIcono }} " style="color: #0E2146;"></i>
                                 <p>{{ Str::title($submodulo->ModNom) }}</p>
                             </a>

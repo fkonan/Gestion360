@@ -34,7 +34,7 @@
                 <div class="user-panel my-3 pt-3 pb-2 d-flex flex-column text-left">
                     <div class="info">
                         <span style="user-select: none" class="fw-medium text-dark">
-                            {{ auth()->user()->persona->PerNombres }} {{ auth()->user()->persona->PerApellidos }}
+                            {{ auth()->user()->persona?->PerNombres }} {{ auth()->user()->persona?->PerApellidos }}
                         </span>
                     </div>
                     <div class="info text-primary fw-medium">

@@ -9,13 +9,11 @@
         <a class="btn fw-bold my-2 text-light bg-primary" onclick="window.history.back()" >Volver</a>
     </div>
     
-    @if(auth()->user()->can('crear-gestion-documental'))
     <a class="btn fw-bold text-light ms-4 mt-4 bg-primary" 
         style="position: absolute; top:150px;" 
         href="{{ route('formatos.create') }}">
         Crear Proceso
     </a>
-    @endif
 
     <div class="row p-4">
         <table
@@ -39,9 +37,7 @@
             <th>Aprobó</th>
             <th>Versión</th>
             <th>PDF</th>
-            @if(auth()->user()->can('editar-gestion-documental'))
             <th>Opciones</th>
-            @endif
         </tr>
         </thead>
         <tbody>
@@ -59,13 +55,11 @@
             <th class="text-center"><a href="{{ asset('storage/' . $formato?->ultimaVersion?->Ruta) }}" target="_blank">
                 <i class="fas fa-file-pdf fa-2x text-danger"></i></a>
             </th>
-            @if(auth()->user()->can('editar-gestion-documental'))
             <td class="text-center">
                 <a href="{{ route('formatos.versions.index', ['id' => $formato?->IdFormato]) }}">
                 <i class="fas fa-list-alt fa-2x"></i>
                 </a>
             </td>
-            @endif
         </tr>
         @endforeach
         </tbody>

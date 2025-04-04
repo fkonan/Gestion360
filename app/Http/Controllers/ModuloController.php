@@ -32,10 +32,14 @@ class ModuloController extends Controller
             'ModEstado' =>'required',
             'ModRuta' =>'nullable|string|max:50',
             'ModPermiso' =>'nullable|string|max:50',
-            'ModIcono' =>'nullable|string|max:10',
+            'ModIcono' =>'nullable|string|max:20',
             'Mod_Padre_Id' =>'nullable|integer'
         ],[
             'ModNom.unique' => 'El nombre del modulo ya existe.',
+            'ModNom.required' => 'El nombre del modulo es requerido.',
+            'ModNom.max' => 'El nombre del modulo no puede tener más de 50 caracteres.',
+            'ModDesc.max' => 'La descripción no puede tener más de 300 caracteres.',
+            'ModIcono.max' => 'El icono no puede tener más de 20 caracteres.',
         ]);
 
         if ($validator->fails()) {

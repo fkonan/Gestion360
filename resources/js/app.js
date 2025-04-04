@@ -31,9 +31,9 @@ $.fn.modal = function (...args) {
 import Swal from 'sweetalert2';
 window.Swal = Swal; 
 
-import { deshabilitarSubmit, actualizarReloj, handleMenuActive } from './utils';
+import { deshabilitarSubmit, habilitarSubmit, actualizarReloj, handleMenuActive } from './utils';
 window.deshabilitarSubmit = deshabilitarSubmit;
-
+window.habilitarSubmit = habilitarSubmit;
 
 //Inicializar funciones
 setInterval(actualizarReloj, 1000);
