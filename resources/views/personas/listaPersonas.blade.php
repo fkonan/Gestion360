@@ -55,7 +55,7 @@
                     <td>{{ $persona?->PerGenero }}</td>
                     <td>{{ $persona?->PerEstado }}</td>
                     <td class="text-center" style="width: 100px;">
-                        <a class="btn btn-secondary p-0 px-2" onclick="cargarModal(`{{ route('personas.edit', ['persona' => $persona->IdPersona]) }}`, 'Editar Persona', '#formEditPersona')">
+                        <a class="btn btn-secondary p-0 px-2" onclick="cargarModal(`{{ route('personas.edit', ['id' => $persona->IdPersona]) }}`, 'Editar Persona', '#formEditPersona')">
                             <i class="nav-icon fas fa-edit"></i>
                         </a>
                     </td>   

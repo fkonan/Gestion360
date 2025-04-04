@@ -58,7 +58,7 @@
      var rutas = {
         permisos: "{{ route('permisos.edit', ['id' => ':id']) }}",
         roles: "{{ route('roles.edit', ['id' => ':id']) }}",
-        usuarios: "{{ route('usuarios.edit', ['usuario' => ':id']) }}"
+        usuarios: "{{ route('usuarios.edit', ['id' => ':id']) }}"
     };
 
     function detalleUsuarios(index, row) {

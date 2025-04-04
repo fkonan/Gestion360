@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Middleware\AutoLogout;
 use App\Http\Middleware\ModuloActivoMiddleware;
+use App\Http\Middleware\SoloAjaxMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'permisos' => PermissionMiddleware::class,
             'role' => RoleMiddleware::class,
+            'soloAJAX' => SoloAjaxMiddleware::class, 
             'modulo.activo' => ModuloActivoMiddleware::class,
         ]);
     })

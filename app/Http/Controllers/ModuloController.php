@@ -15,10 +15,6 @@ class ModuloController extends Controller
     }
 
     public function create(){
-        if(!request()->ajax()){
-            return $this->index();
-        }
-
         $permisos = Permission::all();
         $modulos = Modulo::with('submodulos')->whereNull('Mod_Padre_Id')->get();
 

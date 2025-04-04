@@ -37,18 +37,25 @@ Route::prefix("formatos")->middleware(['auth', 'permisos:acceso-gestion-document
 
 //Ruta Modulo administración
 Route::prefix("administracion")->middleware(['auth', 'permisos:acceso-administracion','modulo.activo:7'])->group(function(){
-    //Resources -> index, create, store, edit, update, delete, show
-    Route::resource("personas",PersonaController::class)->except(["destroy"]);
-    Route::resource("usuarios",UserController::class)->except(["show","destroy"]);
-    Route::get("usuarios/cargarDatos",[UserController::class,"cargarDatos"])->name("usuarios.cargarDatos");
-
-    Route::prefix("usuarios")->group(function(){
-        Route::get("/roles/{id}",[RolController::class,"editRolUsuario"])->name("roles.edit");
-        Route::put("/roles/{id}",[RolController::class,"updateRolUsuario"])->name("roles.update");
-        Route::get("/permisos/{id}",[PermisosController::class,"edit"])->name("permisos.edit");
-        Route::put("/permisos/{id}",[PermisosController::class,"update"])->name("permisos.update");
+    Route::prefix("personas")->group(function(){
+        Route::get("/",[PersonaController::class,"index"])->name("personas.index");
+        Route::get("/create",[PersonaController::class,"create"])->middleware('soloAJAX')->name("personas.create");
+        Route::post("/",[PersonaController::class,"store"])->name("personas.store");
+        Route::get("/{id}/edit",[PersonaController::class,"edit"])->middleware('soloAJAX')->name("personas.edit");
+        Route::put("/{id}",[PersonaController::class,"update"])->name("personas.update");
     });
-
+    Route::prefix("usuarios")->group(function(){
+        Route::get("/",[UserController::class,"index"])->name("usuarios.index");
+        Route::get("/create",[UserController::class,"create"])->middleware('soloAJAX')->name("usuarios.create");
+        Route::post("/",[UserController::class,"store"])->name("usuarios.store");
+        Route::get("/{id}/edit",[UserController::class,"edit"])->middleware('soloAJAX')->name("usuarios.edit");
+        Route::put("/{id}",[UserController::class,"update"])->name("usuarios.update");
+        Route::get("cargarDatos",[UserController::class,"cargarDatos"])->middleware('soloAJAX')->name("usuarios.cargarDatos");
+        Route::get("/{id}/roles",[RolController::class,"editRolUsuario"])->middleware('soloAJAX')->name("roles.edit");
+        Route::put("/{id}/roles",[RolController::class,"updateRolUsuario"])->name("roles.update");
+        Route::get("/{id}/permisos",[PermisosController::class,"edit"])->middleware('soloAJAX')->name("permisos.edit");
+        Route::put("/{id}/permisos",[PermisosController::class,"update"])->name("permisos.update");
+    });
     Route::prefix("reportes")->group(function(){
         Route::get("/",[ModuloController::class,"getReportes"])->name("reportes.index");
     });
@@ -58,10 +65,11 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:acceso-administra
 Route::prefix("configuracion")->middleware(['auth', 'permisos:acceso-configuracion','modulo.activo:6'])->group(function(){
     Route::prefix("sistema")->group(function(){
         Route::get("/",[ModuloController::class,"getGestionSistema"])->name("gestion-sistema.index");
+
         Route::prefix("modulos")->name("modulos.")->group(function(){
             Route::get("/",[ModuloController::class,"index"])->name("index");
-            Route::get("/create",[ModuloController::class,"create"])->name("create");
-            Route::get("/{id}",[ModuloController::class,"edit"])->name("edit");
+            Route::get("/create",[ModuloController::class,"create"])->middleware('soloAJAX')->name("create");
+            Route::get("/{id}",[ModuloController::class,"edit"])->middleware('soloAJAX')->name("edit");
             Route::post("/",[ModuloController::class,"store"])->name("store");
             Route::put("/{id}",[ModuloController::class,"update"])->name("update");
         });
@@ -73,15 +81,15 @@ Route::prefix("gestionRRHH")->middleware(['auth', 'permisos:acceso-gestion-rh','
     Route::prefix("gestion-empleado")->name("gestion-incapacidades.")->group(function(){
         Route::get("/",[ModuloController::class,"getGestionEmpleado"])->name("index");
         Route::get("/incapacidades",[IncapacidadController::class,"listaIncapacidades"])->name("incapacidades");
-        Route::get("/incapacidades/cargarDatos",[IncapacidadController::class,"cargarDatos"])->name("incapacidades.cargarDatos");
-        Route::get("/incapacidades/{id}/datos",[IncapacidadController::class,"editIncapacidad"])->name("incapacidades.edit");
+        Route::get("/incapacidades/cargarDatos",[IncapacidadController::class,"cargarDatos"])->middleware('soloAJAX')->name("incapacidades.cargarDatos");
+        Route::get("/incapacidades/{id}/datos",[IncapacidadController::class,"editIncapacidad"])->middleware('soloAJAX')->name("incapacidades.edit");
         Route::put("/incapacidades/{id}/datos",[IncapacidadController::class,"updateIncapacidad"])->name("incapacidades.update");
-        Route::get("/incapacidades/{id}/gestion",[IncapacidadController::class,"gestionIncapacidad"])->name("incapacidades.gestion");
+        Route::get("/incapacidades/{id}/gestion",[IncapacidadController::class,"gestionIncapacidad"])->middleware('soloAJAX')->name("incapacidades.gestion");
         Route::put("/incapacidades/{id}/estado",[IncapacidadController::class,"updateEstadoIncapacidad"])->name("incapacidades.estado");
         Route::get("/seguimiento",[IncapacidadController::class,"incapacidadesSeguimiento"])->name("seguimiento");
-        Route::get("/seguimiento/cargarDatos",[IncapacidadController::class,"cargarDatosSeguimiento"])->name("seguimiento.cargarDatos");
-        Route::get("/seguimiento/{id}/adjuntos",[IncapacidadController::class,"incapacidadAdjuntos"])->name("seguimiento.adjuntos");
-        Route::get("/seguimiento/{id}/registro",[IncapacidadController::class,"seguimientoDetalle"])->name("seguimiento.detalle");
+        Route::get("/seguimiento/cargarDatos",[IncapacidadController::class,"cargarDatosSeguimiento"])->middleware('soloAJAX')->name("seguimiento.cargarDatos");
+        Route::get("/seguimiento/{id}/adjuntos",[IncapacidadController::class,"incapacidadAdjuntos"])->middleware('soloAJAX')->name("seguimiento.adjuntos");
+        Route::get("/seguimiento/{id}/registro",[IncapacidadController::class,"seguimientoDetalle"])->middleware('soloAJAX')->name("seguimiento.detalle");
         Route::get("/seguimiento/{id}/nuevo-seguimiento",[IncapacidadController::class,"nuevoSeguimiento"])->name("seguimiento.detalle.crear");
         Route::post("/seguimiento/{id}/nuevo-seguimiento",[IncapacidadController::class,"guardarSeguimiento"])->name("seguimiento.detalle.store");
     });
