@@ -38,7 +38,7 @@
                 <div class="col-md-6 mb-3">
                     <label for="PerGenero" class="form-label">Género</label>
                     <select class="form-select" id="PerGenero" name="PerGenero" required>
-                        <option value="">Seleccione</option>
+                        <option value="" disabled selected>Seleccione</option>
                         <option value="MASCULINO">Masculino</option>    
                         <option value="FEMENINO">Femenino</option>
                         <option value="OTRO">Otro</option>
@@ -49,7 +49,7 @@
                 <div class="col-md-6 mb-3">
                     <label for="PerLugNac" class="form-label">Lugar nacimiento</label>
                     <select class="form-select select2" id="PerLugNac" name="PerLugNac" required>
-                        <option value="">Seleccione un lugar</option>
+                        <option value="" disabled selected>Seleccione un lugar</option>
                         @foreach($departamentos as $departamento)
                             <optgroup label="{{ $departamento->DepNom }}">
                             @foreach($departamento->municipios as $municipio)
@@ -72,7 +72,7 @@
                 <div class="col-md-6 mb-3">
                     <label for="PerLugExp" class="form-label">Lugar expedición documento</label>
                     <select class="form-select select2" id="PerLugExp" name="PerLugExp" required>
-                        <option value="">Seleccione un lugar</option>
+                        <option value="" disabled selected>Seleccione un lugar</option>
                             @foreach($departamentos as $departamento)
                                 <optgroup label="{{ $departamento->DepNom }}">
                                 @foreach($departamento->municipios as $municipio)

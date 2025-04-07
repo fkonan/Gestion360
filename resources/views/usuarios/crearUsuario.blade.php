@@ -6,10 +6,9 @@
         <div class="p-4">
             <div class="row">
                 <div class="col-md-6 mb-3">
-
                     <label for="idPersona" class="form-label">Nombre Persona</label>
                     <select class="form-select select2" id="idPersona" name="idPersona" required>
-                        <option value="">Seleccione una persona</option>
+                        <option value="" disabled selected>Seleccione una persona</option>
                         @foreach($personas as $persona)
                             <option value="{{ $persona->IdPersona }}">{{ $persona->PerNombres }} {{ $persona->PerApellidos }}</option>
                         @endforeach

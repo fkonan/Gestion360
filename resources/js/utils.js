@@ -26,7 +26,9 @@ export function actualizarReloj() {
 //Evitar dobles click en forms
 export function deshabilitarSubmit(form) {
     const submitButton = form.querySelector('button[type="submit"], input[type="submit"]');
-    submitButton.disabled = true;
+    if (form.checkValidity()) {
+        submitButton.disabled = true;
+    }
 }
 export function habilitarSubmit(form) {
     const submitButton = form.querySelector('button[type="submit"], input[type="submit"]');

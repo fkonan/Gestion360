@@ -5,6 +5,7 @@ use App\Http\Controllers\ModuloController;
 use App\Http\Controllers\PermisosController;
 use App\Http\Controllers\PersonaController;
 use App\Http\Controllers\RolController;
+use App\Http\Controllers\TiquetesImpresosController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
@@ -45,6 +46,10 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:acceso-administra
     });
     Route::prefix("reportes")->group(function(){
         Route::get("/",[ModuloController::class,"getReportes"])->name("reportes.index");
+        Route::get("/impresionTiquetes",[TiquetesImpresosController::class,"fechasReporte"])->middleware('soloAJAX')->name("reportes.tiquetes");
+        Route::post("/impresionTiquetes/filtrar",[TiquetesImpresosController::class,"filtrarTiquetes"])->name("reportes.filtrarTiquetes");
+        Route::get("/impresionTiquetes/listaTiquetes",[TiquetesImpresosController::class,"listaTiquetes"])->name("reportes.listaTiquetes");
+        Route::get("/impresionTiquetes/cargarData",[TiquetesImpresosController::class,"cargarDataTiquetes"])->middleware('soloAJAX')->name("reportes.cargarData");
     });
 });
 

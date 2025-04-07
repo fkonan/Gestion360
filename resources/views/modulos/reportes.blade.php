@@ -12,7 +12,7 @@
 @section('content')
 <div class="container-fluid pt-4" style="min-height:150px">
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4">
-        <div class="col">
+        <div class="col" onclick="cargarModal(`{{ route('reportes.tiquetes') }}`, 'Impresión de Tiquetes','#fechasReporteForm','modal-lg')">
             <x-card color="bg-dark" 
                     titulo="Impresión de Tiquetes" 
                     descripcion="Reportes" 
@@ -47,3 +47,7 @@
     </div>
 </div>
 @endsection
+
+@pushOnce('script')
+    @vite(['resources/js/cargarModal.js'])
+@endpushOnce
