@@ -8,11 +8,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class SoloAjaxMiddleware
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
+    //Las rutas que se cargan en modales solo podran ser accedidas mediante peticiones AJAX
     public function handle(Request $request, Closure $next): Response
     {
         if (!$request->ajax() && !$request->expectsJson()) {

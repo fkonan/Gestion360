@@ -63,7 +63,6 @@
                 <label for="ModDesc" class="form-label">Descripción</label>
                 <textarea class="form-control" id="ModDesc" name="ModDesc" maxlength="300" rows="5"></textarea>
                 <div class="form-text">Máximo 300 caracteres.</div>
-                <div id="contador" class="text-end text-muted" style="font-size: 0.875rem;">0/300</div>
                 <span class="error text-danger fw-bold" id="error-ModDesc"></span>
             </div>
         </div>

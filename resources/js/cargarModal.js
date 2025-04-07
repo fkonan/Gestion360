@@ -1,5 +1,5 @@
-// Esta función puede ser llamada desde cualquier página en el proyecto (al ser cargarda con vite en el archivo en el archivo),
-// para mostrar un modal con el contenido de una URL específica y carga funciones requerias.
+// Esta función puede ser importada en cualquier parte del proyecto y sirve
+// para mostrar un modal con el contenido de una URL específica y carga funciones adicionales requerias.
 //
 // Parámetros:
 // - url: La URL de la página que se quiere mostrar en el modal.

@@ -31,7 +31,11 @@
 
             <div class="sidebar">
             <!-- Usuario -->
-                <div class="user-panel my-3 pt-3 pb-2 d-flex flex-column text-left">
+                <div class="user-panel my-3 pt-2 pb-2 d-flex flex-column">
+                    <div class="info">
+                        <img src="{{ asset('img/LogoCope.png') }}" style="width:200px">
+                    </div>
+                    
                     <div class="info">
                         <span style="user-select: none" class="fw-medium text-dark">
                             {{ auth()->user()->persona?->PerNombres }} {{ auth()->user()->persona?->PerApellidos }}

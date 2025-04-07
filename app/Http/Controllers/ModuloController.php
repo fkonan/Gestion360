@@ -44,23 +44,33 @@ class ModuloController extends Controller
             ], 422);
         }
 
-        $modulo = new Modulo();
-        $modulo->ModNom = $request->ModNom;
-        $modulo->ModDesc = $request->ModDesc;
-        $modulo->ModEstado = $request->ModEstado;
-        $modulo->ModRuta = $request->ModRuta;
-        $modulo->ModIcono = $request->ModIcono;
-        $modulo->Mod_Padre_Id = $request->Mod_Padre_Id;
-        $modulo->ModPermiso = $request->ModPermiso;
-        $modulo->ModFechReg = now();
-        $modulo->ModHorReg = now();
-        $modulo->save();
+        try{
+            $modulo = new Modulo();
+            $modulo->ModNom = $request->ModNom;
+            $modulo->ModDesc = $request->ModDesc;
+            $modulo->ModEstado = $request->ModEstado;
+            $modulo->ModRuta = $request->ModRuta;
+            $modulo->ModIcono = $request->ModIcono;
+            $modulo->Mod_Padre_Id = $request->Mod_Padre_Id;
+            $modulo->ModPermiso = $request->ModPermiso;
+            $modulo->ModFechReg = now();
+            $modulo->ModHorReg = now();
+            $modulo->save();
+    
+            return response()->json([
+                'title' => 'Modulo creado exitosamente',
+                'redirect' => route('modulos.index'),
+                'type' => 'success', 
+            ]); 
 
-        return response()->json([
-            'title' => 'Modulo creado exitosamente',
-            'redirect' => route('modulos.index'),
-            'type' => 'success', 
-        ]); 
+        }catch(\Exception $e){
+            return response()->json([
+                'title' => 'Error al crear el modulo',
+                'redirect' => route('modulos.index'),
+                'type' => 'error', 
+            ]);
+        }
+        
     }
 
     public function edit($id){
@@ -95,16 +105,25 @@ class ModuloController extends Controller
             ], 422);
         }
 
-        Modulo::findOrFail($id)->update($request->all());
+        try{
+            Modulo::findOrFail($id)->update($request->all());
 
-        return response()->json([
-            'title' => 'Modulo actualizado exitosamente',
-            'redirect' => route('modulos.index'),
-            'type' => 'success', 
-        ]); 
+            return response()->json([
+                'title' => 'Modulo actualizado exitosamente',
+                'redirect' => route('modulos.index'),
+                'type' => 'success', 
+            ]); 
+            
+        }catch(\Exception $e){
+            return response()->json([
+                'title' => 'Error al actualizar el modulo',
+                'redirect' => route('modulos.index'),
+                'type' => 'error', 
+            ]);
+        }
     }
 
-    //Carga de las opciones disponibles en el modulo
+    //Desplega el menu con las opciones de cada modulo
     public function getGestionSistema(){
         return view('modulos.gestionSistema');
     }
