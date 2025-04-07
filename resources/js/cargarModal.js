@@ -14,23 +14,18 @@ function cargarModal(url, titulo = "", formularioId = null, size = null) {
     const $modalTitle = $("#globalModalTitle");
     const $modalDialog = $modal.find(".modal-dialog");
 
-    /* Mostrar un loader mientras se carga el contenido
+    // Mostrar un loader mientras se carga el contenido
     $modalContent.html(`
         <div class="d-flex flex-column align-items-center justify-content-center p-4">
             <i class="fas fa-spinner fa-spin fa-2x mb-2 text-primary"></i>
             <p class="fw-bold text-primary">Cargando, por favor espera...</p>
         </div>
     `);
-    $modal.modal("show");*/
+    $modal.modal("show");
 
     // Asignar tamaño del modal
     if (size) {
         $modalDialog.removeClass("modal-xl modal-lg modal-sm").addClass(size);
-    }
-
-    // Verificar si ya se cargó la misma URL
-    if ($modalContent.data("loaded") === url) {
-        return;
     }
 
     $modalTitle.text(titulo);
@@ -45,7 +40,6 @@ function cargarModal(url, titulo = "", formularioId = null, size = null) {
             // Agregar contenido y guardar URL cargada
             $modalContent.html(response);
             $modalContent.data("loaded", url);
-            $modal.modal("show");
 
             // Inicializar select2 solo si aún no está activado
             if ($('.select2').data('select2') === undefined) {
@@ -127,6 +121,8 @@ function validarFormulario(form, TYPE="POST") {
                         confirmButtonColor: "#3366CC",
                         confirmButtonText: "Aceptar"
                     }).then(() => {
+                        //Se habilita nuvamente el submit al usuario
+                        habilitarSubmit(form);
                         window.location.href = response.redirect;
                     });
                 },

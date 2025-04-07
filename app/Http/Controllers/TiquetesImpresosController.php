@@ -44,7 +44,7 @@ class TiquetesImpresosController extends Controller
 
         if ($tiquetes->isEmpty()) {
             return response()->json([
-                'redirect' => route('reportes.index'),
+                'redirect' => '#',
                 'type' => 'warning', 
                 'title' => 'No se han encontrado tiquetes para las fechas seleccionadas',
             ]); 
