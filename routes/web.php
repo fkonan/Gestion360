@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\FormatoController;
 use App\Http\Controllers\IncapacidadController;
 use App\Http\Controllers\ModuloController;
 use App\Http\Controllers\PermisosController;
@@ -22,18 +21,6 @@ Route::get('/clear', function () {
     return "Cleared!";
  });
 
-
-Route::prefix("formatos")->middleware(['auth', 'permisos:acceso-gestion-documental','modulo.activo:21'])->name("formatos.")->group(function(){
-    Route::get("/",[FormatoController::class,"index"])->name("index");
-    Route::get("/create",[FormatoController::class,"crearNuevoFormato"])->name("create");
-    Route::post("/",[FormatoController::class,"guardarFormato"])->name("store");
-    
-    Route::prefix("/{id}/versions")->name("versions.")->group(function(){
-        Route::get("/",[FormatoController::class,"versionesFormato"])->name("index");
-        Route::get("/create",[FormatoController::class,"crearVersionFormato"])->name("create");
-        Route::post("/",[FormatoController::class,"guardarVersionFormato"])->name("store");
-    });
-});
 
 //Ruta Modulo administración
 Route::prefix("administracion")->middleware(['auth', 'permisos:acceso-administracion','modulo.activo:7'])->group(function(){

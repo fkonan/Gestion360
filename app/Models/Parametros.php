@@ -20,7 +20,4 @@ class Parametros extends Model
         return $this->hasMany(IncapacidadesDocumentos::class, 'ParametroId', 'IdParametro')
             ->whereIn('ParNomGru',['DOCUMENTOS-INCAPACIDAD','DOCUMENTOS-INCAPACIDAD-MP','DOCUMENTOS-INCAPACIDAD-AT']);
     }
-
-
-
 }
