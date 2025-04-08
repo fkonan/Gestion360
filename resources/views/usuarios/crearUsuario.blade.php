@@ -15,6 +15,7 @@
                     </select>
                     <span class="error text-danger fw-bold" id="error-idPersona"></span>
                 </div>
+                
 
                 <div class="col-md-6 mb-3">
                     <label for="Password" class="form-label">Contraseña</label>

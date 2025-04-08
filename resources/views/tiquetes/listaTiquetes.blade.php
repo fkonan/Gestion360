@@ -18,6 +18,8 @@
         <a class="btn fw-bold my-2 text-light bg-primary" onclick="window.history.back()">Volver</a>
     </div>
 
+    <a id="exportar" class="btn fw-bold ms-4 mt-4 bg-success botonBoostrapTable"> Descargar Excel </a>
+
     <div class="row p-4">
         <table
             class="table table-sm table-striped"
@@ -26,6 +28,8 @@
             data-locale="es-ES"
             data-search="true"
             data-pagination="true"
+            data-detail-view="true"
+            data-detail-formatter="detalleTiquete"
             data-url="{{ route('reportes.cargarData') }}"
             data-pagination-parts="['pageSize', 'pageList', 'pageNext', 'pagePrev']">   
             <thead class="table-primary">
@@ -34,14 +38,58 @@
                     <th data-field="NumeroPasaje">Tiquete</th>
                     <th data-field="TerminalOrigen">Terminal Origen</th>
                     <th data-field="TerminalDestino">Terminal Destino</th>
-                    <th data-field="FechaSalida">Fecha Salida</th>
+                    <th data-field="FechaSalida" data-sortable="true">Fecha Salida</th>
                     <th data-field="NumerodeViaje">Numero de Viaje</th>
-                    <th data-field="PrecioBase">Precio Base</th>
-                    <th data-field="Descuento">Descuento</th>
-                    <th data-field="PrecioTotal">Precio Total</th>
+                    <th data-field="PrecioBase" data-sortable="true">Precio Base</th>
+                    <th data-field="Descuento" data-sortable="true">Descuento</th>
+                    <th data-field="PrecioTotal" data-sortable="true">Precio Total</th>
                 </tr>
             </thead>
         </table>
     </div>
 </div>
 @endsection 
+
+@pushOnce('script')
+    @vite(['resources/js/cargarModal.js'])
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+     let btnExportar = document.getElementById("exportar");
+        btnExportar.addEventListener("click", function () {         
+            let url = "{{ route('reportes.cargarData') }}";
+
+            $.ajax({
+                url: url,
+                method: 'GET',
+            
+                success: function (data, status, xhr) {
+                    let ws = XLSX.utils.json_to_sheet(data);
+                    let wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, "Datos");
+                    XLSX.writeFile(wb, "informe_tiquetes.xlsx");
+                },
+                error: function (xhr, status, error) {
+                    console.log(xhr, status, error)
+                    alert('Error al exportar los datos. Por favor, intente nuevamente.');
+                }
+            });
+        });
+    </script>
+    
+    <script>
+        function detalleTiquete(index, row) { 
+            return `
+            <div class="p-3 border rounded bg-light">
+                <div class="row">
+                    <div class="col-md-12">
+                        <p><strong>Asiento:</strong> ${row.Asiento}</p>
+                        <p><strong>Agencia:</strong> ${row.Agencia}</p>
+                        <p><strong>Fecha Impresión:</strong> ${row.ImpFecReg}</p>
+                        <p><strong>Hora Impresión:</strong> ${row.ImpHorReg}</p>
+                    </div>
+                </div>
+            </div>`;
+        }
+    </script>
+@endpushOnce
+

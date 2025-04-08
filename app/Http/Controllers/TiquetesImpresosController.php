@@ -39,7 +39,26 @@ class TiquetesImpresosController extends Controller
             $query->where('Agencia', $request->agencia);
         }
 
-        $tiquetes = $query->get();
+        $tiquetes = $query
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'NumDocPer' => $item->NumDocPer,
+                    'NumeroPasaje' => $item->NumeroPasaje,
+                    'TerminalOrigen' => $item->TerminalOrigen,
+                    'TerminalDestino' => $item->TerminalDestino,
+                    'FechaSalida' => $item->FechaSalida,
+                    'NumerodeViaje' => $item->NumerodeViaje,
+                    'PrecioBase' => number_format($item->PrecioBase, 0, ',', ''), 
+                    'Descuento' => number_format($item->Descuento, 0, ',', ''),
+                    'PrecioTotal' => number_format($item->PrecioTotal, 0, ',', ''),
+                    'Asiento' => $item->Asiento,
+                    'Agencia' => $item->Agencia,
+                    'ImpFecReg' => $item->ImpFecReg,
+                    'ImpHorReg' => $item->ImpHorReg,
+                ];
+            });
+
         $numeroTiquetes = $tiquetes->count();
 
         if ($tiquetes->isEmpty()) {
@@ -63,7 +82,7 @@ class TiquetesImpresosController extends Controller
     }
 
     public function cargarDataTiquetes(){
-        $tiquetes = session('tiquetes');
+        $tiquetes = session('tiquetes') ?? [] ;
         return $tiquetes;
     }
 }

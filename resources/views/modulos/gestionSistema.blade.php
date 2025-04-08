@@ -28,6 +28,15 @@
                     ruta="{{ route('modulos.index') }}"
             />
         </div>
+        <div class="col">
+            <x-card color="bg-warning" 
+                    titulo="Roles" 
+                    descripcion="Administrar" 
+                    icono="fa-user-tag" 
+                    ruta="{{ route('roles.index') }}"
+            />
+        </div>
     </div>
 </div>
 @endsection
+

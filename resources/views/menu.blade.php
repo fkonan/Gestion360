@@ -1,6 +1,6 @@
 <nav class="mt-2">
     <!-- clase ocultar sub modulos al cerrar: nav-collapse-hide-child  -->
-    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
+    <ul class="nav nav-pills nav-sidebar nav-collapse-hide-child flex-column" data-widget="treeview" role="menu">
 
         <!-- Modulos principales -->
         @foreach($modulos as $modulo)

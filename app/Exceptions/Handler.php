@@ -47,6 +47,11 @@ class Handler extends ExceptionHandler
             return response()->view('errors.404');
         }
 
+        if ($exception instanceof UnauthorizedException) {
+            session()->flash('alert', ['type' => 'warning','title' => 'No tienes los permisos necesarios para acceder.']);
+            return redirect()->back();
+        }
+
         return parent::render($request, $exception);
     }
 }

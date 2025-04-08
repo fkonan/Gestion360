@@ -11,4 +11,11 @@ class TiquetesImpresos extends Model
     protected $primaryKey = "IdPrint";
 
     public $timestamps = false;
+
+    protected $casts = [
+        'PrecioBase' => 'float',
+        'Descuento' => 'float',
+        'PrecioTotal' => 'float',
+    ];
+    
 }

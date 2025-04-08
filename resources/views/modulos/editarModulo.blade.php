@@ -32,7 +32,7 @@
             <div class="col-md-4">
                 <label for="ModEstado" class="form-label">Estado</label>
                 <select class="form-select" id="ModEstado" name="ModEstado" required>
-                    <option value="">Seleccione</option>
+                    <option value="" disabled selected>Seleccione</option>
                     <option value="ACTIVO" @selected($moduloEdit->ModEstado == 'ACTIVO')>Activo</option>
                     <option value="INACTIVO" @selected($moduloEdit->ModEstado == 'INACTIVO')>Inactivo</option>
                     <option value="ELIMINADO" @selected($moduloEdit->ModEstado == 'ELIMINADO')>Eliminado</option>

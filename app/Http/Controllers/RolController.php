@@ -8,6 +8,11 @@ use Spatie\Permission\Models\Role;
 
 class RolController extends Controller
 {
+    public function index(){
+        $roles = Role::all();
+        return view("roles.listaRoles",compact("roles"));
+    }
+    
     public function editRolUsuario($id){
 
         $usuario = User::findOrFail($id);

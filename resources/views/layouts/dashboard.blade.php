@@ -84,7 +84,7 @@
     <!-- Renderizado de componentes-->
     <x-alert /> 
     <x-modal />
-
+    
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap-duallistbox/dist/jquery.bootstrap-duallistbox.min.js" defer></script>
     

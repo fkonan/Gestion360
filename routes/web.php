@@ -65,6 +65,10 @@ Route::prefix("configuracion")->middleware(['auth', 'permisos:acceso-configuraci
             Route::post("/",[ModuloController::class,"store"])->name("store");
             Route::put("/{id}",[ModuloController::class,"update"])->name("update");
         });
+
+        Route::prefix("roles")->name("roles.")->group(function(){
+            Route::get("/",[RolController::class,"index"])->name("index");
+        });
     });
 });
 

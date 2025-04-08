@@ -44,6 +44,22 @@
                     ruta="#"
             />
         </div>
+        <div class="col">
+            <x-card color="bg-dark" 
+                    titulo="Firma Conductores" 
+                    descripcion="Reportes" 
+                    icono="fa-id-badge" 
+                    ruta="#"
+            />
+        </div>
+        <div class="col">
+            <x-card color="bg-dark" 
+                    titulo="Descanso Conductores" 
+                    descripcion="Reportes" 
+                    icono="fa-bed" 
+                    ruta="#"
+            />
+        </div>
     </div>
 </div>
 @endsection
