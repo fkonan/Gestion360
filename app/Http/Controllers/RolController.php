@@ -9,14 +9,14 @@ use Spatie\Permission\Models\Role;
 class RolController extends Controller
 {
     public function index(){
-        $roles = Role::all();
+        $roles = Role::with('permissions')->get();
         return view("roles.listaRoles",compact("roles"));
     }
     
     public function editRolUsuario($id){
 
         $usuario = User::findOrFail($id);
-        $rolesDisponibles = Role::where('name', '!=', 'Super Admin')->get();
+        $rolesDisponibles = Role::where('name', '!=', User::SUPER_ADMIN_ROLE)->get();
         $rolesUsuario = $usuario->getRoleNames();  
         return view("usuarios.rolesUsuario",compact("usuario","rolesUsuario","rolesDisponibles"))->render();
     }

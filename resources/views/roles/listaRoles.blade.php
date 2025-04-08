@@ -23,11 +23,20 @@
         onclick="">
             Crear Rol
     </a>
+
+    @php
+    $icons = [
+        'ADMIN' => 'fa-user-shield',
+        'SOPORTE' => 'fa-headset',
+        'SUPER-ADMIN' => 'fa-crown',
+        'DESARROLLADOR' => 'fa-code',
+    ];
+    @endphp
     
     <div class="row p-4">
         <table
             id="administrarRoles"
-            class="table table-sm table-striped"
+            class="table table-striped table-hover align-middle table-bordered"
             data-page-size="10"
             data-toggle="table"
             data-locale="es-ES"
@@ -38,6 +47,7 @@
                 <tr class="bg-primary">
                     <th data-sortable="true">ID</th>
                     <th>Nombre</th>
+                    <th>Permisos</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
@@ -45,7 +55,32 @@
                 @foreach($roles as $rol)
                     <tr>
                         <td>{{ $rol->id }}</td>
-                        <td>{{ $rol->name }}</td>
+                        <td class="text-nowrap">
+                            <i class="fas {{ $icons[$rol->name] ?? 'fa-user' }} me-2 text-primary"></i> {{ $rol->name }}
+                        </td>
+                        <td>
+                            @php
+                                $permisos = $rol->getPermissionNames();
+                                $limit = 5;
+                            @endphp
+
+                            @if($permisos->count() > 0)
+                                @foreach($permisos->take($limit) as $permiso)
+                                    <span style="background-color:#D6D6D6" class="badge text-dark mb-1">{{ $permiso }}</span>
+                                @endforeach
+
+                                @if($permisos->count() > $limit)
+                                    <span class="badge bg-secondary text-light mb-1 ver-mas"
+                                        data-bs-toggle="tooltip"
+                                        title="{{ $permisos->slice($limit)->implode(', ') }}">
+                                        +{{ $permisos->count() - $limit }} más
+                                    </span>
+                                @endif
+                            @else
+                                <span class="badge bg-secondary">Sin permisos</span>
+                            @endif
+                        </td>  
+
                         <td class="text-center" style="width: 80px;">
                             <a class="btn btn-secondary p-0 px-2" onclick="">
                                 <i class="nav-icon fas fa-edit"></i>

@@ -14,7 +14,7 @@ class User extends Authenticatable
     use HasRoles;
 
     protected $guard_name = 'web';
-    private const SUPER_ADMIN_ROLE = 'SUPER-ADMIN';
+    public const SUPER_ADMIN_ROLE = 'SUPER-ADMIN';
 
     protected $table = "_usuarios";
     protected $primaryKey = "IdUsuario";

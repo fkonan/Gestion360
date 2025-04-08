@@ -28,12 +28,10 @@
             id="usuariosDataTable"
             class="table table-sm table-striped"
             data-toggle="table"
-            data-page-size="25"
+            data-page-size="10"
             data-search="true"
             data-locale="es-ES"
             data-pagination="true"
-            data-detail-view="true"
-            data-detail-formatter="detalleUsuarios"
             data-url="{{ route('usuarios.cargarDatos') }}" 
             data-pagination-parts="['pageSize', 'pageList', 'pageNext', 'pagePrev']">   
             <thead class="table-primary">
@@ -43,6 +41,7 @@
                     <th data-field="UsuFecReg" data-sortable="true">Fecha registro</th>
                     <th data-field="UsuHorReg" data-sortable="true">Hora registro</th>
                     <th data-field="UsuarioEstado" data-sortable="true">Estado</th>   
+                    <th data-field="acciones" data-formatter="accionesFormatter">Acciones</th>
                 </tr>
             </thead>
            
@@ -61,34 +60,29 @@
         usuarios: "{{ route('usuarios.edit', ['id' => ':id']) }}"
     };
 
-    function detalleUsuarios(index, row) {
+    function accionesFormatter(index, row) {
         let urlPermisos = rutas.permisos.replace(':id', row.IdUsuario);
         let urlRoles = rutas.roles.replace(':id', row.IdUsuario);
         let urlUsuarios = rutas.usuarios.replace(':id', row.IdUsuario);
 
         return `
-          <div class="p-2 border rounded bg-light">
-            <div class="row">
-                 <div class="col-md-12">
-                    <strong class="mb-2 me-2">Acciones:</strong>
-                    <a class="btn btn-dark btn-sm m-1" 
-                        title="Haga click para gestionar los permisos del usuario"
-                        onclick="cargarModal('${urlPermisos}', 'Permisos usuario', '#formPermisoUsuario', 'modal-xl')">
-                        <i class="fas fa-lock"></i>
-                    </a>
-                    <a class="btn btn-dark btn-sm m-1" 
-                        title="Haga click para gestionar los roles del usuario"
-                        onclick="cargarModal('${urlRoles}', 'Roles usuario', '#formRolUsuario', 'modal-lg')">
-                        <i class="fas fa-user"></i>
-                    </a>
-                    <a class="btn btn-dark btn-sm m-1" 
-                        title="Haga click para editar el usuario"
-                        onclick="cargarModal('${urlUsuarios}', 'Editar Usuario', '#formEditUsuario', 'modal-lg')">
-                        <i class="fas fa-edit"></i>
-                    </a>
-                </div>
+            <div class="col-md-12 text-center">
+                <a class="btn btn-secondary btn-sm me-3" 
+                    title="Haga click para gestionar los permisos del usuario"
+                    onclick="cargarModal('${urlPermisos}', 'Permisos usuario', '#formPermisoUsuario', 'modal-xl')">
+                    <i class="fas fa-lock"></i>
+                </a>
+                <a class="btn btn-secondary btn-sm me-3" 
+                    title="Haga click para gestionar los roles del usuario"
+                    onclick="cargarModal('${urlRoles}', 'Roles usuario', '#formRolUsuario', 'modal-lg')">
+                    <i class="fas fa-user"></i>
+                </a>
+                <a class="btn btn-secondary btn-sm" 
+                    title="Haga click para editar el usuario"
+                    onclick="cargarModal('${urlUsuarios}', 'Editar Usuario', '#formEditUsuario', 'modal-lg')">
+                    <i class="fas fa-edit"></i>
+                </a>
             </div>
-        </div>
         `;
     }
 
