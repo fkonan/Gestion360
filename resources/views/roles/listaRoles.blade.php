@@ -20,7 +20,7 @@
     </div>
 
     <a class="btn fw-bold ms-4 mt-4 bg-warning botonBoostrapTable"  
-        onclick="">
+        onclick="cargarModal(`{{ route('roles.create') }}`, 'Crear Rol', '#formCrearRol','modal-md')">
             Crear Rol
     </a>
 
@@ -83,7 +83,7 @@
 
                     <td class="text-center" style="width: 80px;">
                         <a class="btn btn-secondary p-0 px-2" 
-                            onclick="cargarModal(`{{ route('roles.permisos', ['id' => $rol->id]) }}`, 'Permisos Rol', '#formPermisoRol')">
+                            onclick="cargarModal(`{{ route('roles.permisos', ['id' => $rol->id]) }}`, 'Permisos Rol', '#formPermisoRol','modal-lg')">
                             <i class="nav-icon fas fa-edit"></i>
                         </a>
                     </td>

@@ -69,6 +69,8 @@ Route::prefix("configuracion")->middleware(['auth', 'permisos:acceso-configuraci
 
         Route::prefix("roles")->name("roles.")->group(function(){
             Route::get("/",[RolController::class,"index"])->name("index");
+            Route::get("/create",[RolController::class,"create"])->middleware('soloAJAX')->name("create");
+            Route::post("/",[RolController::class,"store"])->name("store");
             Route::get("/{id}/permisos",[RolController::class,"permisosRol"])->middleware('soloAJAX')->name("permisos");
             Route::put("/{id}/permisos",[RolController::class,"updatePermisos"])->name("permisos.update");
         });
@@ -85,6 +87,7 @@ Route::prefix("gestionRRHH")->middleware(['auth', 'permisos:acceso-gestion-rh','
         Route::put("/incapacidades/{id}/datos",[IncapacidadController::class,"updateIncapacidad"])->name("incapacidades.update");
         Route::get("/incapacidades/{id}/gestion",[IncapacidadController::class,"gestionIncapacidad"])->middleware('soloAJAX')->name("incapacidades.gestion");
         Route::put("/incapacidades/{id}/estado",[IncapacidadController::class,"updateEstadoIncapacidad"])->name("incapacidades.estado");
+
         Route::get("/seguimiento",[IncapacidadController::class,"incapacidadesSeguimiento"])->name("seguimiento");
         Route::get("/seguimiento/cargarDatos",[IncapacidadController::class,"cargarDatosSeguimiento"])->middleware('soloAJAX')->name("seguimiento.cargarDatos");
         Route::get("/seguimiento/{id}/adjuntos",[IncapacidadController::class,"incapacidadAdjuntos"])->middleware('soloAJAX')->name("seguimiento.adjuntos");

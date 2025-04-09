@@ -4,14 +4,60 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class RolController extends Controller
 {
     public function index(){
-        $roles = Role::with('permissions')->get();
+        $roles = Role::with('permissions')
+            ->where('name', '!=', User::SUPER_ADMIN_ROLE)
+            ->get();
         return view("roles.listaRoles",compact("roles"));
+    }
+
+    public function create(){
+        return view("roles.crearRol");
+    }
+
+    public function store(Request $request){
+
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|unique:roles,name|max:50',
+        ], [
+            'name.required' => 'El campo nombre es obligatorio.',
+            'name.unique' => 'El rol ya existe.',
+            'name.max' => 'El nombre no puede tener más de 50 caracteres.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors()
+            ], 422);
+        }
+       
+        try{
+            $rol = new Role();
+            $rol->name = $request->name;
+            $rol->guard_name = 'web';
+            $rol->created_at = now();
+            $rol->updated_at = now();
+            $rol->save();
+
+            return response()->json([
+                'title' => 'Rol '. $rol->name . ' creado correctamente',
+                'redirect' => route('roles.index'),
+                'type' => 'success', 
+            ]);
+         
+        }catch(\Exception $e){
+            return response()->json([
+                'title' => 'Error al crear el modulo',
+                'redirect' => route('modulos.index'),
+                'type' => 'error', 
+            ]);
+        }
     }
 
     public function permisosRol($id){
@@ -34,7 +80,7 @@ class RolController extends Controller
         }catch(\Exception $e){
             return response()->json([
                 'redirect' => route('roles.index'),
-                'type' => 'danger', 
+                'type' => 'error', 
                 'title' => 'Error al actualizar los permisos',
             ]);
         }

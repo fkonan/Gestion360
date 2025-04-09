@@ -16,6 +16,8 @@ class PermisosController extends Controller
         $permisosHeredadosConRol = [];
         $roles = $usuario->roles()->with('permissions')->get();
 
+        // Obtener permisos heredados a través de los roles
+        // y almacenarlos en un array asociativo con el nombre del rol
         foreach ($roles as $rol) {
             foreach ($rol->permissions as $permiso) {
                 if (!in_array($permiso->id, $permisosDirectos)) {
