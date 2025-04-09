@@ -52,44 +52,49 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($roles as $rol)
-                    <tr>
-                        <td>{{ $rol->id }}</td>
-                        <td class="text-nowrap">
-                            <i class="fas {{ $icons[$rol->name] ?? 'fa-user' }} me-2 text-primary"></i> {{ $rol->name }}
-                        </td>
-                        <td>
-                            @php
-                                $permisos = $rol->getPermissionNames();
-                                $limit = 5;
-                            @endphp
+            @foreach($roles as $rol)
+                <tr>
+                    <td>{{ $rol->id }}</td>
+                    <td class="text-nowrap">
+                        <i class="fas {{ $icons[$rol->name] ?? 'fa-user' }} me-2 text-primary"></i> {{ $rol->name }}
+                    </td>
+                    <td>
+                        @php
+                            $permisos = $rol->getPermissionNames();
+                            $limit = 5;
+                        @endphp
 
-                            @if($permisos->count() > 0)
-                                @foreach($permisos->take($limit) as $permiso)
-                                    <span style="background-color:#D6D6D6" class="badge text-dark mb-1">{{ $permiso }}</span>
-                                @endforeach
+                        @if($permisos->count() > 0)
+                            @foreach($permisos->take($limit) as $permiso)
+                                <span style="background-color:#D6D6D6" class="badge text-dark mb-1">{{ $permiso }}</span>
+                            @endforeach
 
-                                @if($permisos->count() > $limit)
-                                    <span class="badge bg-secondary text-light mb-1 ver-mas"
-                                        data-bs-toggle="tooltip"
-                                        title="{{ $permisos->slice($limit)->implode(', ') }}">
-                                        +{{ $permisos->count() - $limit }} más
-                                    </span>
-                                @endif
-                            @else
-                                <span class="badge bg-secondary">Sin permisos</span>
+                            @if($permisos->count() > $limit)
+                                <span class="badge bg-secondary text-light mb-1 ver-mas"
+                                    data-bs-toggle="tooltip"
+                                    title="{{ $permisos->slice($limit)->implode(', ') }}">
+                                    +{{ $permisos->count() - $limit }} más
+                                </span>
                             @endif
-                        </td>  
+                        @else
+                            <span class="badge bg-secondary">Sin permisos</span>
+                        @endif
+                    </td>  
 
-                        <td class="text-center" style="width: 80px;">
-                            <a class="btn btn-secondary p-0 px-2" onclick="">
-                                <i class="nav-icon fas fa-edit"></i>
-                            </a>
-                        </td>
-                    </tr>
-                @endforeach
+                    <td class="text-center" style="width: 80px;">
+                        <a class="btn btn-secondary p-0 px-2" 
+                            onclick="cargarModal(`{{ route('roles.permisos', ['id' => $rol->id]) }}`, 'Permisos Rol', '#formPermisoRol')">
+                            <i class="nav-icon fas fa-edit"></i>
+                        </a>
+                    </td>
+                </tr>
+            @endforeach
             </tbody>
         </table>
     </div>
 </div>
 @endsection
+
+@pushOnce('script')
+    @vite(['resources/js/cargarModal.js'])
+@endpushOnce

@@ -61,6 +61,10 @@ function cargarModal(url, titulo = "", formularioId = null, size = null) {
             if ($modal.find('#roles').length) {
                 bootstrapDualListInit('#roles', 'Roles');
             }
+
+            if ($modal.find('#permisosRol').length) {
+                bootstrapDualListInit('#permisosRol', 'Permisos');
+            }
         })
         .fail((textStatus, errorThrown) => {
             console.error("Error al cargar el contenido:", textStatus, errorThrown);
@@ -78,7 +82,7 @@ function cargarModal(url, titulo = "", formularioId = null, size = null) {
 function bootstrapDualListInit(id, nombre){
     $(id).bootstrapDualListbox({
         nonSelectedListLabel: nombre + ' disponibles',
-        selectedListLabel: nombre + ' del usuario',
+        selectedListLabel: nombre + ' asignados',
         preserveSelectionOnMove: 'moved', 
         moveAllLabel: 'Mover todos', 
         removeAllLabel: 'Quitar todos',

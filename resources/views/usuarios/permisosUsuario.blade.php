@@ -10,14 +10,18 @@
                         @php
                             $isDirect = in_array($permiso->id, $permisosDirectos);
                             $isInherited = in_array($permiso->id, $permisosHeredados);
+                            $rolName = $isInherited ? $permisosHeredadosConRol[$permiso->id] : null;
                         @endphp
                         <option 
                             class="fw-medium {{ $isInherited ? 'text-danger' : '' }}" 
                             value="{{ $permiso->name }}"
+                            title="{{ $isInherited ? 'Este permiso no puede eliminarse manualmente porque es parte del ROL' : '' }}"
                             @if ($isInherited) disabled @endif
                             @if ($isDirect || $isInherited) selected @endif>
-                            {{ $permiso->name }} {{ $isInherited ? '(Permiso de rol)' : '' }}
-                            <i class="nav-icon fas fa-edit"></i>
+                            {{ $permiso->name }}
+                            @if ($isInherited)
+                                (Rol: {{ $rolName }})
+                            @endif
                         </option>
                     @endforeach
                 </select>

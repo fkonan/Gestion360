@@ -19,6 +19,7 @@ Route::get('/clear', function () {
     Artisan::call('cache:clear');
     Artisan::call('config:cache');
     Artisan::call('view:clear');
+    Artisan::call('route:cache');
     return "Cleared!";
  });
 
@@ -68,6 +69,8 @@ Route::prefix("configuracion")->middleware(['auth', 'permisos:acceso-configuraci
 
         Route::prefix("roles")->name("roles.")->group(function(){
             Route::get("/",[RolController::class,"index"])->name("index");
+            Route::get("/{id}/permisos",[RolController::class,"permisosRol"])->middleware('soloAJAX')->name("permisos");
+            Route::put("/{id}/permisos",[RolController::class,"updatePermisos"])->name("permisos.update");
         });
     });
 });

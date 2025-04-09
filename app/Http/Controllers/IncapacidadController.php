@@ -92,11 +92,19 @@ class IncapacidadController extends Controller
 
         $incapacidad->update($request->all());
 
+        //Valida de que ruta viene (incapacidad o seguimiento)
+        $referer = $request->headers->get('referer');
+        $redirect = route('gestion-incapacidades.incapacidades');
+
+        if ($referer == route('gestion-incapacidades.seguimiento')) {
+            $redirect = route('gestion-incapacidades.seguimiento');
+        }
+
         return response()->json([
             'title' => 'Se han actualizado los datos del radicado exitosamente',
-            'redirect' => route('gestion-incapacidades.incapacidades'),
-            'type' => 'success', 
-        ]); 
+            'redirect' => $redirect,
+            'type' => 'success',
+        ]);
     }
 
     public function gestionIncapacidad($id){
@@ -130,7 +138,10 @@ class IncapacidadController extends Controller
             ]);
         }
 
-        $incapacidad->update($request->all());
+        $incapacidad->fill($request->all());
+        $incapacidad->Observacion = 'RECIBIDO Y APROBADO';
+        $incapacidad->save();
+        
 
         return response()->json([
             'title' => 'El radicado ha sido aprobado exitosamente',
