@@ -14,6 +14,14 @@
     </head>
     <body style="margin: 0; padding: 0;">
 
+        <section class="content-header mb-4 p-2 d-flex justify-content-between align-items-center" style="min-height:60px; background-color:#0E2146">
+            <img 
+                src="https://autogestion.copetran.com.co/cdn/img/logos/logo-blango.png" 
+                alt="Logo" 
+                style="height: 45px; object-fit: contain; padding-left: 50px;" 
+            />
+        </section>
+
         <section>
             @yield('content')
         </section>

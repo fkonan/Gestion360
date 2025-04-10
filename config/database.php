@@ -83,6 +83,7 @@ return [
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],
+        
 
         //Conexion base de datos GESTION PASAJES
         'mysql-gestion-pasajes' => [
@@ -105,6 +106,19 @@ return [
             ]) : [],
         ],
 
+        //Conexion base de datos ORACLE logtrans
+        /* 'oracle' => [
+            'driver' => 'oracle',
+            'tns' => '',
+            'host' => env('DB_HOST', '172.16.50.51'),
+            'port' => env('DB_PORT', '1521'),
+            'database' => env('DB_DATABASE', 'PRUEBAS'),
+            'username' => env('DB_USERNAME', 'LOGTRANSPRO'),
+            'password' => env('DB_PASSWORD', 'Copetran2024'),
+            'charset' => 'AL32UTF8',
+            'prefix' => '',
+            'prefix_schema' => '',
+        ], */
 
         'mariadb' => [
             'driver' => 'mariadb',

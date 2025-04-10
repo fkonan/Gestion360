@@ -16,10 +16,6 @@ class PersonaController extends Controller
     }
 
     public function create(){
-        if(!request()->ajax()){
-            return $this->index();
-        }
-
         $departamentos = Departamento::with('municipios')->get();
         $tiposDocumento = TipoDocumento::select('id','nombre')->get();    
         

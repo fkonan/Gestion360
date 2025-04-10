@@ -1,5 +1,5 @@
 <!-- Modal para crear un nuevo rol -->
-<div class="container-fluid p-4 bg-white border rounded">
+<div class="container-fluid p-2 pb-4 bg-white">
     <form id="formCrearRol" action="{{ route('roles.store') }}" method="POST">
         @csrf
         <div class="px-3">
