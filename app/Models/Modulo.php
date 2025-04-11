@@ -28,6 +28,10 @@ class Modulo extends Model
         return $this->belongsTo(Modulo::class, 'Mod_Padre_Id');
     }
 
+    public function permisos(): HasMany{
+        return $this->hasMany(Permisos::class, 'ModuloId', 'IdModulo');
+    }
+
     public function getNombreFormateadoAttribute() {
         $nombreFormateado = mb_convert_case(mb_strtolower($this->ModNom, 'UTF-8'), MB_CASE_TITLE, "UTF-8");
         $nombreFormateado = str_replace('Rr-Hh', 'RR-HH', $nombreFormateado);

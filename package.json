@@ -16,7 +16,6 @@
     },
     "dependencies": {
         "@popperjs/core": "^2.11.8",
-        "admin-lte": "^4.0.0-beta3",
         "bootstrap": "^5.3.3",
         "bootstrap-duallistbox": "^3.0.9",
         "bootstrap-icons": "^1.11.3",

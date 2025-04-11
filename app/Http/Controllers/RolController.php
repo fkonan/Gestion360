@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Permisos;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -14,6 +15,7 @@ class RolController extends Controller
         $roles = Role::with('permissions')
             ->where('name', '!=', User::SUPER_ADMIN_ROLE)
             ->get();
+
         return view("roles.listaRoles",compact("roles"));
     }
 
@@ -63,7 +65,7 @@ class RolController extends Controller
     public function permisosRol($id){
         $rol = Role::findOrFail($id);
         $permisosRol = $rol->permissions;
-        $permisosDisponibles = Permission::all();
+        $permisosDisponibles = Permisos::with('modulo')->get();
         return view("roles.permisosRol",compact("rol","permisosRol","permisosDisponibles"));
     }
 

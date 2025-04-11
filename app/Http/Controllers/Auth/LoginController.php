@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\Persona;
+use App\Models\PersonaDatos;
 use App\Models\Sesion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,18 +16,18 @@ class LoginController extends Controller
 
     public function login(Request $request){
         $request->validate([
-            'documento' => 'required|numeric',
+            'email' => 'required|email',
             'password' => 'required|string',
         ],[
-            'documento.required' => 'El campo documento es obligatorio.',
-            'documento.numeric' => 'El campo documento debe ser numérico.',
+            'email.required' => 'El correo es obligatorio.',
+            'email.email' => 'El correo no es válido.',
             'password.required' => 'La contraseña es obligatoria.',
         ]);
 
-        $user = Persona::where('PerNumDoc', $request->documento)->first()?->usuario;
+        $user = PersonaDatos::where('PerEmail', $request->email)->first()?->persona->usuario;
 
         if (!$user || !password_verify($request->password, $user->Password)) {
-            session()->flash('alert', ['type' => 'error', 'title' => 'Documento o contraseña incorrectos']);
+            session()->flash('alert', ['type' => 'error', 'title' => 'Correo o contraseña incorrectos']);
             return back()->withInput();
         }
 
