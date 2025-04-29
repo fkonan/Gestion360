@@ -20,7 +20,7 @@ class IncapacidadController extends Controller
 
         if($incapacidadesPorGestionar == null){
             session()->flash('alert', ['type' => 'success','title' => 'No hay incapacidades radicadas para gestionar']);
-            return back();
+            return redirect()->route('gestion-incapacidades.index');
         }
         return view("incapacidades.listaIncapacidades");
     }

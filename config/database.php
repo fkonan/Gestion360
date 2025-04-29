@@ -107,18 +107,34 @@ return [
         ],
 
         //Conexion base de datos ORACLE logtrans
-        /* 'oracle' => [
+        'oracle' => [
             'driver' => 'oracle',
             'tns' => '',
-            'host' => env('DB_HOST', '172.16.50.51'),
-            'port' => env('DB_PORT', '1521'),
-            'database' => env('DB_DATABASE', 'PRUEBAS'),
-            'username' => env('DB_USERNAME', 'LOGTRANSPRO'),
-            'password' => env('DB_PASSWORD', 'Copetran2024'),
+            'host' => env('DB_HOST_4', '172.16.50.51'),
+            'port' => env('DB_PORT_4', '1521'),
+            'database' => env('DB_DATABASE_4', 'PRUEBAS'),
+            'username' => env('DB_USERNAME_4', 'LOGTRANSPRO'),
+            'password' => env('DB_PASSWORD_4', 'Copetran2024'),
             'charset' => 'AL32UTF8',
             'prefix' => '',
             'prefix_schema' => '',
-        ], */
+        ],
+
+         //CONEXION SQLSERVER GESTION PASAJES PRUEBAS
+         'sqlsrv' => [
+            'driver' => 'sqlsrv',
+            'url' => env('DB_URL_5'),
+            'host' => env('DB_HOST_5', '172.16.48.56'),
+            'port' => env('DB_PORT_5', '1433'),
+            'database' => env('DB_DATABASE_5', 'WF_COPE_TEST'),
+            'username' => env('DB_USERNAME_5', 'Gestion_Pasajes'),
+            'password' => env('DB_PASSWORD_5', 'Cope202301*'),
+            'charset' => env('DB_CHARSET_5', 'utf8'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            // 'encrypt' => env('DB_ENCRYPT', 'yes'),
+            // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
+        ],
 
         'mariadb' => [
             'driver' => 'mariadb',
