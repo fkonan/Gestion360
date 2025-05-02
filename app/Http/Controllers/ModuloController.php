@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Modulo;
+use Exception;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Models\Permission;
@@ -63,7 +65,8 @@ class ModuloController extends Controller
                 'type' => 'success', 
             ]); 
 
-        }catch(\Exception $e){
+        }catch(Exception $e){
+            Log::error('Error al crear el modulo: ' . $e->getMessage());
             return response()->json([
                 'title' => 'Error al crear el modulo',
                 'redirect' => route('modulos.index'),
@@ -74,10 +77,6 @@ class ModuloController extends Controller
     }
 
     public function edit($id){
-        if(!request()->ajax()){
-            return $this->index();
-        }
-
         $modulos = Modulo::with('submodulos')->whereNull('Mod_Padre_Id')->get();
         $moduloEdit = $modulos->firstWhere('IdModulo', $id) ?? Modulo::findOrFail($id);  
         $permisos = Permission::select('id', 'name')->get();
@@ -114,7 +113,8 @@ class ModuloController extends Controller
                 'type' => 'success', 
             ]); 
             
-        }catch(\Exception $e){
+        }catch(Exception $e){
+            Log::error('Error al actualizar el modulo: ' . $e->getMessage());
             return response()->json([
                 'title' => 'Error al actualizar el modulo',
                 'redirect' => route('modulos.index'),

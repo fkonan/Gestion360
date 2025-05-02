@@ -99,7 +99,7 @@
                 </div> 
             </div>
 
-            <button type="submit" class="btn btn-success">Enviar</button>
+            <button type="submit" class="btn btn-success">Guardar</button>
             <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Cancelar</button>
         </div>
     </form>

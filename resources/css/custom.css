@@ -142,3 +142,16 @@ body:not(.sidebar-collapse) .nav-item .nav-treeview .sangriaSegundoNivel{
     position: absolute;
     top: 215px;
 }
+
+@media (max-width: 768px){
+    .botonBoostrapTable{
+        position: relative;
+        top: 0;
+    }
+
+    .breadcrumbs{
+        display: none;
+    }
+}
+
+

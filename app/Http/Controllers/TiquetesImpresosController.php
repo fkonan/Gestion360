@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\TiquetesImpresos;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class TiquetesImpresosController extends Controller
@@ -33,48 +35,58 @@ class TiquetesImpresosController extends Controller
             ], 422);
         }
 
-        $query = TiquetesImpresos::whereBetween('ImpFecReg', [$request->fechaInicio, $request->fechaFin]);
+        try{
+            $query = TiquetesImpresos::whereBetween('ImpFecReg', [$request->fechaInicio, $request->fechaFin]);
 
-        if ($request->agencia !== 'todas') {
-            $query->where('Agencia', $request->agencia);
-        }
-
-        $tiquetes = $query
-            ->get()
-            ->map(function ($item) {
-                return [
-                    'NumDocPer' => $item->NumDocPer,
-                    'NumeroPasaje' => $item->NumeroPasaje,
-                    'TerminalOrigen' => $item->TerminalOrigen,
-                    'TerminalDestino' => $item->TerminalDestino,
-                    'FechaSalida' => $item->FechaSalida,
-                    'NumerodeViaje' => $item->NumerodeViaje,
-                    'PrecioBase' => number_format($item->PrecioBase, 0, ',', ''), 
-                    'Descuento' => number_format($item->Descuento, 0, ',', ''),
-                    'PrecioTotal' => number_format($item->PrecioTotal, 0, ',', ''),
-                    'Asiento' => $item->Asiento,
-                    'Agencia' => $item->Agencia,
-                    'ImpFecReg' => $item->ImpFecReg,
-                    'ImpHorReg' => $item->ImpHorReg,
-                ];
-            });
-
-        $numeroTiquetes = $tiquetes->count();
-
-        if ($tiquetes->isEmpty()) {
+            if ($request->agencia !== 'todas') {
+                $query->where('Agencia', $request->agencia);
+            }
+    
+            $tiquetes = $query
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'NumDocPer' => $item->NumDocPer,
+                        'NumeroPasaje' => $item->NumeroPasaje,
+                        'TerminalOrigen' => $item->TerminalOrigen,
+                        'TerminalDestino' => $item->TerminalDestino,
+                        'FechaSalida' => $item->FechaSalida,
+                        'NumerodeViaje' => $item->NumerodeViaje,
+                        'PrecioBase' => number_format($item->PrecioBase, 0, ',', ''), 
+                        'Descuento' => number_format($item->Descuento, 0, ',', ''),
+                        'PrecioTotal' => number_format($item->PrecioTotal, 0, ',', ''),
+                        'Asiento' => $item->Asiento,
+                        'Agencia' => $item->Agencia,
+                        'ImpFecReg' => $item->ImpFecReg,
+                        'ImpHorReg' => $item->ImpHorReg,
+                    ];
+                });
+    
+            $numeroTiquetes = $tiquetes->count();
+    
+            if ($tiquetes->isEmpty()) {
+                return response()->json([
+                    'redirect' => '#',
+                    'type' => 'warning', 
+                    'title' => 'No se han encontrado tiquetes para las fechas seleccionadas',
+                ]); 
+            }
+    
+            session(['tiquetes' => $tiquetes]);
             return response()->json([
-                'redirect' => '#',
-                'type' => 'warning', 
-                'title' => 'No se han encontrado tiquetes para las fechas seleccionadas',
-            ]); 
+                'redirect' => route('reportes.listaTiquetes'),
+                'type' => 'success', 
+                'title' => 'Se han encontrado ' . $numeroTiquetes . ' tiquetes para las fechas seleccionadas',
+            ]);
+        }catch(Exception $e){
+            Log::error('Error al filtrar los tiquetes: ' . $e->getMessage());
+            return response()->json([
+                'redirect' => route('reportes.index'),
+                'type' => 'error', 
+                'title' => 'Error al filtrar los tiquetes',
+            ]);
         }
-
-        session(['tiquetes' => $tiquetes]);
-        return response()->json([
-            'redirect' => route('reportes.listaTiquetes'),
-            'type' => 'success', 
-            'title' => 'Se han encontrado ' . $numeroTiquetes . ' tiquetes para las fechas seleccionadas',
-        ]);
+       
     }
 
     public function listaTiquetes(){

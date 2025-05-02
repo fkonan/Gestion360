@@ -1,5 +1,5 @@
 <!-- Lista de navegacion -->
-<nav aria-label="breadcrumb" class="mx-3">
+<nav aria-label="breadcrumb" class="mx-3 breadcrumbs">
     <ol class="breadcrumb">
         @foreach ($items as $item)
             @if ($loop->last)

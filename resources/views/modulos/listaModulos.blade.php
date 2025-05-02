@@ -24,7 +24,7 @@
             Crear Modulo
     </a>
     
-    <div class="row p-4">
+    <div class="row p-4 table-responsive">
         <table
             id="modulosDataTable"
             class="table table-sm table-striped"
@@ -36,7 +36,7 @@
             data-pagination-parts="['pageSize', 'pageList', 'pageNext', 'pagePrev']">   
             <thead class="table-primary">
                 <tr>
-                    <th>Nombre</th>
+                    <th data-visible-in="xs" data-breakpoints="xs">Nombre</th>
                     <th>Descripción</th>
                     <th>Estado</th>
                     <th>Modulo Padre</th>    
@@ -48,17 +48,17 @@
             <tbody>
             @foreach($modulos as $modulo)
                 <tr>
-                   <th class="text-nowrap">{{ mb_strtoupper($modulo->ModNom) }}</th>
-                   <th title="{{ ucfirst(mb_strtolower($modulo->ModDesc)) }}">{{ Str::limit(ucfirst(mb_strtolower($modulo->ModDesc)), 50, '...') }}</th>
-                   <th>{{ $modulo->ModEstado}}</th>
-                   <th>{{ $modulo->padre->ModNom ?? "MODULO PRINCIPAL" }}</th>
-                   <th>{{ $modulo->ModFechReg}}</th>
-                   <th>{{ $modulo->ModHorReg}}</th>
-                    <th class="text-center" style="width: 80px;">
+                   <td class="text-nowrap">{{ mb_strtoupper($modulo->ModNom) }}</td>
+                   <td title="{{ ucfirst(mb_strtolower($modulo->ModDesc)) }}">{{ Str::limit(ucfirst(mb_strtolower($modulo->ModDesc)), 50, '...') }}</td>
+                   <td>{{ $modulo->ModEstado}}</td>
+                   <td>{{ $modulo->padre->ModNom ?? "MODULO PRINCIPAL" }}</td>
+                   <td>{{ $modulo->ModFechReg}}</td>
+                   <td>{{ $modulo->ModHorReg}}</td>
+                    <td class="text-center" style="width: 80px;">
                         <a class="btn btn-secondary p-0 px-2" onclick="cargarModal(`{{ route('modulos.edit', ['id' => $modulo->IdModulo]) }}`, 'Editar Modulo', '#formFormato')">
                             <i class="nav-icon fas fa-edit"></i>
                         </a>
-                    </th>
+                   </td>
                 </tr>
             @endforeach
             </tbody>

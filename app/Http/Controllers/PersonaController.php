@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Departamento;
 use App\Models\Persona;
 use App\Models\TipoDocumento;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class PersonaController extends Controller
@@ -23,7 +25,7 @@ class PersonaController extends Controller
     }
 
     public function store(Request $request){
-    try{       
+          
         $validator=Validator::make(
             $request->all(),[
                 'PerTipoDoc' => 'required',
@@ -53,14 +55,15 @@ class PersonaController extends Controller
                 'PerNumDoc.unique' => 'El número de documento ya esta registrado',
             ]
             );
-            
-            //manejo de errores
-            if ($validator->fails()) {
-                return response()->json([
-                    'errors' => $validator->errors()
-                ], 422);
-            }
+        
+        //manejo de errores
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors()
+            ], 422);
+        }
 
+        try{ 
             $persona = new Persona();
             $persona->PerTipoDoc = $request->PerTipoDoc;
             $persona->PerNumDoc = $request->PerNumDoc;
@@ -82,8 +85,13 @@ class PersonaController extends Controller
                 'type' => 'success', 
                 'title' => 'Persona creada exitosamente'
             ]); 
-        }catch(\Exception $e){
-            return response()->json(['error' => $e->getMessage()], 500);
+        }catch(Exception $e){
+            Log::error('Error al crear la persona: ' . $e->getMessage());
+            return response()->json([
+                'redirect' => route('personas.index'),
+                'type' => 'error', 
+                'title' => 'Error al crear la persona',
+            ]);
         } 
     }
 
@@ -93,10 +101,6 @@ class PersonaController extends Controller
     }
 
     public function edit($id){
-        if(!request()->ajax()){
-            return $this->index();
-        }
-
         $persona = Persona::findOrFail($id);
         $departamentos = Departamento::with('municipios')->get();
         $tiposDocumento = TipoDocumento::select('id','nombre')->get();   
@@ -133,8 +137,14 @@ class PersonaController extends Controller
                 'title' => 'Persona modificada exitosamente'
             ]); 
 
-        }catch(\Exception $e){
-            return response()->json(['error' => $e->getMessage()], 500);
+        }catch(Exception $e){
+            Log::error('Error al modificar la persona: ' . $e->getMessage());
+            return response()->json([
+                'redirect' => route('personas.index'),
+                'type' => 'error', 
+                'title' => 'Error al modificar la persona',
+            ]);
+            
         }
     }
 }

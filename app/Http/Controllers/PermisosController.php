@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Exception;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
 
@@ -38,14 +40,24 @@ class PermisosController extends Controller
     }
 
     public function update(Request $request, $id){
-
-        $usuario = User::findOrFail($id);
-        $usuario->syncPermissions($request->permissions);
-       
-        return response()->json([
-            'redirect' => route('usuarios.index'),
-            'type' => 'success', 
-            'title' => 'Permisos actualizados correctamente para el usuario ' . $usuario->persona->nombreCompleto(),
-        ]); 
+        try{
+            $usuario = User::findOrFail($id);
+            $usuario->syncPermissions($request->permissions);
+           
+            return response()->json([
+                'redirect' => route('usuarios.index'),
+                'type' => 'success', 
+                'title' => 'Permisos actualizados correctamente para el usuario ' . $usuario->persona->nombreCompleto(),
+            ]); 
+            
+        }catch(Exception $e){
+            Log::error('Error al actualizar permisos: ' . $e->getMessage());
+            return response()->json([
+                'redirect' => route('usuarios.index'),
+                'type' => 'error', 
+                'title' => 'Error al actualizar los permisos',
+            ]); 
+        }
+        
     }
 }

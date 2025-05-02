@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Permisos;
 use App\Models\User;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -53,12 +55,13 @@ class RolController extends Controller
                 'type' => 'success', 
             ]);
          
-        }catch(\Exception $e){
+        }catch(Exception $e){
+            Log::error('Error al crear el rol: ' . $e->getMessage());
             return response()->json([
-                'title' => 'Error al crear el modulo',
-                'redirect' => route('modulos.index'),
+                'redirect' => route('roles.index'),
                 'type' => 'error', 
-            ]);
+                'title' => 'Error al crear el rol',
+            ]); 
         }
     }
 
@@ -79,7 +82,8 @@ class RolController extends Controller
                 'type' => 'success', 
                 'title' => 'Permisos para el rol ' . $rol->name . ' actualizados correctamente',
             ]); 
-        }catch(\Exception $e){
+        }catch(Exception $e){
+            Log::error('Error al actualizar los permisos: ' . $e->getMessage());
             return response()->json([
                 'redirect' => route('roles.index'),
                 'type' => 'error', 
@@ -89,7 +93,6 @@ class RolController extends Controller
     }
     
     public function editRolUsuario($id){
-
         $usuario = User::findOrFail($id);
         $rolesDisponibles = Role::where('name', '!=', User::SUPER_ADMIN_ROLE)->get();
         $rolesUsuario = $usuario->getRoleNames();  
@@ -97,15 +100,23 @@ class RolController extends Controller
     }
 
     public function updateRolUsuario(Request $request, $id){
-
-        $usuario = User::findOrFail($id);
-        $usuario->syncRoles($request->roles);
-       
-        return response()->json([
-            'redirect' => route('usuarios.index'),
-            'type' => 'success', 
-            'title' => 'Roles actualizados correctamente para el usuario ' . $usuario->persona->nombreCompleto() ,
-        ]); 
-
+        try{
+            $usuario = User::findOrFail($id);
+            $usuario->syncRoles($request->roles);
+           
+            return response()->json([
+                'redirect' => route('usuarios.index'),
+                'type' => 'success', 
+                'title' => 'Roles actualizados correctamente para el usuario ' . $usuario->persona->nombreCompleto() ,
+            ]); 
+        }catch(Exception $e){
+            Log::error('Error al actualizar los roles: ' . $e->getMessage());
+            return response()->json([
+                'redirect' => route('usuarios.index'),
+                'type' => 'error', 
+                'title' => 'Error al actualizar los roles',
+            ]);
+        }
+      
     }
 }

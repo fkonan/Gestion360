@@ -1,5 +1,5 @@
 <!-- Modal documentos adjuntos -->
-<div class="container-fluid p-3">
+<div class="container-fluid">
     <table
         id="adjuntosDataTable"
         class="table table-sm table-striped"
@@ -12,8 +12,8 @@
         <thead>
             <tr class="bg-primary">
                 <th data-sortable="true">Radicado</th>
-                <th data-sortable="true">Tipo de Documento</th>
-                <th data-sortable="true">Fecha de Registro</th>
+                <th data-sortable="true">Tipo </th>
+                <th data-sortable="true">Fecha </th>
                 <th class="text-center">Acciones</th>
             </tr>
         </thead>

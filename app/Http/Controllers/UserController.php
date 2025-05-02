@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Persona;
 use App\Models\User;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
@@ -41,35 +43,38 @@ class UserController extends Controller
             ], 422);
         }
 
-        $user = new User();
-        $user->idPersona = $request->idPersona;
-        $user->Password =  bcrypt($request->Password);
-        $user->UsuarioEstado = $request->UsuarioEstado;
-        $user->Verificado = $request->Verificado;
-        $user->UsuFecReg = now();
-        $user->UsuHorReg = now();
-        $user->UsuReg = "AppMovil";
-        $user->save();
-
-        return response()->json([
-            'redirect' => route('usuarios.index'),
-            'type' => 'success', 
-            'title' => 'Usuario creado exitosamente'
-        ]); 
+        try{
+            $user = new User();
+            $user->idPersona = $request->idPersona;
+            $user->Password =  bcrypt($request->Password);
+            $user->UsuarioEstado = $request->UsuarioEstado;
+            $user->Verificado = $request->Verificado;
+            $user->UsuFecReg = now();
+            $user->UsuHorReg = now();
+            $user->UsuReg = "AppMovil";
+            $user->save();
+    
+            return response()->json([
+                'redirect' => route('usuarios.index'),
+                'type' => 'success', 
+                'title' => 'Usuario creado exitosamente'
+            ]); 
+        }catch(Exception $e){
+            Log::error('Error al crear el usuario: ' . $e->getMessage());
+            return response()->json([
+                'redirect' => route('usuarios.index'),
+                'type' => 'error', 
+                'title' => 'Error al crear el usuario',
+            ]);
+        }
     }
 
     public function edit($id){
-
-        if(!request()->ajax()){
-            return $this->index();
-        }
-
         $usuario = User::findOrFail($id);
         return view("usuarios.editarUsuario",compact("usuario"))->render();
     }
 
     public function update(Request $request, $id){
-
         $validator = Validator::make($request->all(), [
             'UsuarioEstado' => 'required',
             'Verificado' => 'required',
@@ -81,13 +86,23 @@ class UserController extends Controller
             ], 422);
         }
 
-        User::findOrFail($id)->update($request->all());     
+        try{
+            User::findOrFail($id)->update($request->all());     
 
-        return response()->json([
-            'redirect' => route('usuarios.index'),
-            'type' => 'success', 
-            'title' => 'Usuario modificado exitosamente'
-        ]); 
-
+            return response()->json([
+                'redirect' => route('usuarios.index'),
+                'type' => 'success', 
+                'title' => 'Usuario modificado exitosamente'
+            ]); 
+    
+        }catch(Exception $e){
+            Log::error('Error al modificar el usuario: ' . $e->getMessage());
+            return response()->json([
+                'redirect' => route('usuarios.index'),
+                'type' => 'error', 
+                'title' => 'Error al modificar el usuario',
+            ]);
+        }
+        
     }
 }

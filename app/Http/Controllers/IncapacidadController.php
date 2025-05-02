@@ -8,9 +8,10 @@ use App\Models\Incapacidad;
 use App\Models\incapacidadesSeguimiento;
 use App\Models\Parametros;
 use App\Rules\IncapacidadMaxima;
-use Illuminate\Foundation\Exceptions\Renderer\Exception;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class IncapacidadController extends Controller
@@ -90,21 +91,31 @@ class IncapacidadController extends Controller
             ], 422);
         }
 
-        $incapacidad->update($request->all());
+        try{
+            //Valida de que ruta viene (incapacidad o seguimiento)
+            $referer = $request->headers->get('referer');
+            $redirect = route('gestion-incapacidades.incapacidades');
 
-        //Valida de que ruta viene (incapacidad o seguimiento)
-        $referer = $request->headers->get('referer');
-        $redirect = route('gestion-incapacidades.incapacidades');
-
-        if ($referer == route('gestion-incapacidades.seguimiento')) {
-            $redirect = route('gestion-incapacidades.seguimiento');
+            $incapacidad->update($request->all());
+    
+            if ($referer == route('gestion-incapacidades.seguimiento')) {
+                $redirect = route('gestion-incapacidades.seguimiento');
+            }
+    
+            return response()->json([
+                'title' => 'Se han actualizado los datos del radicado exitosamente',
+                'redirect' => $redirect,
+                'type' => 'success',
+            ]);
+        }catch(Exception $e){
+            Log::error('Error al actualizar la incapacidad: ' . $e->getMessage());
+            return response()->json([
+                'title' => 'Error al actualizar la incapacidad',
+                'redirect' => $redirect,
+                'type' => 'danger', 
+            ]);
         }
-
-        return response()->json([
-            'title' => 'Se han actualizado los datos del radicado exitosamente',
-            'redirect' => $redirect,
-            'type' => 'success',
-        ]);
+        
     }
 
     public function gestionIncapacidad($id){
@@ -115,39 +126,48 @@ class IncapacidadController extends Controller
     public function updateEstadoIncapacidad(Request $request, $id){
         $incapacidad = Incapacidad::findOrFail($id);
         
-        if ($request->IncapacidadEstado == "RECHAZADO") {
-            $validator = Validator::make($request->all(), [
-                'Observacion' => 'required|max:255',
-            ],[
-                'Observacion.required' => 'El campo observación es obligatorio.',
-                'Observacion.max' => 'La observación no puede exceder los 255 caracteres.',
-            ]);
+        try{
+            if ($request->IncapacidadEstado == "RECHAZADO") {
+                $validator = Validator::make($request->all(), [
+                    'Observacion' => 'required|max:255',
+                ],[
+                    'Observacion.required' => 'El campo observación es obligatorio.',
+                    'Observacion.max' => 'La observación no puede exceder los 255 caracteres.',
+                ]);
+        
+                if ($validator->fails()) {
+                    return response()->json([
+                        'errors' => $validator->errors()
+                    ], 422);
+                }
     
-            if ($validator->fails()) {
+                $incapacidad->update($request->all());
+    
                 return response()->json([
-                    'errors' => $validator->errors()
-                ], 422);
+                    'title' => 'El radicado ha sido rechazado exitosamente',
+                    'redirect' => route('gestion-incapacidades.incapacidades'),
+                    'type' => 'success', 
+                ]);
             }
-
-            $incapacidad->update($request->all());
-
+    
+            $incapacidad->fill($request->all());
+            $incapacidad->Observacion = 'RECIBIDO Y APROBADO';
+            $incapacidad->save();
+            
+    
             return response()->json([
-                'title' => 'El radicado ha sido rechazado exitosamente',
+                'title' => 'El radicado ha sido aprobado exitosamente',
                 'redirect' => route('gestion-incapacidades.incapacidades'),
                 'type' => 'success', 
             ]);
+        }catch(Exception $e){
+            Log::error('Error al actualizar el estado de la incapacidad: ' . $e->getMessage());
+            return response()->json([
+                'title' => 'Error al actualizar el estado de la incapacidad',
+                'redirect' => route('gestion-incapacidades.incapacidades'),
+                'type' => 'danger', 
+            ]);
         }
-
-        $incapacidad->fill($request->all());
-        $incapacidad->Observacion = 'RECIBIDO Y APROBADO';
-        $incapacidad->save();
-        
-
-        return response()->json([
-            'title' => 'El radicado ha sido aprobado exitosamente',
-            'redirect' => route('gestion-incapacidades.incapacidades'),
-            'type' => 'success', 
-        ]);
     }
 
     public function seguimientoDetalle($id){
@@ -197,6 +217,7 @@ class IncapacidadController extends Controller
                 'type' => 'success', 
             ]);
         }catch(Exception $e){
+            Log::error('Error al registrar el seguimiento: ' . $e->getMessage());
             return response()->json([
                 'title' => 'Error al registrar el seguimiento',
                 'redirect' => route('gestion-incapacidades.seguimiento.detalle', ['id' => $incapacidadSeguimiento->IncapacidadId]),
