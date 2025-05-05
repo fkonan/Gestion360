@@ -23,7 +23,7 @@
         Registrar usuario
     </a>
 
-    <div class="row p-4">
+    <div id="no-more-tables" class="row p-4">
         <table
             id="usuariosDataTable"
             class="table table-sm table-striped"
@@ -44,7 +44,6 @@
                     <th data-field="acciones" data-formatter="accionesFormatter">Acciones</th>
                 </tr>
             </thead>
-           
         </table>
     </div>
 </div>

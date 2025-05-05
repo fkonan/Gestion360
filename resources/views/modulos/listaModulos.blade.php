@@ -24,7 +24,7 @@
             Crear Modulo
     </a>
     
-    <div class="row p-4 table-responsive">
+    <div id="no-more-tables" class="table-responsive" style="padding:1.5em">
         <table
             id="modulosDataTable"
             class="table table-sm table-striped"

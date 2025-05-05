@@ -4,49 +4,55 @@
 
 
 /* Estilos respondive para las tablas */
-@media (max-width: 768px) {
-    table, thead, tbody, th, td, tr {
+ @media (max-width: 768px) {
+        #no-more-tables table,
+        #no-more-tables thead,
+        #no-more-tables tbody,
+        #no-more-tables th,
+        #no-more-tables td,
+        #no-more-tables tr {
         display: block;
-        margin: 1em 0;
-        width: 100%;
     }
 
-    thead {
-        display: none;
+    #no-more-tables{
+        padding: 0 !important;
+        margin: 0 !important;
     }
-
-    tr {
-        background-color: #fff;
-        border: 1px solid #ddd;
-        border-radius: 0.5rem;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-        padding: 1rem;
-    }
-
-    td {
-        position: relative;
-        padding: 0.75rem 0.5rem 0.75rem 50%;
-        border: none;
-        border-bottom: 1px solid #f1f1f1;
-        word-wrap: break-word;
-        min-height: 40px;
-    }
-
-    td:last-child {
-        border-bottom: none;
-    }
-
-    td::before {
-        content: attr(data-label);
+     
+    #no-more-tables thead tr {
         position: absolute;
-        top: 0%;
-        left: 10px;
-        transform: translateY(-50%);
-        font-weight: bold;
+        top: -9999px;
+        left: -9999px;
+    }
+     
+    #no-more-tables tr { 
+        border: 1px solid #2E2E2E; 
+        box-shadow: #2E2E2E 0px 0px 5px;
+        margin-bottom: 2rem;
+    }
+      
+    #no-more-tables td {
+        border: none;
+        border-bottom: 1px solid #eee;
+        position: relative;
+        padding-left: 50%;
+        white-space: normal;
+        text-align:left;
+    }
+     
+    #no-more-tables td:before {
+        position: absolute;
+        top: 6px;
+        left: 6px;
+        width: 45%;
+        padding-right: 10px;
         white-space: nowrap;
-        color: #333;
+        text-align:left;
+        font-weight: bold;
+        
+    }
+     
+    #no-more-tables td:before { 
+        content: attr(data-label); 
     }
 }
-
-  
-
