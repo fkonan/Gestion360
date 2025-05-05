@@ -41,7 +41,7 @@ class Incapacidad extends Model
 
     public function diagnostico(): BelongsTo{
         return $this->belongsTo(Enfermedades::class,'Diagnostico','IdEnfermedad')
-            ->select('IdEnfermedad','DescCie');
+            ->select('IdEnfermedad','DescCie','CodigoCie');
     }
 
     public function eps(): BelongsTo{

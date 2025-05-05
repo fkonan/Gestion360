@@ -8,7 +8,6 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class RolController extends Controller

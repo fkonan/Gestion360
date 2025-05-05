@@ -3,5 +3,50 @@
 @import 'bootstrap-icons/font/bootstrap-icons.css';
 
 
+/* Estilos respondive para las tablas */
+/* @media (max-width: 768px) {
+    table, thead, tbody, th, td, tr {
+        display: block;
+        margin: 1em 0;
+        width: 100%;
+    }
 
+    thead {
+        display: none;
+    }
+
+    tr {
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        padding: 1rem;
+    }
+
+    td {
+        position: relative;
+        padding: 0.75rem 0.5rem 0.75rem 50%;
+        border: none;
+        border-bottom: 1px solid #f1f1f1;
+        word-wrap: break-word;
+        min-height: 40px;
+    }
+
+    td:last-child {
+        border-bottom: none;
+    }
+
+    td::before {
+        content: attr(data-label);
+        position: absolute;
+        top: 0%;
+        left: 10px;
+        transform: translateY(-50%);
+        font-weight: bold;
+        white-space: nowrap;
+        color: #333;
+    }
+}
+
+   */
 

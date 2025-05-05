@@ -3,11 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Arl;
+use App\Models\Enfermedades;
 use App\Models\Eps;
 use App\Models\Incapacidad;
 use App\Models\incapacidadesSeguimiento;
+use App\Models\LOGTRANS\PerPersonaBloqueo;
+use App\Models\LOGTRANS\PerPersonas;
 use App\Models\Parametros;
 use App\Rules\IncapacidadMaxima;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -63,10 +67,11 @@ class IncapacidadController extends Controller
     public function editIncapacidad($id){
         $incapacidad = Incapacidad::findOrFail($id)->load(['causa', 'diagnostico', 'eps', 'arl']);
         $causasIncapacidad = Parametros::where('ParNomGru', 'CAUSA-INCAPACIDAD')->get();
-        $listaEps = Eps::all();
-        $listaArl = Arl::all();
+        $codigosIncapacidad = Enfermedades::pluck('CodigoCie', 'IdEnfermedad');
+        $listaEps = Eps::pluck('EPSNombre', 'IdEPS');
+        $listaArl = Arl::pluck('ARLNombre', 'IdARL');
 
-        return view("incapacidades.datosIncapacidad",compact("incapacidad","causasIncapacidad","listaEps","listaArl"));
+        return view("incapacidades.revisionIncapacidad",compact("incapacidad","causasIncapacidad","listaEps","listaArl","codigosIncapacidad"));
     }
 
     public function updateIncapacidad(Request $request, $id){
@@ -144,22 +149,41 @@ class IncapacidadController extends Controller
                 $incapacidad->update($request->all());
     
                 return response()->json([
-                    'title' => 'El radicado ha sido rechazado exitosamente',
+                    'title' => 'Se ha RECHAZADO el radicado '. $id .' exitosamente',
                     'redirect' => route('gestion-incapacidades.incapacidades'),
                     'type' => 'success', 
                 ]);
             }
-    
+
+            /* Si es aprobada */
             $incapacidad->fill($request->all());
             $incapacidad->Observacion = 'RECIBIDO Y APROBADO';
-            $incapacidad->save();
             
-    
-            return response()->json([
-                'title' => 'El radicado ha sido aprobado exitosamente',
-                'redirect' => route('gestion-incapacidades.incapacidades'),
-                'type' => 'success', 
-            ]);
+            $agregarBloqueo = $this->bloqueoNovedadLogtrans($incapacidad->IdPerOracle,$incapacidad);
+            if ($agregarBloqueo == "bloqueado") {
+                $incapacidad->save();
+                return response()->json([
+                    'title' => 'El radicado '. $id .' ha sido APROBADO exitosamente y se ha generado el bloqueo en Logtrans',
+                    'redirect' => route('gestion-incapacidades.incapacidades'),
+                    'type' => 'success', 
+                ]);
+            }else if($agregarBloqueo === "error"){
+                $incapacidad->refresh();
+                return response()->json([
+                    'title' => 'Error al generar el bloqueo en Logtrans',
+                    'redirect' => route('gestion-incapacidades.incapacidades'),
+                    'type' => 'success', 
+                ]);
+
+            }else{ 
+                $incapacidad->save();
+                return response()->json([
+                    'title' => 'El radicado '. $id .' ha sido APROBADO exitosamente',
+                    'redirect' => route('gestion-incapacidades.incapacidades'),
+                    'type' => 'success', 
+                ]);
+            }
+
         }catch(Exception $e){
             Log::error('Error al actualizar el estado de la incapacidad: ' . $e->getMessage());
             return response()->json([
@@ -224,6 +248,51 @@ class IncapacidadController extends Controller
                 'type' => 'danger', 
             ]);
         }
-        
+    }
+
+    public function bloqueoNovedadLogtrans($IdPerOracle, $incapacidadDatos){
+        try{
+            $persona = PerPersonas::where('id', $IdPerOracle)
+                ->where('estado', 'ACTIVO')
+                ->where('estborrado', 0)
+                ->first();
+
+            //Verifica si la persona existe y si es un conductor
+            if (!$persona || !in_array($persona->PerContratoPersona->cargo,[206,207,1138045160,1138045159])) {
+                return false;
+            }
+
+            //Información para generar el bloqueo
+            $ultimoId = PerPersonaBloqueo::max('id') + 1;
+            $fecha = Carbon::now()->format('Y-m-d H:i:s');
+            $fechaInicial = Carbon::parse($incapacidadDatos->IncFecIni)->format('Y/m/d H:i:s');
+            $fechaFinal = Carbon::parse($incapacidadDatos->IncFecFin)->format('Y/m/d H:i:s');
+
+            $bloqueo = new PerPersonaBloqueo();
+            $bloqueo->id = $ultimoId;
+            $bloqueo->cedula_conductor = $persona->identificacion;
+            $bloqueo->tb_id = 45;
+            $bloqueo->descripcion = 'INC '. $fechaInicial .' AL '.$fechaFinal.' ('. $incapacidadDatos->diagnostico->CodigoCie .') APROBADO POR RRHH POR gestion.copetran.com.co';
+            $bloqueo->pe_id_bloqueo = 1329752424;
+            $bloqueo->fecbloqueo = $fecha;
+            $bloqueo->activo = 1;
+            $bloqueo->pe_id_desbloqueo = null;
+            $bloqueo->fecdesbloqueo = null;
+            $bloqueo->estborrado = 0;
+            $bloqueo->fecmodifica = $fecha;
+            $bloqueo->empmodifica = 6761;
+            $bloqueo->usrmodifica = 1329752424;
+            $bloqueo->rolmodifica = 60;
+            $bloqueo->feccreacion = $fecha;
+            $bloqueo->empcreacion = 6761;
+            $bloqueo->usrcreacion = 1329752424;
+            $bloqueo->fec_inicio = $fechaInicial;
+            $bloqueo->fec_fin = $fechaFinal;
+            $bloqueo->save();
+            return "bloqueado";
+        }catch(Exception $e){
+            Log::error('Error al bloquear la novedad en Logtrans: ' . $e->getMessage());
+            return "error";
+        }
     }
 }

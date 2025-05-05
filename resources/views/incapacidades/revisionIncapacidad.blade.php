@@ -27,17 +27,23 @@
             </div>
             <div class="col-md-4">
                 <label for="" class="form-label">Código Incapacidad</label>
-                <input type="text" class="form-control" id="" name="" value="" disabled>
-                <span class="error text-danger fw-bold" id=""></span>
+                <select class="form-select select2" id="Diagnostico" name="Diagnostico" disabled>
+                    @foreach ($codigosIncapacidad as $id => $codigo)
+                        <option value="{{ $id }}" @selected($id == $incapacidad->Diagnostico)>
+                            {{ $codigo }}
+                        </option>
+                    @endforeach
+                </select>
+                <span class="error text-danger fw-bold" id="error-Diagnostico"></span>
             </div>   
         </div>
         <div class="row px-4 pb-4">       
             <div class="col-md-4">
                 <label for="EPSId" class="form-label">EPS</label>
                 <select class="form-control select2" id="EPSId" name="EPSId" disabled>
-                    @foreach ($listaEps as $eps)
-                        <option value="{{ $eps->IdEPS }}" @selected($eps->IdEPS == $incapacidad->EPSId)>
-                            {{ $eps->EPSNombre }}
+                    @foreach ($listaEps as $id => $nombre)
+                        <option value="{{ $id }}" @selected($id == $incapacidad->EPSId)>
+                            {{ $nombre }}
                         </option>
                     @endforeach
                 </select>
@@ -46,9 +52,9 @@
             <div class="col-md-4">
                 <label for="ARLId" class="form-label">ARL</label>
                 <select class="form-control select2" id="ARLId" name="ARLId" disabled>
-                    @foreach ($listaArl as $arl)
-                        <option value="{{ $arl->IdARL }}" @selected($arl->IdARL == $incapacidad->ARLId)>
-                            {{ $arl->ARLNombre }}
+                    @foreach ($listaArl as $id => $nombre)
+                        <option value="{{ $id }}" @selected($id == $incapacidad->ARLId)>
+                            {{ $nombre }}
                         </option>
                     @endforeach
                 </select>
