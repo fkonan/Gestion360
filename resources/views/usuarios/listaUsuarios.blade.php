@@ -67,20 +67,20 @@
 
         return `
             <div class="col-md-12 text-center">
-                <a class="btn btn-secondary btn-sm me-3" 
+                <a class="me-3 text-decoration-none" 
                     title="Haga click para gestionar los permisos del usuario"
                     onclick="cargarModal('${urlPermisos}', 'Permisos usuario', '#formPermisoUsuario', 'modal-xl')">
-                    <i class="fas fa-lock"></i>
+                    <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/Permiso00.png" alt="Permisos" style="width: 30px; height: 30px;">
                 </a>
-                <a class="btn btn-secondary btn-sm me-3" 
+                <a class="me-3 text-decoration-none" 
                     title="Haga click para gestionar los roles del usuario"
                     onclick="cargarModal('${urlRoles}', 'Roles usuario', '#formRolUsuario', 'modal-lg')">
-                    <i class="fas fa-user"></i>
+                    <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/person.png" alt="Roles" style="width: 30px; height: 30px;">
                 </a>
-                <a class="btn btn-secondary btn-sm" 
+                <a 
                     title="Haga click para editar el usuario"
                     onclick="cargarModal('${urlUsuarios}', 'Editar Usuario', '#formEditUsuario', 'modal-lg')">
-                    <i class="fas fa-edit"></i>
+                    <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/new_editar.png" alt="Editar" style="width: 30px; height: 30px;">
                 </a>
             </div>
         `;

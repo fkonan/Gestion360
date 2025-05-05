@@ -55,8 +55,8 @@
                     <td>{{ $persona?->PerGenero }}</td>
                     <td>{{ $persona?->PerEstado }}</td>
                     <td class="text-center" style="width: 100px;">
-                        <a class="btn btn-secondary p-0 px-2" onclick="cargarModal(`{{ route('personas.edit', ['id' => $persona->IdPersona]) }}`, 'Editar Persona', '#formEditPersona')">
-                            <i class="nav-icon fas fa-edit"></i>
+                        <a class="p-0 px-2" onclick="cargarModal(`{{ route('personas.edit', ['id' => $persona->IdPersona]) }}`, 'Editar Persona', '#formEditPersona')">
+                            <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/new_editar.png" alt="Editar" style="width: 30px; height: 30px;">
                         </a>
                     </td>   
                 </tr>

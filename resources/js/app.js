@@ -3,6 +3,10 @@ import $ from 'jquery';
 import 'jquery-validation';
 window.$ = window.jQuery = $;
 
+//Datatables
+import 'datatables.net';
+import 'datatables.net-bs5';
+
 // Select2 jQuery
 import select2 from 'select2';
 select2();

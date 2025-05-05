@@ -225,7 +225,7 @@ class IncapacidadController extends Controller
     
             $incapacidadSeguimiento = new incapacidadesSeguimiento();
             $incapacidadSeguimiento->IncapacidadId = $id;
-            $incapacidadSeguimiento->Observacion = $request->Observacion;
+            $incapacidadSeguimiento->Observacion = strtoupper($request->Observacion);
             $incapacidadSeguimiento->SegFecReg = now();
             $incapacidadSeguimiento->SegHorReg = now();
             $incapacidadSeguimiento->UserRegistra = $user->persona->nombreCompleto();
@@ -233,7 +233,7 @@ class IncapacidadController extends Controller
             $incapacidadSeguimiento->save();
     
             return response()->json([
-                'title' => 'Seguimiento registrado exitosamente',
+                'title' => 'Seguimiento radicado N° '. $id .' registrado exitosamente',
                 'redirect' => route('gestion-incapacidades.seguimiento.detalle', ['id' => $incapacidadSeguimiento->IncapacidadId]),
                 'type' => 'success', 
             ]);

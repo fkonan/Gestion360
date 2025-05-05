@@ -80,18 +80,18 @@
                             <a class="ms-3 text-decoration-none" 
                                 title="Haga click para ver los adjuntos"
                                 onclick="cargarModal('${urlAdjuntos}', 'Documentos Incapacidad', '', 'modal-lg')">     
-                                <i class="fas fa-file fs-2"></i>
+                                <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/carpetas.png" alt="Ver Adjuntos" style="width: 32px; height: 32px;">
                             </a>
                             <a class="ms-3 text-decoration-none" 
                                 title="Haga click para editar la incapacidad"
                                 onclick="cargarModal('${urlDatos}', 'Revisión datos incapacidad', '#formIncapacidad', 'modal-xl')">
-                                <i class="fas fa-edit fs-2"></i> 
+                                <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/new_editar.png" alt="Revisión datos" style="width: 32px; height: 32px;">
                             </a>
                             ${row.RevisionDatos == 1 ? `
                             <a class="ms-3 text-decoration-none" 
                                 title="Haga click para gestionar el radicado"
                                 onclick="cargarModal('${urlGestion}', 'Gestion Incapacidad', '#formGestionIncapacidad', 'modal-lg')">
-                                <i class="fas fa-clipboard-list fs-2 text-success"></i> 
+                                <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/aprobarrechazar.png" alt="AprobarRechazar" style="width: 32px; height: 32px;">
                             </a>` : ''}
                         </div>
                     </div>

@@ -82,9 +82,9 @@
                     </td>  
 
                     <td class="text-center" style="width: 80px;">
-                        <a class="btn btn-secondary p-0 px-2" 
+                        <a class="p-0 px-2" 
                             onclick="cargarModal(`{{ route('roles.permisos', ['id' => $rol->id]) }}`, 'Permisos Rol', '#formPermisoRol','modal-lg')">
-                            <i class="nav-icon fas fa-edit"></i>
+                            <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/new_editar.png" alt="Editar" style="width: 30px; height: 30px;">
                         </a>
                     </td>
                 </tr>

@@ -25,7 +25,7 @@
                     <td>{{ $documento->DocFecReg }}</td>
                     <td class="text-center">
                         <a href="{{ $documento->Ruta }}" target="_blank">
-                            <i class="fas fa-file-pdf fa-2x text-danger"></i>
+                            <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/pdf.png" alt="Adjunto" style="width: 32px; height: 34px;">
                         </a>
                     </td>
                 </tr>

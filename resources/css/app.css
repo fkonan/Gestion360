@@ -4,7 +4,7 @@
 
 
 /* Estilos respondive para las tablas */
-/* @media (max-width: 768px) {
+@media (max-width: 768px) {
     table, thead, tbody, th, td, tr {
         display: block;
         margin: 1em 0;
@@ -48,5 +48,5 @@
     }
 }
 
-   */
+  
 
