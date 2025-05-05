@@ -73,7 +73,6 @@ class ModuloController extends Controller
                 'type' => 'error', 
             ]);
         }
-        
     }
 
     public function edit($id){

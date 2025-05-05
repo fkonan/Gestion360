@@ -7,11 +7,9 @@ use App\Models\Enfermedades;
 use App\Models\Eps;
 use App\Models\Incapacidad;
 use App\Models\incapacidadesSeguimiento;
-use App\Models\LOGTRANS\PerPersonaBloqueo;
-use App\Models\LOGTRANS\PerPersonas;
 use App\Models\Parametros;
 use App\Rules\IncapacidadMaxima;
-use Carbon\Carbon;
+use App\Services\BloqueoService;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -117,10 +115,9 @@ class IncapacidadController extends Controller
             return response()->json([
                 'title' => 'Error al actualizar la incapacidad',
                 'redirect' => $redirect,
-                'type' => 'danger', 
+                'type' => 'error', 
             ]);
         }
-        
     }
 
     public function gestionIncapacidad($id){
@@ -128,7 +125,7 @@ class IncapacidadController extends Controller
         return view("incapacidades.gestionIncapacidad",compact("incapacidad"));
     }
 
-    public function updateEstadoIncapacidad(Request $request, $id){
+    public function updateEstadoIncapacidad(Request $request, $id, BloqueoService $bloqueoService){
         $incapacidad = Incapacidad::findOrFail($id);
         
         try{
@@ -155,26 +152,26 @@ class IncapacidadController extends Controller
                 ]);
             }
 
-            /* Si es aprobada */
+            /* Si es aprobada se genera el bloqueo si es conductor*/
             $incapacidad->fill($request->all());
             $incapacidad->Observacion = 'RECIBIDO Y APROBADO';
             
-            $agregarBloqueo = $this->bloqueoNovedadLogtrans($incapacidad->IdPerOracle,$incapacidad);
-            if ($agregarBloqueo == "bloqueado") {
+            $bloqueo = $bloqueoService->bloqNovedadLogtransInc($incapacidad->IdPerOracle,$incapacidad);
+
+            if ($bloqueo == "bloqueado") {
                 $incapacidad->save();
                 return response()->json([
                     'title' => 'El radicado '. $id .' ha sido APROBADO exitosamente y se ha generado el bloqueo en Logtrans',
                     'redirect' => route('gestion-incapacidades.incapacidades'),
                     'type' => 'success', 
                 ]);
-            }else if($agregarBloqueo === "error"){
+            }else if($bloqueo === "error"){
                 $incapacidad->refresh();
                 return response()->json([
-                    'title' => 'Error al generar el bloqueo en Logtrans',
+                    'title' => 'Error al generar el bloqueo en Logtrans, por favor verifique la información',
                     'redirect' => route('gestion-incapacidades.incapacidades'),
-                    'type' => 'success', 
+                    'type' => 'error', 
                 ]);
-
             }else{ 
                 $incapacidad->save();
                 return response()->json([
@@ -189,7 +186,7 @@ class IncapacidadController extends Controller
             return response()->json([
                 'title' => 'Error al actualizar el estado de la incapacidad',
                 'redirect' => route('gestion-incapacidades.incapacidades'),
-                'type' => 'danger', 
+                'type' => 'error', 
             ]);
         }
     }
@@ -245,54 +242,8 @@ class IncapacidadController extends Controller
             return response()->json([
                 'title' => 'Error al registrar el seguimiento',
                 'redirect' => route('gestion-incapacidades.seguimiento.detalle', ['id' => $incapacidadSeguimiento->IncapacidadId]),
-                'type' => 'danger', 
+                'type' => 'error', 
             ]);
-        }
-    }
-
-    public function bloqueoNovedadLogtrans($IdPerOracle, $incapacidadDatos){
-        try{
-            $persona = PerPersonas::where('id', $IdPerOracle)
-                ->where('estado', 'ACTIVO')
-                ->where('estborrado', 0)
-                ->first();
-
-            //Verifica si la persona existe y si es un conductor
-            if (!$persona || !in_array($persona->PerContratoPersona->cargo,[206,207,1138045160,1138045159])) {
-                return false;
-            }
-
-            //Información para generar el bloqueo
-            $ultimoId = PerPersonaBloqueo::max('id') + 1;
-            $fecha = Carbon::now()->format('Y-m-d H:i:s');
-            $fechaInicial = Carbon::parse($incapacidadDatos->IncFecIni)->format('Y/m/d H:i:s');
-            $fechaFinal = Carbon::parse($incapacidadDatos->IncFecFin)->format('Y/m/d H:i:s');
-
-            $bloqueo = new PerPersonaBloqueo();
-            $bloqueo->id = $ultimoId;
-            $bloqueo->cedula_conductor = $persona->identificacion;
-            $bloqueo->tb_id = 45;
-            $bloqueo->descripcion = 'INC '. $fechaInicial .' AL '.$fechaFinal.' ('. $incapacidadDatos->diagnostico->CodigoCie .') APROBADO POR RRHH POR gestion.copetran.com.co';
-            $bloqueo->pe_id_bloqueo = 1329752424;
-            $bloqueo->fecbloqueo = $fecha;
-            $bloqueo->activo = 1;
-            $bloqueo->pe_id_desbloqueo = null;
-            $bloqueo->fecdesbloqueo = null;
-            $bloqueo->estborrado = 0;
-            $bloqueo->fecmodifica = $fecha;
-            $bloqueo->empmodifica = 6761;
-            $bloqueo->usrmodifica = 1329752424;
-            $bloqueo->rolmodifica = 60;
-            $bloqueo->feccreacion = $fecha;
-            $bloqueo->empcreacion = 6761;
-            $bloqueo->usrcreacion = 1329752424;
-            $bloqueo->fec_inicio = $fechaInicial;
-            $bloqueo->fec_fin = $fechaFinal;
-            $bloqueo->save();
-            return "bloqueado";
-        }catch(Exception $e){
-            Log::error('Error al bloquear la novedad en Logtrans: ' . $e->getMessage());
-            return "error";
         }
     }
 }
