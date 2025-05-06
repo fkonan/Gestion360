@@ -14,7 +14,7 @@ Route::get('/home', function () {
     return view('home');
 })->middleware('auth')->name('home');
 
-/* Route::get('/clear', function () {
+Route::get('/clear', function () {
     Artisan::call('storage:link');
     Artisan::call('cache:clear');
     Artisan::call('config:cache');
@@ -22,8 +22,7 @@ Route::get('/home', function () {
     Artisan::call('route:cache');
     return "Cleared!";
 });
- */
-
+ 
 //Ruta Modulo administración
 Route::prefix("administracion")->middleware(['auth', 'permisos:acceso-administracion','modulo.activo:7'])->group(function(){
     Route::prefix("personas")->group(function(){

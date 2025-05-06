@@ -49,3 +49,35 @@ export function handleMenuActive() {
         return href !== window.location.origin + "/" && url.startsWith(href);
     }).parentsUntil(".nav-sidebar > .nav-treeview").addClass('menu-open').prev('a').addClass('active');
 }
+
+
+export function abrirArchivo(url) {
+    const overlay = document.createElement('div');
+    overlay.style = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.8); z-index: 9999; display: flex;
+        justify-content: center; align-items: center; overflow: hidden;
+    `;
+
+    let content = '';
+    if (url.match(/\.(jpeg|jpg|png|gif)$/i)) {
+        // If the file is an image
+        content = `<img src="${url}" style="max-width: 80%; max-height: 80%; border: none;" alt="Archivo">`;
+    } else {
+        // Default to iframe for other file types (e.g., PDF)
+        content = `<iframe src="${url}" style="width: 80%; height: 90%; border: none;"></iframe>`;
+    }
+
+    overlay.innerHTML = `
+        ${content}
+        <div style="position: absolute; top: 10px; right: 10px; display: flex; gap: 10px;">
+            <button style="
+                padding: 10px 20px; background: #ff0000; color: #fff; border: none;
+                cursor: pointer; font-size: 16px; font-weight: bold">Cerrar</button>
+        </div>
+    `;
+
+    overlay.querySelector('button').addEventListener('click', () => document.body.removeChild(overlay));
+    document.body.appendChild(overlay);
+}
+

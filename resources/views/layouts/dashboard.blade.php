@@ -31,9 +31,9 @@
 
             <div class="sidebar">
             <!-- Usuario -->
-                <div class="user-panel my-3 pt-2 pb-2 d-flex flex-column">
+                <div class="user-panel my-3 pt-1 pb-2 d-flex flex-column">
                     <div class="info">
-                        <img src="{{ asset('img/LogoCope.png') }}" style="width:200px; height: 90px;" alt="Logo Cope" class="img-fluid">
+                        <img src="{{ asset('img/LogoCope.png') }}" style="width:auto; height: auto;" alt="Logo Cope" class="img-fluid">
                     </div>
                     
                     <div class="info">

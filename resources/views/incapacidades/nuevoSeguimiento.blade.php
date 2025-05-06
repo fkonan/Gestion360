@@ -1,5 +1,5 @@
 <!-- Modal nuevo seguimiento de incapacidad -->
-<div class="container-fluid p-0 bg-white border rounded">
+<div class="container-fluid p-0 bg-whit rounded">
     <form 
         id="formNuevoSeguimiento" 
         action="{{ route('gestion-incapacidades.seguimiento.detalle.store', ['id' => $incapacidad->IdIncapacidad]) }}"
@@ -7,7 +7,7 @@
         enctype="multipart/form-data">
         
         @csrf
-        <div class="row g-3 px-4 py-4">
+        <div class="row g-3 p-3">
             <div class="col-md-12">
                 <label for="Observacion" class="form-label">Observación</label>
                 <textarea class="form-control" id="Observacion" name="Observacion" rows="3"></textarea>

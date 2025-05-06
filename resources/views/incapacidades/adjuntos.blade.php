@@ -24,9 +24,9 @@
                     <td>{{ $documento->tipoDocumento->ParNom }}</td>
                     <td>{{ $documento->DocFecReg }}</td>
                     <td class="text-center">
-                        <a href="{{ $documento->Ruta }}" target="_blank">
-                            <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/pdf.png" alt="Adjunto" style="width: 32px; height: 34px;">
-                        </a>
+                        <button type="button" class="btn btn-link" onclick="abrirArchivo('{{ $documento->Ruta }}')">
+                            <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/pdf.png" alt="Adjunto" style="width: 32px; height: 32px;">
+                        </button>
                     </td>
                 </tr>
             @endforeach
