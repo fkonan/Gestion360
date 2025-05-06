@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\PersonaDatos;
-use App\Models\Sesion;
+use App\Models\GESTIONADMIN\PersonaDatos;
+use App\Models\GESTIONADMIN\Sesion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 

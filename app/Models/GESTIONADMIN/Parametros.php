@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\GESTIONADMIN;
 
 use App\Models\GESTIONHUMANA\Incapacidad;
 use App\Models\GESTIONHUMANA\IncapacidadesDocumentos;

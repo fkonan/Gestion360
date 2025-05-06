@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\GESTIONADMIN;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,6 +10,7 @@ class TipoDocumento extends Model
 {
     use HasFactory;
 
+    protected $connection = 'mysql-gestion-admin';
     protected $table = "_tipo_documento";
     protected $primaryKey = "id";
         

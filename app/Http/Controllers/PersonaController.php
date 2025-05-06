@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Departamento;
-use App\Models\Persona;
-use App\Models\TipoDocumento;
+use App\Models\GESTIONADMIN\Departamento;
+use App\Models\GESTIONADMIN\Persona;
+use App\Models\GESTIONADMIN\TipoDocumento;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;

@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\GESTIONADMIN\Parametros;
 use App\Models\GESTIONHUMANA\Arl;
 use App\Models\GESTIONHUMANA\Enfermedades;
 use App\Models\GESTIONHUMANA\Eps;
 use App\Models\GESTIONHUMANA\Incapacidad;
 use App\Models\GESTIONHUMANA\incapacidadesSeguimiento;
-use App\Models\Parametros;
 use App\Rules\IncapacidadMaxima;
 use App\Services\BloqueoService;
 use Exception;

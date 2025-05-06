@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\Modulo;
+use App\Models\GESTIONADMIN\Modulo;
 use Closure;
 use Illuminate\Http\Request;
 

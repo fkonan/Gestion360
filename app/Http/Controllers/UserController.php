@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Persona;
+use App\Models\GESTIONADMIN\Persona;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;

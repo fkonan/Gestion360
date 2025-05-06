@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Modulo;
+use App\Models\GESTIONADMIN\Modulo;
 use Exception;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;

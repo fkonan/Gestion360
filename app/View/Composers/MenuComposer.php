@@ -2,8 +2,8 @@
 
 namespace App\View\Composers;
 
+use App\Models\GESTIONADMIN\Modulo;
 use Illuminate\View\View;
-use App\Models\Modulo;
 
 class MenuComposer
 {

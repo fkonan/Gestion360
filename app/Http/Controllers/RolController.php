@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Permisos;
+use App\Models\GESTIONADMIN\Permisos;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;

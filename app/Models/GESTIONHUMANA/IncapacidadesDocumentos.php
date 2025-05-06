@@ -2,7 +2,7 @@
 
 namespace App\Models\GESTIONHUMANA;
 
-use App\Models\Parametros;
+use App\Models\GESTIONADMIN\Parametros;
 use Illuminate\Database\Eloquent\Model;
 
 class IncapacidadesDocumentos extends Model

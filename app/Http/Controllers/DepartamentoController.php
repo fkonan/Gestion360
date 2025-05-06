@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Departamento;
+use App\Models\GESTIONADMIN\Departamento;
 use Exception;
 use Illuminate\Http\Request;
 

@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\GESTIONADMIN\Persona;
+use App\Models\GESTIONADMIN\Sesion;
 use App\Models\GESTIONHUMANA\Enfermedades;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
