@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TiquetesImpresos;
+use App\Models\GESTIONPASAJES\TiquetesImpresos;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
