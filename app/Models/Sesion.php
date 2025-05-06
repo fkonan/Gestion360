@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Sesion extends Model
 {
+    protected $connection = 'mysql-gestion-admin';
     protected $table = "_sesion";
     protected $primaryKey = "IdSesion"; 
     public $timestamps = false;

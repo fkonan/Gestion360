@@ -9,6 +9,7 @@ class PersonaDatos extends Model
 {
     use HasFactory;
 
+    protected $connection = 'mysql-gestion-admin';
     protected $table ="_personas_datos";
     protected $primaryKey ="IdPersonaDatos";
     public $timestamps = false;

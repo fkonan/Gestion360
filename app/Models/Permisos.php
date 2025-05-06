@@ -6,6 +6,7 @@ use Spatie\Permission\Models\Permission;
 
 class Permisos extends Permission
 {
+    protected $connection = 'mysql-gestion-admin';
     protected $table = 'permisos';
     protected $primaryKey = 'id';
     public $timestamps = false;

@@ -11,6 +11,7 @@ class Municipio extends Model
 {
     use HasFactory;
 
+    protected $connection = 'mysql-gestion-admin';
     protected $table = "_municipios";
     protected $primaryKey = "IdMunicipio";
     public $incrementing = false;

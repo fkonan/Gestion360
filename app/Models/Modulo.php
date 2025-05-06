@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Modulo extends Model
 {
-
+    protected $connection = 'mysql-gestion-admin';
     protected $table = "modulos";
     protected $primaryKey = "IdModulo";
     protected $fillable = [

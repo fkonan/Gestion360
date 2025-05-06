@@ -10,6 +10,7 @@ class Departamento extends Model
 {
     use HasFactory;
     
+    protected $connection = 'mysql-gestion-admin';
     protected $table = "_departamentos";
     protected $primaryKey = "IdDepartamento";
     public $incrementing = false;

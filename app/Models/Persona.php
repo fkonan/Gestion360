@@ -11,6 +11,7 @@ class Persona extends Model
 {
     use HasFactory;
 
+    protected $connection = 'mysql-gestion-admin';
     protected $table ="_personas";
     protected $primaryKey ="IdPersona";
     public $timestamps = false;

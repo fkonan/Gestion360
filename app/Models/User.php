@@ -17,6 +17,7 @@ class User extends Authenticatable
     protected $guard_name = 'web';
     public const SUPER_ADMIN_ROLE = 'SUPER-ADMIN';
 
+    protected $connection = 'mysql-gestion-admin';
     protected $table = "_usuarios";
     protected $primaryKey = "IdUsuario";
     public $timestamps = false;

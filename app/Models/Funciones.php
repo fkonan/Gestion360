@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Funciones extends Model
 {
+    protected $connection = 'mysql-gestion-admin';
     protected $table = "_funciones";
     protected $primaryKey = "IdFunciones";
 
