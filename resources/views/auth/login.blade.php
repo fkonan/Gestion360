@@ -22,7 +22,7 @@
                             </div>
                         </div>   
                         @error('email')          
-                        <small class="text-danger">{{ $message }}</small>
+                         <small class="text-danger fw-bold">{{ $message }}</small>
                         @enderror
                     </div>
 

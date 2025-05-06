@@ -1,36 +1,34 @@
 <!-- Modal documentos adjuntos -->
-<div class="container-fluid">
+<div class="table-responsive">
     <table
         id="adjuntosDataTable"
-        class="table table-sm table-striped"
-        data-page-size="10"
+        class="table table-hover align-middle"
         data-toggle="table"
         data-locale="es-ES"
         data-search="true"
         data-pagination="true"
-        data-pagination-parts="['pageSize', 'pageList', 'pageNext', 'pagePrev']">   
+        data-pagination-parts="['pageSize', 'pageList', 'pageNext', 'pagePrev']">
         <thead>
-            <tr class="bg-primary">
+            <tr>
                 <th data-sortable="true">Radicado</th>
-                <th data-sortable="true">Tipo </th>
-                <th data-sortable="true">Fecha </th>
+                <th data-sortable="true">Tipo</th>
+                <th data-sortable="true">Fecha</th>
                 <th class="text-center">Acciones</th>
             </tr>
         </thead>
         <tbody>
             @foreach($incapacidadDocumentos as $documento)
-                <tr>
-                    <td>{{ $documento->Radicado ?? 1 }}</td>
-                    <td>{{ $documento->tipoDocumento->ParNom }}</td>
-                    <td>{{ $documento->DocFecReg }}</td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-link" onclick="abrirArchivo('{{ $documento->Ruta }}')">
-                            <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/pdf.png" alt="Adjunto" style="width: 32px; height: 32px;">
-                        </button>
-                    </td>
-                </tr>
+            <tr class="align-middle">
+                <td class="align-middle">{{ $documento->Radicado ?? 1 }}</td>
+                <td class="align-middle">{{ $documento->tipoDocumento->ParNom }}</td>
+                <td class="align-middle">{{ $documento->DocFecReg }}</td>
+                <td class="text-center align-middle">
+                <button type="button" class="btn btn-link m-0 p-0" onclick="abrirArchivo('{{ $documento->Ruta }}')">
+                    <img class="m-0 p-0" src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/pdf.png" alt="Adjunto" style="width: 35px; height: 35px;">
+                </button>
+                </td>
+            </tr>
             @endforeach
         </tbody>
     </table>
-    
 </div>

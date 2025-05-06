@@ -27,23 +27,19 @@ class LoginController extends Controller
         $user = PersonaDatos::where('PerEmail', $request->email)->first()?->persona->usuario;
 
         if (!$user || !password_verify($request->password, $user->Password)) {
-            session()->flash('alert', ['type' => 'error', 'title' => 'Correo o contraseña incorrectos']);
-            return back()->withInput();
+            return back()->withInput()->withErrors(['email' => 'Correo o contraseña incorrectos']);
         }
 
         if($user->persona->PerEstado == "INACTIVO"){
-            session()->flash('alert', ['type' => 'warning','title' => 'Persona inactiva']);
-            return back()->withInput();
+            return back()->withInput()->withErrors(['email' => 'Persona inactiva']);
         }
 
         if($user->UsuarioEstado == "INACTIVO"){
-            session()->flash('alert', ['type' => 'warning','title' => 'Usuario inactivo']);
-            return back()->withInput();
+            return back()->withInput()->withErrors(['email' => 'Usuario inactivo']);
         }
 
         if($user->UsuarioEstado == "SUSPENDIDO"){
-            session()->flash('alert', ['type' => 'warning','title' => 'Usuario suspendido']);
-            return back()->withInput();
+            return back()->withInput()->withErrors(['email' => 'Usuario suspendido']);
         }
 
         $this->registrarLogin($user->IdUsuario);
@@ -58,7 +54,7 @@ class LoginController extends Controller
         $sesion->SesionFechReg = now();
         $sesion->SesionHorReg = now();
         $sesion->SesionTipo = "LOGIN";
-        return $sesion->save();
+        $sesion->save();
     }
 
     public function logout(){

@@ -5,6 +5,7 @@ use App\Http\Controllers\ModuloController;
 use App\Http\Controllers\PermisosController;
 use App\Http\Controllers\PersonaController;
 use App\Http\Controllers\RolController;
+use App\Http\Controllers\SeguimientoIncapacidadController;
 use App\Http\Controllers\TiquetesImpresosController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Artisan;
@@ -87,12 +88,14 @@ Route::prefix("gestionRRHH")->middleware(['auth', 'permisos:acceso-gestion-rh','
         Route::get("/incapacidades/{id}/gestion",[IncapacidadController::class,"gestionIncapacidad"])->middleware('soloAJAX')->name("incapacidades.gestion");
         Route::put("/incapacidades/{id}/estado",[IncapacidadController::class,"updateEstadoIncapacidad"])->name("incapacidades.estado");
 
-        Route::get("/seguimiento",[IncapacidadController::class,"incapacidadesSeguimiento"])->name("seguimiento");
-        Route::get("/seguimiento/cargarDatos",[IncapacidadController::class,"cargarDatosSeguimiento"])->middleware('soloAJAX')->name("seguimiento.cargarDatos");
+        //Esta ruta carga adjuntos para la incapacidad y para el seguimiento
         Route::get("/seguimiento/{id}/adjuntos",[IncapacidadController::class,"incapacidadAdjuntos"])->middleware('soloAJAX')->name("seguimiento.adjuntos");
-        Route::get("/seguimiento/{id}/registro",[IncapacidadController::class,"seguimientoDetalle"])->name("seguimiento.detalle");
-        Route::get("/seguimiento/{id}/nuevo-seguimiento",[IncapacidadController::class,"nuevoSeguimiento"])->name("seguimiento.detalle.crear");
-        Route::post("/seguimiento/{id}/nuevo-seguimiento",[IncapacidadController::class,"guardarSeguimiento"])->name("seguimiento.detalle.store");
+
+        Route::get("/seguimiento",[SeguimientoIncapacidadController::class,"incapacidadesSeguimiento"])->name("seguimiento");
+        Route::get("/seguimiento/cargarDatos",[SeguimientoIncapacidadController::class,"cargarDatosSeguimiento"])->middleware('soloAJAX')->name("seguimiento.cargarDatos");
+        Route::get("/seguimiento/{id}/registro",[SeguimientoIncapacidadController::class,"seguimientoDetalle"])->name("seguimiento.detalle");
+        Route::get("/seguimiento/{id}/nuevo-seguimiento",[SeguimientoIncapacidadController::class,"nuevoSeguimiento"])->name("seguimiento.detalle.crear");
+        Route::post("/seguimiento/{id}/nuevo-seguimiento",[SeguimientoIncapacidadController::class,"guardarSeguimiento"])->name("seguimiento.detalle.store");
     });
 });
 
