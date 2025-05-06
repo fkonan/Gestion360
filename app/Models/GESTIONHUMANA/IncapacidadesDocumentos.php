@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\GESTIONHUMANA;
 
+use App\Models\Parametros;
 use Illuminate\Database\Eloquent\Model;
 
 class IncapacidadesDocumentos extends Model

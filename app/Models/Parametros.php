@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\GESTIONHUMANA\Incapacidad;
+use App\Models\GESTIONHUMANA\IncapacidadesDocumentos;
 use Illuminate\Database\Eloquent\Model;
 
 class Parametros extends Model

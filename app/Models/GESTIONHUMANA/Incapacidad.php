@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\GESTIONHUMANA;
 
+use App\Models\Parametros;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;

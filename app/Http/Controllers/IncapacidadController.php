@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Arl;
-use App\Models\Enfermedades;
-use App\Models\Eps;
-use App\Models\Incapacidad;
-use App\Models\incapacidadesSeguimiento;
+use App\Models\GESTIONHUMANA\Arl;
+use App\Models\GESTIONHUMANA\Enfermedades;
+use App\Models\GESTIONHUMANA\Eps;
+use App\Models\GESTIONHUMANA\Incapacidad;
+use App\Models\GESTIONHUMANA\incapacidadesSeguimiento;
 use App\Models\Parametros;
 use App\Rules\IncapacidadMaxima;
 use App\Services\BloqueoService;
