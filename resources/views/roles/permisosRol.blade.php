@@ -1,5 +1,5 @@
 <!-- Modal para asignar permisos a un rol -->
-<div class="container-fluid px-5 py-4 border rounded">
+<div class="container-fluid px-5 py-4 rounded">
     <form id="formPermisoRol" action="{{ route('roles.permisos.update', ['id' => $rol->id]) }}" method="POST">
         @csrf
         @method('PUT')

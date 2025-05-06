@@ -1,6 +1,6 @@
 <!-- Modal crear usuario -->
 
-<div class="container-fluid p-0 bg-white border rounded">
+<div class="container-fluid p-0 bg-white rounded">
     <form id="formCrearUsuario" action="{{  route('usuarios.store')  }}" method="POST">
         @csrf
         <div class="p-4">

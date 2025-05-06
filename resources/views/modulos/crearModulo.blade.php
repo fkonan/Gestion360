@@ -1,5 +1,5 @@
 <!-- modal para crearModulos-->
-<div class="container-fluid p-0 bg-white border rounded">
+<div class="container-fluid p-0 bg-white rounded">
     <form 
         id="formFormato" 
         action="{{ route('modulos.store') }}" 

@@ -1,6 +1,6 @@
 <!-- Modal editar persona -->
 
-<div class="container-fluid p-0 bg-white border rounded">
+<div class="container-fluid p-0 bg-white rounded">
     <form id="formEditPersona" action="{{  route('personas.update', ['id' => $persona->IdPersona])  }}" method="POST">
         @csrf
         @method('PUT')

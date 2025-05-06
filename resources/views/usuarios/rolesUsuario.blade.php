@@ -1,5 +1,5 @@
 <!-- Modal para asignar roles a un usuario -->
-<div class="container-fluid px-5 py-4 border rounded">
+<div class="container-fluid px-5 py-4 rounded">
     <form id="formRolUsuario" action="{{ route('roles.update', ['id' => $usuario->IdUsuario])}}" method="POST">
         @csrf
         @method('PUT')

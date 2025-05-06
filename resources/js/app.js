@@ -3,10 +3,6 @@ import $ from 'jquery';
 import 'jquery-validation';
 window.$ = window.jQuery = $;
 
-//Datatables
-import 'datatables.net';
-import 'datatables.net-bs5';
-
 // Select2 jQuery
 import select2 from 'select2';
 select2();
@@ -18,7 +14,8 @@ import 'bootstrap';
 import 'bootstrap-table/dist/bootstrap-table.min.js';
 import 'bootstrap-table/dist/locale/bootstrap-table-es-ES.min.js';
 import 'bootstrap-table/dist/bootstrap-table.min.css';
-
+/* import 'bootstrap-table/dist/extensions/responsive/bootstrap-table-responsive.js';
+ */
 
 // Bootstrap modal
 import { Modal } from 'bootstrap';
