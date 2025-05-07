@@ -81,3 +81,14 @@ export function abrirArchivo(url) {
     document.body.appendChild(overlay);
 }
 
+// Controla que al intentar quitar un permiso heredado, no se pueda quitar el permiso de un rol padre
+// y se muestre un mensaje de advertencia
+export function quitarPermisoHeredado(rolPadre) {
+    Swal.fire({
+        icon: "warning",
+        title: "No se puede quitar el permiso",
+        text: "No se puede quitar un permiso que viene de un rol, debe quitar el rol " + rolPadre + ' en su lugar.',
+        confirmButtonColor: "#3366CC",
+        confirmButtonText: "Aceptar"
+    });
+}

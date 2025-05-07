@@ -37,7 +37,8 @@
                             $rolName = $isInherited ? $permisosHeredadosConRol[$permiso->id] : null;
                         @endphp
                         <option 
-                            class="fw-medium {{ $isInherited ? 'text-danger' : '' }}" 
+                            class="fw-medium {{ $isInherited ? 'isInherited' : '' }}" 
+                            @if ($isInherited) onclick="quitarPermisoHeredado('{{ $rolName }}')" @endif
                             value="{{ $permiso->name }}"
                             title="{{ $isInherited ? 'Este permiso no puede eliminarse manualmente porque es parte del ROL' : '' }}"
                             @if ($isInherited) disabled @endif

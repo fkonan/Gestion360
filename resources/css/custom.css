@@ -74,8 +74,8 @@ body:not(.sidebar-collapse) .nav-item .nav-treeview .sangriaSegundoNivel{
 /* Dual select bootstrap */
 .bootstrap-duallistbox-container {
     display: flex;
-    justify-content: space-between;
-    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: center;
     gap: 20px;
 }
 
@@ -109,6 +109,7 @@ body:not(.sidebar-collapse) .nav-item .nav-treeview .sangriaSegundoNivel{
     padding: 12px;
     background-color: #ffffff;
     flex: 1;
+    min-width: 0;
 }
 
 .bootstrap-duallistbox-container .box1::before,
@@ -143,6 +144,13 @@ body:not(.sidebar-collapse) .nav-item .nav-treeview .sangriaSegundoNivel{
 .bootstrap-duallistbox-container .removeall {
     background-color: #dc3545 !important; /* rojo Bootstrap */
     color: white;
+}
+
+/* Estilos select en permisos usuario */
+.isInherited{
+    background-color: #f8d7da !important; /* Color de fondo rojo claro */
+    color: #721c24 !important; /* Color de texto rojo oscuro */
+    font-weight: bold; /* Negrita */
 }
 
 /* Spinner de carga */
