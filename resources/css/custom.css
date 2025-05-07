@@ -72,42 +72,77 @@ body:not(.sidebar-collapse) .nav-item .nav-treeview .sangriaSegundoNivel{
 
 
 /* Dual select bootstrap */
-.bootstrap-duallistbox-container select option {
-    padding: 5px; 
-    margin-bottom: 11px; 
-    font-size: 1em; 
-    background-color: #D6D6D6;
+.bootstrap-duallistbox-container {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    gap: 20px;
 }
 
-.bootstrap-duallistbox-container select option:hover{
-    background-color: #c0bcbc;
+.bootstrap-duallistbox-container select option {
+    padding: 6px;
+    margin: 5px 0;
+    font-size: 0.95rem;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+    border: 1px solid #dee2e6;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.bootstrap-duallistbox-container select option:hover {
+    background-color: #e9ecef;
 }
 
 .bootstrap-duallistbox-container select {
-    min-height: 300px; 
+    min-height: 320px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    padding: 5px;
+    background-color: white;
 }
 
- 
-.bootstrap-duallistbox-container .box1 select {
-    text-align: right;
+.bootstrap-duallistbox-container .box1,
+.bootstrap-duallistbox-container .box2 {
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    padding: 12px;
+    background-color: #ffffff;
+    flex: 1;
 }
 
-.bootstrap-duallistbox-container .box2 select {
-    text-align: left;
+.bootstrap-duallistbox-container .box1::before,
+.bootstrap-duallistbox-container .box2::before {
+    display: block;
+    font-weight: bold;
+    font-size: 1rem;
+    margin-bottom: 10px;
+    color: #0d6efd;
+    content: attr(data-title);
+    font-family: "Segoe UI", sans-serif;
+}
+
+.bootstrap-duallistbox-container .moveall,
+.bootstrap-duallistbox-container .removeall {
+    width: 100%;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 8px 0;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    margin-top: 8px;
+    margin-bottom: 4px;
 }
 
 .bootstrap-duallistbox-container .moveall {
-    background-color: var(--bs-primary) !important;
-    font-weight: bold;
+    background-color: #198754 !important; /* verde Bootstrap */
     color: white;
-    margin: 20px 0 5px 0;
 }
 
 .bootstrap-duallistbox-container .removeall {
-    background-color: #ffc107;
-    font-weight: bold; 
-    color: black;
-    margin: 20px 0 5px 0;
+    background-color: #dc3545 !important; /* rojo Bootstrap */
+    color: white;
 }
 
 /* Spinner de carga */

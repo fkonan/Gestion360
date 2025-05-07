@@ -79,21 +79,23 @@ function cargarModal(url, titulo = "", formularioId = null, size = null) {
 }
 
 
-function bootstrapDualListInit(id, nombre){
+function bootstrapDualListInit(id, nombre) {
     $(id).bootstrapDualListbox({
-        nonSelectedListLabel: nombre + ' disponibles',
-        selectedListLabel: nombre + ' asignados',
-        preserveSelectionOnMove: 'moved', 
-        moveAllLabel: 'Mover todos', 
-        removeAllLabel: 'Quitar todos',
+        preserveSelectionOnMove: 'moved',
         infoText: 'Mostrando {0} ' + nombre,
         infoTextEmpty: 'No hay ' + nombre + ' disponibles',
-        infoTextFiltered: '<span class="badge bg-warning">Filtrados</span> {0} de {1}'
+        infoTextFiltered: '<span class="badge bg-warning">Filtrados</span> {0} de {1}',
+        moveAllLabel: 'Mover todos', 
+        removeAllLabel: 'Quitar todos',
+        selectorMinimalHeight: 320
     });
 
+    $('.box1').attr('data-title', 'Todos los ' + nombre + ' disponibles');
+    $('.box2').attr('data-title',  nombre + ' asignados');
     $('.moveall').text('Agregar todos »');
     $('.removeall').text('« Quitar todos');    
 }
+
 
 function validarFormulario(form, TYPE="POST") {
 

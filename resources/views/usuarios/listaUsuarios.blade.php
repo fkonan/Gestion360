@@ -74,8 +74,8 @@
                 </a>
                 <a class="me-3 text-decoration-none" 
                     title="Haga click para gestionar los roles del usuario"
-                    onclick="cargarModal('${urlRoles}', 'Roles usuario', '#formRolUsuario', 'modal-lg')">
-                    <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/person.png" alt="Roles" style="width: 30px; height: 30px;">
+                    onclick="cargarModal('${urlRoles}', 'Roles usuario', '#formRolUsuario', 'modal-xl')">
+                    <img src="{{ asset('img/rolesEdit.png') }}" alt="Roles" style="width: 32px; height: 32px;">
                 </a>
                 <a 
                     title="Haga click para editar el usuario"

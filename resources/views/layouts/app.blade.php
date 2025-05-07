@@ -25,6 +25,8 @@
         <section>
             @yield('content')
         </section>
+
+        @include('footer')
         
         @stack('script')
 
