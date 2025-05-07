@@ -6,7 +6,10 @@
             icon: "{{ session('alert.type') }}",
             title: "{{ session('alert.title') }}",
             confirmButtonColor: "#3366CC",
-            confirmButtonText: "Aceptar"
+            confirmButtonText: "Aceptar",
+            customClass: {
+                popup: 'responsive-swal'
+            }
         });
     });
 </script>

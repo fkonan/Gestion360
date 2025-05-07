@@ -19,7 +19,7 @@
                 </div>
             </div>
 
-            <div class="row">
+            <div class="row pb-4">
                 <div class="col-md-6 mb-3">
                     <label for="UsuarioEstado" class="form-label">Estado</label>
                     <select class="form-select" id="UsuarioEstado" name="UsuarioEstado" required>

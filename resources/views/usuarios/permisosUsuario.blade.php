@@ -38,21 +38,21 @@
                         @endphp
                         <option 
                             class="fw-medium {{ $isInherited ? 'isInherited' : '' }}" 
-                            @if ($isInherited) onclick="quitarPermisoHeredado('{{ $rolName }}')" @endif
+                            @if ($isInherited) disabled @endif
                             value="{{ $permiso->name }}"
                             title="{{ $isInherited ? 'Este permiso no puede eliminarse manualmente porque es parte del ROL' : '' }}"
-                            @if ($isInherited) disabled @endif
                             @if ($isDirect || $isInherited) selected @endif>
                             {{ $permiso->name }}
                             @if ($isInherited)
-                                (Rol: {{ $rolName }})
+                                (🔒 Rol: {{ $rolName }})
                             @endif
                         </option>
                     @endforeach
                 </select>
             </div>
         </div>
-        <button type="submit" class="btn btn-success my-3">Guardar</button>
+        <button type="submit" class="btn btn-success my-2">Guardar</button>
         <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Cancelar</button>
     </form>
 </div>
+

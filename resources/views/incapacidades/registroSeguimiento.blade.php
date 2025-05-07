@@ -26,14 +26,14 @@
 
     <div class="row p-4">
         <table
-            class="table table-sm table-striped"
+            class="table table-bordered align-middle"
             data-page-size="10"
             data-toggle="table"
             data-locale="es-ES"
             data-search="true"
             data-pagination="true"
             data-pagination-parts="['pageSize', 'pageList', 'pageNext', 'pagePrev']">   
-            <thead class="table-primary">
+            <thead class="table-primary text-center">
                 <tr class="bg-primary">
                     <th>Observacion</th>
                     <th data-sortable="true">Fecha Registro</th>
@@ -49,7 +49,11 @@
                     <td>{{$item->SegFecReg}}</td>
                     <td>{{$item->SegHorReg}}</td>
                     <td>{{$item->UserRegistra}}</td>
-                    <td>{{$item->Estado}}</td>
+                    <td>
+                        <span class="badge {{ $item->Estado == 'ACTIVO' ? 'bg-success' : 'bg-danger' }}">
+                            {{$item->Estado}}
+                        </span>
+                    </td>
                 </tr>
                 @endforeach
             </tbody>

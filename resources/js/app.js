@@ -37,13 +37,11 @@ import { deshabilitarSubmit,
         actualizarReloj,
         handleMenuActive, 
         abrirArchivo,
-        quitarPermisoHeredado 
     } from './utils';
 
 window.deshabilitarSubmit = deshabilitarSubmit;
 window.habilitarSubmit = habilitarSubmit;
 window.abrirArchivo = abrirArchivo;
-window.quitarPermisoHeredado = quitarPermisoHeredado;
 
 //Inicializar funciones
 setInterval(actualizarReloj, 1000);

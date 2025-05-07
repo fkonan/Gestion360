@@ -35,7 +35,7 @@
                     <span class="error text-danger fw-bold" id="error-UsuarioEstado"></span>
                 </div>
 
-                <div class="col-md-6 mb-3">
+                <div class="col-md-6 mb-3  pb-4">
                     <label for="Verificado" class="form-label">Verificado</label>
                     <select class="form-select" id="Verificado" name="Verificado" required>
                         <option value="TRUE">TRUE</option>

@@ -93,9 +93,8 @@ function bootstrapDualListInit(id, nombre) {
     $('.box1').attr('data-title', 'Todos los ' + nombre + ' disponibles');
     $('.box2').attr('data-title',  nombre + ' asignados');
     $('.moveall').text('Agregar todos »');
-    $('.removeall').text('« Quitar todos');    
+    $('.removeall').text('« Quitar todos');   
 }
-
 
 function validarFormulario(form, TYPE="POST") {
 

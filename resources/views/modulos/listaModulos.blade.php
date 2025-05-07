@@ -38,10 +38,10 @@
                 <tr>
                     <th>Nombre</th>
                     <th>Descripción</th>
-                    <th>Estado</th>
                     <th>Modulo Padre</th>    
                     <th>Fecha Registro</th>
                     <th>Hora Registro</th>
+                    <th>Estado</th>
                     <th>Opciones</th>
                 </tr>
             </thead>
@@ -50,15 +50,20 @@
                 <tr>
                    <td data-label="Nombre"class="text-nowrap">{{ mb_strtoupper($modulo->ModNom) }}</td>
                    <td data-label="Descripcion"title="{{ ucfirst(mb_strtolower($modulo->ModDesc)) }}">{{ Str::limit(ucfirst(mb_strtolower($modulo->ModDesc)), 50, '...') }}</td>
-                   <td data-label="Estado">{{ $modulo->ModEstado}}</td>
                    <td data-label="Modulo Padre">{{ $modulo->padre->ModNom ?? "MODULO PRINCIPAL" }}</td>
                    <td data-label="Fecha Registro">{{ $modulo->ModFechReg}}</td>
                    <td data-label="Hora Registro">{{ $modulo->ModHorReg}}</td>
-                    <td data-label="Opciones" class="text-center" style="width: 80px;">
+                   <td class="text-center" data-label="Estado">
+                        <span class="badge {{ $modulo->ModEstado == 'ACTIVO' ? 'bg-success' : 'bg-danger' }}">
+                            {{ $modulo->ModEstado}}
+                        </span>
+                    </td>
+                   <td data-label="Opciones" class="text-center" style="width: 80px;">
                         <a class="p-0 px-2" onclick="cargarModal(`{{ route('modulos.edit', ['id' => $modulo->IdModulo]) }}`, 'Editar Modulo', '#formFormato')">
                             <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/new_editar.png" alt="Editar" style="width: 30px; height: 30px;">
                         </a>
                    </td>
+                  
                 </tr>
             @endforeach
             </tbody>
