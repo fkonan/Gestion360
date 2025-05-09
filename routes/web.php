@@ -28,7 +28,7 @@ Route::get('/clear', function () {
 Route::prefix("administracion")->middleware(['auth', 'permisos:acceso-administracion','modulo.activo:7'])->group(function(){
     Route::prefix("personas")->group(function(){
         Route::get("/",[PersonaController::class,"index"])->name("personas.index");
-        Route::get("/create",[PersonaController::class,"create"])->middleware('soloAJAX')->name("personas.create");
+        Route::get("/crear",[PersonaController::class,"create"])->name("personas.create");
         Route::post("/",[PersonaController::class,"store"])->name("personas.store");
         Route::get("/{id}/edit",[PersonaController::class,"edit"])->middleware('soloAJAX')->name("personas.edit");
         Route::put("/{id}",[PersonaController::class,"update"])->name("personas.update");

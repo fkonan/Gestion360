@@ -18,7 +18,7 @@
     </div>
 
     <a class="btn fw-bold ms-4 mt-4 text-light bg-warning botonBoostrapTable" 
-        onclick="cargarModal(`{{ route('personas.create') }}`, 'Crear Persona', '#formPersonaCrear')">
+        href="{{ route('personas.create') }}">
         Registrar persona
     </a>
 
@@ -32,7 +32,8 @@
             data-pagination="true"
             data-mobile-responsive="true"
             data-check-on-init="true"
-            data-pagination-parts="['pageSize', 'pageList', 'pageNext', 'pagePrev']">   
+            data-pagination-parts="['pageSize', 'pageList', 'pageNext', 'pagePrev']"
+            onsubmit="">   
             <thead class="table-primary">
                 <tr>
                     <th>Identificación</th>

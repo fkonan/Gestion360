@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\GESTIONADMIN\Departamento;
 use App\Models\GESTIONADMIN\Persona;
+use App\Models\GESTIONADMIN\PersonaDatos;
 use App\Models\GESTIONADMIN\TipoDocumento;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
@@ -30,6 +33,8 @@ class PersonaController extends Controller
             $request->all(),[
                 'PerTipoDoc' => 'required',
                 'PerNumDoc' => 'unique:_personas,PerNumDoc|required|string|max:10',
+                'PerTelefono' => 'unique:_personas_datos,PerTelefono|required',
+                'PerEmail' => 'unique:_personas_datos,PerEmail|required',
                 'PerApellidos' => 'required|string|regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ]+(?:\s[A-Za-zÁÉÍÓÚáéíóúÑñ]+)*$/|max:50',
                 'PerNombres' => 'required|string|regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ]+(?:\s[A-Za-zÁÉÍÓÚáéíóúÑñ]+)*$/|max:50',
                 'PerGenero' => 'required',
@@ -53,6 +58,8 @@ class PersonaController extends Controller
                 'PerGenero.required' => 'El género es requerido',
 
                 'PerNumDoc.unique' => 'El número de documento ya esta registrado',
+                'PerTelefono.unique' => 'El número de telefono ya esta registrado',
+                'PerEmail.unique' => 'El correo ya esta registrado',
             ]
             );
         
@@ -62,6 +69,8 @@ class PersonaController extends Controller
                 'errors' => $validator->errors()
             ], 422);
         }
+
+        DB::beginTransaction();
 
         try{ 
             $persona = new Persona();
@@ -79,6 +88,24 @@ class PersonaController extends Controller
             $persona->PerHorReg = now();
             $persona->save();
 
+            $personaDatos = new PersonaDatos();
+            $personaDatos->IdPersona = $persona->IdPersona;
+            $personaDatos->PerTelefono = $request->PerTelefono;
+            $personaDatos->PerEmail = $request->PerEmail;
+            $personaDatos->PerDir = $request->PerDir;
+            $personaDatos->PerBar = $request->PerBar;
+            $personaDatos->PerMunRes = $request->PerMunRes;
+            $personaDatos->PerFecReg = now();
+            $personaDatos->PerHorReg = now();
+            $personaDatos->PerFecUltAct = now();
+            $personaDatos->PerAutTra = "SI";
+            $personaDatos->PerComDat = "SI";
+            $personaDatos->PerConPol = "SI";
+            $personaDatos->PerAutNot = "SI";
+            $personaDatos->save();
+
+            DB::commit();
+
             return response()->json([
                 'message' => 'Persona creada exitosamente',
                 'redirect' => route('personas.index'),
@@ -86,6 +113,7 @@ class PersonaController extends Controller
                 'title' => 'Persona creada exitosamente'
             ]); 
         }catch(Exception $e){
+            DB::rollBack();
             Log::error('Error al crear la persona: ' . $e->getMessage());
             return response()->json([
                 'redirect' => route('personas.index'),
@@ -129,8 +157,19 @@ class PersonaController extends Controller
                 ], 422);
             }
 
-            Persona::findOrFail($id)->update($request->all());     
+            //Validar que no se cambie a estado inactivo asi mismo
+            $personaActualizar = Persona::findOrFail($id);
+            $personaLogeada = Auth::user();
 
+            if($request->PerEstado == 'Inactivo' && $personaActualizar->IdPersona == $personaLogeada->persona->IdPersona){
+                return response()->json([
+                    'redirect' => '#',
+                    'type' => 'warning', 
+                    'title' => 'No puede cambiar a estado INACTIVO a su propio registro'
+                ]); 
+            } 
+
+            $personaActualizar->update($request->all());     
             return response()->json([
                 'redirect' => route('personas.index'),
                 'type' => 'success', 

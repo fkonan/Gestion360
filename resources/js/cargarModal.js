@@ -106,7 +106,6 @@ function validarFormulario(form, TYPE="POST") {
     
     $(form).validate({
         errorClass: "text-danger fw-bold is-invalid",
-        validClass: "is-valid",
 
         submitHandler: function (form) {
             let URL = $(form).attr("action");

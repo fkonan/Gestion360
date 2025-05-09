@@ -93,7 +93,8 @@ class RolController extends Controller
     
     public function editRolUsuario($id){
         $usuario = User::findOrFail($id);
-        $rolesDisponibles = Role::where('name', '!=', User::SUPER_ADMIN_ROLE)->get();
+        /* $rolesDisponibles = Role::where('name', '!=', User::SUPER_ADMIN_ROLE)->get(); */
+        $rolesDisponibles = Role::all();
         $rolesUsuario = $usuario->getRoleNames();  
         return view("usuarios.rolesUsuario",compact("usuario","rolesUsuario","rolesDisponibles"));
     }
