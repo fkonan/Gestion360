@@ -14,8 +14,8 @@ import 'bootstrap';
 import 'bootstrap-table/dist/bootstrap-table.min.js';
 import 'bootstrap-table/dist/locale/bootstrap-table-es-ES.min.js';
 import 'bootstrap-table/dist/bootstrap-table.min.css';
-/* import 'bootstrap-table/dist/extensions/responsive/bootstrap-table-responsive.js';
- */
+import 'bootstrap-table/dist/extensions/mobile/bootstrap-table-mobile.min.js';
+
 
 // Bootstrap modal
 import { Modal } from 'bootstrap';

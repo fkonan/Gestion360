@@ -14,8 +14,7 @@
 @section('content')
 <div class="container-fluid p-0 rounded bg-white" style="min-height:150px;">
     <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-secondary">
-        <span class="text-left text-light fs-5 fw-bold">Incapacidades</span>
-        <a class="btn fw-bold my-2 text-light bg-primary" onclick="window.history.back()" >Volver</a>
+        <span class="text-left text-light fs-5 fw-medium py-1">Incapacidades</span>
     </div>
 
     <div class="row p-4">
@@ -27,6 +26,8 @@
             data-locale="es-ES"
             data-search="true"
             data-pagination="true"
+            data-mobile-responsive="true"
+            data-check-on-init="true"
             data-detail-view="true"
             data-detail-formatter="detalleIncapacidad"
             data-url="{{ route('gestion-incapacidades.incapacidades.cargarDatos') }}"        

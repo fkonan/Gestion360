@@ -14,8 +14,7 @@
 <div class="container-fluid p-0 border rounded bg-white" style="min-height:150px;">
 
     <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-secondary">
-        <span class="text-left text-light fs-5 fw-bold">Usuarios registrados</span>
-        <a class="btn fw-bold my-2 text-light bg-primary" onclick="window.history.back()" >Volver</a>
+        <span class="text-left text-light fs-5 fw-medium py-1">Usuarios registrados</span>
     </div>
 
     <a class="btn fw-bold ms-4 mt-4 text-light bg-warning botonBoostrapTable" 
@@ -33,6 +32,8 @@
             data-locale="es-ES"
             data-pagination="true"
             data-responsive="true"
+            data-mobile-responsive="true"
+            data-check-on-init="true"
             data-url="{{ route('usuarios.cargarDatos') }}" 
             data-pagination-parts="['pageSize', 'pageList', 'pageNext', 'pagePrev']">   
             <thead class="table-primary">
@@ -41,7 +42,7 @@
                     <th data-field="nombreCompleto" data-formatter="nombreCompletoFormatter" data-priority="1">Nombre Completo</th>
                     <th data-field="UsuFecReg" data-sortable="true" data-priority="3">Fecha registro</th>
                     <th data-field="UsuHorReg" data-sortable="true" data-priority="4">Hora registro</th>
-                    <th data-field="UsuarioEstado" data-sortable="true" data-priority="2">Estado</th>   
+                    <th class="text-center" data-field="UsuarioEstado" data-formatter="estadoFormatter" data-sortable="true" data-priority="2">Estado</th>   
                     <th data-field="acciones" data-formatter="accionesFormatter" data-priority="1">Acciones</th>
                 </tr>
             </thead>
@@ -59,6 +60,14 @@
         roles: "{{ route('roles.edit', ['id' => ':id']) }}",
         usuarios: "{{ route('usuarios.edit', ['id' => ':id']) }}"
     };
+
+    function estadoFormatter(value, row) {
+        return `
+        <span class="badge ${row.persona.PerEstado === 'ACTIVO' ? 'bg-success' : 'bg-danger'}">
+            ${row.persona.PerEstado}
+        </span>
+        `;
+    }
 
     function accionesFormatter(index, row) {
         let urlPermisos = rutas.permisos.replace(':id', row.IdUsuario);

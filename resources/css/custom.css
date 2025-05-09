@@ -1,10 +1,14 @@
 :root {
     --bs-primary: #0070C0; 
-    --bs-secondary: #2E2E2E;
-    --bs-secondary-rgb: 46, 46, 46;
+    --bs-secondary: #2C3643;
+    --bs-secondary-rgb: 44, 54, 67;
     --bs-primary-rgb: 0, 112, 192; 
 }
 
+.table-primary {
+    --bs-table-bg: var(--bs-primary);
+    --bs-table-color: #fff; 
+  }
 
 /* Estilos bootstrap table */
 .pagination .page-item.active .page-link {
@@ -22,20 +26,28 @@
     border-color: var(--bs-primary) !important;
 }
 
+.table{
+    border-radius: 1em;
+}
 
 /* Estilos menu lateral */
 .nav-sidebar .nav-link p {
     white-space: nowrap;   
     text-overflow: ellipsis; 
+    color:#2e2e2ebd;
+    font-weight: 400;
+}
+
+.nav-sidebar .nav-link.active p {
+    color:#ffffff;
 }
 
 .nav-sidebar .nav-link:hover{
     background-color: #9d9fa1 !important;  
 }
 
-
 .nav-sidebar .nav-link.active {
-    background-color: var(--bs-primary) !important;  
+    background-color: var(--bs-secondary) !important;  
     color: white !important;                                
     transition: all 0.3s;                     
 }
@@ -43,11 +55,20 @@
     color: white !important;                                     
     transition: all 0.3s;                     
 }
+
 .nav-sidebar .nav-treeview .nav-link.active {
-    background-color: #a2aeb9 !important;   
-    color: #1a1a1a !important;    
-    font-weight: bold;
+    background-color: #F8F9FA !important;         
 }
+
+.nav-sidebar .nav-treeview .nav-link.active i{
+    color: var(--bs-secondary) !important;            
+}
+
+.nav-sidebar .nav-treeview .nav-link.active p{
+    color: var(--bs-secondary) !important; 
+    font-weight: 700;
+}
+
 body:not(.sidebar-collapse) .nav-item .nav-treeview .nav-link {
     padding-left: 20px;
 }
@@ -174,6 +195,29 @@ body:not(.sidebar-collapse) .nav-item .nav-treeview .sangriaSegundoNivel{
     font-size: 18px;
 }
 
+/* Boostrap card views */
+.bootstrap-table .card-view{
+    padding: 0;
+    margin: 0;
+    height: auto;
+    font-size: .9em;
+}
+.bootstrap-table .card-view .title {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.bootstrap-table .card-view .card-view-value {
+    margin-bottom: 12px;
+    display: block;
+    font-size: 1em;
+}
+
+.bootstrap-table .card-view{
+    border-bottom: 1px solid #cfcfcf;
+    margin-top: 0.5rem;
+}
 
 /* Estilos card componente */
 .card:hover{
@@ -183,35 +227,9 @@ body:not(.sidebar-collapse) .nav-item .nav-treeview .sangriaSegundoNivel{
 
 .botonBoostrapTable{
     position: absolute;
-    top: 215px;
+    box-shadow:#1a1a1a;
+    top: 185px;
 }
 
-/* Mobile estilos */
-@media (max-width: 768px){
-    .botonBoostrapTable{
-        position: relative;
-        top: 0;
-    }
-
-    .swal2-popup{
-        width: 80%;
-        max-width: 400px;
-        font-size: .7em;
-    }
-
-    .breadcrumbs{
-        display: none;
-    }
-
-    /* Bootstrap duallist  */
-    .bootstrap-duallistbox-container .box1,
-    .bootstrap-duallistbox-container .box2 {
-        flex: auto;
-    }
-
-    .container-fluid{
-        padding: 0 10px !important;
-    }
-}
 
 

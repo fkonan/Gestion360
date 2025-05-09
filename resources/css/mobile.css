@@ -1,0 +1,36 @@
+/* Mobile estilos */
+@media (max-width: 768px){
+    .botonBoostrapTable{
+        position: relative;
+        top: 0;
+    }
+
+    .swal2-popup{
+        width: 80%;
+        max-width: 400px;
+        font-size: .7em;
+    }
+
+    .breadcrumbs{
+        display: none;
+    }
+
+    /* Bootstrap duallist  */
+    .bootstrap-duallistbox-container .box1,
+    .bootstrap-duallistbox-container .box2 {
+        flex: auto;
+    }
+
+    .container-fluid{
+        padding: 0 !important;
+    }
+
+    /* Card bootstrap table */
+    #no-more-tables{
+        padding: 0 5px !important;
+    }
+
+    .table tr{
+        border-color: #2E2E2E;
+    }
+}

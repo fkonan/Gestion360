@@ -14,8 +14,7 @@
 @section('content')
 <div class="container-fluid p-0 border rounded" style="min-height:150px; background-color: white">
     <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-secondary">
-        <span class="text-left text-light fs-5 fw-bold">Resultado Tiquetes</span>
-        <a class="btn fw-bold my-2 text-light bg-primary" onclick="window.history.back()">Volver</a>
+        <span class="text-left text-light fs-5 fw-medium py-1">Resultado Tiquetes</span>
     </div>
 
     <a id="exportar" class="btn fw-bold ms-4 mt-4 bg-success botonBoostrapTable"> Descargar Excel </a>
@@ -29,6 +28,8 @@
             data-search="true"
             data-pagination="true"
             data-detail-view="true"
+            data-mobile-responsive="true"
+            data-check-on-init="true"
             data-detail-formatter="detalleTiquete"
             data-url="{{ route('reportes.cargarData') }}"
             data-pagination-parts="['pageSize', 'pageList', 'pageNext', 'pagePrev']">   

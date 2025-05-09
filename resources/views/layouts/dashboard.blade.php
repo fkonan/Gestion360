@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-duallistbox/dist/bootstrap-duallistbox.min.css">
 
      <!--Vite -->
-     @vite(['resources/css/app.css', 'resources/js/app.js','resources/css/custom.css'])
+     @vite(['resources/css/app.css', 'resources/js/app.js','resources/css/custom.css','resources/css/mobile.css'])
 </head>
 
 <body class="sidebar-mini layout-fixed">
@@ -31,17 +31,32 @@
 
             <div class="sidebar">
             <!-- Usuario -->
-                <div class="user-panel my-3 pt-1 pb-2 d-flex flex-column">
+                <div class="user-panel my-3 pt-1 pb-2 d-flex flex-column" style="border-bottom: 1px solid rgba(157, 159, 161, 0.7);">
                     <div class="info">
                         <img src="{{ asset('img/LogoCope.png') }}" style="width:auto; height: auto;" alt="Logo Cope" class="img-fluid">
                     </div>
                     
-                    <div class="info">
-                        <span style="user-select: none" class="fw-medium text-dark">
+                    <div class="info" style="user-select: none; font-size: 0.75em">
+                        <span class="fw-bold text-dark">Nombre:</span>
+                        <span class="fw-medium">
                             {{ auth()->user()->persona?->PerNombres }} {{ auth()->user()->persona?->PerApellidos }}
                         </span>
+                        <br>
+
+                        <span class="fw-bold text-dark"> Rol:</span>
+                        <span class="fw-medium">
+                            {{ auth()->user()->rol }}
+                        </span>
+                        <br>
+
+                        <span class="fw-bold text-dark"> Ultima sesión:</span>
+                        <span class="fw-medium">
+                            {{ auth()->user()->ultimaSesion->first()->SesionFechReg }} 
+                            {{ auth()->user()->ultimaSesion->first()->SesionHorReg }} 
+                        </span>
                     </div>
-                    <div class="info text-primary fw-medium">
+
+                    <div class="info text-primary">
                         <span id="horas"></span>:<span id="minutos"></span>:<span id="segundos"></span>&nbsp;<span id="ampm"></span>
                     </div>
                 </div>
@@ -53,8 +68,8 @@
 
         <!-- Contenido Principal -->
         <div class="content-wrapper">
-            <section class="content-header mb-4 p-2 d-flex justify-content-between align-items-center bg-primary">
-                <div class="container-fluid">
+            <section class="content-header mb-4 p-2 py-1 d-flex justify-content-between align-items-center bg-secondary">
+                <div class="container-fluid my-1">
                     <a class="pushmenu btn btn-sm text-light" 
                         data-widget="pushmenu" 
                         data-enable-remember="true" 
@@ -62,13 +77,6 @@
                         role="button">
                         <i class="fas fa-bars"></i>
                     </a>      
-                </div>
-                <div class="info pe-4 text-light">
-                    <span>Ultima sesión</span><br>
-                    <span style="font-size: .8em;" class="text-nowrap">
-                        {{ auth()->user()->ultimaSesion->first()->SesionFechReg }}  /
-                        {{ auth()->user()->ultimaSesion->first()->SesionHorReg }} 
-                    </span>                       
                 </div>
             </section>
 

@@ -29,6 +29,8 @@ class User extends Authenticatable
         'UsuFecReg','UsuHorReg','UsuReg',
         'UsuarioEstado','Verificado',
     ];
+
+    
     
     public function persona(): BelongsTo{
         return $this->belongsTo(Persona::class,'idPersona','IdPersona');
@@ -66,6 +68,11 @@ class User extends Authenticatable
 
     public function enfermedadesRegistradas(): HasMany{
         return $this->hasMany(Enfermedades::class,'IdUserReg','IdUsuario');
+    }
+
+    public function getRolAttribute(){
+        $roles = $this->getRoleNames();
+        return $roles->isNotEmpty() ? $roles->first() : 'Usuario';
     }
 
 }
