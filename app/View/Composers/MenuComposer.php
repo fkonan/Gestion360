@@ -10,8 +10,7 @@ class MenuComposer
     public function compose(View $view): void
     {
         $modulos = Modulo::with('submodulos')
-            ->whereNull('Mod_Padre_Id')
-            ->where('ModEstado', 'ACTIVO')
+            ->where('ModuloEstado', 'ACTIVO')
             ->get();
 
         $view->with('modulos', $modulos);

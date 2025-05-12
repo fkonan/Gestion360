@@ -63,8 +63,8 @@
 
     function estadoFormatter(value, row) {
         return `
-        <span class="badge ${row.persona.PerEstado === 'ACTIVO' ? 'bg-success' : 'bg-danger'}">
-            ${row.persona.PerEstado}
+        <span class="badge ${row.UsuarioEstado === 'ACTIVO' ? 'bg-success' : 'bg-danger'}">
+            ${row.UsuarioEstado}
         </span>
         `;
     }

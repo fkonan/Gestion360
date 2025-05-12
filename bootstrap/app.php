@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\ModuloActivoMiddleware;
 use App\Http\Middleware\SoloAjaxMiddleware;
+use App\Http\Middleware\SubModuloActivoMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -20,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => RoleMiddleware::class,
             'soloAJAX' => SoloAjaxMiddleware::class, 
             'modulo.activo' => ModuloActivoMiddleware::class,
+            'submodulo.activo' => SubModuloActivoMiddleware::class
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

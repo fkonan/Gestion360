@@ -17,36 +17,18 @@
             </div>
 
             <div class="col-md-4">
-                <label for="Mod_Padre_Id" class="form-label">Modulo Padre</label>
-                <select class="form-select select2" id="Mod_Padre_Id" name="Mod_Padre_Id" placeholder="Seleccione si es parte de otro modulo">
-                    <option value="" @selected($moduloEdit->Mod_Padre_Id == null)>Sin módulo padre (Módulo principal)</option>
-                    @foreach($modulos as $modulo)
-                        <option value="{{ $modulo->IdModulo }}" @selected($moduloEdit->Mod_Padre_Id == $modulo->IdModulo)>
-                            {{ ucfirst(mb_strtolower($modulo->ModNom)) }} 
-                        </option>
-                    @endforeach
-                </select>
-                <span class="error text-danger fw-bold" id="error-Mod_Padre_Id"></span>
+                <label for="ModIcono" class="form-label">Icono</label>
+                <input type="text" class="form-control" id="ModIcono" name="ModIcono" value="{{ $moduloEdit->ModIcono }}">
+                <span class="error text-danger fw-bold" id="error-ModIcono"></span>
             </div>
 
-            <div class="col-md-4">
-                <label for="ModEstado" class="form-label">Estado</label>
-                <select class="form-select" id="ModEstado" name="ModEstado" required>
-                    <option value="" disabled selected>Seleccione</option>
-                    <option value="ACTIVO" @selected($moduloEdit->ModEstado == 'ACTIVO')>Activo</option>
-                    <option value="INACTIVO" @selected($moduloEdit->ModEstado == 'INACTIVO')>Inactivo</option>
-                    <option value="ELIMINADO" @selected($moduloEdit->ModEstado == 'ELIMINADO')>Eliminado</option>
-                </select>
-                <span class="error text-danger fw-bold" id="error-ModEstado"></span>
-            </div>   
-        </div>
-        <div class="row px-4 pb-4">       
             <div class="col-md-4">
                 <label for="ModRuta" class="form-label">Ruta</label>
                 <input type="text" class="form-control" id="ModRuta" name="ModRuta" value="{{ $moduloEdit->ModRuta }}">
                 <span class="error text-danger fw-bold" id="error-ModRuta"></span>
             </div>
-
+        </div>
+        <div class="row px-4 pb-4">       
             <div class="col-md-4">
                 <label for="ModPermiso" class="form-label">Permiso</label>
                 <select class="form-select select2" id="ModPermiso" name="ModPermiso">
@@ -59,19 +41,24 @@
             </div>
 
             <div class="col-md-4">
-                <label for="ModIcono" class="form-label">Icono</label>
-                <input type="text" class="form-control" id="ModIcono" name="ModIcono" value="{{ $moduloEdit->ModIcono }}">
-                <span class="error text-danger fw-bold" id="error-ModIcono"></span>
-            </div>
+                <label for="ModuloEstado" class="form-label">Estado</label>
+                <select class="form-select" id="ModuloEstado" name="ModuloEstado" required>
+                    <option value="" disabled selected>Seleccione</option>
+                    <option value="ACTIVO" @selected($moduloEdit->ModEstado == 'ACTIVO')>Activo</option>
+                    <option value="INACTIVO" @selected($moduloEdit->ModEstado == 'INACTIVO')>Inactivo</option>
+                    <option value="ELIMINADO" @selected($moduloEdit->ModEstado == 'ELIMINADO')>Eliminado</option>
+                </select>
+                <span class="error text-danger fw-bold" id="error-ModuloEstado"></span>
+            </div>   
         </div>
 
         <div class="row gx-3 px-4">
             <div class="mb-3">
-                <label for="ModDesc" class="form-label">Descripción</label>
-                <textarea class="form-control" id="ModDesc" name="ModDesc" maxlength="300" rows="5">{{ $moduloEdit->ModDesc }}</textarea>
+                <label for="ModDes" class="form-label">Descripción</label>
+                <textarea class="form-control" id="ModDes" name="ModDes" maxlength="300" rows="5">{{ $moduloEdit->ModDes }}</textarea>
                 <div class="form-text">Máximo 300 caracteres.</div>
                 <!--<div id="contador" class="text-end text-muted" style="font-size: 0.875rem;">0/300</div>-->
-                <span class="error text-danger fw-bold" id="error-ModDesc"></span>
+                <span class="error text-danger fw-bold" id="error-ModDes"></span>
             </div>
         </div>
 

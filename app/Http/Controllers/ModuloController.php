@@ -12,31 +12,30 @@ use Spatie\Permission\Models\Permission;
 class ModuloController extends Controller
 {
     public function index(){
-        $modulos = Modulo::with('padre')->get();  
+        $modulos = Modulo::all();
         return view('modulos.listaModulos', compact('modulos'));
     }
 
     public function create(){
         $permisos = Permission::all();
-        $modulos = Modulo::with('submodulos')->whereNull('Mod_Padre_Id')->get();
+        $modulos = Modulo::with('submodulos')->get();
 
         return view('modulos.crearModulo', compact('modulos','permisos'))->render();
     }
 
     public function store(Request $request){
         $validator = Validator::make($request->all(), [
-            'ModNom' =>'unique:modulos,ModNom|required|string|max:50',
-            'ModDesc' =>'nullable|string|max:300',
-            'ModEstado' =>'required',
+            'ModNom' =>'unique:_modulos,ModNom|required|string|max:50',
+            'ModDes' =>'nullable|string|max:300',
+            'ModuloEstado' =>'required',
             'ModRuta' =>'nullable|string|max:50',
             'ModPermiso' =>'nullable|string|max:50',
             'ModIcono' =>'nullable|string|max:20',
-            'Mod_Padre_Id' =>'nullable|integer'
         ],[
             'ModNom.unique' => 'El nombre del modulo ya existe.',
             'ModNom.required' => 'El nombre del modulo es requerido.',
             'ModNom.max' => 'El nombre del modulo no puede tener más de 50 caracteres.',
-            'ModDesc.max' => 'La descripción no puede tener más de 300 caracteres.',
+            'ModDes.max' => 'La descripción no puede tener más de 300 caracteres.',
             'ModIcono.max' => 'El icono no puede tener más de 20 caracteres.',
         ]);
 
@@ -49,11 +48,10 @@ class ModuloController extends Controller
         try{
             $modulo = new Modulo();
             $modulo->ModNom = $request->ModNom;
-            $modulo->ModDesc = $request->ModDesc;
-            $modulo->ModEstado = $request->ModEstado;
+            $modulo->ModDesc = $request->ModDes;
+            $modulo->ModEstado = $request->ModuloEstado;
             $modulo->ModRuta = $request->ModRuta;
             $modulo->ModIcono = $request->ModIcono;
-            $modulo->Mod_Padre_Id = $request->Mod_Padre_Id;
             $modulo->ModPermiso = $request->ModPermiso;
             $modulo->ModFechReg = now();
             $modulo->ModHorReg = now();
@@ -76,23 +74,21 @@ class ModuloController extends Controller
     }
 
     public function edit($id){
-        $modulos = Modulo::with('submodulos')->whereNull('Mod_Padre_Id')->get();
-        $moduloEdit = $modulos->firstWhere('IdModulo', $id) ?? Modulo::findOrFail($id);  
+        $moduloEdit = Modulo::findOrFail($id);  
         $permisos = Permission::select('id', 'name')->get();
 
-        return view('modulos.editarModulo', compact('modulos', 'moduloEdit', 'permisos'))->render();
+        return view('modulos.editarModulo', compact('moduloEdit', 'permisos'))->render();
     }
 
     public function update(Request $request, $id){
 
         $validator = Validator::make($request->all(), [
             'ModNom' =>'required|string|max:50',
-            'ModDesc' =>'nullable|string|max:300',
-            'ModEstado' =>'required',
+            'ModDes' =>'nullable|string|max:300',
+            'ModuloEstado' =>'required',
             'ModPermiso' =>'nullable|string|max:255',
             'ModRuta' =>'nullable|string|max:255',
             'ModIcono' =>'nullable|string|max:255',
-            'Mod_Padre_Id' =>'nullable|integer'
         ],[
             'ModNom.unique' => 'El nombre del modulo ya existe.',
         ]);
@@ -105,7 +101,7 @@ class ModuloController extends Controller
 
         try{
             Modulo::findOrFail($id)->update($request->all());
-
+           
             return response()->json([
                 'title' => 'Modulo actualizado exitosamente',
                 'redirect' => route('modulos.index'),

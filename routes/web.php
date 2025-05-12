@@ -6,6 +6,7 @@ use App\Http\Controllers\PermisosController;
 use App\Http\Controllers\PersonaController;
 use App\Http\Controllers\RolController;
 use App\Http\Controllers\SeguimientoIncapacidadController;
+use App\Http\Controllers\SubModuloController;
 use App\Http\Controllers\TiquetesImpresosController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Artisan;
@@ -45,7 +46,7 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:acceso-administra
         Route::get("/{id}/permisos",[PermisosController::class,"edit"])->middleware('soloAJAX')->name("permisos.edit");
         Route::put("/{id}/permisos",[PermisosController::class,"update"])->name("permisos.update");
     });
-    Route::prefix("reportes")->middleware('modulo.activo:21')->group(function(){
+    Route::prefix("reportes")->middleware('submodulo.activo:12')->group(function(){
         Route::get("/",[ModuloController::class,"getReportes"])->name("reportes.index");
         Route::get("/impresionTiquetes",[TiquetesImpresosController::class,"fechasReporte"])->middleware('soloAJAX')->name("reportes.tiquetes");
         Route::post("/impresionTiquetes/filtrar",[TiquetesImpresosController::class,"filtrarTiquetes"])->name("reportes.filtrarTiquetes");
@@ -67,6 +68,14 @@ Route::prefix("configuracion")->middleware(['auth', 'permisos:acceso-configuraci
             Route::put("/{id}",[ModuloController::class,"update"])->name("update");
         });
 
+        Route::prefix("submodulos")->name("submodulos.")->group(function(){
+            Route::get("/",[SubModuloController::class,"index"])->name("index");
+            Route::get("/create",[SubModuloController::class,"create"])->middleware('soloAJAX')->name("create");
+            Route::post("/",[SubModuloController::class,"store"])->name("store");
+            Route::get("/{id}",[SubModuloController::class,"edit"])->middleware('soloAJAX')->name("edit");
+            Route::put("/{id}",[SubModuloController::class,"update"])->name("update");
+        });
+
         Route::prefix("roles")->name("roles.")->group(function(){
             Route::get("/",[RolController::class,"index"])->name("index");
             Route::get("/create",[RolController::class,"create"])->middleware('soloAJAX')->name("create");
@@ -79,7 +88,7 @@ Route::prefix("configuracion")->middleware(['auth', 'permisos:acceso-configuraci
 
 //Rutas Modulo Gestion RRHH
 Route::prefix("gestionRRHH")->middleware(['auth', 'permisos:acceso-gestion-rh','modulo.activo:2'])->group(function(){
-    Route::prefix("gestion-empleado")->middleware('modulo.activo:16')->name("gestion-incapacidades.")->group(function(){
+    Route::prefix("gestion-empleado")->middleware('submodulo.activo:7')->name("gestion-incapacidades.")->group(function(){
         Route::get("/",[ModuloController::class,"getGestionEmpleado"])->name("index");
         Route::get("/incapacidades",[IncapacidadController::class,"listaIncapacidades"])->name("incapacidades");
         Route::get("/incapacidades/cargarDatos",[IncapacidadController::class,"cargarDatos"])->middleware('soloAJAX')->name("incapacidades.cargarDatos");

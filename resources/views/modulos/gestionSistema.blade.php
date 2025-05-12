@@ -29,6 +29,14 @@
             />
         </div>
         <div class="col">
+            <x-card color="bg-danger" 
+                    titulo="Sub Modulos" 
+                    descripcion="Administrar" 
+                    icono="fa-stream" 
+                    ruta="{{ route('submodulos.index') }}"
+            />
+        </div>
+        <div class="col">
             <x-card color="bg-warning" 
                     titulo="Roles" 
                     descripcion="Administrar" 
