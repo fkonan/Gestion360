@@ -1,6 +1,6 @@
  <!-- Modal layout -->
 <div class="modal fade" id="globalModal" tabindex="-1" role="dialog" style="display: none;">
-    <div class="modal-dialog modal-xl">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
         <div class="modal-content">
             <div class="modal-header bg-dark">
                 <h5 class="modal-title" id="globalModalTitle"></h5>

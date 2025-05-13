@@ -14,8 +14,13 @@
 
                 <div class="col-md-6 mb-3">
                     <label for="Password" class="form-label">Contraseña</label>
-                    <input type="password" class="form-control" id="Password" name="Password" placeholder="********" value="{{ $usuario->Password }}" disabled required>
-                    <span class="error text-danger fw-bold" id="error-Password"></span>
+                    <div class="input-group">
+                        <input type="password" class="form-control" id="Password" name="Password" placeholder="********" value="{{ $usuario->Password }}" disabled required>
+                        <div class="input-group-text">
+                            <a href="#"><span class="fas fa-edit" onclick="togglePasswordVisibility()"></span></a>
+                        </div>
+                        <span class="error text-danger fw-bold" id="error-Password"></span>
+                    </div>
                 </div>
             </div>
 

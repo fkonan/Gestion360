@@ -6,6 +6,7 @@ use App\Models\GESTIONADMIN\Persona;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
@@ -87,7 +88,11 @@ class UserController extends Controller
         }
 
         try{
-            User::findOrFail($id)->update($request->all());     
+            $data = $request->all();
+            if ($request->has('Password')) {
+                $data['Password'] = Hash::make($request->Password);
+            }
+            User::findOrFail($id)->update($data);
 
             return response()->json([
                 'redirect' => route('usuarios.index'),

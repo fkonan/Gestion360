@@ -49,7 +49,7 @@
             @foreach($modulos as $modulo)
                 <tr>
                    <td data-label="Nombre"class="text-nowrap">{{ mb_strtoupper($modulo->ModNom) }}</td>
-                   <td data-label="Descripcion"title="{{ ucfirst(mb_strtolower($modulo->ModDesc)) }}">{{ Str::limit(ucfirst(mb_strtolower($modulo->ModDesc)), 80, '...') }}</td>
+                   <td data-label="Descripcion"title="{{ ucfirst(mb_strtolower($modulo->ModDesc)) }}">{{ ucfirst(mb_strtolower($modulo->ModDesc)) }}</td>
                    <td data-label="Fecha Registro">{{ $modulo->ModFechReg}}</td>
                    <td data-label="Hora Registro">{{ $modulo->ModHorReg}}</td>
                    <td class="text-center" data-label="Estado">

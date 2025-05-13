@@ -98,6 +98,20 @@
     function nombreCompletoFormatter(value, row) {
         return row.persona.PerNombres + ' ' + row.persona.PerApellidos;
     }
+
+    function togglePasswordVisibility() {
+        let passwordField = document.getElementById("Password");
+        if (passwordField.disabled) {
+            passwordField.disabled = false;
+            passwordField.type = "text";
+            passwordField.dataset.previousValue = passwordField.value;
+            passwordField.value = ""; 
+        } else {
+            passwordField.disabled = true;
+            passwordField.type = "password";
+            passwordField.value = passwordField.dataset.previousValue; 
+        }
+    }
 </script>
 @endpushOnce
 

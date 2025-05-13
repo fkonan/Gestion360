@@ -7,6 +7,7 @@ use App\Models\GESTIONADMIN\PersonaDatos;
 use App\Models\GESTIONADMIN\Sesion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class LoginController extends Controller
 {
@@ -26,7 +27,7 @@ class LoginController extends Controller
 
         $user = PersonaDatos::where('PerEmail', $request->email)->first()?->persona->usuario;
 
-        if (!$user || !password_verify($request->password, $user->Password)) {
+        if (!$user || !Hash::check($request->password, $user->Password)) {
             return back()->withInput()->withErrors(['email' => 'Correo o contraseña incorrectos']);
         }
 
