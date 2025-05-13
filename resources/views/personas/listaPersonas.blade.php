@@ -61,7 +61,7 @@
                         </span>
                     </td>
                     <td class="text-center" style="width: 100px;">
-                        <a class="p-0 px-2" onclick="cargarModal(`{{ route('personas.edit', ['id' => $persona->IdPersona]) }}`, 'Editar Persona', '#formEditPersona')">
+                        <a class="p-0 px-2" href="{{ route('personas.edit', ['id' => $persona->IdPersona]) }}">
                             <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/new_editar.png" alt="Editar" style="width: 30px; height: 30px;">
                         </a>
                     </td>   

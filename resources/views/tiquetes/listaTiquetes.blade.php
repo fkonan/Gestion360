@@ -39,6 +39,7 @@
                     <th data-field="NumeroPasaje">Tiquete</th>
                     <th data-field="TerminalOrigen">Terminal Origen</th>
                     <th data-field="TerminalDestino">Terminal Destino</th>
+                    <th data-field="Agencia">Agencia</th>
                     <th data-field="FechaSalida" data-sortable="true">Fecha Salida</th>
                     <th data-field="NumerodeViaje">Numero de Viaje</th>
                     <th data-field="PrecioBase" data-sortable="true">Precio Base</th>
@@ -84,7 +85,6 @@
                 <div class="row">
                     <div class="col-md-12">
                         <p><strong>Asiento:</strong> ${row.Asiento}</p>
-                        <p><strong>Agencia:</strong> ${row.Agencia}</p>
                         <p><strong>Fecha Impresión:</strong> ${row.ImpFecReg}</p>
                         <p><strong>Hora Impresión:</strong> ${row.ImpHorReg}</p>
                     </div>

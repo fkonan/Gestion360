@@ -18,7 +18,7 @@
      @vite(['resources/css/app.css', 'resources/js/app.js','resources/css/custom.css','resources/css/mobile.css'])
 </head>
 
-<body class="sidebar-mini layout-fixed">
+<body class="sidebar-mini sidebar-collapse layout-fixed">
     <div class="wrapper">
         <!-- Pantalla de carga -->
         <div class="preloader flex-column justify-content-center align-items-center">
@@ -32,8 +32,8 @@
             <div class="sidebar">
             <!-- Usuario -->
                 <div class="user-panel my-3 pt-1 pb-2 d-flex flex-column" style="border-bottom: 1px solid rgba(157, 159, 161, 0.7);">
-                    <div class="info">
-                        <img src="{{ asset('img/LogoCope.png') }}" style="width:auto; height: auto;" alt="Logo Cope" class="img-fluid">
+                    <div class="info" style="width: 235px; margin: 0 auto;">
+                        <img src="{{ asset('img/LogoCope.png') }}" style="width:100%; height: auto;" alt="Logo Cope">
                     </div>
                     
                     <div class="info" style="user-select: none; font-size: 0.75em">

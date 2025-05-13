@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\GESTIONPASAJES\TiquetesImpresos;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -50,7 +51,7 @@ class TiquetesImpresosController extends Controller
                         'NumeroPasaje' => $item->NumeroPasaje,
                         'TerminalOrigen' => $item->TerminalOrigen,
                         'TerminalDestino' => $item->TerminalDestino,
-                        'FechaSalida' => $item->FechaSalida,
+                        'FechaSalida' => Carbon::parse($item->FechaSalida)->format('Y-m-d H:i'),
                         'NumerodeViaje' => $item->NumerodeViaje,
                         'PrecioBase' => number_format($item->PrecioBase, 0, ',', ''), 
                         'Descuento' => number_format($item->Descuento, 0, ',', ''),

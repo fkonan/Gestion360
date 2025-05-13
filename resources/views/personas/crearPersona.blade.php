@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
 
-@section('title','Lista personas')
+@section('title','Crear persona')
 
 @section('breadcrumb')
 <x-breadcrumb :items="[
@@ -154,7 +154,7 @@
 
             <div class="p-4">
                 <button type="submit" class="btn btn-success">Guardar</button>
-                <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Cancelar</button>
+                <a type="button" class="btn btn-dark" href="{{ route('personas.index') }}">Cancelar</a>
             </div>
         </div>
     </form>

@@ -32,6 +32,9 @@
             data-locale="es-ES"
             data-search="true"
             data-pagination="true"
+            data-detail-formatter="detalleIncapacidad"
+            data-mobile-responsive="true"
+            data-check-on-init="true"
             data-pagination-parts="['pageSize', 'pageList', 'pageNext', 'pagePrev']">   
             <thead class="table-primary">
                 <tr class="bg-primary">

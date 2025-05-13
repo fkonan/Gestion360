@@ -41,6 +41,12 @@
                     <th data-field="arl.ARLNombre">ARL</th>
                     <th data-field="IncFecIni">Fecha Inicio</th>
                     <th data-field="IncFecFin">Fecha Fin</th>
+                    <th data-field="detalleMobile"
+                        data-formatter="detalleIncapacidad"
+                        data-class="detalle-mobile"
+                        data-switchable="false">
+                        Detalles
+                    </th>
                 </tr>
             </thead>
         </table>
@@ -58,6 +64,7 @@
         };
 
         function detalleIncapacidad(index, row) {
+            const id = `detalle-${row.IdIncapacidad}`;
             let fechaInicio = new Date(row.IncFecIni);
             let fechaFin = new Date(row.IncFecFin);
 
@@ -67,7 +74,12 @@
             let urlSeguimientoDetalle = rutas.seguimientoDetalle.replace(':id', row.IdIncapacidad);
 
             return `
-            <div class="p-3 border rounded bg-light">
+            <div class="d-sm-none">
+                <button class="btn btn-sm btn-outline-primary w-100 mb-2" type="button" data-bs-toggle="collapse" data-bs-target="#${id}" aria-expanded="false">
+                    Ver detalles
+                </button>
+            </div>
+            <div class="p-3 border rounded d-sm-block bg-light collapse detalleCard" id="${id}">
                 <div class="row">
                     <div class="col-md-12">
                         <p><strong>Diagnóstico:</strong> ${row.diagnostico.DescCie}</p>

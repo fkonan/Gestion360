@@ -31,7 +31,7 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:acceso-administra
         Route::get("/",[PersonaController::class,"index"])->name("personas.index");
         Route::get("/crear",[PersonaController::class,"create"])->name("personas.create");
         Route::post("/",[PersonaController::class,"store"])->name("personas.store");
-        Route::get("/{id}/edit",[PersonaController::class,"edit"])->middleware('soloAJAX')->name("personas.edit");
+        Route::get("/{id}/edit",[PersonaController::class,"edit"])->name("personas.edit");
         Route::put("/{id}",[PersonaController::class,"update"])->name("personas.update");
     });
     Route::prefix("usuarios")->group(function(){

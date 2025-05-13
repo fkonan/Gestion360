@@ -34,7 +34,7 @@ class PersonaController extends Controller
                 'PerTipoDoc' => 'required',
                 'PerNumDoc' => 'unique:_personas,PerNumDoc|required|string|max:10',
                 'PerTelefono' => 'unique:_personas_datos,PerTelefono|required',
-                'PerEmail' => 'unique:_personas_datos,PerEmail|required',
+                'PerEmail' => 'unique:_personas_datos,PerEmail|required|email',
                 'PerApellidos' => 'required|string|regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ]+(?:\s[A-Za-zÁÉÍÓÚáéíóúÑñ]+)*$/|max:50',
                 'PerNombres' => 'required|string|regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ]+(?:\s[A-Za-zÁÉÍÓÚáéíóúÑñ]+)*$/|max:50',
                 'PerGenero' => 'required',
@@ -105,7 +105,6 @@ class PersonaController extends Controller
             $personaDatos->save();
 
             DB::commit();
-
             return response()->json([
                 'message' => 'Persona creada exitosamente',
                 'redirect' => route('personas.index'),
@@ -142,6 +141,7 @@ class PersonaController extends Controller
             $validator = Validator::make($request->all(), [
                 'PerApellidos' => 'required|string|max:50',
                 'PerNombres' => 'required|string|max:50',
+                'PerEmail' => 'unique:_personas_datos,PerEmail|required|email',
                 'PerGenero' => 'required|string|max:15',
                 'PerFecNac' => 'required',
                 'PerLugNac' => 'required',
@@ -159,6 +159,7 @@ class PersonaController extends Controller
 
             //Validar que no se cambie a estado inactivo asi mismo
             $personaActualizar = Persona::findOrFail($id);
+            $personaDatos = $personaActualizar->datos;
             $personaLogeada = Auth::user();
 
             if($request->PerEstado == 'Inactivo' && $personaActualizar->IdPersona == $personaLogeada->persona->IdPersona){
@@ -169,7 +170,15 @@ class PersonaController extends Controller
                 ]); 
             } 
 
-            $personaActualizar->update($request->all());     
+            DB::beginTransaction();
+            $personaActualizar->update($request->only(['PerApellidos', 'PerNombres','PerGenero',
+                'PerFecNac','PerLugNac','PerFecExp','PerLugExp','PerGruRh','PerEstado'])); 
+
+            $personaDatos->fill($request->only(['PerTelefono', 'PerEmail', 'PerDir','PerBar','PerMunRes']));  
+            $personaDatos->PerFecUltAct = now();
+            $personaDatos->save();
+            DB::commit();
+            
             return response()->json([
                 'redirect' => route('personas.index'),
                 'type' => 'success', 
@@ -177,6 +186,7 @@ class PersonaController extends Controller
             ]); 
 
         }catch(Exception $e){
+            DB::rollBack();
             Log::error('Error al modificar la persona: ' . $e->getMessage());
             return response()->json([
                 'redirect' => route('personas.index'),

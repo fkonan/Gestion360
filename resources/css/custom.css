@@ -31,6 +31,44 @@
 }
 
 /* Estilos menu lateral */
+body.sidebar-collapse .main-sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    overflow-y: auto;
+}
+
+/* Centrar verticalmente los íconos SOLO cuando no se hace hover */
+body.sidebar-collapse:not(.sidebar-open) .main-sidebar:hover .nav-sidebar,
+body.sidebar-collapse:not(.sidebar-open) .main-sidebar .nav-sidebar:hover {
+    position: static !important;
+    transform: none !important;
+}
+
+/* Centrado solo cuando sidebar colapsado y sin hover */
+body.sidebar-collapse .main-sidebar .nav-sidebar {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 100%;
+    transition: transform 0s ease;
+}
+
+/* padding de los ítems del menú */
+.main-sidebar .nav-sidebar > .nav-item > .nav-link {
+    padding-left: 6px !important; 
+}
+
+/* Padding a los iconos del menu */
+.main-sidebar .nav-sidebar .nav-icon {
+    padding-left: 12px;
+}
+
+/* Solo aplicar cuando el menú está expandido (sin sidebar-collapse) */
+body:not(.sidebar-collapse) .main-sidebar .nav-sidebar .nav-icon {
+    padding-left: 1px;
+}
+
 .nav-sidebar .nav-link p {
     white-space: nowrap;   
     text-overflow: ellipsis; 
@@ -70,11 +108,9 @@
 }
 
 body:not(.sidebar-collapse) .nav-item .nav-treeview .nav-link {
-    padding-left: 20px;
+    padding-left: 10px;
 }
-body:not(.sidebar-collapse) .nav-item .nav-treeview .sangriaSegundoNivel{
-    padding-left: 30px;
-}
+
 
 /* Estilos select2 */
 .select2-container .select2-selection--single {
@@ -230,6 +266,21 @@ body:not(.sidebar-collapse) .nav-item .nav-treeview .sangriaSegundoNivel{
     box-shadow:#1a1a1a;
     top: 185px;
 }
+
+
+/* Detalle de la tabla en modo tarjeta */
+th.detalle-mobile,
+td.detalle-mobile {
+    display: none;
+}
+
+@media (max-width: 576px) {
+    th.detalle-mobile,
+    td.detalle-mobile {
+        display: table-cell !important;
+    }
+}
+
 
 
 

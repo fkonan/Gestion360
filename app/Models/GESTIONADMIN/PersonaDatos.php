@@ -14,6 +14,13 @@ class PersonaDatos extends Model
     protected $primaryKey ="IdPersonaDatos";
     public $timestamps = false;
 
+    protected $fillable =[
+            "PerTelefono","PerEmail","PerDir",
+            "PerBar","PerMunRes","PerFecReg",
+            "PerHorReg","PerFecUltAct","PerAutTra",
+            "PerComDat","PerConPol","PerAutNot"
+    ];
+
     public function persona(){
         return $this->belongsTo(Persona::class,"IdPersona","IdPersona");
     }

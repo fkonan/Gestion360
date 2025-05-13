@@ -12,8 +12,8 @@
                     class="nav-link text-dark"
                     style="background-color:rgba(214, 214, 214, 0.51)">
 
-                    <i class="nav-icon fas {{ $modulo->ModIcono  }}" style="color:rgba(75, 75, 76, 0.7);"></i>
-                    <p><b>{{ $modulo->nombre_formateado }}</b></p>
+                    <i class="nav-icon fas {{ $modulo->ModIcono  }}" style="color:rgba(75, 75, 76, 0.7); font-size: 16px;"></i>
+                    <p class="fw-medium">{{ $modulo->nombre_formateado }}</p>
                     @if($modulo->submodulos->count())   
                         <p><i class="right fas fa-angle-left"></i></p>
                     @endif
@@ -32,7 +32,7 @@
                         @if(! $submodulo->ModPermiso || auth()->user()->can($submodulo->ModPermiso))     
                         <li class="nav-item">
                             <a class="nav-link text-black"  href="{{ $submodulo->ModRuta && Route::has($submodulo->ModRuta) ? route($submodulo->ModRuta) : '#' }}">
-                                <i class="nav-icon fas {{ $submodulo->ModIcono }} " style="color:rgba(75, 75, 76, 0.7);"></i>
+                                <i class="nav-icon fas {{ $submodulo->ModIcono }} " style="color:rgba(75, 75, 76, 0.7); font-size: 16px;"></i>
                                 <p>{{ Str::title($submodulo->ModNom) }}</p>
                             </a>
                         </li>
@@ -54,7 +54,7 @@
                 <li class="nav-item">
                     <a href="#" onclick="document.getElementById('logoutForm').submit();" class="nav-link bg-danger">
                         <i class="fas fa-sign-out-alt"></i>
-                        <p>Cerrar sesión</p>
+                        <p class="text-light">Cerrar sesión</p>
                     </a>
                     <form id="logoutForm" action="{{ route('logout') }}" method="POST" style="display: none;">
                         @csrf
