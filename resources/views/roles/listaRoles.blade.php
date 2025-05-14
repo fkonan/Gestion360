@@ -18,10 +18,12 @@
         <span class="text-left text-light fs-5 fw-medium py-1">Roles</span>
     </div>
 
-    <a class="btn fw-bold ms-4 mt-4 bg-warning botonBoostrapTable"  
-        onclick="cargarModal(`{{ route('roles.create') }}`, 'Crear Rol', '#formCrearRol','modal-md')">
-            Crear Rol
-    </a>
+    @permite('configuracion.gestion_sistema.crear')
+        <a class="btn fw-bold ms-4 mt-4 bg-warning botonBoostrapTable"  
+            onclick="cargarModal(`{{ route('roles.create') }}`, 'Crear Rol', '#formCrearRol','modal-lg')">
+                Crear Rol
+        </a>
+    @endpermite
 
     @php
     $icons = [
@@ -49,8 +51,9 @@
                 <tr class="bg-primary">
                     <th data-sortable="true">ID</th>
                     <th>Nombre</th>
-                    <th>Permisos</th>
-                    <th>Acciones</th>
+                    @permite('configuracion.gestion_sistema.actualizar')
+                        <th>Acciones</th>
+                    @endpermite
                 </tr>
             </thead>
             <tbody>
@@ -60,35 +63,14 @@
                     <td class="text-nowrap">
                         <i class="fas {{ $icons[$rol->name] ?? 'fa-user' }} me-2 text-primary"></i> {{ $rol->name }}
                     </td>
-                    <td>
-                        @php
-                            $permisos = $rol->getPermissionNames();
-                            $limit = 5;
-                        @endphp
-
-                        @if($permisos->count() > 0)
-                            @foreach($permisos->take($limit) as $permiso)
-                                <span style="background-color:#D6D6D6" class="badge text-dark mb-1">{{ $permiso }}</span>
-                            @endforeach
-
-                            @if($permisos->count() > $limit)
-                                <span class="badge bg-secondary text-light mb-1 ver-mas"
-                                    data-bs-toggle="tooltip"
-                                    title="{{ $permisos->slice($limit)->implode(', ') }}">
-                                    +{{ $permisos->count() - $limit }} más
-                                </span>
-                            @endif
-                        @else
-                            <span class="badge bg-secondary">Sin permisos</span>
-                        @endif
-                    </td>  
-
-                    <td class="text-center" style="width: 80px;">
-                        <a class="p-0 px-2" 
-                            onclick="cargarModal(`{{ route('roles.permisos', ['id' => $rol->id]) }}`, 'Permisos Rol', '#formPermisoRol','modal-xl')">
-                            <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/new_editar.png" alt="Editar" style="width: 30px; height: 30px;">
-                        </a>
-                    </td>
+                    @permite('configuracion.gestion_sistema.actualizar')
+                        <td class="text-center" style="width: 80px;">
+                            <a class="p-0 px-2" 
+                                href="{{ route('roles.permisos', ['id' => $rol->id]) }}">
+                                <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/new_editar.png" alt="Editar" style="width: 30px; height: 30px;">
+                            </a>
+                        </td>
+                    @endpermite
                 </tr>
             @endforeach
             </tbody>

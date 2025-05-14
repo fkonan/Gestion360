@@ -10,6 +10,22 @@
     --bs-table-color: #fff; 
   }
 
+/* Estilos botones asignacion de permisos */
+.form-switch .form-check-input {
+    background-color: #dc3545; 
+    border: none;
+    cursor: pointer;
+    height: 18px;
+}
+
+.form-switch .form-check-input:checked {
+    background-color: #26ac26; 
+}
+
+.form-switch .form-check-input:focus {
+    box-shadow: none;
+}
+
 /* Estilos bootstrap table */
 .pagination .page-item.active .page-link {
     background-color: var(--bs-primary) !important;

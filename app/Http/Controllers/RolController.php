@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\GESTIONADMIN\Modulo;
 use App\Models\GESTIONADMIN\Permisos;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class RolController extends Controller
@@ -65,29 +67,38 @@ class RolController extends Controller
     }
 
     public function permisosRol($id){
-        $rol = Role::findOrFail($id);
-        $permisosRol = $rol->permissions;
-        $permisosDisponibles = Permisos::with('modulo')->get();
-        return view("roles.permisosRol",compact("rol","permisosRol","permisosDisponibles"));
+        $role = Role::findOrFail($id);
+        $modulos = Modulo::where('ModuloEstado', 'ACTIVO')
+            ->with('submodulos')
+            ->get();
+
+        foreach ($modulos as $modulo) {
+            $nombreModulo = normalizarNombre($modulo->ModNom);
+            
+            foreach ($modulo->submodulos as $submodulo) {
+                $nombreSubmodulo = normalizarNombre($submodulo->SubModNom);
+        
+                $prefix = "$nombreModulo.$nombreSubmodulo";
+                $submodulo->permisos = Permission::where('name', 'like', "$prefix.%")->get();
+            }
+        }
+    
+        $permisosAsignados = $role->permissions->pluck('id')->toArray();
+        return view('roles.permisosRol', compact('modulos', 'role', 'permisosAsignados'));
     }
 
     public function updatePermisos(Request $request, $id){
         try{
             $rol = Role::findOrFail($id);
-            $rol->syncPermissions($request->permisosRol);
+            $rol->syncPermissions($request->permissions ?? []);
+
+            session()->flash('alert', ['type' => 'success','title' => 'Permisos para el rol ' . $rol->name . ' actualizados correctamente']);
+            return redirect()->route('roles.index');
            
-            return response()->json([
-                'redirect' => route('roles.index'),
-                'type' => 'success', 
-                'title' => 'Permisos para el rol ' . $rol->name . ' actualizados correctamente',
-            ]); 
         }catch(Exception $e){
             Log::error('Error al actualizar los permisos: ' . $e->getMessage());
-            return response()->json([
-                'redirect' => route('roles.index'),
-                'type' => 'error', 
-                'title' => 'Error al actualizar los permisos',
-            ]);
+            session()->flash('alert', ['type' => 'error','title' => 'Error al actualizar los permisos']);
+            return redirect()->route('roles.index');
         }
     }
     

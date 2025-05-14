@@ -17,11 +17,13 @@
         <span class="text-left text-light fs-5 fw-medium py-1">Lista de personas</span>
     </div>
 
-    <a class="btn fw-bold ms-4 mt-4 text-light bg-warning botonBoostrapTable" 
-        href="{{ route('personas.create') }}">
-        Registrar persona
-    </a>
-
+    @permite('administracion.personas.crear')
+        <a class="btn fw-bold ms-4 mt-4 text-light bg-warning botonBoostrapTable" 
+            href="{{ route('personas.create') }}">
+            Registrar persona
+        </a>
+    @endpermite
+   
     <div class="row p-4">
         <table
             id="personasDataTable"
@@ -43,7 +45,9 @@
                     <th>Departamento</th>
                     <th>Genero</th>    
                     <th>Estado</th>
-                    <th>Opciones</th>
+                    @permite('administracion.personas.actualizar')
+                        <th>Opciones</th>
+                    @endpermite
                 </tr>
             </thead>
             <tbody>
@@ -60,11 +64,13 @@
                         {{ $persona?->PerEstado }}
                         </span>
                     </td>
-                    <td class="text-center" style="width: 100px;">
-                        <a class="p-0 px-2" href="{{ route('personas.edit', ['id' => $persona->IdPersona]) }}">
-                            <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/new_editar.png" alt="Editar" style="width: 30px; height: 30px;">
-                        </a>
-                    </td>   
+                    @permite('administracion.personas.actualizar')
+                        <td class="text-center" style="width: 100px;">
+                            <a class="p-0 px-2" href="{{ route('personas.edit', ['id' => $persona->IdPersona]) }}">
+                                <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/new_editar.png" alt="Editar" style="width: 30px; height: 30px;">
+                            </a>
+                        </td>   
+                    @endpermite
                 </tr>
             @endforeach
             </tbody>

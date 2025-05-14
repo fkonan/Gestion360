@@ -3,9 +3,11 @@
 namespace App\Providers;
 
 use App\View\Composers\MenuComposer;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Blade;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -17,13 +19,17 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void{
         View::composer('menu', MenuComposer::class);
 
+        Blade::if('permite', function ($permiso) {
+            return Auth::check() && Auth::user()->can($permiso);
+        });
+
         // Acceso total a los usuarios super admin
-        Gate::before(function ($user, $ability) {
+       /*  Gate::before(function ($user, $ability) {
             if ($user->hasRole('Super Admin')) {
                 return true; 
             }      
             return null; 
-        }); 
+        });  */
         
     }
 }

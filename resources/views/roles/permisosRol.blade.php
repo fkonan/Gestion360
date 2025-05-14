@@ -1,21 +1,77 @@
-<!-- Modal para asignar permisos a un rol -->
-<div class="container-fluid px-5 py-4 rounded">
-    <form id="formPermisoRol" action="{{ route('roles.permisos.update', ['id' => $rol->id]) }}" method="POST">
-        @csrf
-        @method('PUT')
-        <div class="row pb-3">
-            <div class="col-md-12">
-                <select multiple="multiple" id="permisosRol" name="permisosRol[]" class="form-control">
-                    @foreach ($permisosDisponibles as $permiso)
-                        <option class="fw-medium" value="{{ $permiso->name }}"
-                             @if ($permisosRol->contains($permiso->id)) selected @endif>
-                             {{ $permiso->name }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-        </div>
-        <button type="submit" class="btn btn-success my-3">Guardar</button>
-        <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Cancelar</button>
-    </form>
+@extends('layouts.dashboard')
+
+@section('title','Permisos Rol')
+    
+@section('breadcrumb')
+<x-breadcrumb :items="[
+        ['name' => 'Home', 'url' => route('home')],
+        ['name' => 'Gestión Sistema' , 'url' => route('gestion-sistema.index')],
+        ['name' => 'Administrar Roles', 'url' => route('roles.index')],
+        ['name' => 'Permisos Rol'],
+    ]" />
+<br>
+@endsection
+
+@section('content')
+<div class="container-fluid p-0 border rounded shadow" style="min-height:150px; background-color: white">
+
+    <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-secondary">
+        <span class="text-left text-light fs-5 fw-medium py-1">Editar Rol</span>
+    </div>
+
+    <div class="row p-4">
+        <form id="formPermisoRol" action="{{ route('roles.permisos.update', ['id' => $role->id]) }}" method="POST">
+            @csrf
+            @method('PUT')
+
+            <h4 class="mb-4">{{ $role->name }}</h4>
+
+            @foreach ($modulos as $modulo)
+                <div class="border border-primary rounded m-0 p-0 pb-3 mb-4">
+                <h5 class="p-2 bg-primary text-light">{{ ucfirst($modulo->ModNom) }}</h5>
+
+                @php
+                    $nombreModulo = normalizarNombre($modulo->ModNom);
+                    $permisoModulo = \Spatie\Permission\Models\Permission::where('name', "$nombreModulo.acceder")->first();
+                @endphp
+
+                @if ($permisoModulo)
+                    <div class="m-3 form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch"
+                            name="permissions[]" value="{{ $permisoModulo->name }}"
+                            {{ in_array($permisoModulo->id, $permisosAsignados) ? 'checked' : '' }}>
+                        <label class="form-check-label">Acceso al módulo</label>
+                    </div>
+                @endif
+
+                @foreach ($modulo->submodulos as $submodulo)
+                    <div class="ms-4 rounded">
+                        <p class="text-secondary fs-6 fw-medium m-0 p-0">{{ ucfirst($submodulo->SubModNom) }}</p>
+                        <div class="row mb-2">
+                            @foreach ($submodulo->permisos as $permiso)
+                                <div class="col-md-2">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" role="switch"
+                                            name="permissions[]" value="{{ $permiso->name }}"
+                                            {{ in_array($permiso->id, $permisosAsignados) ? 'checked' : '' }}>
+                                        <label class="form-check-label">{{ Str::title(str_replace('_', ' ', Str::afterLast($permiso->name, '.'))) }}
+                                        </label>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endforeach
+                </div>
+            @endforeach
+
+            <button type="submit" class="btn btn-success my-3">Guardar</button>
+            <a type="button" class="btn btn-dark" href="{{ route('roles.index') }}">Cancelar</a>
+        </form>
+    </div>
 </div>
+@endsection
+
+@pushOnce('script')
+   
+@endpushOnce

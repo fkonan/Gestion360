@@ -11,10 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Permission\Traits\HasRoles;
 
+
 class User extends Authenticatable
 {
     use HasFactory;
     use HasRoles;
+    
 
     protected $guard_name = 'web';
     public const SUPER_ADMIN_ROLE = 'SUPER-ADMIN';
