@@ -24,7 +24,16 @@
             @csrf
             @method('PUT')
 
-            <h4 class="mb-4">{{ $role->name }}</h4>
+            <div class="input-group">
+                <input type="name" class="form-control" id="name" name="name" value="{{ $role->name }}" disabled required>
+                <div class="input-group-text" onclick="editarNombreRol()">
+                    <span class="fas fa-edit"></span>
+                </div>
+            </div>
+            @error('name')          
+                <small class="text-danger fw-bold">{{ $message }}</small>
+            @enderror
+            <br>
 
             @foreach ($modulos as $modulo)
                 <div class="border border-primary rounded m-0 p-0 pb-3 mb-4">
@@ -73,5 +82,14 @@
 @endsection
 
 @pushOnce('script')
-   
+<script>
+    function editarNombreRol() {
+        let rolField = document.getElementById("name");
+        if (rolField.disabled) {
+            rolField.disabled = false;
+        } else {
+            rolField.disabled = true;
+        }
+    }
+</script>
 @endpushOnce

@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Str;
 
+//Formatea el nombre de los modulos en un formato que permita relacionarlos con los permisos
 if (!function_exists('normalizarNombre')) {
     function normalizarNombre($texto)
     {
@@ -11,3 +12,15 @@ if (!function_exists('normalizarNombre')) {
         return strtolower($texto);
     }
 }
+
+//Permite usar los toas de forma mas directa
+if (!function_exists('toast')) {
+    function toast($message, $type = 'primary', $redirect = null) {
+        $redirect = $redirect ?? redirect()->back();
+        return $redirect->with('toast', [
+            'type' => $type,
+            'message' => $message,
+        ]);
+    }
+}
+

@@ -9,6 +9,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
@@ -32,7 +33,7 @@ class RolController extends Controller
             'name' => 'required|unique:roles,name|max:50',
         ], [
             'name.required' => 'El campo nombre es obligatorio.',
-            'name.unique' => 'El rol ya existe.',
+            'name.unique' => 'El nombre del rol ya existe.',
             'name.max' => 'El nombre no puede tener más de 50 caracteres.',
         ]);
 
@@ -88,17 +89,43 @@ class RolController extends Controller
     }
 
     public function updatePermisos(Request $request, $id){
+        if($request->name){
+            $validator = Validator::make($request->all(), [
+                'name' => [
+                    'required',
+                    'max:50',
+                    'regex:/^[\pL\s]+$/u',
+                    Rule::unique('roles')->ignore($id),
+                ],
+            ], [
+                'name.required' => 'El campo nombre es obligatorio.',
+                'name.unique' => 'El nombre del rol ya existe.',
+                'name.max' => 'El nombre no puede tener más de 50 caracteres.',
+                'name.regex' => 'El nombre no es valido.',
+            ]);
+
+            if ($validator->fails()) {
+                return toast($validator->errors()->first(), 'danger');
+            }
+        }
+
         try{
             $rol = Role::findOrFail($id);
+
+            //Actualzar nombre
+            if($request->name){
+                $rol->name = $request->name;
+                $rol->save();    
+            }
+           
+            //Sincronizar los permisos
             $rol->syncPermissions($request->permissions ?? []);
 
-            session()->flash('alert', ['type' => 'success','title' => 'Permisos para el rol ' . $rol->name . ' actualizados correctamente']);
-            return redirect()->route('roles.index');
+            return toast('Permisos actualizados correctamente', 'success',redirect()->route('roles.index'));
            
         }catch(Exception $e){
             Log::error('Error al actualizar los permisos: ' . $e->getMessage());
-            session()->flash('alert', ['type' => 'error','title' => 'Error al actualizar los permisos']);
-            return redirect()->route('roles.index');
+            return toast('Error al actualizar los permisos', 'danger',redirect()->route('roles.index'));
         }
     }
     

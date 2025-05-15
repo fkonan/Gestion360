@@ -9,6 +9,8 @@ select2();
 
 // Bootstrap;
 import 'bootstrap';
+import * as bootstrap from 'bootstrap';
+window.bootstrap = bootstrap;
 
 // Bootstrap table
 import 'bootstrap-table/dist/bootstrap-table.min.js';
