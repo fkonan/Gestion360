@@ -24,23 +24,23 @@ class RolController extends Controller
     }
 
     public function create(){
-        return view("roles.crearRol");
+        $modulos = $this->modulosConPermisos();
+        return view("roles.crearRol",compact('modulos'));
     }
 
     public function store(Request $request){
 
         $validator = Validator::make($request->all(), [
-            'name' => 'required|unique:roles,name|max:50',
+            'name' => 'required|unique:roles,name|max:50|regex:/^[\pL\s]+$/u',
         ], [
             'name.required' => 'El campo nombre es obligatorio.',
             'name.unique' => 'El nombre del rol ya existe.',
             'name.max' => 'El nombre no puede tener más de 50 caracteres.',
+            'name.regex' => 'El nombre no es valido.'
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'errors' => $validator->errors()
-            ], 422);
+            return toast($validator->errors()->first(), 'danger');
         }
        
         try{
@@ -51,11 +51,10 @@ class RolController extends Controller
             $rol->updated_at = now();
             $rol->save();
 
-            return response()->json([
-                'title' => 'Rol '. $rol->name . ' creado correctamente',
-                'redirect' => route('roles.index'),
-                'type' => 'success', 
-            ]);
+            //Sincronizar los permisos
+            $rol->syncPermissions($request->permissions ?? []);
+
+            return toast('Rol '. $rol->name . ' creado correctamente', 'success', redirect()->route('roles.index'));
          
         }catch(Exception $e){
             Log::error('Error al crear el rol: ' . $e->getMessage());
@@ -67,11 +66,11 @@ class RolController extends Controller
         }
     }
 
-    public function permisosRol($id){
-        $role = Role::findOrFail($id);
+    //relaciona los permisos con los modulos en base al nombre => formato permiso: "modulo.submodulo.permiso"
+    private function modulosConPermisos(){
         $modulos = Modulo::where('ModuloEstado', 'ACTIVO')
-            ->with('submodulos')
-            ->get();
+        ->with('submodulos')
+        ->get();
 
         foreach ($modulos as $modulo) {
             $nombreModulo = normalizarNombre($modulo->ModNom);
@@ -83,7 +82,12 @@ class RolController extends Controller
                 $submodulo->permisos = Permission::where('name', 'like', "$prefix.%")->get();
             }
         }
-    
+        return $modulos;
+    }
+
+    public function permisosRol($id){
+        $role = Role::findOrFail($id);
+        $modulos = $this->modulosConPermisos();
         $permisosAsignados = $role->permissions->pluck('id')->toArray();
         return view('roles.permisosRol', compact('modulos', 'role', 'permisosAsignados'));
     }

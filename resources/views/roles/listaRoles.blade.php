@@ -19,9 +19,9 @@
     </div>
 
     @permite('configuracion.gestion_sistema.crear')
-        <a class="btn fw-bold ms-4 mt-4 bg-warning botonBoostrapTable"  
-            onclick="cargarModal(`{{ route('roles.create') }}`, 'Crear Rol', '#formCrearRol','modal-lg')">
-                Crear Rol
+        <a class="btn fw-bold ms-4 mt-4 bg-warning botonBoostrapTable" 
+            href="{{ route('roles.create') }}"> 
+            Crear Rol
         </a>
     @endpermite
 

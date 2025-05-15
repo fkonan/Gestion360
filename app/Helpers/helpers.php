@@ -13,7 +13,7 @@ if (!function_exists('normalizarNombre')) {
     }
 }
 
-//Permite usar los toas de forma mas directa
+//Permite usar los toast de forma mas directa
 if (!function_exists('toast')) {
     function toast($message, $type = 'primary', $redirect = null) {
         $redirect = $redirect ?? redirect()->back();

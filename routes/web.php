@@ -78,7 +78,7 @@ Route::prefix("configuracion")->middleware(['auth', 'permisos:configuracion.acce
 
         Route::prefix("roles")->name("roles.")->group(function(){
             Route::get("/",[RolController::class,"index"])->name("index");
-            Route::get("/create",[RolController::class,"create"])->middleware('soloAJAX')->name("create");
+            Route::get("/create",[RolController::class,"create"])->name("create");
             Route::post("/",[RolController::class,"store"])->name("store");
             Route::get("/{id}/permisos",[RolController::class,"permisosRol"])->name("permisos");
             Route::put("/{id}/permisos",[RolController::class,"updatePermisos"])->name("permisos.update");
