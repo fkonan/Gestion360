@@ -4,7 +4,6 @@
 
         <!-- Modulos principales -->
         @foreach($modulos as $modulo)
-        
             <!-- Modulos permiso de visualizacion -->
             @if(! $modulo->ModPermiso || auth()->user()->can($modulo->ModPermiso))
             <li class="nav-item has-treeview">
@@ -18,17 +17,11 @@
                         <p><i class="right fas fa-angle-left"></i></p>
                     @endif
                 </a>
-
                 <!-- Submodulos -->
                 @if($modulo->submodulos->count())
                 <ul class="nav nav-treeview">
                     @foreach($modulo->submodulos as $submodulo)
-
-                        @if ($submodulo->ModEstado !== 'ACTIVO')
-                            @continue
-                        @endif
-
-                        <!-- Submodulos permisos -->
+                        <!-- Submodulos permiso de visualizacion -->
                         @if(! $submodulo->ModPermiso || auth()->user()->can($submodulo->ModPermiso))     
                         <li class="nav-item">
                             <a class="nav-link text-black"  href="{{ $submodulo->ModRuta && Route::has($submodulo->ModRuta) ? route($submodulo->ModRuta) : '#' }}">

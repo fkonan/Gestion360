@@ -58,6 +58,12 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:administracion.ac
         //Actualizacion estado conductor
         Route::get("/actualizarEstadoModal",[ConductorController::class,"formActualizarEstado"])->middleware('soloAJAX')->name("conductor.estado");
         Route::put("/actualizarEstado",[ConductorController::class,"actualizarEstadoConductor"])->name("conductor.actualizarEstado");
+
+        //Firma politica equipaje
+        Route::get("/reporteEquipajeModal",[ConductorController::class,"reporteFirmaEquipaje"])->name("conductor.firmaEquipaje");
+        Route::post("/reporteEquipajeModal",[ConductorController::class,"filtrarFirmaEquipaje"])->name("filtrar.firmaEquipaje");
+        Route::get("/reporteEquipajeModal/cargarData",[ConductorController::class,"cargarDataFirmaEquipaje"])->middleware('soloAJAX')->name("firmaEquipaje.cargarData");
+        Route::get("/reporteEquipajeModal/listaFirmasEquipaje",[ConductorController::class,"listaFirmasEquipaje"])->name("lista.firmaEquipaje");
     });
 });
 

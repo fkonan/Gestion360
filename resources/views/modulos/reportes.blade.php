@@ -44,7 +44,7 @@
                     ruta="#"
             />
         </div>
-        <div class="col">
+        <div class="col" onclick="cargarModal(`{{ route('conductor.firmaEquipaje') }}`, 'Reporte para listar los conductores que han firmado y/o aceptado la política de equipaje','#firmaEquipajeForm','modal-md')">
             <x-card color="bg-dark" 
                     titulo="Firma Conductores" 
                     descripcion="Reportes" 
