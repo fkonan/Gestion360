@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\GESTIONADMIN\Modulo;
-use App\Models\GESTIONADMIN\Permisos;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;

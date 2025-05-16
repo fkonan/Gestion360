@@ -1,5 +1,5 @@
 <!-- Modal Gestion Incapacidad -->
-<div class="container-fluid p-0 bg-white rounded">
+<div class="container-fluid bg-white rounded">
     <form 
         id="formGestionIncapacidad" 
         action="{{ route('gestion-incapacidades.incapacidades.estado', ['id' => $incapacidad->IdIncapacidad]) }}" 

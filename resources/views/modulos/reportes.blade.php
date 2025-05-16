@@ -36,9 +36,9 @@
                     ruta="#"
             />
         </div>
-        <div class="col">
+        <div class="col" onclick="cargarModal(`{{ route('conductor.estado') }}`, 'Activacion o Suspensión Conductores','#estadoConductorForm','modal-md')">
             <x-card color="bg-dark" 
-                    titulo="Actualizacin Estado Conductores en FICS" 
+                    titulo="Actualización Estado Conductores en FICS" 
                     descripcion="Reportes" 
                     icono="fa-id-badge" 
                     ruta="#"

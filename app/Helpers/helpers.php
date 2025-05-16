@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Str;
+use Illuminate\Http\JsonResponse;
 
 //Formatea el nombre de los modulos en un formato que permita relacionarlos con los permisos
 if (!function_exists('normalizarNombre')) {
@@ -23,4 +24,17 @@ if (!function_exists('toast')) {
         ]);
     }
 }
+
+//Permite lanzar el mensaje de sweet alert al finalizar una accion en un MODAL (estos van con ajax)
+if (!function_exists('sweetAlertJson')) {
+    function sweetAlertJson($message, $type = 'success', $redirect = null): JsonResponse
+    {
+        return response()->json([
+            'title' => $message,
+            'type' => $type,
+            'redirect' => $redirect ?? '#',
+        ]);
+    }
+}
+
 

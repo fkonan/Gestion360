@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\GESTIONADMIN\PersonaDatos;
 use App\Models\GESTIONADMIN\Sesion;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 class LoginController extends Controller
 {
@@ -59,15 +61,21 @@ class LoginController extends Controller
     }
 
     public function logout(){
-        $session = new Sesion();
-        $session->IdUser = Auth::id();
-        $session->SesionFechReg = now();
-        $session->SesionHorReg = now();
-        $session->SesionTipo = "LOGOUT";
-        $session->save();
+        try{
+            $session = new Sesion();
+            $session->IdUser = Auth::id();
+            $session->SesionFechReg = now();
+            $session->SesionHorReg = now();
+            $session->SesionTipo = "LOGOUT";
+            $session->save();
+    
+            Auth::logout();
+            session()->flash('alert', ['type' => 'success','title' => 'Sesion cerrada exitosamente']);
+            return redirect()->route('login');
 
-        Auth::logout();
-        session()->flash('alert', ['type' => 'success','title' => 'Sesion cerrada exitosamente']);
-        return redirect()->route('login');
+        }catch(Exception $e){
+            Log::error('Error al hacer logout: ' . $e->getMessage());
+            return toast('Error en el logout', 'danger');
+        }
     }
 }

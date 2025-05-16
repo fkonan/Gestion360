@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ConductorController;
 use App\Http\Controllers\IncapacidadController;
 use App\Http\Controllers\ModuloController;
 use App\Http\Controllers\PermisosController;
@@ -47,11 +48,16 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:administracion.ac
         Route::put("/{id}/permisos",[PermisosController::class,"update"])->name("permisos.update");
     });
     Route::prefix("reportes")->middleware(['permisos:administracion.reportes.acceder','submodulo.activo:12'])->group(function(){
+        //Impresion tiquetes
         Route::get("/",[ModuloController::class,"getReportes"])->name("reportes.index");
         Route::get("/impresionTiquetes",[TiquetesImpresosController::class,"fechasReporte"])->middleware('soloAJAX')->name("reportes.tiquetes");
         Route::post("/impresionTiquetes/filtrar",[TiquetesImpresosController::class,"filtrarTiquetes"])->name("reportes.filtrarTiquetes");
         Route::get("/impresionTiquetes/listaTiquetes",[TiquetesImpresosController::class,"listaTiquetes"])->name("reportes.listaTiquetes");
         Route::get("/impresionTiquetes/cargarData",[TiquetesImpresosController::class,"cargarDataTiquetes"])->middleware('soloAJAX')->name("reportes.cargarData");
+
+        //Actualizacion estado conductor
+        Route::get("/actualizarEstadoModal",[ConductorController::class,"formActualizarEstado"])->middleware('soloAJAX')->name("conductor.estado");
+        Route::put("/actualizarEstado",[ConductorController::class,"actualizarEstadoConductor"])->name("conductor.actualizarEstado");
     });
 });
 
