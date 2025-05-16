@@ -44,7 +44,7 @@ class RolController extends Controller
        
         try{
             $rol = new Role();
-            $rol->name = $request->name;
+            $rol->names = $request->name;
             $rol->guard_name = 'web';
             $rol->created_at = now();
             $rol->updated_at = now();
@@ -57,11 +57,7 @@ class RolController extends Controller
          
         }catch(Exception $e){
             Log::error('Error al crear el rol: ' . $e->getMessage());
-            return response()->json([
-                'redirect' => route('roles.index'),
-                'type' => 'error', 
-                'title' => 'Error al crear el rol',
-            ]); 
+            return toast('Error al crear el rol', 'danger');
         }
     }
 
@@ -144,20 +140,12 @@ class RolController extends Controller
         try{
             $usuario = User::findOrFail($id);
             $usuario->syncRoles($request->roles);
+
+            return sweetAlertJson("Roles actualizados correctamente para el usuario " . $usuario->persona->nombreCompleto(), "success",route('usuarios.index'));
            
-            return response()->json([
-                'redirect' => route('usuarios.index'),
-                'type' => 'success', 
-                'title' => 'Roles actualizados correctamente para el usuario ' . $usuario->persona->nombreCompleto() ,
-            ]); 
         }catch(Exception $e){
             Log::error('Error al actualizar los roles: ' . $e->getMessage());
-            return response()->json([
-                'redirect' => route('usuarios.index'),
-                'type' => 'error', 
-                'title' => 'Error al actualizar los roles',
-            ]);
+            return sweetAlertJson("Error al actualizar los roles", "error",route('usuarios.index'));
         }
-      
     }
 }

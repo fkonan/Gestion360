@@ -34,16 +34,22 @@ $.fn.modal = function (...args) {
 import Swal from 'sweetalert2';
 window.Swal = Swal; 
 
+// XLSX (excels)
+import * as XLSX from 'xlsx';
+window.XLSX = XLSX;
+
 import { deshabilitarSubmit, 
         habilitarSubmit, 
         actualizarReloj,
         handleMenuActive, 
         abrirArchivo,
+        exportarExcel
     } from './utils';
 
 window.deshabilitarSubmit = deshabilitarSubmit;
 window.habilitarSubmit = habilitarSubmit;
 window.abrirArchivo = abrirArchivo;
+window.exportarExcel = exportarExcel;
 
 //Inicializar funciones
 setInterval(actualizarReloj, 1000);

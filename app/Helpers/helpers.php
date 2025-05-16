@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Support\Str;
 use Illuminate\Http\JsonResponse;
 
 //Formatea el nombre de los modulos en un formato que permita relacionarlos con los permisos

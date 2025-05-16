@@ -56,20 +56,12 @@ class ModuloController extends Controller
             $modulo->ModFechReg = now();
             $modulo->ModHorReg = now();
             $modulo->save();
-    
-            return response()->json([
-                'title' => 'Modulo creado exitosamente',
-                'redirect' => route('modulos.index'),
-                'type' => 'success', 
-            ]); 
+
+            return sweetAlertJson("Modulo creado exitosamente","success",route('modulos.index'));
 
         }catch(Exception $e){
             Log::error('Error al crear el modulo: ' . $e->getMessage());
-            return response()->json([
-                'title' => 'Error al crear el modulo',
-                'redirect' => route('modulos.index'),
-                'type' => 'error', 
-            ]);
+            return sweetAlertJson("Error al crear el modulo","error",route('modulos.index'));
         }
     }
 
@@ -101,20 +93,11 @@ class ModuloController extends Controller
 
         try{
             Modulo::findOrFail($id)->update($request->all());
-           
-            return response()->json([
-                'title' => 'Modulo actualizado exitosamente',
-                'redirect' => route('modulos.index'),
-                'type' => 'success', 
-            ]); 
+            return sweetAlertJson("Modulo actualizado exitosamente", "success",route('modulos.index'));
             
         }catch(Exception $e){
             Log::error('Error al actualizar el modulo: ' . $e->getMessage());
-            return response()->json([
-                'title' => 'Error al actualizar el modulo',
-                'redirect' => route('modulos.index'),
-                'type' => 'error', 
-            ]);
+            return sweetAlertJson("Error al actualizar el modulo", "error",route('modulos.index'));
         }
     }
 

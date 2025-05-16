@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class PersonaController extends Controller
 {
@@ -105,20 +106,13 @@ class PersonaController extends Controller
             $personaDatos->save();
 
             DB::commit();
-            return response()->json([
-                'message' => 'Persona creada exitosamente',
-                'redirect' => route('personas.index'),
-                'type' => 'success', 
-                'title' => 'Persona creada exitosamente'
-            ]); 
+            return sweetAlertJson("Persona creada exitosamente", "success",route('personas.index'));
+
         }catch(Exception $e){
             DB::rollBack();
             Log::error('Error al crear la persona: ' . $e->getMessage());
-            return response()->json([
-                'redirect' => route('personas.index'),
-                'type' => 'error', 
-                'title' => 'Error al crear la persona',
-            ]);
+
+            return sweetAlertJson("Error al crear la persona", "error",route('personas.index'));
         } 
     }
 
@@ -141,7 +135,11 @@ class PersonaController extends Controller
             $validator = Validator::make($request->all(), [
                 'PerApellidos' => 'required|string|max:50',
                 'PerNombres' => 'required|string|max:50',
-                'PerEmail' => 'unique:_personas_datos,PerEmail|required|email',
+                'PerEmail' => [
+                    'required',
+                    'email',
+                    Rule::unique('_personas_datos', 'PerEmail')->ignore($id, 'IdPersona')
+                ],
                 'PerGenero' => 'required|string|max:15',
                 'PerFecNac' => 'required',
                 'PerLugNac' => 'required',
@@ -163,11 +161,7 @@ class PersonaController extends Controller
             $personaLogeada = Auth::user();
 
             if($request->PerEstado == 'Inactivo' && $personaActualizar->IdPersona == $personaLogeada->persona->IdPersona){
-                return response()->json([
-                    'redirect' => '#',
-                    'type' => 'warning', 
-                    'title' => 'No puede cambiar a estado INACTIVO a su propio registro'
-                ]); 
+                return sweetAlertJson("No puede cambiar a estado INACTIVO a su propio registro", "warning");
             } 
 
             DB::beginTransaction();
@@ -178,22 +172,14 @@ class PersonaController extends Controller
             $personaDatos->PerFecUltAct = now();
             $personaDatos->save();
             DB::commit();
-            
-            return response()->json([
-                'redirect' => route('personas.index'),
-                'type' => 'success', 
-                'title' => 'Persona modificada exitosamente'
-            ]); 
+
+            return sweetAlertJson("Persona modificada exitosamente", "success",route('personas.index'));
 
         }catch(Exception $e){
             DB::rollBack();
             Log::error('Error al modificar la persona: ' . $e->getMessage());
-            return response()->json([
-                'redirect' => route('personas.index'),
-                'type' => 'error', 
-                'title' => 'Error al modificar la persona',
-            ]);
-            
+
+            return sweetAlertJson("Error al modificar la persona", "error",route('personas.index'));  
         }
     }
 }

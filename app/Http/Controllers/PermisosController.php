@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
 
 class PermisosController extends Controller
-{
+{   
     public function edit($id){
         $usuario = User::findOrFail($id);
         $permisosDisponibles = Permission::all(); 
@@ -39,24 +39,17 @@ class PermisosController extends Controller
         ));
     }
 
+    //Actulizar permisos del usuario
     public function update(Request $request, $id){
         try{
             $usuario = User::findOrFail($id);
             $usuario->syncPermissions($request->permissions);
+
+            return sweetAlertJson('Permisos actualizados correctamente para el usuario ' . $usuario->persona->nombreCompleto(), 'success',route('usuarios.index'));
            
-            return response()->json([
-                'redirect' => route('usuarios.index'),
-                'type' => 'success', 
-                'title' => 'Permisos actualizados correctamente para el usuario ' . $usuario->persona->nombreCompleto(),
-            ]); 
-            
         }catch(Exception $e){
             Log::error('Error al actualizar permisos: ' . $e->getMessage());
-            return response()->json([
-                'redirect' => route('usuarios.index'),
-                'type' => 'error', 
-                'title' => 'Error al actualizar los permisos',
-            ]); 
+            return sweetAlertJson("Error al actualizar los permisos", "error",route('usuarios.index'));
         }
         
     }

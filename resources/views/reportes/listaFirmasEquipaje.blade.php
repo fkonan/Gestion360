@@ -17,7 +17,11 @@
         <span class="text-left text-light fs-5 fw-medium py-1">Resultado firma equipaje</span>
     </div>
 
-    <a id="exportar" class="btn fw-bold ms-4 mt-4 bg-success botonBoostrapTable"> Descargar Excel </a>
+    <button id="exportar" 
+        onclick="exportarExcel('exportar', `{{ route('firmaEquipaje.cargarData') }}` , 'Firmas_Conductores_Politica_Equipaje')"
+        class="btn fw-bold ms-4 mt-4 bg-success botonBoostrapTable"> 
+        Descargar Excel 
+    </button>
 
     <div class="row p-4">
         <table
@@ -33,11 +37,11 @@
             data-pagination-parts="['pageSize', 'pageList', 'pageNext', 'pagePrev']">   
             <thead class="table-primary">
                 <tr class="bg-primary">
-                    <th data-field="NomCon">Nombre y apellidos</th>
-                    <th data-field="DocCon">Identificación</th>
-                    <th data-field="CodCon">Codigo</th>
-                    <th data-field="FirFecReg">Fecha firma</th>
-                    <th data-field="FirHorReg">Hora firma</th>
+                    <th data-field="NomCon" data-sortable="true">Nombre y apellidos</th>
+                    <th data-field="DocCon" data-sortable="true">Identificación</th>
+                    <th data-field="CodCon" data-sortable="true">Codigo</th>
+                    <th data-field="FirFecReg" data-sortable="true">Fecha firma</th>
+                    <th data-field="FirHorReg" data-sortable="true">Hora firma</th>
                 </tr>
             </thead>
         </table>
@@ -47,27 +51,5 @@
 
 @pushOnce('script')
     @vite(['resources/js/cargarModal.js'])
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script>
-     let btnExportar = document.getElementById("exportar");
-        btnExportar.addEventListener("click", function () {         
-            let url = "{{ route('firmaEquipaje.cargarData') }}";
-
-            $.ajax({
-                url: url,
-                method: 'GET',
-            
-                success: function (data, status, xhr) {
-                    let ws = XLSX.utils.json_to_sheet(data);
-                    let wb = XLSX.utils.book_new();
-                    XLSX.utils.book_append_sheet(wb, ws, "Datos");
-                    XLSX.writeFile(wb, "informe_firma_equipaje.xlsx");
-                },
-                error: function (xhr, status, error) {
-                    alert('Error al exportar los datos. Por favor, intente nuevamente.');
-                }
-            });
-        });
-    </script>
 @endpushOnce
 

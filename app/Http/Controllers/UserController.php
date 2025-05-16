@@ -54,19 +54,12 @@ class UserController extends Controller
             $user->UsuHorReg = now();
             $user->UsuReg = "AppMovil";
             $user->save();
+
+            return sweetAlertJson("Usuario creado exitosamente","success",route('usuarios.index'));
     
-            return response()->json([
-                'redirect' => route('usuarios.index'),
-                'type' => 'success', 
-                'title' => 'Usuario creado exitosamente'
-            ]); 
         }catch(Exception $e){
             Log::error('Error al crear el usuario: ' . $e->getMessage());
-            return response()->json([
-                'redirect' => route('usuarios.index'),
-                'type' => 'error', 
-                'title' => 'Error al crear el usuario',
-            ]);
+            return sweetAlertJson("Error al crear el usuario","error",route('usuarios.index'));
         }
     }
 
@@ -92,21 +85,13 @@ class UserController extends Controller
             if ($request->has('Password')) {
                 $data['Password'] = Hash::make($request->Password);
             }
-            User::findOrFail($id)->update($data);
 
-            return response()->json([
-                'redirect' => route('usuarios.index'),
-                'type' => 'success', 
-                'title' => 'Usuario modificado exitosamente'
-            ]); 
+            User::findOrFail($id)->update($data);
+            return sweetAlertJson("Usuario modificado exitosamente","success",route('usuarios.index'));
     
         }catch(Exception $e){
             Log::error('Error al modificar el usuario: ' . $e->getMessage());
-            return response()->json([
-                'redirect' => route('usuarios.index'),
-                'type' => 'error', 
-                'title' => 'Error al modificar el usuario',
-            ]);
+            return sweetAlertJson("Error al modificar el usuario","error",route('usuarios.index'));
         }
         
     }

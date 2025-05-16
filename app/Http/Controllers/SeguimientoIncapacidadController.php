@@ -69,19 +69,12 @@ class SeguimientoIncapacidadController extends Controller
             $incapacidadSeguimiento->UserRegistra = $user->persona->nombreCompleto();
             $incapacidadSeguimiento->Estado = "ACTIVO";
             $incapacidadSeguimiento->save();
+
+            return sweetAlertJson("Seguimiento radicado N° '. $id .' registrado exitosamente", "success",route('gestion-incapacidades.seguimiento.detalle', ['id' => $incapacidadSeguimiento->IncapacidadId]));
     
-            return response()->json([
-                'title' => 'Seguimiento radicado N° '. $id .' registrado exitosamente',
-                'redirect' => route('gestion-incapacidades.seguimiento.detalle', ['id' => $incapacidadSeguimiento->IncapacidadId]),
-                'type' => 'success', 
-            ]);
         }catch(Exception $e){
             Log::error('Error al registrar el seguimiento: ' . $e->getMessage());
-            return response()->json([
-                'title' => 'Error al registrar el seguimiento',
-                'redirect' => route('gestion-incapacidades.seguimiento.detalle', ['id' => $incapacidadSeguimiento->IncapacidadId]),
-                'type' => 'error', 
-            ]);
+            return sweetAlertJson("Error al registrar el seguimiento", "error",route('gestion-incapacidades.seguimiento.detalle', ['id' => $incapacidadSeguimiento->IncapacidadId]));
         }
     }
 }

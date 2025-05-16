@@ -85,19 +85,12 @@ class IncapacidadController extends Controller
             if ($referer == route('gestion-incapacidades.seguimiento')) {
                 $redirect = route('gestion-incapacidades.seguimiento');
             }
+
+            return sweetAlertJson("Se han actualizado los datos del radicado exitosamente", "success",$redirect);
     
-            return response()->json([
-                'title' => 'Se han actualizado los datos del radicado exitosamente',
-                'redirect' => $redirect,
-                'type' => 'success',
-            ]);
         }catch(Exception $e){
             Log::error('Error al actualizar la incapacidad: ' . $e->getMessage());
-            return response()->json([
-                'title' => 'Error al actualizar la incapacidad',
-                'redirect' => $redirect,
-                'type' => 'error', 
-            ]);
+            return sweetAlertJson("Error al actualizar la incapacidad", "error",$redirect);
         }
     }
 
@@ -125,12 +118,7 @@ class IncapacidadController extends Controller
                 }
     
                 $incapacidad->update($request->all());
-    
-                return response()->json([
-                    'title' => 'Se ha RECHAZADO el radicado '. $id .' exitosamente',
-                    'redirect' => route('gestion-incapacidades.incapacidades'),
-                    'type' => 'success', 
-                ]);
+                return sweetAlertJson("Se ha RECHAZADO el radicado '. $id .' exitosamente", "success",route('gestion-incapacidades.incapacidades'));
             }
 
             /* Si es aprobada se genera el bloqueo si es conductor*/
@@ -141,33 +129,17 @@ class IncapacidadController extends Controller
 
             if ($bloqueo == "bloqueado") {
                 $incapacidad->save();
-                return response()->json([
-                    'title' => 'El radicado '. $id .' ha sido APROBADO exitosamente y se ha generado el bloqueo en Logtrans',
-                    'redirect' => route('gestion-incapacidades.incapacidades'),
-                    'type' => 'success', 
-                ]);
+                return sweetAlertJson("El radicado '. $id .' ha sido APROBADO exitosamente y se ha generado el bloqueo en Logtrans", "success",route('gestion-incapacidades.incapacidades'));
             }else if($bloqueo === "error"){
                 $incapacidad->refresh();
-                return response()->json([
-                    'title' => 'Error al generar el bloqueo en Logtrans, por favor verifique la información',
-                    'redirect' => route('gestion-incapacidades.incapacidades'),
-                    'type' => 'error', 
-                ]);
+                return sweetAlertJson("Error al generar el bloqueo en Logtrans, por favor verifique la información", "error",route('gestion-incapacidades.incapacidades'));
             }else{ 
                 $incapacidad->save();
-                return response()->json([
-                    'title' => 'El radicado '. $id .' ha sido APROBADO exitosamente',
-                    'redirect' => route('gestion-incapacidades.incapacidades'),
-                    'type' => 'success', 
-                ]);
+                return sweetAlertJson("El radicado '. $id .' ha sido APROBADO exitosamente", "success",route('gestion-incapacidades.incapacidades'));
             }
         }catch(Exception $e){
             Log::error('Error al actualizar el estado de la incapacidad: ' . $e->getMessage());
-            return response()->json([
-                'title' => 'Error al actualizar el estado de la incapacidad',
-                'redirect' => route('gestion-incapacidades.incapacidades'),
-                'type' => 'error', 
-            ]);
+            return sweetAlertJson("Error al actualizar el estado de la incapacidad", "error",route('gestion-incapacidades.incapacidades'));
         }
     }
 }

@@ -17,7 +17,11 @@
         <span class="text-left text-light fs-5 fw-medium py-1">Resultado Tiquetes</span>
     </div>
 
-    <a id="exportar" class="btn fw-bold ms-4 mt-4 bg-success botonBoostrapTable"> Descargar Excel </a>
+    <button id="exportar"
+        onclick="exportarExcel('exportar', `{{ route('reportes.cargarData') }}` , 'Tiquetes_impresos')" 
+        class="btn fw-bold ms-4 mt-4 bg-success botonBoostrapTable"> 
+        Descargar Excel 
+    </button>
 
     <div class="row p-4">
         <table
@@ -54,29 +58,6 @@
 
 @pushOnce('script')
     @vite(['resources/js/cargarModal.js'])
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script>
-     let btnExportar = document.getElementById("exportar");
-        btnExportar.addEventListener("click", function () {         
-            let url = "{{ route('reportes.cargarData') }}";
-
-            $.ajax({
-                url: url,
-                method: 'GET',
-            
-                success: function (data, status, xhr) {
-                    let ws = XLSX.utils.json_to_sheet(data);
-                    let wb = XLSX.utils.book_new();
-                    XLSX.utils.book_append_sheet(wb, ws, "Datos");
-                    XLSX.writeFile(wb, "informe_tiquetes.xlsx");
-                },
-                error: function (xhr, status, error) {
-                    alert('Error al exportar los datos. Por favor, intente nuevamente.');
-                }
-            });
-        });
-    </script>
-    
     <script>
         function detalleTiquete(index, row) { 
             return `

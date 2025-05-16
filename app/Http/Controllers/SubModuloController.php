@@ -60,20 +60,12 @@ class SubModuloController extends Controller
             $modulo->ModFechReg = now();
             $modulo->ModHorReg = now();
             $modulo->save();
-    
-            return response()->json([
-                'title' => 'Submodulo creado exitosamente',
-                'redirect' => route('submodulos.index'),
-                'type' => 'success', 
-            ]); 
+
+            return sweetAlertJson("Submodulo creado exitosamente", "success",route('submodulos.index'));
 
         }catch(Exception $e){
             Log::error('Error al crear el submodulo: ' . $e->getMessage());
-            return response()->json([
-                'title' => 'Error al crear el submodulo',
-                'redirect' => route('submodulos.index'),
-                'type' => 'error', 
-            ]);
+            return sweetAlertJson("Error al crear el submodulo", "error",route('submodulos.index'));
         }
     }
 
@@ -107,20 +99,11 @@ class SubModuloController extends Controller
 
         try{
             SubModulo::findOrFail($id)->update($request->all());
-           
-            return response()->json([
-                'title' => 'SubModulo actualizado exitosamente',
-                'redirect' => route('submodulos.index'),
-                'type' => 'success', 
-            ]); 
+            return sweetAlertJson("SubModulo actualizado exitosamente", "success",route('submodulos.index'));
             
         }catch(Exception $e){
             Log::error('Error al actualizar el submodulo: ' . $e->getMessage());
-            return response()->json([
-                'title' => 'Error al actualizar el submodulo',
-                'redirect' => route('submodulos.index'),
-                'type' => 'error', 
-            ]);
+            return sweetAlertJson("Error al actualizar el submodulo", "error",route('submodulos.index'));
         }
     }
 

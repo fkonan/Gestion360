@@ -61,10 +61,10 @@ export function abrirArchivo(url) {
 
     let content = '';
     if (url.match(/\.(jpeg|jpg|png|gif)$/i)) {
-        // If the file is an image
+        //Si es una imagen
         content = `<img src="${url}" style="max-width: 80%; max-height: 80%; border: none;" alt="Archivo">`;
     } else {
-        // Default to iframe for other file types (e.g., PDF)
+        //Si es otro tipo de archivo valido
         content = `<iframe src="${url}" style="width: 80%; height: 90%; border: none;"></iframe>`;
     }
 
@@ -81,17 +81,41 @@ export function abrirArchivo(url) {
     document.body.appendChild(overlay);
 }
 
-/* export function quitarPermisoHeredado(select) {
-    const selectedOption = select.options[select.selectedIndex];
-    const optionClasses = selectedOption.getAttribute('class') || '';
-    console.log(optionClasses);
-    if (optionClasses.split(' ').includes('isInherited')) {
-        Swal.fire({
-            icon: "warning",
-            title: "No se puede quitar el permiso",
-            text: "No se puede quitar un permiso que viene de un rol, debe quitar el rol en su lugar.",
-            confirmButtonColor: "#3366CC",
-            confirmButtonText: "Aceptar"
-        });
-    }
-} */
+export function exportarExcel(button, urlDatos, nombreArchivo) {
+    const btnExportar = document.getElementById(button);
+    const textoOriginal = btnExportar.innerText.trim();
+
+    // Desactivar botón
+    btnExportar.disabled = true;
+    btnExportar.innerText = "";
+
+    // Crear spinner FA dinámicamente
+    const spinner = document.createElement("i");
+    spinner.className = "fas fa-spinner fa-spin me-2";
+    
+    // Insertar spinner y texto al botón
+    btnExportar.appendChild(spinner);
+    btnExportar.append("Descargando...");
+
+    $.ajax({
+        url: urlDatos,
+        method: 'GET',
+
+        success: function (data) {
+            let ws = XLSX.utils.json_to_sheet(data);
+            let wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Datos");
+            XLSX.writeFile(wb, nombreArchivo + ".xlsx");
+
+            // Restaurar estado del botón
+            btnExportar.disabled = false;
+            btnExportar.innerText = textoOriginal;
+        },
+        error: function () {
+            alert('Error al exportar los datos. Por favor, intente nuevamente.');
+            btnExportar.disabled = false;
+            btnExportar.innerText = textoOriginal;
+        }
+    });
+}
+

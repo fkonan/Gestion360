@@ -23,6 +23,7 @@
         "jquery": "^3.6.4",
         "jquery-validation": "^1.21.0",
         "select2": "^4.1.0-rc.0",
-        "sweetalert2": "^11.17.2"
+        "sweetalert2": "^11.17.2",
+        "xlsx": "^0.18.5"
     }
 }
