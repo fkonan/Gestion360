@@ -71,7 +71,6 @@
                     XLSX.writeFile(wb, "informe_tiquetes.xlsx");
                 },
                 error: function (xhr, status, error) {
-                    console.log(xhr, status, error)
                     alert('Error al exportar los datos. Por favor, intente nuevamente.');
                 }
             });

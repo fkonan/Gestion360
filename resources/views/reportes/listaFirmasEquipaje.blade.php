@@ -48,5 +48,26 @@
 @pushOnce('script')
     @vite(['resources/js/cargarModal.js'])
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+     let btnExportar = document.getElementById("exportar");
+        btnExportar.addEventListener("click", function () {         
+            let url = "{{ route('firmaEquipaje.cargarData') }}";
+
+            $.ajax({
+                url: url,
+                method: 'GET',
+            
+                success: function (data, status, xhr) {
+                    let ws = XLSX.utils.json_to_sheet(data);
+                    let wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, "Datos");
+                    XLSX.writeFile(wb, "informe_firma_equipaje.xlsx");
+                },
+                error: function (xhr, status, error) {
+                    alert('Error al exportar los datos. Por favor, intente nuevamente.');
+                }
+            });
+        });
+    </script>
 @endpushOnce
 
