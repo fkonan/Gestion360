@@ -5,6 +5,8 @@ use Exception;
 use Illuminate\Support\Facades\Log;
 use App\Models\FICS\Tripulantes;
 use App\Models\GESTIONPASAJES\FirmaEquipajePol;
+use App\Models\GESTIONPASAJES\ParametrosPasajes;
+use App\Services\EventoConductorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -86,7 +88,7 @@ class ConductorController extends Controller
             }
 
             if ($listaFirmas->isEmpty()) {
-                return sweetAlertJson("No se encontraron resultados, verfice los parametros.", "warning","#");
+                return sweetAlertJson("No se encontraron resultados para los parametros ingresados.", "warning","#");
             }else{
                 session(['firmasEquipaje' => $listaFirmas]);
                 $numeroRegistros = $listaFirmas->count();
@@ -107,5 +109,29 @@ class ConductorController extends Controller
     public function cargarDataFirmaEquipaje(){
         $firmasEquipaje = session('firmasEquipaje') ?? [] ;
         return $firmasEquipaje;
+    }
+
+    public function formDescansoConductores(){
+        $parametrosDescansoConductores = ParametrosPasajes::getDescansoConductores();
+        return view('conductores.descansoConductores',compact("parametrosDescansoConductores"));
+    }
+
+    public function registrarEvento(Request $request, EventoConductorService $eventoConductorService){
+        $validator = Validator::make($request->all(), [
+            'identificacion' => ['required', 'regex:/^\d{1,15}$/'],
+            'fecha' => ['required','date']
+        ], [
+            'identificacion.regex' => 'El campo identificación no tiene un formato valido',
+            'identificacion.required' => 'El campo identificación es obligatorio.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $respuesta = $eventoConductorService->registrarEventoDescanso($request);
+        return $respuesta;
     }
 }

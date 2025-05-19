@@ -121,10 +121,10 @@ class IncapacidadController extends Controller
                 return sweetAlertJson("Se ha RECHAZADO el radicado '. $id .' exitosamente", "success",route('gestion-incapacidades.incapacidades'));
             }
 
-            /* Si es aprobada se genera el bloqueo si es conductor*/
             $incapacidad->fill($request->all());
             $incapacidad->Observacion = 'RECIBIDO Y APROBADO';
             
+             /* Si es aprobada se genera el bloqueo si es conductor*/
             $bloqueo = $bloqueoService->bloqNovedadLogtransInc($incapacidad->IdPerOracle,$incapacidad);
 
             if ($bloqueo == "bloqueado") {

@@ -70,7 +70,7 @@ class TiquetesImpresosController extends Controller
             }
     
             session(['tiquetes' => $tiquetes]);
-            return sweetAlertJson("Se han encontrado ' . $numeroTiquetes . ' tiquetes para las fechas seleccionadas", "success", route('reportes.listaTiquetes'));
+            return sweetAlertJson("Se han encontrado " .$numeroTiquetes. " tiquetes para las fechas seleccionadas", "success", route('reportes.listaTiquetes'));
 
         }catch(Exception $e){
             Log::error('Error al filtrar los tiquetes: ' . $e->getMessage());

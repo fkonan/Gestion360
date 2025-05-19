@@ -8,14 +8,13 @@
         
         @csrf
         @method('PUT')
-        <div class="row g-5 p-4">       
-            <div class="col-md-4">
-                <label for="IncapacidadEstado" class="form-label">Radicado</label>
+        <div class="row g-3 p-4">       
+            <div class="col-md-2">
+                <label for="IdIncapacidad" class="form-label">Radicado</label>
                 <input type="text" class="form-control" id="IdIncapacidad" name="IdIncapacidad" value="{{ $incapacidad->IdIncapacidad}}" disabled>
                 <span class="error text-danger fw-bold" id="error-IdIncapacidad"></span>
             </div>
-
-            <div class="col-md-4">
+            <div class="col-md-6">
                 <label for="IncPerNom" class="form-label">Persona</label>
                 <input type="text" class="form-control" id="IncPerNom" name="IncPerNom" value="{{ $incapacidad->IncPerNom}}" disabled>
                 <span class="error text-danger fw-bold" id="error-IncPerNom"></span>

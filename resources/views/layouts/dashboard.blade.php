@@ -104,6 +104,8 @@
                 document.activeElement.blur();
             }
         });
+</script>
+
     </script>
 
     @stack('script')

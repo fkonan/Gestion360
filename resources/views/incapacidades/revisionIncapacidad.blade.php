@@ -26,7 +26,7 @@
                 <span class="error text-danger fw-bold" id="error-CausaId"></span>
             </div>
             <div class="col-md-4">
-                <label for="" class="form-label">Código Incapacidad</label>
+                <label for="Diagnostico" class="form-label">Código Incapacidad</label>
                 <select class="form-select select2" id="Diagnostico" name="Diagnostico" disabled>
                     @foreach ($codigosIncapacidad as $id => $codigo)
                         <option value="{{ $id }}" @selected($id == $incapacidad->Diagnostico)>

@@ -48,14 +48,16 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:administracion.ac
         Route::put("/{id}/permisos",[PermisosController::class,"update"])->name("permisos.update");
     });
     Route::prefix("reportes")->middleware(['permisos:administracion.reportes.acceder','submodulo.activo:12'])->group(function(){
-        //Impresion tiquetes
+        
         Route::get("/",[ModuloController::class,"getReportes"])->name("reportes.index");
+
+        //Impresion tiquetes
         Route::get("/impresionTiquetes",[TiquetesImpresosController::class,"fechasReporte"])->middleware('soloAJAX')->name("reportes.tiquetes");
         Route::post("/impresionTiquetes/filtrar",[TiquetesImpresosController::class,"filtrarTiquetes"])->name("reportes.filtrarTiquetes");
         Route::get("/impresionTiquetes/listaTiquetes",[TiquetesImpresosController::class,"listaTiquetes"])->name("reportes.listaTiquetes");
         Route::get("/impresionTiquetes/cargarData",[TiquetesImpresosController::class,"cargarDataTiquetes"])->middleware('soloAJAX')->name("reportes.cargarData");
 
-        //Actualizacion estado conductor
+        //Actualizacion estado conductor FICS
         Route::get("/actualizarEstadoModal",[ConductorController::class,"formActualizarEstado"])->middleware('soloAJAX')->name("conductor.estado");
         Route::put("/actualizarEstado",[ConductorController::class,"actualizarEstadoConductor"])->name("conductor.actualizarEstado");
 
@@ -64,6 +66,10 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:administracion.ac
         Route::post("/reporteEquipajeModal",[ConductorController::class,"filtrarFirmaEquipaje"])->name("filtrar.firmaEquipaje");
         Route::get("/reporteEquipajeModal/cargarData",[ConductorController::class,"cargarDataFirmaEquipaje"])->middleware('soloAJAX')->name("firmaEquipaje.cargarData");
         Route::get("/reporteEquipajeModal/listaFirmasEquipaje",[ConductorController::class,"listaFirmasEquipaje"])->name("lista.firmaEquipaje");
+
+        //Descanso conductores
+        Route::get("/formDescansoConductores",[ConductorController::class,"formDescansoConductores"])->name("conductor.descanso");
+        Route::post("/descansoConductores",[ConductorController::class,"registrarEvento"])->name("registrar.evento");
     });
 });
 
