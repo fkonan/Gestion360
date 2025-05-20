@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\GESTIONADMIN\Modulo;
 use App\Models\GESTIONADMIN\SubModulo;
 use Closure;
 use Illuminate\Http\Request;

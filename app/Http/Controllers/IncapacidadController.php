@@ -118,24 +118,24 @@ class IncapacidadController extends Controller
                 }
     
                 $incapacidad->update($request->all());
-                return sweetAlertJson("Se ha RECHAZADO el radicado '. $id .' exitosamente", "success",route('gestion-incapacidades.incapacidades'));
+                return sweetAlertJson("Se ha RECHAZADO el radicado ". $id ." exitosamente", "success",route('gestion-incapacidades.incapacidades'));
             }
 
             $incapacidad->fill($request->all());
             $incapacidad->Observacion = 'RECIBIDO Y APROBADO';
             
-             /* Si es aprobada se genera el bloqueo si es conductor*/
+            /* Si es aprobada se genera el bloqueo si es conductor*/
             $bloqueo = $bloqueoService->bloqNovedadLogtransInc($incapacidad->IdPerOracle,$incapacidad);
 
             if ($bloqueo == "bloqueado") {
                 $incapacidad->save();
-                return sweetAlertJson("El radicado '. $id .' ha sido APROBADO exitosamente y se ha generado el bloqueo en Logtrans", "success",route('gestion-incapacidades.incapacidades'));
+                return sweetAlertJson("El radicado ". $id ." ha sido APROBADO exitosamente y se ha generado el bloqueo en Logtrans", "success",route('gestion-incapacidades.incapacidades'));
             }else if($bloqueo === "error"){
                 $incapacidad->refresh();
                 return sweetAlertJson("Error al generar el bloqueo en Logtrans, por favor verifique la información", "error",route('gestion-incapacidades.incapacidades'));
             }else{ 
                 $incapacidad->save();
-                return sweetAlertJson("El radicado '. $id .' ha sido APROBADO exitosamente", "success",route('gestion-incapacidades.incapacidades'));
+                return sweetAlertJson("El radicado ". $id ." ha sido APROBADO exitosamente", "success",route('gestion-incapacidades.incapacidades'));
             }
         }catch(Exception $e){
             Log::error('Error al actualizar el estado de la incapacidad: ' . $e->getMessage());
