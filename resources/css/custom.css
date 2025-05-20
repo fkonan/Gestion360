@@ -248,6 +248,10 @@ body:not(.sidebar-collapse) .nav-item .nav-treeview .nav-link {
 }
 
 /* Boostrap card views */
+html body .bootstrap-table .fixed-table-container .table tbody tr .card-view .card-view-value {
+    text-align: center !important;
+}
+
 .bootstrap-table .card-view{
     padding: 0;
     margin: 0;

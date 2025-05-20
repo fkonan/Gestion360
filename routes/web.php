@@ -84,6 +84,7 @@ Route::prefix("configuracion")->middleware(['auth', 'permisos:configuracion.acce
             Route::get("/{id}",[ModuloController::class,"edit"])->middleware('soloAJAX')->name("edit");
             Route::post("/",[ModuloController::class,"store"])->name("store");
             Route::put("/{id}",[ModuloController::class,"update"])->name("update");
+            Route::post("/{id}/cambiar-estado", [ModuloController::class, "cambiarEstado"])->name("cambiarEstado");
         });
 
         Route::prefix("submodulos")->name("submodulos.")->group(function(){
@@ -92,6 +93,7 @@ Route::prefix("configuracion")->middleware(['auth', 'permisos:configuracion.acce
             Route::post("/",[SubModuloController::class,"store"])->name("store");
             Route::get("/{id}",[SubModuloController::class,"edit"])->middleware('soloAJAX')->name("edit");
             Route::put("/{id}",[SubModuloController::class,"update"])->name("update");
+            Route::post("/{id}/cambiar-estado", [SubModuloController::class, "cambiarEstado"])->name("cambiarEstado");
         });
 
         Route::prefix("roles")->name("roles.")->group(function(){

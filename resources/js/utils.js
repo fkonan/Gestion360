@@ -119,3 +119,27 @@ export function exportarExcel(button, urlDatos, nombreArchivo) {
     });
 }
 
+//actualiza el estado de un registro de una tabla con un switch asincronamente
+export function actualizarEstado(ruta){
+    $.ajax({
+        url: ruta,
+        type: 'POST',
+        data: {
+            _token: document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        success: function (response) {
+            Swal.fire({
+                icon: response.type,
+                title: response.title,
+                confirmButtonColor: "#3366CC",
+                confirmButtonText: "Aceptar"
+            }).then(() => {
+                window.location.href = response.redirect;
+            });
+        },
+        error: function() {
+            alert('Error al cambiar el estado');
+        }
+    });
+}
+

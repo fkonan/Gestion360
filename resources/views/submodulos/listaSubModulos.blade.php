@@ -59,9 +59,15 @@
                    <td data-label="Fecha Registro">{{ $modulo->ModFechReg}}</td>
                    <td data-label="Hora Registro">{{ $modulo->ModHorReg}}</td>
                    <td class="text-center" data-label="Estado">
-                        <span class="badge {{ $modulo->ModEstado == 'ACTIVO' ? 'bg-success' : 'bg-danger' }}">
-                            {{ $modulo->ModEstado}}
-                        </span>
+                        <div class="form-check form-switch d-flex justify-content-center">
+                            <input 
+                                onchange="actualizarEstado(`{{ route('submodulos.cambiarEstado', ['id' => $modulo->IdModulo]) }}`)"
+                                class="form-check-input estado-switch" 
+                                type="checkbox" 
+                                role="switch"
+                                data-id="{{ $modulo->IdModulo }}"
+                                {{ $modulo->ModEstado == 'ACTIVO' ? 'checked' : '' }}>
+                        </div>
                     </td>
                     @permite('configuracion.gestion_sistema.actualizar')
                         <td data-label="Opciones" class="text-center" style="width: 80px;">

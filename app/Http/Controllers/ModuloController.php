@@ -101,6 +101,18 @@ class ModuloController extends Controller
         }
     }
 
+    public function cambiarEstado($id){
+        try{
+            $modulo = Modulo::findOrFail($id);
+            $modulo->ModuloEstado = $modulo->ModuloEstado === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO';
+            $modulo->save();
+            return sweetAlertJson("Estado cambiado a {$modulo->ModuloEstado}", "success");
+        }catch(Exception $e){
+            Log::error('Error al actualizar el estado del modulo: ' . $e->getMessage());
+            return sweetAlertJson("Error al actualizar el estado del modulo", "error");
+        }
+    }
+
     //Desplega el menu con las opciones de cada modulo
     public function getGestionSistema(){
         return view('modulos.gestionSistema');

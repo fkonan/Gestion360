@@ -107,6 +107,19 @@ class SubModuloController extends Controller
         }
     }
 
+    public function cambiarEstado($id){
+        try{
+            $submodulo = SubModulo::findOrFail($id);
+            $submodulo->SubModuloEstado = $submodulo->SubModuloEstado === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO';
+            $submodulo->save();
+            return sweetAlertJson("Estado cambiado a {$submodulo->SubModuloEstado}", "success");
+        }catch(Exception $e){
+            Log::error('Error al actualizar el estado del submodulo: ' . $e->getMessage());
+            return sweetAlertJson("Error al actualizar el estado del submodulo", "error");
+        }
+    }
+
+
 }
 
 

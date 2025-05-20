@@ -52,23 +52,28 @@
             <tbody>
             @foreach($modulos as $modulo)
                 <tr>
-                   <td data-label="Nombre"class="text-nowrap">{{ mb_strtoupper($modulo->ModNom) }}</td>
-                   <td data-label="Descripcion"title="{{ ucfirst(mb_strtolower($modulo->ModDesc)) }}">{{ ucfirst(mb_strtolower($modulo->ModDesc)) }}</td>
-                   <td data-label="Fecha Registro">{{ $modulo->ModFechReg}}</td>
-                   <td data-label="Hora Registro">{{ $modulo->ModHorReg}}</td>
-                   <td class="text-center" data-label="Estado">
-                        <span class="badge {{ $modulo->ModEstado == 'ACTIVO' ? 'bg-success' : 'bg-danger' }}">
-                            {{ $modulo->ModEstado}}
-                        </span>
+                    <td data-label="Nombre"class="text-nowrap">{{ mb_strtoupper($modulo->ModNom) }}</td>
+                    <td data-label="Descripcion"title="{{ ucfirst(mb_strtolower($modulo->ModDesc)) }}">{{ ucfirst(mb_strtolower($modulo->ModDesc)) }}</td>
+                    <td data-label="Fecha Registro">{{ $modulo->ModFechReg}}</td>
+                    <td data-label="Hora Registro">{{ $modulo->ModHorReg}}</td>
+                    <td class="text-left" data-label="Estado">
+                        <div class="form-check form-switch d-flex justify-content-center">
+                            <input 
+                                onchange="actualizarEstado(`{{ route('modulos.cambiarEstado', ['id' => $modulo->IdModulo]) }}`)"
+                                class="form-check-input estado-switch" 
+                                type="checkbox" 
+                                role="switch"
+                                data-id="{{ $modulo->IdModulo }}"
+                                {{ $modulo->ModEstado == 'ACTIVO' ? 'checked' : '' }}>
+                        </div>
                     </td>
                     @permite('configuracion.gestion_sistema.actualizar')
                         <td data-label="Opciones" class="text-center" style="width: 80px;">
-                                <a class="p-0 px-2" onclick="cargarModal(`{{ route('modulos.edit', ['id' => $modulo->IdModulo]) }}`, 'Editar Modulo', '#formFormato')">
-                                    <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/new_editar.png" alt="Editar" style="width: 30px; height: 30px;">
-                                </a>
+                            <a class="p-0 px-2" onclick="cargarModal(`{{ route('modulos.edit', ['id' => $modulo->IdModulo]) }}`, 'Editar Modulo', '#formFormato')">
+                                <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/new_editar.png" alt="Editar" style="width: 30px; height: 30px;">
+                            </a>
                         </td>
                    @endpermite
-                  
                 </tr>
             @endforeach
             </tbody>
