@@ -13,4 +13,16 @@ class PerContratoPersona extends Model
     protected $keyType = 'string';
 
     public $timestamps = false;
+
+    public function nombreCompleto(){
+        $nombre = $this->pnombre;
+        if ($this->snombre){ 
+            $nombre .= ' ' . $this->snombre; 
+        }
+        $apellido = $this->papellido;
+        if ($this->sapellido){
+            $apellido .= ' ' . $this->sapellido;
+        }
+        return mb_strtoupper($nombre . ' ' . $apellido, 'UTF-8');
+    }
 }

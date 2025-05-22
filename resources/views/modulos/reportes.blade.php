@@ -12,7 +12,7 @@
 @section('content')
 <div class="container-fluid pt-4" style="min-height:150px">
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4">
-        <div class="col" onclick="cargarModal(`{{ route('reportes.tiquetes') }}`, 'Impresión de Tiquetes','#fechasReporteForm','modal-lg')">
+        <div class="col-lg-4 col-xl-3" onclick="cargarModal(`{{ route('reportes.tiquetes') }}`, 'Impresión de Tiquetes','#fechasReporteForm','modal-lg')">
             <x-card color="bg-dark" 
                     titulo="Impresión de Tiquetes" 
                     descripcion="Reportes" 
@@ -20,7 +20,7 @@
                     ruta="#"
             />
         </div>
-        <div class="col">
+        <div class="col-lg-4 col-xl-3">
             <x-card color="bg-dark" 
                     titulo="Esquema Tarifario Pasajes" 
                     descripcion="Reportes" 
@@ -28,7 +28,7 @@
                     ruta="#"
             />
         </div>
-        <div class="col">
+        <div class="col-lg-4 col-xl-3" onclick="cargarModal(`{{ route('conductor.ingresoSalidas') }}`, 'Reporte de entradas y salidas conductores','#ingSalConForm','modal-lg')">
             <x-card color="bg-dark" 
                     titulo="Ingresos y Salidas Conductores" 
                     descripcion="Reportes" 
@@ -36,7 +36,7 @@
                     ruta="#"
             />
         </div>
-        <div class="col" onclick="cargarModal(`{{ route('conductor.estado') }}`, 'Activacion o Suspensión Conductores','#estadoConductorForm','modal-md')">
+        <div class="col-lg-4 col-xl-3" onclick="cargarModal(`{{ route('conductor.estado') }}`, 'Activacion o Suspensión Conductores','#estadoConductorForm','modal-md')">
             <x-card color="bg-dark" 
                     titulo="Actualización Estado Conductores en FICS" 
                     descripcion="Reportes" 
@@ -44,7 +44,7 @@
                     ruta="#"
             />
         </div>
-        <div class="col" onclick="cargarModal(`{{ route('conductor.firmaEquipaje') }}`, 'Reporte para listar los conductores que han firmado y/o aceptado la política de equipaje','#firmaEquipajeForm','modal-md')">
+        <div class="col-lg-4 col-xl-3" onclick="cargarModal(`{{ route('conductor.firmaEquipaje') }}`, 'Reporte para listar los conductores que han firmado y/o aceptado la política de equipaje','#firmaEquipajeForm','modal-md')">
             <x-card color="bg-dark" 
                     titulo="Firma Conductores" 
                     descripcion="Reportes" 
@@ -52,7 +52,7 @@
                     ruta="#"
             />
         </div>
-        <div class="col" onclick="cargarModal(`{{ route('conductor.descanso') }}`, 'Aqui puede registrar eventos no reportados de descanso de conductores','#descansoConductorForm','modal-md')">
+        <div class="col-lg-4 col-xl-3" onclick="cargarModal(`{{ route('conductor.descanso') }}`, 'Aqui puede registrar eventos no reportados de descanso de conductores','#descansoConductorForm','modal-md')">
             <x-card color="bg-dark" 
                     titulo="Descanso Conductores" 
                     descripcion="Reportes" 
@@ -67,11 +67,12 @@
 @pushOnce('script')
     @vite(['resources/js/cargarModal.js'])
     <script>
+        //para el reporte descanso conductores
         function habilitarOpciones() {   
-            var opciones = document.getElementById('opciones');
-            var opcionEvento = document.getElementById('opcionEvento');
-            var opcionEventoLabel = document.getElementById('opcionEventoLabel');
-            var evento = document.getElementById('evento');
+            const opciones = document.getElementById('opciones');
+            const opcionEvento = document.getElementById('opcionEvento');
+            const opcionEventoLabel = document.getElementById('opcionEventoLabel');
+            const evento = document.getElementById('evento');
             
             opciones.style.display = 'block';
             opcionEvento.style.display = 'block';
@@ -81,6 +82,24 @@
             }else{
                 opcionEventoLabel.innerHTML = 'Fecha de reingreso de descanso';
             }   
+        }
+
+        //para el reporte ingreso y salidas conductores
+        function habilitarInputFiltro(checkElement){
+            const parametro = document.getElementById('parametro');
+            const parametroLabel = parametro ? parametro.querySelector('label') : null;
+
+            if (checkElement.id === 'filtroCedula') {
+                parametro.style.display = '';
+                parametroLabel.innerHTML = 'Ingrese la cédula';
+
+            } else if (checkElement.id === 'filtroCodigo') {
+                parametro.style.display = '';
+                parametroLabel.innerHTML = 'Ingrese el código';
+
+            } else if (checkElement.id === 'filtroTodos') {
+                parametro.style.display = 'none';
+            }
         }
     </script>
 @endpushOnce

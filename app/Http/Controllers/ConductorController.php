@@ -6,6 +6,9 @@ use Illuminate\Support\Facades\Log;
 use App\Models\FICS\Tripulantes;
 use App\Models\GESTIONPASAJES\FirmaEquipajePol;
 use App\Models\GESTIONPASAJES\ParametrosPasajes;
+use App\Models\LOGTRANS\PerConductoresEventos;
+use App\Models\LOGTRANS\PerContratoPersona;
+use App\Models\LOGTRANS\PerPersonas;
 use App\Services\EventoConductorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -133,5 +136,84 @@ class ConductorController extends Controller
 
         $respuesta = $eventoConductorService->registrarEventoDescanso($request);
         return $respuesta;
+    }
+
+    public function formIngSalConductores(){
+        return view("reportes.ingresoSalidaConductores");
+    }
+
+    public function listaIngSalConductores(){
+        return view("reportes.reporteIngresoSalida");
+    }
+
+
+    public function reporteIngSalConductores(Request $request){
+        $validator = Validator::make($request->all(), [
+            'fechaInicial' => 'date',
+            'fechaFinal' => [
+                'date',
+                'after_or_equal:fechaInicial',
+            ],
+        ], [
+            'fechaFinal.after_or_equal' => 'La fecha de fin debe ser posterior o igual a la fecha de inicio.',  
+            'fechaInicial.date' => 'La fecha de fin debe ser una fecha válida.',
+            'fechaFinal.date' => 'La fecha de fin debe ser una fecha válida.',  
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try{
+            //se busca el PE_ID del conductor si es una busqueda con parametro
+            if($request->parametroInput &&  $request->filtro !== 'todos'){
+                $conductorId = PerContratoPersona::where($request->filtro,$request->parametroInput)->value("pe_id_pe");
+                
+                if(!$conductorId){
+                    $conductorId = PerPersonas::where($request->filtro,$request->parametroInput)->value("id");
+                }
+
+                if(!$conductorId){
+                    return sweetAlertJson("Conductor no encontrado, revise el parametro ingresado","error");
+                }
+            }
+
+            $query = PerConductoresEventos::whereIn("evento", [49, 50])
+                ->where("estborrado",0)
+                ->whereBetween("fechaevento", [$request->fechaInicial, $request->fechaFinal])
+                ->with(["PerContratoPersona", "PerPersona"])
+                ->orderBy("fechaevento", "desc");
+
+            //filtro por PE_ID si se definio parametro
+            if (isset($conductorId) && $conductorId) {
+                $query->where("pe_id", $conductorId);
+            }
+
+            $dataReporte = $query->get()
+            ->map(function ($item) {
+                return [
+                    'identificacion' => $item->PerPersona?->identificacion,
+                    'codigo' => $item->PerContratoPersona?->codigo,
+                    'nombreCompleto' => $item->PerPersona?->nombreCompleto(),
+                    'evento' => $item->anotacion,
+                    'fechaEvento' => $item->fechaevento,
+                    /* 'agencia' => PerPersonas::where("id",$item->empcreacion)->value("nomsucursal") */
+                ];
+            });
+
+            $numeroRegistros = $dataReporte->count();
+            session(['ingSalConductores' => $dataReporte]);
+            return sweetAlertJson("Registros encontrados: ".$numeroRegistros ,"success",route("lista.ingresoSalidas"));
+        }catch(Exception $e){
+            Log::error('Error al obtener la lista de ingreso salida de conductores: ' . $e->getMessage());
+            return sweetAlertJson("Error al obtener los resultados","error");
+        }
+    }
+
+    public function cargarDataIngSalConductores(){
+        $data = session('ingSalConductores') ?? [] ;
+        return $data;
     }
 }

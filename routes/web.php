@@ -70,6 +70,12 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:administracion.ac
         //Descanso conductores
         Route::get("/formDescansoConductores",[ConductorController::class,"formDescansoConductores"])->name("conductor.descanso");
         Route::post("/descansoConductores",[ConductorController::class,"registrarEvento"])->name("registrar.evento");
+
+        //Ingreso y salidas conductores
+        Route::get("/formIngSalConductores",[ConductorController::class,"formIngSalConductores"])->name("conductor.ingresoSalidas");
+        Route::post("/formIngSalConductores/filtrar",[ConductorController::class,"reporteIngSalConductores"])->name("reporte.ingresoSalidas");
+        Route::get("/formIngSalConductores/listaDatos",[ConductorController::class,"listaIngSalConductores"])->name("lista.ingresoSalidas");
+        Route::get("/formIngSalConductores/cargarData",[ConductorController::class,"cargarDataIngSalConductores"])->name("ingresoSalida.cargarData");
     });
 });
 

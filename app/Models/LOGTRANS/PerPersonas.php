@@ -19,4 +19,16 @@ class PerPersonas extends Model
                 ->where('estborrado',0)
                 ->where('estado',1);
     }
+
+    public function nombreCompleto(){
+        $nombre = $this->pnombre;
+        if ($this->snombre){ 
+            $nombre .= ' ' . $this->snombre; 
+        }
+        $apellido = $this->papellido;
+        if ($this->sapellido){
+            $apellido .= ' ' . $this->sapellido;
+        }
+        return mb_strtoupper($nombre . ' ' . $apellido, 'UTF-8');
+    }
 }
