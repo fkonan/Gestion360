@@ -32,5 +32,6 @@
 
         <!-- Alertas de swal (components/alert)-->
         <x-alert /> 
+        <x-loader />
     </body>
 </html>

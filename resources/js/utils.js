@@ -23,19 +23,33 @@ export function actualizarReloj() {
     if(ampmLocal) ampmLocal.innerText = ampm;
 }
 
-//Evitar dobles click en forms
-export function deshabilitarSubmit(form) {
+
+function mostrarLoader() {
+    const loader = document.getElementById('fullscreen-loader');
+    if (loader) loader.style.display = 'flex';
+}
+
+function ocultarLoader() {
+    const loader = document.getElementById('fullscreen-loader');
+    if (loader) loader.style.display = 'none';
+}
+
+//Evitar dobles click en forms y da un feedback de carga 
+export function deshabilitarSubmit(form , validity=false) {
     const submitButton = form.querySelector('button[type="submit"], input[type="submit"]');
-    if (form.checkValidity()) {
-        // Desactivar botón
+    if (form.checkValidity() || validity) {
         submitButton.disabled = true;
+        mostrarLoader();
     }
 }
+
+//vuelve a habilitar en caso de un error 
 export function habilitarSubmit(form) {
     const submitButton = form.querySelector('button[type="submit"], input[type="submit"]');
     submitButton.disabled = false;
-
+    ocultarLoader();
 }
+
 
 //Esta funcion lleva control de cuando un elemento de menu debe ser active segun las rutas
 export function handleMenuActive() {

@@ -2,13 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\CorreoCredenciales;
 use App\Models\GESTIONADMIN\Persona;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
+use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
@@ -23,19 +28,16 @@ class UserController extends Controller
 
     public function create(){
         $personas = Persona::all();
-        return view("usuarios.crearUsuario", compact("personas"));
+        $roles = Role::all();
+        return view("usuarios.crearUsuario", compact("personas","roles"));
     }
 
     public function store(Request $request){
 
         $validator = Validator::make($request->all(), [
             'idPersona' => 'required',
-            'Password' => 'required',
-            'UsuarioEstado' => 'required',
-            'Verificado' => 'required',
         ],[
             'idPersona.required' => 'Debe seleccionar una persona',
-            'Password.required' => 'El campo contraseña es obligatorio',
         ]);
 
         if ($validator->fails()) {
@@ -44,20 +46,37 @@ class UserController extends Controller
             ], 422);
         }
 
+        DB::beginTransaction();
         try{
+            $contraseñaPlana = Str::random(12);
+
             $user = new User();
             $user->idPersona = $request->idPersona;
-            $user->Password =  bcrypt($request->Password);
-            $user->UsuarioEstado = $request->UsuarioEstado;
-            $user->Verificado = $request->Verificado;
+            $user->Password =  bcrypt($contraseñaPlana);
+            $user->UsuarioEstado = "ACTIVO";
+            $user->Verificado = "TRUE";
             $user->UsuFecReg = now();
             $user->UsuHorReg = now();
-            $user->UsuReg = "AppMovil";
+            $user->UsuReg = "Gestion";
             $user->save();
 
+            //se asigna el rol 
+            $user->syncRoles($request->rol);
+
+            $datos = [
+                'usuario' => $user->persona->datos->PerEmail,
+                'contraseña' => $contraseñaPlana,
+            ];
+
+            //Se envia a una cola de correso
+            //Mail::to($user->persona->datos->PerEmail)->queue(new CorreoCredenciales($datos));
+
+            Mail::to($user->persona->datos->PerEmail)->send(new CorreoCredenciales($datos));
+            DB::commit();
             return sweetAlertJson("Usuario creado exitosamente","success",route('usuarios.index'));
     
         }catch(Exception $e){
+            DB::rollBack();
             Log::error('Error al crear el usuario: ' . $e->getMessage());
             return sweetAlertJson("Error al crear el usuario","error",route('usuarios.index'));
         }

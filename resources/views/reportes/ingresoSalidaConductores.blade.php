@@ -2,10 +2,10 @@
 <div class="container-fluid p-2 bg-white">
     <form
         id="ingSalConForm" 
-        action="{{  route('reporte.ingresoSalidas')  }}" 
+        action="{{ route('reporte.ingresoSalidas') }}" 
         method="POST" 
         enctype="multipart/form-data"
-        onsubmit="deshabilitarSubmit(this)">
+        onsubmit="deshabilitarSubmit(this,true)">
         
         @csrf
         <div class="row mb-3 mx-1">
