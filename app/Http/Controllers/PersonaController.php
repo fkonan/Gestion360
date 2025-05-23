@@ -17,8 +17,47 @@ use Illuminate\Validation\Rule;
 class PersonaController extends Controller
 {
     public function index(){
-        $personas = Persona::with(['municipioNac','datos'])->get();
-        return view("personas.listaPersonas",compact("personas"));
+        return view("personas.listaPersonas");
+    }
+
+    public function cargarDatos(Request $request){
+        //paginacion
+        $limit = $request->get('limit', 25); // Número de registros por página
+        $offset = $request->get('offset', 0); // Desde qué registro empezar
+        $search = $request->get('search');
+        $sort = $request->get('sort', 'PerFechReg');
+        $order = $request->get('order', 'desc');
+
+        $personas = Persona::with(['municipioNac.departamento', 'datos']);
+
+        //buscador
+        if (!empty($search)) {
+            $personas->where(function ($q) use ($search) {
+                $q->where('PerFechReg', 'like', "%$search%")
+                    ->orWhere('PerNombres', 'like', "%$search%")
+                    ->orWhere('PerApellidos', 'like', "%$search%")
+                    ->orWhere('PerNumDoc', 'like', "%$search%")
+                    ->orWhereHas('municipioNac.departamento', function ($q2) use ($search) {
+                        $q2->where('DepNom', 'like', "%$search%");
+                    })
+                    ->orWhereHas('datos', function ($q3) use ($search) {
+                        $q3->where('PerTelefono', 'like', "%$search%");
+                    });
+            });
+        }
+
+         //datos de la pagina 
+        $total = $personas->count();
+        $rows = $personas->orderBy($sort, $order)
+            ->skip($offset)
+            ->take($limit)
+            ->get();
+
+        return response()->json([
+         'total' => $total,
+         'rows' => $rows
+      ]);
+
     }
 
     public function create(){

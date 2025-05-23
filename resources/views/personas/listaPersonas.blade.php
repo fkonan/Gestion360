@@ -24,56 +24,34 @@
         </a>
     @endpermite
    
-    <div class="row p-4">
+    <div id="no-more-tables" class="row p-4">
         <table
             id="personasDataTable"
             class="table table-sm table-striped"
-            data-page-size="10"
             data-toggle="table"
+            data-page-size="25"
             data-search="true"
+            data-locale="es-ES"
             data-pagination="true"
+            data-responsive="true"
             data-mobile-responsive="true"
             data-check-on-init="true"
-            data-pagination-parts="['pageSize', 'pageList', 'pageNext', 'pagePrev']"
-            onsubmit="">   
+            data-side-pagination="server"
+            data-url="{{ route('personas.cargarDatos') }}" >   
             <thead class="table-primary">
                 <tr>
-                    <th>Identificación</th>
-                    <th>Nombre Completo</th>
-                    <th>Correo</th>
-                    <th>Telefono</th>
-                    <th>Departamento</th>
-                    <th>Genero</th>    
-                    <th>Estado</th>
+                    <th data-field="PerNumDoc">Identificación</th>
+                    <th data-field="nombreCompleto" data-formatter="nombreCompletoFormatter">Nombre Completo</th>
+                    <th data-field="municipio_nac.departamento.DepNom" data-sortable="true">Departamento</th>
+                    <th data-field="datos.PerTelefono">Telefono</th>
+                    <th data-field="PerGenero" data-sortable="true">Genero</th>  
+                    <th data-field="PerFechReg" data-sortable="true">Fecha registro</th> 
+                    <th class="text-center" data-sortable="true" data-field="PerEstado" data-formatter="estadoFormatter">Estado</th>
                     @permite('administracion.personas.actualizar')
-                        <th>Opciones</th>
+                        <th class="text-center" data-field="acciones" data-formatter="accionesFormatter" >Opciones</th>
                     @endpermite
                 </tr>
             </thead>
-            <tbody>
-            @foreach($personas as $persona)
-                <tr>
-                    <td data-sortable="true">{{ $persona?->PerNumDoc }}</td>
-                    <td data-sortable="true">{{ $persona?->PerNombres }} {{ $persona?->PerApellidos }}</td>
-                    <td data-sortable="true">{{ $persona?->datos?->PerEmail ?? "-"}}</td>
-                    <td data-sortable="true">{{ $persona?->datos?->PerTelefono ?? "-"}}</td>
-                    <td data-sortable="true">{{ $persona?->municipioNac->departamento->DepNomMin }}</td>
-                    <td data-sortable="true">{{ $persona?->PerGenero }}</td>
-                    <td data-sortable="true" class="text-center" data-label="Estado">
-                        <span class="badge {{ $persona?->PerEstado == 'ACTIVO' ? 'bg-success' : 'bg-danger' }}">
-                        {{ $persona?->PerEstado }}
-                        </span>
-                    </td>
-                    @permite('administracion.personas.actualizar')
-                        <td class="text-center" style="width: 100px;">
-                            <a class="p-0 px-2" href="{{ route('personas.edit', ['id' => $persona->IdPersona]) }}">
-                                <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/new_editar.png" alt="Editar" style="width: 30px; height: 30px;">
-                            </a>
-                        </td>   
-                    @endpermite
-                </tr>
-            @endforeach
-            </tbody>
         </table>
     </div> 
 </div>
@@ -81,5 +59,37 @@
 
 @pushOnce('script')
     @vite(['resources/js/cargarModal.js'])
+    <script>
+    function estadoFormatter(value, row) {
+        return `
+        <span class="badge ${row.PerEstado === 'ACTIVO' ? 'bg-success' : 'bg-danger'}">
+            ${row.PerEstado}
+        </span>
+        `;
+    }
+
+    /* function departamentoFormatter(value, row, index) {
+        return row.municipio_nac.departamento.DepNom || 'No definido';
+    } */
+
+    function accionesFormatter(index, row) {
+        let ruta = "{{ route('personas.edit', ['id' => ':id']) }}"
+        let rutaPersona = ruta.replace(':id',row.IdPersona);
+
+        return `
+            <div class="col-md-12">
+                @permite('administracion.personas.actualizar')
+                     <a class="text-decoration-none" href="${rutaPersona}">
+                        <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/new_editar.png" alt="Editar" style="width: 30px; height: 30px;">
+                    </a>
+                @endpermite
+            </div>
+        `;
+    }
+
+    function nombreCompletoFormatter(value, row) {
+        return row.PerNombres + ' ' + row.PerApellidos;
+    }
+    </script>
 @endpushOnce
 

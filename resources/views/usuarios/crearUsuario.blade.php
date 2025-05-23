@@ -11,7 +11,7 @@
         <div class="p-4">
             <div class="row mb-4">
                 <div class="col-md-6 mb-3">
-                    <label for="idPersona" class="form-label">Nombre Persona</label>
+                    <label for="idPersona" class="form-label">Persona *</label>
                     <select class="form-select select2" id="idPersona" name="idPersona" required>
                         <option value="" disabled selected>Seleccione una persona</option>
                         @foreach($personas as $persona)
@@ -22,7 +22,7 @@
                 </div>
 
                   <div class="col-md-6 mb-3">
-                    <label for="rol" class="form-label">Rol</label>
+                    <label for="rol" class="form-label">Asignar Rol *</label>
                     <select class="form-select select2" id="rol" name="rol" required>
                         <option value="" disabled selected>Seleccione un rol</option>
                         @foreach($roles as $rol)

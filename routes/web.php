@@ -34,6 +34,7 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:administracion.ac
         Route::post("/",[PersonaController::class,"store"])->name("personas.store");
         Route::get("/{id}/edit",[PersonaController::class,"edit"])->name("personas.edit");
         Route::put("/{id}",[PersonaController::class,"update"])->name("personas.update");
+        Route::get("cargarDatos",[PersonaController::class,"cargarDatos"])->middleware('soloAJAX')->name("personas.cargarDatos");
     });
     Route::prefix("usuarios")->middleware(['permisos:administracion.usuarios.acceder','submodulo.activo:10'])->group(function(){
         Route::get("/",[UserController::class,"index"])->name("usuarios.index");

@@ -29,7 +29,7 @@
         <table
             id="modulosDataTable"
             class="table table-sm table-striped"
-            data-page-size="10"
+            data-page-size="25"
             data-toggle="table"
             data-locale="es-ES"
             data-search="true"

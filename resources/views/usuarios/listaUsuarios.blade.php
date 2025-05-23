@@ -29,7 +29,7 @@
             id="usuariosDataTable"
             class="table table-sm table-striped"
             data-toggle="table"
-            data-page-size="10"
+            data-page-size="25"
             data-search="true"
             data-locale="es-ES"
             data-pagination="true"
@@ -37,8 +37,7 @@
             data-mobile-responsive="true"
             data-check-on-init="true"
             data-side-pagination="server"
-            data-url="{{ route('usuarios.cargarDatos') }}" 
-            data-pagination-parts="['pageSize', 'pageList', 'pageNext', 'pagePrev']">   
+            data-url="{{ route('usuarios.cargarDatos') }}">   
             <thead class="table-primary">
                 <tr>
                     <th data-field="persona.PerNumDoc" data-visible="true" data-priority="1">Identificación</th>
