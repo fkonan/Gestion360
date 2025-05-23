@@ -6,10 +6,12 @@
     width: 100vw; height: 100vh;
     background-color: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(2px);
+    flex-direction: column;
     align-items: center;
-    justify-content: center;">
-    <div class="spinner-border text-light" role="status" style="width: 4rem; height: 4rem;">
-        <span class="visually-hidden">Cargando...</span>
-    </div>
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+">
+    <div class="spinner-border text-light" role="status" style="width: 4rem; height: 4rem;"></div>
+    <span class="mt-3">Cargando...</span>
 </div>
-

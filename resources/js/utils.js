@@ -50,7 +50,6 @@ export function habilitarSubmit(form) {
     ocultarLoader();
 }
 
-
 //Esta funcion lleva control de cuando un elemento de menu debe ser active segun las rutas
 export function handleMenuActive() {
     var url = window.location.href.split('#')[0];
@@ -66,7 +65,7 @@ export function handleMenuActive() {
     }).parentsUntil(".nav-sidebar > .nav-treeview").addClass('menu-open').prev('a').addClass('active');
 }
 
-
+//Abrir archivo adjunto
 export function abrirArchivo(url) {
     const overlay = document.createElement('div');
     overlay.style = `

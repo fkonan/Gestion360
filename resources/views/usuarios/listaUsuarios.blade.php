@@ -36,6 +36,7 @@
             data-responsive="true"
             data-mobile-responsive="true"
             data-check-on-init="true"
+            data-side-pagination="server"
             data-url="{{ route('usuarios.cargarDatos') }}" 
             data-pagination-parts="['pageSize', 'pageList', 'pageNext', 'pagePrev']">   
             <thead class="table-primary">

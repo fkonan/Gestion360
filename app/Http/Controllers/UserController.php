@@ -21,9 +21,40 @@ class UserController extends Controller
         return view("usuarios.listaUsuarios");
     }
 
-    public function cargarDatos(){
-        $usuarios = User::with('persona')->get();
-        return $usuarios;
+    public function cargarDatos(Request $request){
+        //paginacion
+        $limit = $request->get('limit', 25); // Número de registros por página
+        $offset = $request->get('offset', 0); // Desde qué registro empezar
+        $search = $request->get('search');
+        $sort = $request->get('sort', 'UsuFecReg');
+        $order = $request->get('order', 'desc');
+
+        $usuarios = User::with('persona');
+
+        //buscador
+        if (!empty($search)) {
+            $usuarios->where(function ($q) use ($search) {
+                $q->where('UsuFecReg', 'like', "%$search%")
+                ->orWhere('UsuHorReg', 'like', "%$search%")
+                ->orWhereHas('persona', function ($q2) use ($search) {
+                    $q2->where('PerApellidos', 'like', "%$search%")
+                        ->orWhere('PerNombres', 'like', "%$search%")
+                        ->orWhere('PerNumDoc', 'like', "%$search%");
+                });
+            });
+        }
+
+        //datos de la pagina 
+        $total = $usuarios->count();
+        $rows = $usuarios->orderBy($sort, $order)
+            ->skip($offset)
+            ->take($limit)
+            ->get();
+
+        return response()->json([
+         'total' => $total,
+         'rows' => $rows
+      ]);
     }
 
     public function create(){
