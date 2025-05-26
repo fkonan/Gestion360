@@ -29,9 +29,7 @@ class SubModuloController extends Controller
         $validator = Validator::make($request->all(), [
             'ModNom' =>'unique:_submodulos,SubModNom|required|string|max:50',
             'ModDesc' =>'nullable|string|max:300',
-            'ModEstado' =>'required',
             'ModRuta' =>'nullable|string|max:50',
-            'ModPermiso' =>'nullable|string|max:50',
             'ModIcono' =>'nullable|string|max:20',
             'Mod_Padre_Id' =>'integer'
         ],[
@@ -53,10 +51,10 @@ class SubModuloController extends Controller
             $modulo->ModuloId = $request->Mod_Padre_Id;
             $modulo->ModNom = $request->ModNom;
             $modulo->ModDesc = $request->ModDesc;
-            $modulo->ModEstado = $request->ModEstado;
+            $modulo->ModEstado = "ACTIVO";
             $modulo->ModRuta = $request->ModRuta;
             $modulo->ModIcono = $request->ModIcono;
-            $modulo->ModPermiso = $request->ModPermiso;
+            $modulo->ModPermiso = null;
             $modulo->ModFechReg = now();
             $modulo->ModHorReg = now();
             $modulo->save();

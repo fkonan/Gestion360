@@ -46,8 +46,8 @@
                     <th data-field="datos.PerTelefono">Telefono</th>
                     <th data-field="PerGenero" data-sortable="true">Genero</th>  
                     <th data-field="PerFechReg" data-sortable="true">Fecha registro</th> 
-                    <th class="text-center" data-sortable="true" data-field="PerEstado" data-formatter="estadoFormatter">Estado</th>
                     @permite('administracion.personas.actualizar')
+                        <th class="text-center" data-sortable="true" data-field="PerEstado" data-formatter="estadoFormatter">Estado</th>
                         <th class="text-center" data-field="acciones" data-formatter="accionesFormatter" >Opciones</th>
                     @endpermite
                 </tr>
@@ -68,9 +68,21 @@
         `;
     }
 
-    /* function departamentoFormatter(value, row, index) {
-        return row.municipio_nac.departamento.DepNom || 'No definido';
-    } */
+    function estadoFormatter(value, row) {
+        const checked = row.PerEstado === 'ACTIVO' ? 'checked' : '';
+        const url = "{{ route('personas.cambiarEstado', ['id' => ':id']) }}".replace(':id', row.IdPersona);
+        return `
+            <div class="form-check form-switch d-flex justify-content-center">
+                <input 
+                    onchange="actualizarEstado('${url}')"
+                    class="form-check-input estado-switch" 
+                    type="checkbox" 
+                    role="switch"
+                    data-id="${row.IdPersona}"
+                    ${checked}>
+            </div>
+        `;
+    }
 
     function accionesFormatter(index, row) {
         let ruta = "{{ route('personas.edit', ['id' => ':id']) }}"

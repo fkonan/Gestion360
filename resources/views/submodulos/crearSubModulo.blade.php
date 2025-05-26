@@ -8,12 +8,12 @@
 
         @csrf
         <div class="row g-3 p-4">       
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label for="ModNom" class="form-label">Nombre</label>
                 <input type="text" class="form-control" id="ModNom" name="ModNom" maxlength="100" required>
                 <span class="error text-danger fw-bold" id="error-ModNom"></span>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label for="Mod_Padre_Id" class="form-label">Modulo Padre</label>
                 <select class="form-select select2" id="Mod_Padre_Id" name="Mod_Padre_Id">
                     @foreach($modulos as $modulo)
@@ -24,38 +24,17 @@
                 </select>
                 <span class="error text-danger fw-bold" id="error-Mod_Padre_Id"></span>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label for="ModIcono" class="form-label">Icono</label>
                 <input type="text" class="form-control" id="ModIcono" name="ModIcono">
                 <span class="error text-danger fw-bold" id="error-ModIcono"></span>
             </div>
-        </div> 
-
-        <div class="row px-4 pb-4">   
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label for="ModRuta" class="form-label">Ruta</label>
                 <input type="text" class="form-control" id="ModRuta" name="ModRuta">
                 <span class="error text-danger fw-bold" id="error-ModRuta"></span>
             </div>
-            <div class="col-md-4">
-                <label for="ModPermiso" class="form-label">Permiso</label>
-                <select class="form-select select2" id="ModPermiso" name="ModPermiso">
-                <option value="">Sin permiso</option>
-                    @foreach ($permisos as $permiso)
-                        <option value="{{ $permiso->name }}">{{ $permiso->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-md-4">
-                <label for="ModEstado" class="form-label">Estado</label>
-                <select class="form-select" id="ModEstado" name="ModEstado" required>
-                    <option value="ACTIVO">Activo</option>
-                    <option value="INACTIVO">Inactivo</option>
-                    <option value="ELIMINADO">Eliminado</option>
-                </select>
-                <span class="error text-danger fw-bold" id="error-ModEstado"></span>
-            </div>  
-        </div>
+        </div> 
 
         <div class="row gx-3 px-4">
             <div class="mb-3">

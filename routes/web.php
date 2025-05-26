@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ConductorController;
+use App\Http\Controllers\GestionWebController;
 use App\Http\Controllers\IncapacidadController;
 use App\Http\Controllers\ModuloController;
 use App\Http\Controllers\PermisosController;
@@ -35,6 +36,7 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:administracion.ac
         Route::get("/{id}/edit",[PersonaController::class,"edit"])->name("personas.edit");
         Route::put("/{id}",[PersonaController::class,"update"])->name("personas.update");
         Route::get("cargarDatos",[PersonaController::class,"cargarDatos"])->middleware('soloAJAX')->name("personas.cargarDatos");
+        Route::post("/{id}/cambiar-estado", [PersonaController::class, "cambiarEstado"])->middleware('soloAJAX')->name("personas.cambiarEstado");
     });
     Route::prefix("usuarios")->middleware(['permisos:administracion.usuarios.acceder','submodulo.activo:10'])->group(function(){
         Route::get("/",[UserController::class,"index"])->name("usuarios.index");
@@ -47,6 +49,7 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:administracion.ac
         Route::put("/{id}/roles",[RolController::class,"updateRolUsuario"])->name("roles.update");
         Route::get("/{id}/permisos",[PermisosController::class,"edit"])->middleware('soloAJAX')->name("permisos.edit");
         Route::put("/{id}/permisos",[PermisosController::class,"update"])->name("permisos.update");
+        Route::post("/{id}/cambiar-estado", [UserController::class, "cambiarEstado"])->middleware('soloAJAX')->name("usuarios.cambiarEstado");
     });
     Route::prefix("reportes")->middleware(['permisos:administracion.reportes.acceder','submodulo.activo:12'])->group(function(){
         
@@ -91,7 +94,7 @@ Route::prefix("configuracion")->middleware(['auth', 'permisos:configuracion.acce
             Route::get("/{id}",[ModuloController::class,"edit"])->middleware('soloAJAX')->name("edit");
             Route::post("/",[ModuloController::class,"store"])->name("store");
             Route::put("/{id}",[ModuloController::class,"update"])->name("update");
-            Route::post("/{id}/cambiar-estado", [ModuloController::class, "cambiarEstado"])->name("cambiarEstado");
+            Route::post("/{id}/cambiar-estado", [ModuloController::class, "cambiarEstado"])->middleware('soloAJAX')->name("cambiarEstado");
         });
 
         Route::prefix("submodulos")->name("submodulos.")->group(function(){
@@ -100,7 +103,7 @@ Route::prefix("configuracion")->middleware(['auth', 'permisos:configuracion.acce
             Route::post("/",[SubModuloController::class,"store"])->name("store");
             Route::get("/{id}",[SubModuloController::class,"edit"])->middleware('soloAJAX')->name("edit");
             Route::put("/{id}",[SubModuloController::class,"update"])->name("update");
-            Route::post("/{id}/cambiar-estado", [SubModuloController::class, "cambiarEstado"])->name("cambiarEstado");
+            Route::post("/{id}/cambiar-estado", [SubModuloController::class, "cambiarEstado"])->middleware('soloAJAX')->name("cambiarEstado");
         });
 
         Route::prefix("roles")->name("roles.")->group(function(){
@@ -132,6 +135,13 @@ Route::prefix("gestionRRHH")->middleware(['auth', 'permisos:gestion_de_rr_hh.acc
         Route::get("/seguimiento/{id}/nuevo-seguimiento",[SeguimientoIncapacidadController::class,"nuevoSeguimiento"])->name("seguimiento.detalle.crear");
         Route::post("/seguimiento/{id}/nuevo-seguimiento",[SeguimientoIncapacidadController::class,"guardarSeguimiento"])->name("seguimiento.detalle.store");
     });
+});
+
+//Rutas Modulo Gestion Web
+Route::prefix("gestionWeb")->middleware(['auth','permisos:gestion_web.acceder','modulo.activo:14'])->group(function(){ 
+
+    //Ruta para el chatbot
+    Route::get("/chatbot",[GestionWebController::class,"loginChatBot"])->name("chatbot.index");
 });
 
 require __DIR__.'/auth.php';

@@ -19,7 +19,7 @@
                 src="https://autogestion.copetran.com.co/cdn/img/logos/logo-blango.png" 
                 alt="Logo" 
                 style="height: 45px; object-fit: contain; padding-left: 50px;" 
-            />
+            />   
         </section>
 
         <section>

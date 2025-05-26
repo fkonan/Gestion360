@@ -15,7 +15,7 @@
         <div class="col">
             <x-card color="bg-success" 
                     titulo="Terminales" 
-                    descripcion="Administrar" 
+                    descripcion="Administración" 
                     icono="fa-map-marked-alt" 
                     ruta="#"
             />
@@ -23,7 +23,7 @@
         <div class="col">
             <x-card color="bg-primary" 
                     titulo="Modulos" 
-                    descripcion="Administrar" 
+                    descripcion="Administración" 
                     icono="fa-cube" 
                     ruta="{{ route('modulos.index') }}"
             />
@@ -31,7 +31,7 @@
         <div class="col">
             <x-card color="bg-danger" 
                     titulo="Sub Modulos" 
-                    descripcion="Administrar" 
+                    descripcion="Administración" 
                     icono="fa-stream" 
                     ruta="{{ route('submodulos.index') }}"
             />
@@ -39,7 +39,7 @@
         <div class="col">
             <x-card color="bg-warning" 
                     titulo="Roles" 
-                    descripcion="Administrar" 
+                    descripcion="Administración" 
                     icono="fa-user-tag" 
                     ruta="{{ route('roles.index') }}"
             />

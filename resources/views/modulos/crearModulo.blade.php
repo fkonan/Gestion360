@@ -25,29 +25,6 @@
             </div>
         </div> 
 
-        <div class="row px-4 pb-4">   
-            <div class="col-md-4">
-                <label for="ModPermiso" class="form-label">Permiso</label>
-                <select class="form-select select2" id="ModPermiso" name="ModPermiso">
-                <option value="">Sin permiso</option>
-                    @foreach ($permisos as $permiso)
-                        <option value="{{ $permiso->name }}">{{ $permiso->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div class="col-md-4">
-                <label for="ModuloEstado" class="form-label">Estado</label>
-                <select class="form-select" id="ModuloEstado" name="ModuloEstado" required>
-                    <option value="ACTIVO">Activo</option>
-                    <option value="INACTIVO">Inactivo</option>
-                    <option value="ELIMINADO">Eliminado</option>
-                </select>
-                <span class="error text-danger fw-bold" id="error-ModuloEstado"></span>
-            </div>  
-            
-        </div>
-
         <div class="row gx-3 px-4">
             <div class="mb-3">
                 <label for="ModDes" class="form-label">Descripción</label>

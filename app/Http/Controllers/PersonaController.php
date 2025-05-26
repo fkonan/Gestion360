@@ -20,6 +20,18 @@ class PersonaController extends Controller
         return view("personas.listaPersonas");
     }
 
+    public function cambiarEstado($id){
+        try{
+            $persona = Persona::findOrFail($id);
+            $persona->PerEstado = $persona->PerEstado === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO';
+            $persona->save();
+            return sweetAlertJson("Estado cambiado a {$persona->PerEstado}", "success");
+        }catch(Exception $e){
+            Log::error('Error al actualizar el estado de la persona: ' . $e->getMessage());
+            return sweetAlertJson("Error al actualizar el estado de la persona", "error");
+        }
+    } 
+
     public function cargarDatos(Request $request){
         //paginacion
         $limit = $request->get('limit', 25); // Número de registros por página

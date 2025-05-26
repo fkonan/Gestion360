@@ -4,6 +4,7 @@
 
 @section('content')
 <div class="container text-center mt-5">
+    <br><br><br><br>
     <h1>404 - Página no encontrada</h1>
     <p>La URL solicitada no existe. Por favor, verifica la dirección e intenta de nuevo.</p>
     <a onclick="window.history.back()" class="btn btn-primary">Volver</a>

@@ -21,6 +21,18 @@ class UserController extends Controller
         return view("usuarios.listaUsuarios");
     }
 
+    public function cambiarEstado($id){
+        try{
+            $usuario = User::findOrFail($id);
+            $usuario->UsuarioEstado = $usuario->UsuarioEstado === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO';
+            $usuario->save();
+            return sweetAlertJson("Estado cambiado a {$usuario->UsuarioEstado}", "success");
+        }catch(Exception $e){
+            Log::error('Error al actualizar el estado del usuario: ' . $e->getMessage());
+            return sweetAlertJson("Error al actualizar el estado del usuario", "error");
+        }
+    }
+
     public function cargarDatos(Request $request){
         //paginacion
         $limit = $request->get('limit', 25); // Número de registros por página

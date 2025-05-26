@@ -44,7 +44,9 @@
                     <th data-field="nombreCompleto" data-formatter="nombreCompletoFormatter" data-priority="1">Nombre Completo</th>
                     <th data-field="UsuFecReg" data-sortable="true" data-priority="3">Fecha registro</th>
                     <th data-field="UsuHorReg" data-sortable="true" data-priority="4">Hora registro</th>
-                    <th class="text-center" data-field="UsuarioEstado" data-formatter="estadoFormatter" data-sortable="true" data-priority="2">Estado</th>
+                    @permite('administracion.usuarios.actualizar')
+                        <th class="text-center" data-field="UsuarioEstado" data-formatter="estadoFormatter" data-sortable="true" data-priority="2">Estado</th>
+                    @endpermite
                     @if(
                         auth()->user()->can('administracion.usuarios.asignar_permisos') ||
                         auth()->user()->can('administracion.usuarios.asignar_roles') ||
@@ -64,24 +66,26 @@
 @pushOnce('script')
     @vite(['resources/js/cargarModal.js'])
     <script>
-     var rutas = {
-        permisos: "{{ route('permisos.edit', ['id' => ':id']) }}",
-        roles: "{{ route('roles.edit', ['id' => ':id']) }}",
-        usuarios: "{{ route('usuarios.edit', ['id' => ':id']) }}"
-    };
-
     function estadoFormatter(value, row) {
+        const checked = row.UsuarioEstado === 'ACTIVO' ? 'checked' : '';
+        const url = "{{ route('usuarios.cambiarEstado', ['id' => ':id']) }}".replace(':id', row.IdUsuario);
         return `
-        <span class="badge ${row.UsuarioEstado === 'ACTIVO' ? 'bg-success' : 'bg-danger'}">
-            ${row.UsuarioEstado}
-        </span>
+            <div class="form-check form-switch d-flex justify-content-center">
+                <input 
+                    onchange="actualizarEstado('${url}')"
+                    class="form-check-input estado-switch" 
+                    type="checkbox" 
+                    role="switch"
+                    data-id="${row.IdUsuario}"
+                    ${checked}>
+            </div>
         `;
     }
 
     function accionesFormatter(index, row) {
-        let urlPermisos = rutas.permisos.replace(':id', row.IdUsuario);
-        let urlRoles = rutas.roles.replace(':id', row.IdUsuario);
-        let urlUsuarios = rutas.usuarios.replace(':id', row.IdUsuario);
+        let urlPermisos = "{{ route('permisos.edit', ['id' => ':id']) }}".replace(':id', row.IdUsuario);
+        let urlRoles = "{{ route('roles.edit', ['id' => ':id']) }}".replace(':id', row.IdUsuario);
+        let urlUsuarios = "{{ route('usuarios.edit', ['id' => ':id']) }}".replace(':id', row.IdUsuario);
 
         return `
             <div class="col-md-12 text-center">

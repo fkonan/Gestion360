@@ -27,9 +27,7 @@ class ModuloController extends Controller
         $validator = Validator::make($request->all(), [
             'ModNom' =>'unique:_modulos,ModNom|required|string|max:50',
             'ModDes' =>'nullable|string|max:300',
-            'ModuloEstado' =>'required',
             'ModRuta' =>'nullable|string|max:50',
-            'ModPermiso' =>'nullable|string|max:50',
             'ModIcono' =>'nullable|string|max:20',
         ],[
             'ModNom.unique' => 'El nombre del modulo ya existe.',
@@ -49,10 +47,10 @@ class ModuloController extends Controller
             $modulo = new Modulo();
             $modulo->ModNom = $request->ModNom;
             $modulo->ModDesc = $request->ModDes;
-            $modulo->ModEstado = $request->ModuloEstado;
+            $modulo->ModEstado = "ACTIVO";
             $modulo->ModRuta = $request->ModRuta;
             $modulo->ModIcono = $request->ModIcono;
-            $modulo->ModPermiso = $request->ModPermiso;
+            $modulo->ModPermiso = null;
             $modulo->ModFechReg = now();
             $modulo->ModHorReg = now();
             $modulo->save();
