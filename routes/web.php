@@ -1,11 +1,13 @@
 <?php
 
 use App\Http\Controllers\ConductorController;
+use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\GestionWebController;
 use App\Http\Controllers\IncapacidadController;
 use App\Http\Controllers\ModuloController;
 use App\Http\Controllers\PermisosController;
 use App\Http\Controllers\PersonaController;
+use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\RolController;
 use App\Http\Controllers\SeguimientoIncapacidadController;
 use App\Http\Controllers\SubModuloController;
@@ -143,6 +145,14 @@ Route::prefix("gestionWeb")->middleware(['auth','permisos:gestion_web.acceder','
     //Ruta para el chatbot
     Route::get("/chatbot",[GestionWebController::class,"loginChatBot"])->name("chatbot.index");
 });
+
+
+//Rutas olvido/restablecimiento de contraseña
+Route::get('/forgot-password', [ForgotPasswordController::class, 'showForm'])->name('password.request');
+Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink'])->name('password.email');
+
+Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
+Route::post('/reset-password', [ResetPasswordController::class, 'resetPassword'])->name('password.update');
 
 require __DIR__.'/auth.php';
 

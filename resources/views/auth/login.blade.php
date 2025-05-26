@@ -38,6 +38,10 @@
                         @enderror
                     </div>
 
+                    <div class="mb-3 text-end">
+                        <a href="{{ route('password.request') }}">¿Olvidaste tu contraseña?</a>
+                    </div>
+
                     <div class="row"></div>
                         <div class="col-4">
                         <button type="submit" name="Boton" value="Boton" id="Boton" class="btn btn-warning btn-block">Ingresar</button>

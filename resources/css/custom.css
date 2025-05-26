@@ -276,7 +276,7 @@ html body .bootstrap-table .fixed-table-container .table tbody tr .card-view .ca
 }
 
 /* Estilos card componente */
-.card:hover{
+.cardComponent:hover{
     transform: translateY(-4px);
     transition: all 0.1s ease-in-out;
 }

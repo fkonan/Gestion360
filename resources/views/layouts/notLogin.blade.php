@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-duallistbox/dist/bootstrap-duallistbox.min.css">
 
      <!--Vite -->
-     @vite(['resources/css/app.css', 'resources/js/app.js','resources/css/custom.css'])
+    @vite(['resources/css/app.css', 'resources/js/app.js','resources/css/custom.css','resources/css/mobile.css'])
 </head>
 
 <body class="sidebar-mini layout-fixed">
