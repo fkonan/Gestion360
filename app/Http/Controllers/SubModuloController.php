@@ -49,7 +49,7 @@ class SubModuloController extends Controller
         try{
             $modulo = new SubModulo();
             $modulo->ModuloId = $request->Mod_Padre_Id;
-            $modulo->ModNom = $request->ModNom;
+            $modulo->ModNom = strtoupper($request->ModNom);
             $modulo->ModDesc = $request->ModDesc;
             $modulo->ModEstado = "ACTIVO";
             $modulo->ModRuta = $request->ModRuta;

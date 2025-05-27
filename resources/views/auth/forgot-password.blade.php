@@ -11,6 +11,7 @@
                 <h4>Sistema: <b>Gestión</b></h4>
                 <div class="card p-1">
                 <div class="card-body login-card-body p-4">
+                    <h4 class="pb-2"><b>Recuperar contraseña</b></h4>
                     <p class="mb-3 text-center">
                         Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.
                     </p>
@@ -23,7 +24,9 @@
                         @error('email')          
                             <small class="text-danger fw-bold">{{ $message }}</small>
                         @enderror
+
                         <button class="btn btn-warning btn-block mt-3" type="submit" name="Boton" value="Boton" id="Boton">Enviar enlace</button>
+                        <a href="{{ route('login') }}" class="btn btn-secondary btn-block mt-3">Atras</a>
                     </form>
                 </div>
             </div>

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ConductorController;
 use App\Http\Controllers\ForgotPasswordController;
+use App\Http\Controllers\GestionPasajesController;
 use App\Http\Controllers\GestionWebController;
 use App\Http\Controllers\IncapacidadController;
 use App\Http\Controllers\ModuloController;
@@ -143,7 +144,19 @@ Route::prefix("gestionRRHH")->middleware(['auth', 'permisos:gestion_de_rr_hh.acc
 Route::prefix("gestionWeb")->middleware(['auth','permisos:gestion_web.acceder','modulo.activo:14'])->group(function(){ 
 
     //Ruta para el chatbot
-    Route::get("/chatbot",[GestionWebController::class,"loginChatBot"])->name("chatbot.index");
+    Route::get("/chatbot",[GestionWebController::class,"loginChatBot"])->middleware('soloAJAX')->name("chatbot.index");
+});
+
+
+//Rutas Modulo Gestion Pasajes
+Route::prefix("gestionPasajes")->middleware(['auth', 'permisos:gestion_pasajes.acceder','modulo.activo:8'])->group(function(){
+    Route::prefix("buscar-viaje")->middleware('submodulo.activo:18')->group(function(){
+        Route::get("/",[GestionPasajesController::class,"formBuscarViaje"])->name("buscar-viaje.index");
+        Route::post("/filtrar",[GestionPasajesController::class,"filtrarViajes"])->name("buscar-viaje.filtrar");
+        Route::get("/viajes",[GestionPasajesController::class,"listaViajes"])->name("buscar-viaje.lista");
+    });
+
+    
 });
 
 
