@@ -4,7 +4,7 @@
 
 @section('breadcrumb')
 <x-breadcrumb :items="[
-        ['name' => 'Home', 'url' => route('home')],
+        ['name' => 'Inicio', 'url' => route('home')],
         ['name' => 'Gestión Sistema', 'url' => route('gestion-sistema.index')],
         ['name' => 'Administrar Modulos']
     ]" />
