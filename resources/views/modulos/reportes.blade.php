@@ -20,7 +20,7 @@
                     ruta="#"
             />
         </div>
-        <div class="col-lg-4 col-xl-3">
+        <div class="col-lg-4 col-xl-3" onclick="cargarModal(`{{ route('esquemaTarifario.index') }}`, 'Esquema Tarifario Pasajes','#esquemaTarifarioForm','modal-lg')">
             <x-card color="bg-dark" 
                     titulo="Esquema Tarifario Pasajes" 
                     descripcion="Reportes" 

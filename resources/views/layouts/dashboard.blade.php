@@ -20,6 +20,9 @@
 </head>
 
 <body class="sidebar-mini sidebar-collapse layout-fixed">
+    <!-- Toast componente (para AJAX) -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" id="toastContainer"></div>
+
     <div class="wrapper">
         <!-- Pantalla de carga -->
         <div class="preloader flex-column justify-content-center align-items-center">

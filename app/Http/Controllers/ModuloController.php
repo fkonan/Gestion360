@@ -104,10 +104,16 @@ class ModuloController extends Controller
             $modulo = Modulo::findOrFail($id);
             $modulo->ModuloEstado = $modulo->ModuloEstado === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO';
             $modulo->save();
-            return sweetAlertJson("Estado cambiado a {$modulo->ModuloEstado}", "success");
+            return response()->json([
+                'message' => 'Estado cambiado a ' . $modulo->ModuloEstado,
+                'type' => 'success'
+            ]);
         }catch(Exception $e){
             Log::error('Error al actualizar el estado del modulo: ' . $e->getMessage());
-            return sweetAlertJson("Error al actualizar el estado del modulo", "error");
+            return response()->json([
+                'message' => 'Error al actualizar el estado del modulo',
+                'type' => 'danger'
+            ]);
         }
     }
 

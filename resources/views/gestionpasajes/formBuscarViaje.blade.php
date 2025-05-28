@@ -60,7 +60,6 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function () {
-            validarFormulario("#formBuscarViaje");
             $('.select2').select2({
                 dropdownParent: $("#formBuscarViaje"),
                 width: '100%'

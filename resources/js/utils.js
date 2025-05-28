@@ -125,6 +125,8 @@ export function exportarExcel(button, urlDatos, nombreArchivo) {
             // Restaurar estado del botón
             btnExportar.disabled = false;
             btnExportar.innerText = textoOriginal;
+
+            mostrarToast('Excel descargado','success');
         },
         error: function () {
             alert('Error al exportar los datos. Por favor, intente nuevamente.');
@@ -133,6 +135,7 @@ export function exportarExcel(button, urlDatos, nombreArchivo) {
         }
     });
 }
+
 
 //actualiza el estado de un registro de una tabla con un switch asincronamente
 export function actualizarEstado(ruta){
@@ -143,18 +146,70 @@ export function actualizarEstado(ruta){
             _token: document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         },
         success: function (response) {
-            Swal.fire({
-                icon: response.type,
-                title: response.title,
-                confirmButtonColor: "#3366CC",
-                confirmButtonText: "Aceptar"
-            }).then(() => {
-                window.location.href = response.redirect;
-            });
+            mostrarToast(response.message, response.type);
         },
         error: function() {
-            alert('Error al cambiar el estado');
+            mostrarToast('Error al cambiar el ESTADO', 'danger');
         }
     });
 }
+
+//Funcion para mostrar toast desde el front (AJAX)
+function mostrarToast(message, type = 'primary') {
+    const container = document.getElementById('toastContainer');
+    if (!container) {
+        console.error('No se encontró el contenedor para el toast');
+        return;
+    }
+
+    // Íconos según el tipo
+    const icons = {
+        success: 'bi-check-circle-fill text-success',
+        danger: 'bi-exclamation-triangle-fill text-danger',
+        warning: 'bi-exclamation-diamond-fill text-warning',
+        info: 'bi-info-circle-fill text-info',
+        primary: 'bi-bell-fill text-primary'
+    };
+    const icon = icons[type] || icons.primary;
+
+    // Crear el contenido del toast
+    const toastId = `toast-${Date.now()}`;
+    const toastHTML = `
+        <div class="toast bg-white shadow-sm show" role="alert" aria-live="assertive" aria-atomic="true" id="${toastId}">
+            <div class="toast-progress bg-${type}" style="height: 3px; width: 100%;"></div>
+
+            <div class="d-flex align-items-center px-2 py-1">
+                <div class="p-2">
+                    <i class="bi ${icon} fs-4 me-3 flex-shrink-0"></i>
+                </div>
+                <div class="toast-body fw-semibold text-dark">
+                    ${message}
+                </div>
+                <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>
+            </div>
+        </div>
+    `;
+
+    // Limpiar y añadir el nuevo toast
+    container.insertAdjacentHTML('beforeend', toastHTML);
+
+    // Mostrarlo
+    const toastEl = document.getElementById(toastId);
+    const bsToast = new bootstrap.Toast(toastEl, { delay: 5000 });
+
+    toastEl.addEventListener('hidden.bs.toast', () => {
+        toastEl.remove();
+    });
+
+    bsToast.show();
+
+    setTimeout(() => {
+        if (toastEl.classList.contains('show')) {
+            toastEl.classList.remove('show');
+            toastEl.classList.add('toast-hide'); 
+        }
+    }, 4800);
+}
+
+
 

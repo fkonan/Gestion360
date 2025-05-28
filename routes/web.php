@@ -83,6 +83,10 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:administracion.ac
         Route::post("/formIngSalConductores/filtrar",[ConductorController::class,"reporteIngSalConductores"])->name("reporte.ingresoSalidas");
         Route::get("/formIngSalConductores/listaDatos",[ConductorController::class,"listaIngSalConductores"])->name("lista.ingresoSalidas");
         Route::get("/formIngSalConductores/cargarData",[ConductorController::class,"cargarDataIngSalConductores"])->name("ingresoSalida.cargarData");
+
+        //Esquema tarifario pasajes
+        Route::get("/esquemaTarifarioPasajes",[GestionPasajesController::class,"formEsquemaTarifario"])->name("esquemaTarifario.index");
+        Route::post("/esquemaTarifarioPasajes/filtrar",[GestionPasajesController::class,"filtrarEsquemaTarifario"])->name("esquemaTarifario.filtrar");
     });
 });
 
@@ -144,7 +148,7 @@ Route::prefix("gestionRRHH")->middleware(['auth', 'permisos:gestion_de_rr_hh.acc
 Route::prefix("gestionWeb")->middleware(['auth','permisos:gestion_web.acceder','modulo.activo:14'])->group(function(){ 
 
     //Ruta para el chatbot
-    Route::get("/chatbot",[GestionWebController::class,"loginChatBot"])->middleware('soloAJAX')->name("chatbot.index");
+    Route::get("/chatbot",[GestionWebController::class,"loginChatBot"])->name("chatbot.index");
 });
 
 
@@ -153,10 +157,7 @@ Route::prefix("gestionPasajes")->middleware(['auth', 'permisos:gestion_pasajes.a
     Route::prefix("buscar-viaje")->middleware('submodulo.activo:18')->group(function(){
         Route::get("/",[GestionPasajesController::class,"formBuscarViaje"])->name("buscar-viaje.index");
         Route::post("/filtrar",[GestionPasajesController::class,"filtrarViajes"])->name("buscar-viaje.filtrar");
-        Route::get("/viajes",[GestionPasajesController::class,"listaViajes"])->name("buscar-viaje.lista");
     });
-
-    
 });
 
 

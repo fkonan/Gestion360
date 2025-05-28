@@ -26,10 +26,17 @@ class UserController extends Controller
             $usuario = User::findOrFail($id);
             $usuario->UsuarioEstado = $usuario->UsuarioEstado === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO';
             $usuario->save();
-            return sweetAlertJson("Estado cambiado a {$usuario->UsuarioEstado}", "success");
+            return response()->json([
+                'message' => 'Estado cambiado a ' . $usuario->UsuarioEstado,
+                'type' => 'success'
+            ]);
+           
         }catch(Exception $e){
             Log::error('Error al actualizar el estado del usuario: ' . $e->getMessage());
-            return sweetAlertJson("Error al actualizar el estado del usuario", "error");
+            return response()->json([
+                'message' => 'Error al actualizar el estado del usuario',
+                'type' => 'danger'
+            ]);
         }
     }
 

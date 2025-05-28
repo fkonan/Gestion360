@@ -25,10 +25,16 @@ class PersonaController extends Controller
             $persona = Persona::findOrFail($id);
             $persona->PerEstado = $persona->PerEstado === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO';
             $persona->save();
-            return sweetAlertJson("Estado cambiado a {$persona->PerEstado}", "success");
+            return response()->json([
+                'message' => 'Estado cambiado a ' . $persona->PerEstado,
+                'type' => 'success'
+            ]);
         }catch(Exception $e){
             Log::error('Error al actualizar el estado de la persona: ' . $e->getMessage());
-            return sweetAlertJson("Error al actualizar el estado de la persona", "error");
+            return response()->json([
+                'message' => 'Error al actualizar el estado de la persona',
+                'type' => 'danger'
+            ]);
         }
     } 
 

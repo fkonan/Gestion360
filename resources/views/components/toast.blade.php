@@ -1,6 +1,6 @@
 <!-- Toast componente -->
 @if(session('toast'))
-    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055">
+    <div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055">
         <div class="toast bg-white shadow-sm" role="alert" aria-live="assertive" aria-atomic="true" id="toastAlert">
             
             <!-- Barra de progreso -->

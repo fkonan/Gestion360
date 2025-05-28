@@ -42,7 +42,7 @@
                 <tr>
                     <th data-field="PerNumDoc">Identificación</th>
                     <th data-field="nombreCompleto" data-formatter="nombreCompletoFormatter">Nombre Completo</th>
-                    <th data-field="municipio_nac.departamento.DepNom" data-sortable="true">Departamento</th>
+                    <th data-field="municipio_nac.departamento.DepNom">Departamento</th>
                     <th data-field="datos.PerTelefono">Telefono</th>
                     <th data-field="PerGenero" data-sortable="true">Genero</th>  
                     <th data-field="PerFechReg" data-sortable="true">Fecha registro</th> 
