@@ -11,6 +11,7 @@ class MenuComposer
     {
         $modulos = Modulo::with(['submodulos' => function ($query) {
                 $query->where('SubModuloEstado', 'ACTIVO');
+                    
             }])
             ->where('ModuloEstado', 'ACTIVO')
             ->get();

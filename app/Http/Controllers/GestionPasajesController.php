@@ -102,37 +102,57 @@ class GestionPasajesController extends Controller
     }
 
     public function filtrarEsquemaTarifario(Request $request){
-        
-        $fechaIni = Carbon::parse($request->fechaInicio)->format('d/m/Y H:i:s');
-        $fechaFin = Carbon::parse($request->fechaFin)->format('d/m/Y H:i:s');
-        $terminalOrigen = $request->origen;
-        $terminalDestino = $request->destino;
-        
-        $resultados = DB::connection('sqlsrv') 
-            ->table('EsquemasTarifariosTarifas as ett')
-            ->join('Terminales as t_o', 't_o.Id', '=', 'ett.TerminalOrigen')
-            ->join('Terminales as t_d', 't_d.Id', '=', 'ett.TerminalDestino')
-            ->join('CategoriasServicios as cs', 'cs.Id', '=', 'ett.Categoria')
-            ->select(
-                'ett.id',
-                't_o.Nombre as ORIGEN',
-                't_d.Nombre as DESTINO',
-                'cs.Nombre as SERVICIO',
-                'ett.Precio_OneWay as PRECIO',
-                DB::raw('CONVERT(DATE, ett.Fecha_Ini) as [FECHA INICIAL]'),
-                DB::raw('CONVERT(DATE, ett.Fecha_Fin) as [FECHA FINAL]'),
-                'ett.Estado'
-            )
-            ->whereBetween(DB::raw('CONVERT(DATE, ett.Fecha_Ini)'), [$fechaIni, DB::raw('GETDATE()')])
-            ->where(DB::raw('CONVERT(DATE, ett.Fecha_Fin)'), '<=', $fechaFin)
-            ->where('ett.Estado', '0')
-            ->whereNotIn('ett.Categoria', ['1', '2', '3', '7', '8', '9', '14'])
-            ->where('ett.EsquemaTarifario', '1')
-            ->where('ett.TerminalOrigen', 'like', $terminalOrigen)
-            ->where('ett.TerminalDestino', 'like', $terminalDestino) 
-            ->orderBy('ett.Fecha_Ini', 'asc')
-            ->get();
+        try{
+            $fechaIni = Carbon::parse($request->fechaInicio)->format('d/m/Y H:i:s');
+            $fechaFin = Carbon::parse($request->fechaFin)->format('d/m/Y H:i:s');
+            $terminalOrigen = $request->origen;
+            $terminalDestino = $request->destino;
+            
+            $resultados = DB::connection('sqlsrv') 
+                ->table('EsquemasTarifariosTarifas as ett')
+                ->join('Terminales as t_o', 't_o.Id', '=', 'ett.TerminalOrigen')
+                ->join('Terminales as t_d', 't_d.Id', '=', 'ett.TerminalDestino')
+                ->join('CategoriasServicios as cs', 'cs.Id', '=', 'ett.Categoria')
+                ->select(
+                    'ett.id',
+                    't_o.Nombre as origen',
+                    't_d.Nombre as destino',
+                    'cs.Nombre as servicio',
+                    'ett.Precio_OneWay as precio',
+                    DB::raw('CONVERT(DATE, ett.Fecha_Ini) as [fechaInicial]'),
+                    DB::raw('CONVERT(DATE, ett.Fecha_Fin) as [fechaFinal]'),
+                    'ett.Estado as estado',
+                )
+                ->whereBetween(DB::raw('CONVERT(DATE, ett.Fecha_Ini)'), [$fechaIni, DB::raw('GETDATE()')])
+                ->where(DB::raw('CONVERT(DATE, ett.Fecha_Fin)'), '<=', $fechaFin)
+                ->where('ett.Estado', '0')
+                ->whereNotIn('ett.Categoria', ['1', '2', '3', '7', '8', '9', '14'])
+                ->where('ett.EsquemaTarifario', '1')
+                ->where('t_o.Nombre', 'like', '%'.$terminalOrigen.'%')
+                ->where('t_d.Nombre', 'like', '%'.$terminalDestino.'%') 
+                ->orderBy('ett.Fecha_Ini', 'asc')
+                ->get();
+            
+            $numeroResultados = $resultados->count();
 
-        dd($resultados);
+            if($numeroResultados === 0){
+                return sweetAlertJson("No se encontraron resultados para los criterios seleccionados.", "warning");
+            }
+
+            session(['esquemaTarifario' => $resultados]);
+            return sweetAlertJson("Resultados obtenidos: ". $numeroResultados, "success", route('esquemaTarifario.listaDatos')); 
+        }catch(Exception $e){
+            Log::error('Error al filtrar el esquema tarifario: ' . $e->getMessage());
+            return sweetAlertJson("Error al filtrar el esquema tarifario", "error"); 
+        }
+    }
+
+    public function listaEsquemaTarifario(){
+        return view('reportes.reporteEsqTarifario');
+    }
+
+    public function cargarDataEsquemaTarifario(){
+        $esquemas = session('esquemaTarifario') ?? [] ;
+        return $esquemas;
     }
 }

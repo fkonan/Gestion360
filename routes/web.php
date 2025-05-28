@@ -87,6 +87,9 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:administracion.ac
         //Esquema tarifario pasajes
         Route::get("/esquemaTarifarioPasajes",[GestionPasajesController::class,"formEsquemaTarifario"])->name("esquemaTarifario.index");
         Route::post("/esquemaTarifarioPasajes/filtrar",[GestionPasajesController::class,"filtrarEsquemaTarifario"])->name("esquemaTarifario.filtrar");
+        Route::get("/esquemaTarifarioPasajes/listaDatos",[GestionPasajesController::class,"listaEsquemaTarifario"])->name("esquemaTarifario.listaDatos");
+        Route::get("/esquemaTarifarioPasajes/cargarData",[GestionPasajesController::class,"cargarDataEsquemaTarifario"])->name("esquemaTarifario.cargarData");
+
     });
 });
 

@@ -329,6 +329,11 @@ td.detalle-mobile {
     to { width: 0%; }
 }
 
+.swal2-popup{
+    max-width: 450px;
+    
+}
+
 
 @media (max-width: 576px) {
     th.detalle-mobile,

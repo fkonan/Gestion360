@@ -17,7 +17,7 @@
                     <div class="input-group">
                         <input type="password" class="form-control" id="Password" name="Password" placeholder="********" value="{{ $usuario->Password }}" disabled required>
                         <div class="input-group-text">
-                            <a href="#"><span class="fas fa-edit" onclick="togglePasswordVisibility()"></span></a>
+                            <span class="fas fa-edit" onclick="togglePasswordVisibility()"></span>
                         </div>
                         <span class="error text-danger fw-bold" id="error-Password"></span>
                     </div>
