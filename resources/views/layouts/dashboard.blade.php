@@ -7,6 +7,7 @@
 
     <title>@yield('title')</title>
 
+    <link rel="icon" href="{{ asset('favicon.png') }}" type="image/png">
     <link rel="preload" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
@@ -80,7 +81,8 @@
                         href="#" 
                         role="button">
                         <i class="fas fa-bars"></i>
-                    </a>      
+                    </a>    
+                    <img src="{{ asset('img/LogoCopeBlanco.png') }}" style="width:70px; height: 15px;" alt="Logo Cope" class="d-md-none">
                 </div>
             </section>
 

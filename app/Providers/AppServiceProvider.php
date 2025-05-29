@@ -19,8 +19,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void{
         View::composer('menu', MenuComposer::class);
 
+        
         Blade::if('permite', function ($permiso) {
-            return Auth::check() && Auth::user()->can($permiso);
+            return Auth::check() && Auth::user()->can($permiso);  //Ignorar erroes en el can 
         });
 
         // Acceso total a los usuarios super admin

@@ -22,10 +22,9 @@ class ConductorController extends Controller
     //FICS 
     public function actualizarEstadoConductor(Request $request){
         $validator = Validator::make($request->all(), [
-            'legajo' => ['required', 'regex:/^\d{4}$/'],
+            'legajo' => ['required'],
         ], [
             'legajo.required' => 'El campo legajo es obligatorio.',
-            'legajo.regex' => 'El legajo debe ser un número de 4 dígitos.',
         ]);
 
         if ($validator->fails()) {
