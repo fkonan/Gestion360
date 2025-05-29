@@ -21,10 +21,13 @@ class LoginController extends Controller
         $request->validate([
             'email' => 'required|email',
             'password' => 'required|string',
+            'g-recaptcha-response' => 'required|captcha',
         ],[
             'email.required' => 'El correo es obligatorio.',
             'email.email' => 'El correo no es válido.',
             'password.required' => 'La contraseña es obligatoria.',
+            'g-recaptcha-response.required' => 'El captcha es obligatorio.',
+            'g-recaptcha-response.captcha' => 'Captcha inválido, por favor inténtalo de nuevo.',
         ]);
 
         $user = PersonaDatos::where('PerEmail', $request->email)->first()?->persona->usuario;

@@ -3,7 +3,7 @@
 @section('title','Login')
 
 @section('content')
-<br><br><br><br>
+<br><br><br>
 <div class="container">
     <div class="row" style="margin: auto;">
         <div class="col-xs-12 col-sm-2 col-md-3 col-lg-4 col-xl-4 col-xxl-4"></div>
@@ -38,14 +38,21 @@
                         @enderror
                     </div>
 
-                    <div class="mb-3 text-end">
-                        <a href="{{ route('password.request') }}">¿Olvidaste tu contraseña?</a>
+                    <div class="d-flex flex-column my-4 align-items-center">
+                        {!! NoCaptcha::display() !!}
+                        @if ($errors->has('g-recaptcha-response'))
+                            <small class="text-danger">{{ $errors->first('g-recaptcha-response') }}</small>
+                        @endif
                     </div>
 
-                    <div class="row"></div>
-                        <div class="col-4">
-                        <button type="submit" name="Boton" value="Boton" id="Boton" class="btn btn-warning btn-block">Ingresar</button>
+                    <div class="row">
+                        <div class="col-12">
+                            <button type="submit" name="Boton" value="Boton" id="Boton" class="btn btn-warning w-100 fw-medium">Ingresar</button>
                         </div>
+                    </div>
+
+                    <div class="mt-4 text-end">
+                        <a href="{{ route('password.request') }}">¿Olvidaste tu contraseña?</a>
                     </div>
                     </form>
                 </div>
