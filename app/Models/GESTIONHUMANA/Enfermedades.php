@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Enfermedades extends Model
 {
     protected $connection = 'mysql-gestion-humana';
-    protected $table = "enfermedades";
+    protected $table = "Enfermedades";
     protected $primaryKey = "IdEnfermedad";
 
     public $timestamps = false;

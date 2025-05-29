@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class FirmaEquipajePol extends Model
 {
     protected $connection = "mysql-gestion-pasajes";
-    protected $table = "_firconductores";
+    protected $table = "_FirConductores";
     protected $primaryKey = "IdFirma";
     public $timestamps = false;
 

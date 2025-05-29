@@ -58,18 +58,18 @@ class UserController extends Controller
         $sort = $request->get('sort', 'UsuFecReg');
         $order = $request->get('order', 'desc');
 
-        $usuarios = User::with('persona');
+        $usuarios = User::with(['persona','roles']);
 
         //buscador
         if (!empty($search)) {
             $usuarios->where(function ($q) use ($search) {
-                $q->where('UsuFecReg', 'like', "%$search%")
-                ->orWhere('UsuHorReg', 'like', "%$search%")
-                ->orWhereHas('persona', function ($q2) use ($search) {
-                    $q2->where('PerApellidos', 'like', "%$search%")
-                        ->orWhere('PerNombres', 'like', "%$search%")
-                        ->orWhere('PerNumDoc', 'like', "%$search%");
-                });
+            $q->where('UsuFecReg', 'like', "%$search%")
+            ->orWhere('UsuHorReg', 'like', "%$search%")
+            ->orWhereHas('persona', function ($q2) use ($search) {
+                $q2->where('PerApellidos', 'like', "%$search%")
+                    ->orWhere('PerNombres', 'like', "%$search%")
+                    ->orWhere('PerNumDoc', 'like', "%$search%");
+            });
             });
         }
 
@@ -80,10 +80,16 @@ class UserController extends Controller
             ->take($limit)
             ->get();
 
+        // Agregar el rol principal a cada usuario
+        $rows = $rows->map(function ($usuario) {
+            $usuario->rol = $usuario->roles->pluck('name')->first();
+            return $usuario;
+        });
+
         return response()->json([
          'total' => $total,
          'rows' => $rows
-      ]);
+          ]);
     }
 
     public function create(){

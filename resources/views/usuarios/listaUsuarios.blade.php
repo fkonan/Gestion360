@@ -40,19 +40,20 @@
             data-url="{{ route('usuarios.cargarDatos') }}">   
             <thead class="table-primary">
                 <tr>
-                    <th data-field="persona.PerNumDoc" data-visible="true" data-priority="1">Identificación</th>
-                    <th data-field="nombreCompleto" data-formatter="nombreCompletoFormatter" data-priority="1">Nombre Completo</th>
-                    <th data-field="UsuFecReg" data-sortable="true" data-priority="3">Fecha registro</th>
-                    <th data-field="UsuHorReg" data-sortable="true" data-priority="4">Hora registro</th>
+                    <th data-field="persona.PerNumDoc" data-visible="true">Identificación</th>
+                    <th data-field="nombreCompleto" data-formatter="nombreCompletoFormatter">Nombre Completo</th>
+                    <th data-field="UsuFecReg" data-sortable="true">Fecha registro</th>
+                    <th data-field="UsuHorReg" data-sortable="true">Hora registro</th>
+                    <th data-field="rol">Rol del usuario</th>
                     @permite('administracion.usuarios.actualizar')
-                        <th class="text-center" data-field="UsuarioEstado" data-formatter="estadoFormatter" data-sortable="true" data-priority="2">Estado</th>
+                        <th class="text-center" data-field="UsuarioEstado" data-formatter="estadoFormatter" data-sortable="true">Estado</th>
                     @endpermite
                     @if(
                         auth()->user()->can('administracion.usuarios.asignar_permisos') ||
                         auth()->user()->can('administracion.usuarios.asignar_roles') ||
                         auth()->user()->can('administracion.usuarios.actualizar')
                     )
-                        <th data-field="acciones" data-formatter="accionesFormatter" data-priority="1">Acciones</th>
+                        <th data-field="acciones" data-formatter="accionesFormatter">Acciones</th>
                     @endif
 
                 </tr>

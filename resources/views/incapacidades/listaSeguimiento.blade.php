@@ -39,8 +39,8 @@
                     <th data-field="causa.ParDes">Causa Incapacidad</th>
                     <th data-field="eps.EPSNombre">EPS</th>
                     <th data-field="arl.ARLNombre">ARL</th>
-                    <th data-field="IncFecIni">Fecha Inicio</th>
-                    <th data-field="IncFecFin">Fecha Fin</th>
+                    <th data-field="IncFecIni" data-sortable="true">Fecha Inicio</th>
+                    <th data-field="IncFecFin" data-sortable="true">Fecha Fin</th>
                     <th data-field="detalleMobile"
                         data-formatter="detalleIncapacidad"
                         data-class="detalle-mobile"

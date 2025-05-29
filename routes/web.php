@@ -55,7 +55,6 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:administracion.ac
         Route::post("/{id}/cambiar-estado", [UserController::class, "cambiarEstado"])->middleware('soloAJAX')->name("usuarios.cambiarEstado");
     });
     Route::prefix("reportes")->middleware(['permisos:administracion.reportes.acceder','submodulo.activo:12'])->group(function(){
-        
         Route::get("/",[ModuloController::class,"getReportes"])->name("reportes.index");
 
         //Impresion tiquetes
@@ -147,14 +146,6 @@ Route::prefix("gestionRRHH")->middleware(['auth', 'permisos:gestion_de_rr_hh.acc
     });
 });
 
-//Rutas Modulo Gestion Web
-Route::prefix("gestionWeb")->middleware(['auth','permisos:gestion_web.acceder','modulo.activo:14'])->group(function(){ 
-
-    //Ruta para el chatbot
-    Route::get("/chatbot",[GestionWebController::class,"loginChatBot"])->name("chatbot.index");
-});
-
-
 //Rutas Modulo Gestion Pasajes
 Route::prefix("gestionPasajes")->middleware(['auth', 'permisos:gestion_pasajes.acceder','modulo.activo:8'])->group(function(){
     Route::prefix("buscar-viaje")->middleware('submodulo.activo:18')->group(function(){
@@ -163,6 +154,10 @@ Route::prefix("gestionPasajes")->middleware(['auth', 'permisos:gestion_pasajes.a
     });
 });
 
+//Rutas Modulo Gestion Web
+Route::prefix("gestionWeb")->middleware(['auth','permisos:gestion_web.acceder','modulo.activo:14'])->group(function(){ 
+    Route::get("/chatbot",[GestionWebController::class,"loginChatBot"])->name("chatbot.index");
+});
 
 //Rutas olvido/restablecimiento de contraseña
 Route::get('/forgot-password', [ForgotPasswordController::class, 'showForm'])->name('password.request');

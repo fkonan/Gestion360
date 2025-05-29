@@ -74,7 +74,7 @@ class User extends Authenticatable
 
     public function getRolAttribute(){
         $roles = $this->getRoleNames();
-        return $roles->isNotEmpty() ? $roles->first() : 'Usuario';
+        return $roles->isNotEmpty() ? $roles->first() : 'SIN ROL';
     }
 
 }
