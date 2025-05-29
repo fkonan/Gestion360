@@ -16,10 +16,10 @@
                     <label for="Password" class="form-label">Contraseña</label>
                     <div class="input-group">
                         <input type="password" class="form-control" id="Password" name="Password" placeholder="********" value="{{ $usuario->Password }}" disabled required>
+                        <span class="error text-danger fw-bold" id="error-Password"></span>
                         <div class="input-group-text">
                             <span class="fas fa-edit" onclick="togglePasswordVisibility()"></span>
                         </div>
-                        <span class="error text-danger fw-bold" id="error-Password"></span>
                     </div>
                 </div>
             </div>

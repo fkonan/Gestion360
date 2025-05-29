@@ -1,17 +1,19 @@
 <?php
 
-namespace App\View\Composers;
+namespace App\Services;
 
 use App\Models\GESTIONADMIN\Modulo;
-use Illuminate\View\View;
+use Carbon\Carbon;
+use Exception;
+use Illuminate\Support\Facades\Log;
 
-class MenuComposer
-{
-    public function compose(View $view): void
-    {
-        /* Carga los modulos con los submodulos,
+class ModuloService
+{   
+    public function modulosActivosConSubmodulos(){
+         /* Carga los modulos con los submodulos,
         1.Se verifica que los submodulos tenga alguna ruta establecida de lo contrario no se mostrara el submodulo.
         2.Si en un modulo ningun submodulo tiene rutas entonces no se mostrata ese modulo.      */
+
         $modulos = Modulo::with(['submodulos' => function ($query) {
             $query->where('SubModuloEstado', 'ACTIVO')
                 ->whereNotNull('SubModRuta');
@@ -23,6 +25,8 @@ class MenuComposer
             })
             ->values();
 
-        $view->with('modulos', $modulos);
+        return $modulos;
     }
+
+    
 }

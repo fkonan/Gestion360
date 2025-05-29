@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\GESTIONADMIN\Modulo;
 use App\Models\User;
+use App\Services\ModuloService;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -22,8 +24,8 @@ class RolController extends Controller
         return view("roles.listaRoles",compact("roles"));
     }
 
-    public function create(){
-        $modulos = $this->modulosConPermisos();
+    public function create(ModuloService $moduloService){
+        $modulos = $this->modulosConPermisos($moduloService);
         return view("roles.crearRol",compact('modulos'));
     }
 
@@ -62,13 +64,12 @@ class RolController extends Controller
     }
 
     //relaciona los permisos con los modulos en base al nombre => formato permiso: "modulo.submodulo.permiso"
-    private function modulosConPermisos(){
-        $modulos = Modulo::where('ModuloEstado', 'ACTIVO')
-        ->with('submodulos')
-        ->get();
+    private function modulosConPermisos($moduloService){
+
+        $modulos = $moduloService->modulosActivosConSubmodulos();
 
         foreach ($modulos as $modulo) {
-            $nombreModulo = normalizarNombre($modulo->ModNom);
+            $nombreModulo = normalizarNombre($modulo->ModNom); 
             
             foreach ($modulo->submodulos as $submodulo) {
                 $nombreSubmodulo = normalizarNombre($submodulo->SubModNom);
@@ -80,9 +81,9 @@ class RolController extends Controller
         return $modulos;
     }
 
-    public function permisosRol($id){
+    public function permisosRol($id, ModuloService $moduloService){
         $role = Role::findOrFail($id);
-        $modulos = $this->modulosConPermisos();
+        $modulos = $this->modulosConPermisos($moduloService);
         $permisosAsignados = $role->permissions->pluck('id')->toArray();
         return view('roles.permisosRol', compact('modulos', 'role', 'permisosAsignados'));
     }
@@ -137,6 +138,12 @@ class RolController extends Controller
     }
 
     public function updateRolUsuario(Request $request, $id){
+        $usuarioAuth = Auth::user();
+
+        if($id == $usuarioAuth->IdUsuario){
+            return sweetAlertJson("No puedes cambiar tus propios roles", "warning");
+        }
+
         try{
             $usuario = User::findOrFail($id);
             $usuario->syncRoles($request->roles);

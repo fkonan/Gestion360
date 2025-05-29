@@ -7,6 +7,7 @@ use App\Models\GESTIONADMIN\Persona;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -22,6 +23,15 @@ class UserController extends Controller
     }
 
     public function cambiarEstado($id){
+        $usuarioAuth = Auth::user();
+
+        if($id == $usuarioAuth->IdUsuario){
+             return response()->json([
+                'message' => 'No se puede cambiar el estado asi mismo',
+                'type' => 'warning'
+            ]);
+        }
+
         try{
             $usuario = User::findOrFail($id);
             $usuario->UsuarioEstado = $usuario->UsuarioEstado === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO';
