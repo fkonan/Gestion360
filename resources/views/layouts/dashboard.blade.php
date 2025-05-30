@@ -44,20 +44,20 @@
                     <div class="info" style="user-select: none; font-size: 0.75em">
                         <span class="fw-bold text-dark">Nombre:</span>
                         <span class="fw-medium">
-                            {{ auth()->user()->persona?->PerNombres }} {{ auth()->user()->persona?->PerApellidos }}
+                            {{ $user->persona?->PerNombres }} {{ $user->persona?->PerApellidos }}
                         </span>
                         <br>
 
                         <span class="fw-bold text-dark"> Rol:</span>
                         <span class="fw-medium">
-                            {{ auth()->user()->rol }}
+                            {{ $user->rol }}
                         </span>
                         <br>
 
                         <span class="fw-bold text-dark"> Ultima sesión:</span>
                         <span class="fw-medium">
-                            {{ auth()->user()->ultimaSesion->first()->SesionFechReg }} 
-                            {{ auth()->user()->ultimaSesion->first()->SesionHorReg }} 
+                            {{ $user->ultimaSesion->first()->SesionFechReg }} 
+                            {{ $user->ultimaSesion->first()->SesionHorReg }} 
                         </span>
                     </div>
 

@@ -91,7 +91,8 @@
         return `
             <div class="col-md-12">
                 @permite('administracion.personas.actualizar')
-                     <a class="text-decoration-none" href="${rutaPersona}">
+                     <a class="text-decoration-none" href="${rutaPersona}"
+                        title="Editar persona">
                         <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/new_editar.png" alt="Editar" style="width: 30px; height: 30px;">
                     </a>
                 @endpermite

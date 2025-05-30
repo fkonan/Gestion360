@@ -90,17 +90,17 @@
                         <div>
                             <strong>Acciones:</strong> 
                             <a class="ms-3 text-decoration-none" 
-                                title="Haga click para ver los adjuntos"
+                                title="Ver adjuntos"
                                 onclick="cargarModal('${urlAdjuntos}', 'Documentos Incapacidad', '', 'modal-lg')">     
                                 <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/carpetas.png" alt="Ver Adjuntos" style="width: 32px; height: 32px;">
                             </a>
                             <a class="ms-3 text-decoration-none" 
-                                title="Haga click para editar la incapacidad"
+                                title="Editar incapacidad"
                                 onclick="cargarModal('${urlDatos}', 'Revisión datos incapacidad', '#formIncapacidad', 'modal-xl')">
                                 <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/new_editar.png" alt="Revisión datos" style="width: 32px; height: 32px;">
                             </a>
                              <a class="ms-3 text-decoration-none" 
-                                title="Haga click para ver el seguimiento a la incapacidad"
+                                title="Seguimiento incapacidad"
                                 href="${urlSeguimientoDetalle}">
                                 <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/seguimiento.png" alt="Seguimiento" style="width: 34px; height: 34px;">
                             </a>

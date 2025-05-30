@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Mail\CorreoRecuperacion;
+use App\Models\GESTIONADMIN\PersonaDatos;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -22,6 +23,12 @@ class ForgotPasswordController extends Controller
     {
         try{
             $request->validate(['email' => 'required|email']);
+
+            // Verifica que el email exista
+            $existe = PersonaDatos::where('PerEmail', $request->email)->exists();
+            if (!$existe) {
+                return toast('El correo no está registrado en el sistema, verifique la información.', 'danger');
+            }
 
             $token = Str::random(60);
 
@@ -43,7 +50,7 @@ class ForgotPasswordController extends Controller
 
         }catch(Exception $e){
             Log::error('Error al enviar enlace de recuperación: ' . $e->getMessage());
-            return toast('Ocurrió un error al enviar el enlace de recuperación', 'error', redirect()->route('login'));
+            return toast('Ocurrió un error al enviar el enlace de recuperación', 'danger', redirect()->route('login'));
         }
        
     }

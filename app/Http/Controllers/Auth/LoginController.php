@@ -30,35 +30,46 @@ class LoginController extends Controller
             'g-recaptcha-response.captcha' => 'Captcha inválido, por favor inténtalo de nuevo.',
         ]);
 
-        $user = PersonaDatos::where('PerEmail', $request->email)->first()?->persona->usuario;
+        try{
+            $personaDatos = PersonaDatos::with(['persona.usuario'])
+            ->where('PerEmail', $request->email)
+            ->first();
 
-        if (!$user || !Hash::check($request->password, $user->Password)) {
-            return back()->withInput()->withErrors(['email' => 'Correo o contraseña incorrectos']);
+            $user = $personaDatos?->persona?->usuario;
+
+
+            if (!$user || !Hash::check($request->password, $user->Password)) {
+                return back()->withInput()->withErrors(['email' => 'Correo o contraseña incorrectos']);
+            }
+
+            if($user->persona->PerEstado == "INACTIVO"){
+                return toast('Persona inactiva, contacte con un administrador', 'warning');
+            }
+
+            if($user->UsuarioEstado == "INACTIVO"){
+                return toast('Usuario inactivo, contacte con un administrador', 'warning');
+            }
+
+            if($user->UsuarioEstado == "SUSPENDIDO"){
+                return toast('Usuario suspendido, contacte con un administrador', 'warning');
+            }
+
+            $this->registrarLogin($user->IdUsuario);
+
+            Auth::login($user);
+            return redirect()->intended(route('home')); 
+        }catch(Exception $e){
+            Log::error('Error al hacer el login: ' . $e->getMessage());
+            return toast('Error en el login', 'danger');
         }
-
-        if($user->persona->PerEstado == "INACTIVO"){
-            return back()->withInput()->withErrors(['email' => 'Persona inactiva']);
-        }
-
-        if($user->UsuarioEstado == "INACTIVO"){
-            return back()->withInput()->withErrors(['email' => 'Usuario inactivo']);
-        }
-
-        if($user->UsuarioEstado == "SUSPENDIDO"){
-            return back()->withInput()->withErrors(['email' => 'Usuario suspendido']);
-        }
-
-        $this->registrarLogin($user->IdUsuario);
-
-        Auth::login($user);
-        return redirect()->intended(route('home')); 
     }
 
     private function registrarLogin($IdUser){
         $sesion = new Sesion();
         $sesion->IdUser = $IdUser;
-        $sesion->SesionFechReg = now();
-        $sesion->SesionHorReg = now();
+        $now = now();
+        $sesion->SesionFechReg = $now;
+        $sesion->SesionHorReg = $now;
         $sesion->SesionTipo = "LOGIN";
         $sesion->save();
     }
@@ -73,8 +84,7 @@ class LoginController extends Controller
             $session->save();
     
             Auth::logout();
-            session()->flash('alert', ['type' => 'success','title' => 'Sesion cerrada exitosamente']);
-            return redirect()->route('login');
+            return toast('Sesion cerrada exitosamente', 'success',redirect()->route('login'));
 
         }catch(Exception $e){
             Log::error('Error al hacer logout: ' . $e->getMessage());

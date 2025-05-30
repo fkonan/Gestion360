@@ -17,12 +17,14 @@
         <span class="text-left text-light fs-5 fw-medium py-1">Usuarios registrados</span>
     </div>
 
-    @permite('administracion.usuarios.crear')
-        <a class="btn fw-bold ms-4 mt-4 text-light bg-warning botonBoostrapTable" 
-            onclick="cargarModal(`{{ route('usuarios.create') }}`, 'Crear Usuario', '#formCrearUsuario', 'modal-lg')">
-            Registrar usuario
-        </a>
-    @endpermite
+    <div class="botonBoostrapTable">
+        @permite('administracion.usuarios.crear')
+            <a class="btn fw-bold ms-4 mt-4 text-dark bg-warning " 
+                onclick="cargarModal(`{{ route('usuarios.create') }}`, 'Crear Usuario', '#formCrearUsuario', 'modal-lg')">
+                Registrar usuario
+            </a>
+        @endpermite
+    </div>
 
     <div id="no-more-tables" class="row p-4">
         <table
@@ -92,21 +94,21 @@
             <div class="col-md-12 text-center">
                 @permite('administracion.usuarios.asignar_permisos')
                     <a class="me-3 text-decoration-none" 
-                        title="Haga click para gestionar los permisos del usuario"
+                        title="Gestionar permisos del usuario"
                         onclick="cargarModal('${urlPermisos}', 'Permisos usuario', '#formPermisoUsuario', 'modal-xl')">
                         <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/Permiso00.png" alt="Permisos" style="width: 30px; height: 30px;">
                     </a>
                 @endpermite
                 @permite('administracion.usuarios.asignar_roles')
                     <a class="me-3 text-decoration-none" 
-                        title="Haga click para gestionar los roles del usuario"
+                        title="Gestionar roles del usuario"
                         onclick="cargarModal('${urlRoles}', 'Roles usuario', '#formRolUsuario', 'modal-xl')">
                         <img src="{{ asset('img/rolesEdit.png') }}" alt="Roles" style="width: 32px; height: 32px;">
                     </a>
                 @endpermite
                 @permite('administracion.usuarios.actualizar')
                     <a 
-                        title="Haga click para editar el usuario"
+                        title="Editar usuario"
                         onclick="cargarModal('${urlUsuarios}', 'Editar Usuario', '#formEditUsuario', 'modal-lg')">
                         <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/new_editar.png" alt="Editar" style="width: 30px; height: 30px;">
                     </a>

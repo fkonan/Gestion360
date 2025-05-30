@@ -4,17 +4,16 @@ namespace App\View\Composers;
 
 use App\Models\GESTIONADMIN\Modulo;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Cache;
 
 class MenuComposer
 {
     public function compose(View $view): void
     {
-        /* Carga los modulos con los submodulos,
-        1.Se verifica que los submodulos tenga alguna ruta establecida de lo contrario no se mostrara el submodulo.
-        2.Si en un modulo ningun submodulo tiene rutas entonces no se mostrata ese modulo.      */
-        $modulos = Modulo::with(['submodulos' => function ($query) {
-            $query->where('SubModuloEstado', 'ACTIVO')
-                ->whereNotNull('SubModRuta');
+        $modulos = Cache::remember('modulos_con_submodulos', now()->addHours(4), function () {
+            return Modulo::with(['submodulos' => function ($query) {
+                $query->where('SubModuloEstado', 'ACTIVO')
+                      ->whereNotNull('SubModRuta');
             }])
             ->where('ModuloEstado', 'ACTIVO')
             ->get()
@@ -22,6 +21,7 @@ class MenuComposer
                 return $modulo->submodulos->isNotEmpty();
             })
             ->values();
+        });
 
         $view->with('modulos', $modulos);
     }
