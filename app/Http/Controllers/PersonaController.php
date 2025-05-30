@@ -163,13 +163,13 @@ class PersonaController extends Controller
             $personaDatos->save();
 
             DB::commit();
-            return sweetAlertJson("Persona creada exitosamente", "success",route('personas.index'));
+            return toastModal("Persona creada exitosamente", "success",route('personas.index'));
 
         }catch(Exception $e){
             DB::rollBack();
             Log::error('Error al crear la persona: ' . $e->getMessage());
 
-            return sweetAlertJson("Error al crear la persona", "error",route('personas.index'));
+            return toastModal("Error al crear la persona", "error",route('personas.index'));
         } 
     }
 
@@ -218,7 +218,7 @@ class PersonaController extends Controller
             $personaLogeada = Auth::user();
 
             if($request->PerEstado == 'Inactivo' && $personaActualizar->IdPersona == $personaLogeada->persona->IdPersona){
-                return sweetAlertJson("No puede cambiar a estado INACTIVO a su propio registro", "warning");
+                return toastModal("No puede cambiar a estado INACTIVO a su propio registro", "warning");
             } 
 
             DB::beginTransaction();
@@ -230,13 +230,13 @@ class PersonaController extends Controller
             $personaDatos->save();
             DB::commit();
 
-            return sweetAlertJson("Persona modificada exitosamente", "success",route('personas.index'));
+            return toastModal("Persona modificada exitosamente", "success",route('personas.index'));
 
         }catch(Exception $e){
             DB::rollBack();
             Log::error('Error al modificar la persona: ' . $e->getMessage());
 
-            return sweetAlertJson("Error al modificar la persona", "error",route('personas.index'));  
+            return toastModal("Error al modificar la persona", "error",route('personas.index'));  
         }
     }
 }

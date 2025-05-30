@@ -18,15 +18,21 @@ class ResetPasswordController extends Controller
 
     public function resetPassword(Request $request)
     {
-         $request->validate([
+        $request->validate([
             'email' => 'required|email',
             'token' => 'required',
-            'password' => 'required|confirmed|min:6',
+            'password' => [
+                'required',
+                'confirmed',
+                'min:6',
+                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/'
+            ],
             ],[
             'password.required' => 'La contraseña es obligatoria.',
             'password.confirmed' => 'Las contraseñas no coinciden.',
             'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
-            ]);
+            'password.regex' => 'La contraseña debe contener al menos una mayúscula, una minúscula, un número y un carácter especial.',
+        ]);
 
         try{
             $record = DB::table('password_resets')

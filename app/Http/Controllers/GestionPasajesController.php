@@ -136,14 +136,14 @@ class GestionPasajesController extends Controller
             $numeroResultados = $resultados->count();
 
             if($numeroResultados === 0){
-                return sweetAlertJson("No se encontraron resultados para los criterios seleccionados.", "warning");
+                return toastModal("No se encontraron resultados para los criterios seleccionados.", "warning");
             }
 
             session(['esquemaTarifario' => $resultados]);
-            return sweetAlertJson("Resultados obtenidos: ". $numeroResultados, "success", route('esquemaTarifario.listaDatos')); 
+            return toastModal("Resultados obtenidos: ". $numeroResultados, "success", route('esquemaTarifario.listaDatos')); 
         }catch(Exception $e){
             Log::error('Error al filtrar el esquema tarifario: ' . $e->getMessage());
-            return sweetAlertJson("Error al filtrar el esquema tarifario", "error"); 
+            return toastModal("Error al filtrar el esquema tarifario", "error"); 
         }
     }
 

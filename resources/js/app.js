@@ -44,7 +44,8 @@ import { deshabilitarSubmit,
         handleMenuActive, 
         abrirArchivo,
         exportarExcel,
-        actualizarEstado
+        actualizarEstado,
+        mostrarToast
     } from './utils';
 
 window.deshabilitarSubmit = deshabilitarSubmit;
@@ -52,6 +53,7 @@ window.habilitarSubmit = habilitarSubmit;
 window.abrirArchivo = abrirArchivo;
 window.exportarExcel = exportarExcel;
 window.actualizarEstado = actualizarEstado;
+window.mostrarToast = mostrarToast;
 
 //Inicializar funciones
 setInterval(actualizarReloj, 1000);

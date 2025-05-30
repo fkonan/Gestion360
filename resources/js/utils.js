@@ -155,7 +155,7 @@ export function actualizarEstado(ruta){
 }
 
 //Funcion para mostrar toast desde el front (AJAX)
-function mostrarToast(message, type = 'primary') {
+export function mostrarToast(message, type = 'primary') {
     const container = document.getElementById('toastContainer');
     if (!container) {
         console.error('No se encontró el contenedor para el toast');

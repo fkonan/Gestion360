@@ -139,12 +139,12 @@ class UserController extends Controller
 
             Mail::to($user->persona->datos->PerEmail)->send(new CorreoCredenciales($datos));
             DB::commit();
-            return sweetAlertJson("Usuario creado exitosamente","success",route('usuarios.index'));
+            return toastModal("Usuario creado exitosamente","success",route('usuarios.index'));
     
         }catch(Exception $e){
             DB::rollBack();
             Log::error('Error al crear el usuario: ' . $e->getMessage());
-            return sweetAlertJson("Error al crear el usuario","error",route('usuarios.index'));
+            return toastModal("Error al crear el usuario","error",route('usuarios.index'));
         }
     }
 
@@ -172,11 +172,11 @@ class UserController extends Controller
             }
 
             User::findOrFail($id)->update($data);
-            return sweetAlertJson("Usuario modificado exitosamente","success",route('usuarios.index'));
+            return toastModal("Usuario modificado exitosamente","success",route('usuarios.index'));
     
         }catch(Exception $e){
             Log::error('Error al modificar el usuario: ' . $e->getMessage());
-            return sweetAlertJson("Error al modificar el usuario","error",route('usuarios.index'));
+            return toastModal("Error al modificar el usuario","error",route('usuarios.index'));
         }
         
     }

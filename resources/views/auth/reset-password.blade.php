@@ -37,7 +37,7 @@
                         </div>
 
                         @error('password')          
-                            <small class="text-danger fw-bold">{{ $message }}</small>
+                            <small class="text-danger">{{ $message }}</small>
                         @enderror
                         
                         <button class="btn btn-warning btn-block mt-3" type="submit" name="Boton" value="Boton" id="Boton">Cambiar contraseña</button>

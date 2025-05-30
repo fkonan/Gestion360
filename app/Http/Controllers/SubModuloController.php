@@ -59,11 +59,11 @@ class SubModuloController extends Controller
             $modulo->ModHorReg = now();
             $modulo->save();
 
-            return sweetAlertJson("Submodulo creado exitosamente", "success",route('submodulos.index'));
+            return toastModal("Submodulo creado exitosamente", "success",route('submodulos.index'));
 
         }catch(Exception $e){
             Log::error('Error al crear el submodulo: ' . $e->getMessage());
-            return sweetAlertJson("Error al crear el submodulo", "error",route('submodulos.index'));
+            return toastModal("Error al crear el submodulo", "error",route('submodulos.index'));
         }
     }
 
@@ -97,11 +97,11 @@ class SubModuloController extends Controller
 
         try{
             SubModulo::findOrFail($id)->update($request->all());
-            return sweetAlertJson("SubModulo actualizado exitosamente", "success",route('submodulos.index'));
+            return toastModal("SubModulo actualizado exitosamente", "success",route('submodulos.index'));
             
         }catch(Exception $e){
             Log::error('Error al actualizar el submodulo: ' . $e->getMessage());
-            return sweetAlertJson("Error al actualizar el submodulo", "error",route('submodulos.index'));
+            return toastModal("Error al actualizar el submodulo", "error",route('submodulos.index'));
         }
     }
 

@@ -66,14 +66,7 @@
 
 <!-- Sweet alert -->
 <x-alert /> 
-
-<!--
-<div style="padding-top:5%;">
-    <script src="https://autogestion.copetran.com.co/cdn/scripts/HeaderFooter.js" defer></script>
-</div>
--->
 @endsection
-
 
 @pushOnce('script')
 <script>

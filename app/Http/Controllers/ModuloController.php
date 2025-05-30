@@ -55,11 +55,11 @@ class ModuloController extends Controller
             $modulo->ModHorReg = now();
             $modulo->save();
 
-            return sweetAlertJson("Modulo creado exitosamente","success",route('modulos.index'));
+            return toastModal("Modulo creado exitosamente","success",route('modulos.index'));
 
         }catch(Exception $e){
             Log::error('Error al crear el modulo: ' . $e->getMessage());
-            return sweetAlertJson("Error al crear el modulo","error",route('modulos.index'));
+            return toastModal("Error al crear el modulo","error",route('modulos.index'));
         }
     }
 
@@ -91,11 +91,11 @@ class ModuloController extends Controller
 
         try{
             Modulo::findOrFail($id)->update($request->all());
-            return sweetAlertJson("Modulo actualizado exitosamente", "success",route('modulos.index'));
+            return toastModal("Modulo actualizado exitosamente", "success",route('modulos.index'));
             
         }catch(Exception $e){
             Log::error('Error al actualizar el modulo: ' . $e->getMessage());
-            return sweetAlertJson("Error al actualizar el modulo", "error",route('modulos.index'));
+            return toastModal("Error al actualizar el modulo", "error",route('modulos.index'));
         }
     }
 

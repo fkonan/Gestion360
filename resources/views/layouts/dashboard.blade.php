@@ -111,6 +111,18 @@
                 document.activeElement.blur();
             }
         });
+        
+        // Función para mostrar el toast
+        window.addEventListener('DOMContentLoaded', function () {
+            const title = sessionStorage.getItem('toastTitle');
+            const type = sessionStorage.getItem('toastType');
+
+            if (title && type) {
+                mostrarToast(title, type); 
+                sessionStorage.removeItem('toastTitle');
+                sessionStorage.removeItem('toastType');
+            }
+        });
 
     </script>
 

@@ -26,11 +26,11 @@ class EventoConductorService
                 ->first();
 
             if(!$conductor){
-                return sweetAlertJson("El numero de identificacion es incorrecto o no es valido actualmente.", "error");
+                return toastModal("El numero de identificacion es incorrecto o no es valido actualmente.", "error");
             };
 
             if(!in_array($request->evento, [self::REGRESO_ANTICIPADO, self::REGRESO_DE_DESCANSO, self::SALIDA_A_DESCANSO])){
-                return sweetAlertJson("Ocurrio un error con el evento seleccionado, intento nuevamente mas tarde", "error");
+                return toastModal("Ocurrio un error con el evento seleccionado, intento nuevamente mas tarde", "error");
             }
 
             //El regreso anticipado maneja un logica distinta a los otros casos
@@ -58,11 +58,11 @@ class EventoConductorService
             $conductorEvento->tiporegistro = 0;
             $conductorEvento->save();
  
-            return sweetAlertJson("Se registró el evento ". $eventoDesc, "success",route("reportes.index"));
+            return toastModal("Se registró el evento ". $eventoDesc, "success",route("reportes.index"));
            
         }catch(Exception $e){
             Log::error('Error al registrar el descanso: ' . $e->getMessage());
-            return sweetAlertJson("Error al registrar el descanso","error");
+            return toastModal("Error al registrar el descanso","error");
         }
        
     }
@@ -75,14 +75,14 @@ class EventoConductorService
                     ->first();
 
         if(!$conductorBloqueo){
-            return sweetAlertJson("El conductor no presenta bloqueo para realizar el REGRESO ANTICIPADO, debe realizar REGRESO DE DESCANSO", "warning");
+            return toastModal("El conductor no presenta bloqueo para realizar el REGRESO ANTICIPADO, debe realizar REGRESO DE DESCANSO", "warning");
         }
 
         //Se cambia la fecha de bloqueo por 1 dia antes al actual
         $conductorBloqueo->fecha_fin = Carbon::now()->subDay();
         $conductorBloqueo->save();
 
-        return sweetAlertJson("Se registró el evento REGRESO ANTICIPADO", "success",route("reportes.index"));
+        return toastModal("Se registró el evento REGRESO ANTICIPADO", "success",route("reportes.index"));
     } 
   
 }

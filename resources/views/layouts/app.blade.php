@@ -5,6 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <title>@yield('title')</title>
+        <link rel="icon" href="{{ asset('favicon.png') }}" type="image/png">
 
         <!-- CAPCHA js de paquete: anhskohbo/no-captcha-->
         {!! NoCaptcha::renderJs() !!}

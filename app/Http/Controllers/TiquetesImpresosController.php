@@ -66,15 +66,15 @@ class TiquetesImpresosController extends Controller
             $numeroTiquetes = $tiquetes->count();
     
             if ($tiquetes->isEmpty()) {
-                return sweetAlertJson("No se han encontrado tiquetes para las fechas seleccionadas", "warning");
+                return toastModal("No se han encontrado tiquetes para las fechas seleccionadas", "warning");
             }
     
             session(['tiquetes' => $tiquetes]);
-            return sweetAlertJson("Se han encontrado " .$numeroTiquetes. " tiquetes para las fechas seleccionadas", "success", route('reportes.listaTiquetes'));
+            return toastModal("Se han encontrado " .$numeroTiquetes. " tiquetes para las fechas seleccionadas", "success", route('reportes.listaTiquetes'));
 
         }catch(Exception $e){
             Log::error('Error al filtrar los tiquetes: ' . $e->getMessage());
-            return sweetAlertJson("Error al filtrar los tiquetes", "error",route('reportes.index'));
+            return toastModal("Error al filtrar los tiquetes", "error",route('reportes.index'));
         }
        
     }

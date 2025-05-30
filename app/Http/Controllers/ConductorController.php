@@ -37,7 +37,7 @@ class ConductorController extends Controller
             $tripulante = Tripulantes::where("legajo", $request->legajo)->first();
            
             if (!$tripulante) {
-                return sweetAlertJson("El legajo no corresponde a ningun conductor", "warning");
+                return toastModal("El legajo no corresponde a ningun conductor", "warning");
             }
 
             //Cambia el estado dependiendo del que tenga actualmente 
@@ -46,12 +46,12 @@ class ConductorController extends Controller
 
             $estado = $tripulante->Estado === 1 ? 'ACTIVADO' : 'SUSPENDIDO';
 
-            return sweetAlertJson("Se cambió el estado del conductor a $estado en el sistema", "success");
+            return toastModal("Se cambió el estado del conductor a $estado en el sistema", "success");
             
 
         }catch(Exception $e){
             Log::error('Error al actualizar estado de conductor FICS: ' . $e->getMessage());
-            return sweetAlertJson("Error al actualizar estado de conductor","error");
+            return toastModal("Error al actualizar estado de conductor","error");
         }    
     }
 
@@ -90,16 +90,16 @@ class ConductorController extends Controller
             }
 
             if ($listaFirmas->isEmpty()) {
-                return sweetAlertJson("No se encontraron resultados para los parametros ingresados.", "warning","#");
+                return toastModal("No se encontraron resultados para los parametros ingresados.", "warning","#");
             }else{
                 session(['firmasEquipaje' => $listaFirmas]);
                 $numeroRegistros = $listaFirmas->count();
-                return sweetAlertJson('Se han encontrado ' . $numeroRegistros . ' registros para los parametros seleccionadas', "success",route("lista.firmaEquipaje"));
+                return toastModal('Se han encontrado ' . $numeroRegistros . ' registros para los parametros seleccionadas', "success",route("lista.firmaEquipaje"));
             }
         
         }catch(Exception $e){
             Log::error('Error al obtener la lista de firmas politica equipaje: ' . $e->getMessage());
-            return sweetAlertJson("Error al obtener los resultados","error");
+            return toastModal("Error al obtener los resultados","error");
         }
 
     }
@@ -175,7 +175,7 @@ class ConductorController extends Controller
                 }
 
                 if(!$conductorId){
-                    return sweetAlertJson("Conductor no encontrado, revise el parametro ingresado","error");
+                    return toastModal("Conductor no encontrado, revise el parametro ingresado","error");
                 }
             }
 
@@ -204,10 +204,10 @@ class ConductorController extends Controller
 
             $numeroRegistros = $dataReporte->count();
             session(['ingSalConductores' => $dataReporte]);
-            return sweetAlertJson("Registros encontrados: ".$numeroRegistros ,"success",route("lista.ingresoSalidas"));
+            return toastModal("Registros encontrados: ".$numeroRegistros ,"success",route("lista.ingresoSalidas"));
         }catch(Exception $e){
             Log::error('Error al obtener la lista de ingreso salida de conductores: ' . $e->getMessage());
-            return sweetAlertJson("Error al obtener los resultados","error");
+            return toastModal("Error al obtener los resultados","error");
         }
     }
 

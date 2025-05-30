@@ -45,11 +45,11 @@ class PermisosController extends Controller
             $usuario = User::findOrFail($id);
             $usuario->syncPermissions($request->permissions);
 
-            return sweetAlertJson('Permisos actualizados correctamente para el usuario ' . $usuario->persona->nombreCompleto(), 'success',route('usuarios.index'));
+            return toastModal('Permisos actualizados correctamente para el usuario ' . $usuario->persona->nombreCompleto(), 'success',route('usuarios.index'));
            
         }catch(Exception $e){
             Log::error('Error al actualizar permisos: ' . $e->getMessage());
-            return sweetAlertJson("Error al actualizar los permisos", "error",route('usuarios.index'));
+            return toastModal("Error al actualizar los permisos", "error",route('usuarios.index'));
         }
         
     }

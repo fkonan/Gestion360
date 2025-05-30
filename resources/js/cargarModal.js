@@ -7,6 +7,8 @@
 // - formularioId: (Opcional) El ID del formulario para activar las validaciones (solo si el modal contiene un formulario).
 // - size: (Opcional) El tamaño del modal. Puede ser "modal-xl", "modal-lg", "modal-sm" o ninguno (para tamaño normal).
 
+import { mostrarToast } from "./utils";
+
 
 function cargarModal(url, titulo = "", formularioId = null, size = null) {
     const $modal = $("#globalModal");
@@ -119,16 +121,17 @@ function validarFormulario(form, TYPE="POST") {
                 contentType: false,
                 dataType: "json",
                 success: function (response) {
-                    Swal.fire({
-                        icon: response.type,
-                        title: response.title,
-                        confirmButtonColor: "#3366CC",
-                        confirmButtonText: "Aceptar"
-                    }).then(() => {
-                        //Se habilita nuvamente el submit al usuario
-                        habilitarSubmit(form);
-                        window.location.href = response.redirect;
-                    });
+                    habilitarSubmit(form);
+                    if(response.redirect == '#'){
+                        //si no hay redireccion se muestra directamente la alerta 
+                        mostrarToast(response.title,response.type);
+                    }else{
+                        //guarda la info de la alerta en sesion para usarla luego en el layout
+                        sessionStorage.setItem('toastTitle', response.title);
+                        sessionStorage.setItem('toastType', response.type);     
+                    }
+
+                    window.location.href = response.redirect;
                 },
                 error: function (xhr) {
                     $(".error").text("");

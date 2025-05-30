@@ -141,18 +141,18 @@ class RolController extends Controller
         $usuarioAuth = Auth::user();
 
         if($id == $usuarioAuth->IdUsuario){
-            return sweetAlertJson("No puedes cambiar tus propios roles", "warning");
+            return toastModal("No puedes cambiar tus propios roles", "warning");
         }
 
         try{
             $usuario = User::findOrFail($id);
             $usuario->syncRoles($request->roles);
 
-            return sweetAlertJson("Roles actualizados correctamente para el usuario " . $usuario->persona->nombreCompleto(), "success",route('usuarios.index'));
+            return toastModal("Roles actualizados correctamente para el usuario " . $usuario->persona->nombreCompleto(), "success",route('usuarios.index'));
            
         }catch(Exception $e){
             Log::error('Error al actualizar los roles: ' . $e->getMessage());
-            return sweetAlertJson("Error al actualizar los roles", "error",route('usuarios.index'));
+            return toastModal("Error al actualizar los roles", "error",route('usuarios.index'));
         }
     }
 }

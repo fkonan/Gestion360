@@ -24,9 +24,9 @@ if (!function_exists('toast')) {
     }
 }
 
-//Permite lanzar el mensaje de sweet alert al finalizar una accion en un MODAL (estos van con ajax)
-if (!function_exists('sweetAlertJson')) {
-    function sweetAlertJson($message, $type = 'success', $redirect = null): JsonResponse
+//Permite lanzar la alerta toast en un modal (como resultado de una peticion ajax)
+if (!function_exists('toastModal')) {
+    function toastModal($message, $type = 'success', $redirect = null): JsonResponse
     {
         return response()->json([
             'title' => $message,
