@@ -33,8 +33,7 @@
             data-pagination="true"
             data-mobile-responsive="true"
             data-check-on-init="true"
-            data-url="{{ route('ingresoSalida.cargarData') }}"
-            data-pagination-parts="['pageSize', 'pageList', 'pageNext', 'pagePrev']">   
+            data-url="{{ route('ingresoSalida.cargarData') }}">   
             <thead class="table-primary">
                 <tr class="bg-primary">
                     <th data-field="identificacion" data-sortable="true">Identificación</th>

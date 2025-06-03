@@ -70,7 +70,7 @@
             let fechaInicio = new Date(row.IncFecIni);
             let fechaFin = new Date(row.IncFecFin);
 
-            let diasIncapacidad = Math.ceil((fechaFin - fechaInicio) / (1000 * 60 * 60 * 24));
+            let diasIncapacidad = Math.ceil((fechaFin - fechaInicio) / (1000 * 60 * 60 * 24)) + 1;
             let urlDatos = rutas.datos.replace(':id', row.IdIncapacidad);
             let urlAdjuntos = rutas.adjuntos.replace(':id', row.IdIncapacidad);
             let urlSeguimientoDetalle = rutas.seguimientoDetalle.replace(':id', row.IdIncapacidad);

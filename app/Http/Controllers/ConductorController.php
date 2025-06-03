@@ -46,8 +46,7 @@ class ConductorController extends Controller
 
             $estado = $tripulante->Estado === 1 ? 'ACTIVADO' : 'SUSPENDIDO';
 
-            return toastModal("Se cambió el estado del conductor a $estado en el sistema", "success");
-            
+            return toastModal("Se cambió el estado del conductor a $estado en el sistema", "success");  
 
         }catch(Exception $e){
             Log::error('Error al actualizar estado de conductor FICS: ' . $e->getMessage());
