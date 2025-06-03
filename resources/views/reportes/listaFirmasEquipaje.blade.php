@@ -33,8 +33,7 @@
             data-pagination="true"
             data-mobile-responsive="true"
             data-check-on-init="true"
-            data-url="{{ route('firmaEquipaje.cargarData') }}"
-            data-pagination-parts="['pageSize', 'pageList', 'pageNext', 'pagePrev']">   
+            data-url="{{ route('firmaEquipaje.cargarData') }}">   
             <thead class="table-primary">
                 <tr class="bg-primary">
                     <th data-field="NomCon" data-sortable="true">Nombre y apellidos</th>
