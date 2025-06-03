@@ -38,9 +38,10 @@
                 <tr class="bg-primary">
                     <th data-field="identificacion" data-sortable="true">Identificación</th>
                     <th data-field="codigo" data-sortable="true">Código</th>
-                    <th data-field="nombreCompleto" data-sortable="true">Conductor</th>
-                    <th data-field="evento" data-sortable="true">Evento</th>
-                    <th data-field="fechaEvento" data-sortable="true">Fecha de evento</th>
+                    <th data-field="conductor" data-sortable="true">Conductor</th>
+                    <th data-field="anotacion" data-sortable="true">Evento</th>
+                    <th data-field="fechaevento" data-sortable="true">Fecha de evento</th>
+                    <th data-field="agencia" data-sortable="true">Agencia</th>
                     <!-- <th data-field="agencia" data-sortable="true">Agencia registro de evento</th> -->
                 </tr>
             </thead>

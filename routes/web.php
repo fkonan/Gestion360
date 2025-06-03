@@ -31,8 +31,8 @@ Route::get('/clear', function () {
 });
  
 //Ruta Modulo administración
-Route::prefix("administracion")->middleware(['auth', 'permisos:administracion.acceder','modulo.activo:7'])->group(function(){
-    Route::prefix("personas")->middleware(['permisos:administracion.personas.acceder','submodulo.activo:11'])->group(function(){
+Route::prefix("administracion")->middleware(['auth', 'permisos:administracion.acceder','modulo.activo:12'])->group(function(){
+    Route::prefix("personas")->middleware(['permisos:administracion.personas.acceder','submodulo.activo:21'])->group(function(){
         Route::get("/",[PersonaController::class,"index"])->name("personas.index");
         Route::get("/crear",[PersonaController::class,"create"])->name("personas.create");
         Route::post("/",[PersonaController::class,"store"])->name("personas.store");
@@ -41,7 +41,7 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:administracion.ac
         Route::get("cargarDatos",[PersonaController::class,"cargarDatos"])->middleware('soloAJAX')->name("personas.cargarDatos");
         Route::post("/{id}/cambiar-estado", [PersonaController::class, "cambiarEstado"])->middleware('soloAJAX')->name("personas.cambiarEstado");
     });
-    Route::prefix("usuarios")->middleware(['permisos:administracion.usuarios.acceder','submodulo.activo:10'])->group(function(){
+    Route::prefix("usuarios")->middleware(['permisos:administracion.usuarios.acceder','submodulo.activo:20'])->group(function(){
         Route::get("/",[UserController::class,"index"])->name("usuarios.index");
         Route::get("/create",[UserController::class,"create"])->middleware('soloAJAX')->name("usuarios.create");
         Route::post("/",[UserController::class,"store"])->name("usuarios.store");
@@ -54,7 +54,7 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:administracion.ac
         Route::put("/{id}/permisos",[PermisosController::class,"update"])->name("permisos.update");
         Route::post("/{id}/cambiar-estado", [UserController::class, "cambiarEstado"])->middleware('soloAJAX')->name("usuarios.cambiarEstado");
     });
-    Route::prefix("reportes")->middleware(['permisos:administracion.reportes.acceder','submodulo.activo:12'])->group(function(){
+    Route::prefix("reportes")->middleware(['permisos:administracion.reportes.acceder','submodulo.activo:22'])->group(function(){
         Route::get("/",[ModuloController::class,"getReportes"])->name("reportes.index");
 
         //Impresion tiquetes
@@ -92,8 +92,8 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:administracion.ac
 });
 
 //Rutas Modulo Configuracion
-Route::prefix("configuracion")->middleware(['auth', 'permisos:configuracion.acceder','modulo.activo:6'])->group(function(){
-    Route::prefix("sistema")->middleware(['permisos:configuracion.gestion_sistema.acceder','submodulo.activo:9'])->group(function(){
+Route::prefix("configuracion")->middleware(['auth', 'permisos:configuracion.acceder','modulo.activo:11'])->group(function(){
+    Route::prefix("sistema")->middleware(['permisos:configuracion.gestion_sistema.acceder','submodulo.activo:19'])->group(function(){
         Route::get("/",[ModuloController::class,"getGestionSistema"])->name("gestion-sistema.index");
 
         Route::prefix("modulos")->name("modulos.")->group(function(){
@@ -146,8 +146,8 @@ Route::prefix("gestionRRHH")->middleware(['auth', 'permisos:gestion_de_rr_hh.acc
 });
 
 //Rutas Modulo Gestion Pasajes
-Route::prefix("gestionPasajes")->middleware(['auth', 'permisos:gestion_pasajes.acceder','modulo.activo:8'])->group(function(){
-    Route::prefix("buscar-viaje")->middleware('submodulo.activo:18')->group(function(){
+Route::prefix("gestionPasajes")->middleware(['auth', 'permisos:gestion_pasajes.acceder','modulo.activo:13'])->group(function(){
+    Route::prefix("buscar-viaje")->middleware('submodulo.activo:23')->group(function(){
         Route::get("/",[GestionPasajesController::class,"formBuscarViaje"])->name("buscar-viaje.index");
         Route::post("/filtrar",[GestionPasajesController::class,"filtrarViajes"])->name("buscar-viaje.filtrar");
     });

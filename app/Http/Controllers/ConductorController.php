@@ -10,7 +10,9 @@ use App\Models\LOGTRANS\PerConductoresEventos;
 use App\Models\LOGTRANS\PerContratoPersona;
 use App\Models\LOGTRANS\PerPersonas;
 use App\Services\EventoConductorService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class ConductorController extends Controller
@@ -165,44 +167,51 @@ class ConductorController extends Controller
         }
 
         try{
-            //se busca el PE_ID del conductor si es una busqueda con parametro
-            if($request->parametroInput &&  $request->filtro !== 'todos'){
-                $conductorId = PerContratoPersona::where($request->filtro,$request->parametroInput)->value("pe_id_pe");
-                
-                if(!$conductorId){
-                    $conductorId = PerPersonas::where($request->filtro,$request->parametroInput)->value("id");
-                }
+            $fechaIni = Carbon::parse($request->fechaInicial)->format('Y/m/d');
+            $fechaFin = Carbon::parse($request->fechaFinal)->format('Y/m/d');
 
-                if(!$conductorId){
-                    return toastModal("Conductor no encontrado, revise el parametro ingresado","error");
-                }
+            $query = DB::connection('oracle')
+                ->table('LOGTRANSPRO.per_conductoreseventos as ce')
+                ->leftJoin('logtranspro.per_personas as p', 'p.id', '=', 'ce.pe_id')
+                ->join('logtranspro.per_contrato_persona as pcp', 'pcp.pe_id_pe', '=', 'ce.pe_id')
+                ->select(
+                    'ce.id',
+                    'p.identificacion',
+                    'pcp.codigo',
+                    DB::raw("p.PNOMBRE || NVL(' ' || p.SNOMBRE, '') || ' ' || p.PAPELLIDO || NVL(' ' || p.SAPELLIDO, '') as conductor"),
+                    'ce.anotacion',
+                    'ce.fechaevento',
+                    DB::raw("(SELECT s.NOMSUCURSAL FROM per_personas s WHERE s.id = ce.Empcreacion) AS agencia")
+                )
+                ->whereRaw("TRUNC(ce.FECHAEVENTO) >= TRUNC(TO_DATE(?, 'YYYY/MM/DD'))", [$fechaIni])
+                ->whereRaw("TRUNC(ce.FECHAEVENTO) <= TRUNC(TO_DATE(?, 'YYYY/MM/DD'))", [$fechaFin])
+                ->whereIn('ce.evento', ['49', '50']);
+
+            // Añadir filtros según la variable "filtro"
+            switch ($request->filtro) {
+                case 'identificacion':
+                    $query->where('p.identificacion', 'like', $request->identificacion);
+                    break;
+
+                case 'codigo':
+                    $query->where('pcp.codigo', 'like', $request->codigo);
+                    break;
+
+                case 'todos':
+                    $query->where('p.identificacion', 'like', '%')
+                        ->where('pcp.codigo', 'like', '%');
+                    break;
+            } 
+
+            // Ordenar y ejecutar
+            $resultados = $query->orderBy('ce.FECHAEVENTO', 'desc')->get();
+            $numeroRegistros = $resultados->count();
+
+            if ($numeroRegistros == 0) {
+                return toastModal("No se encontraron resultados para los parametros ingresados.", "warning","#");
             }
 
-            $query = PerConductoresEventos::whereIn("evento", [49, 50])
-                ->where("estborrado",0)
-                ->whereBetween("fechaevento", [$request->fechaInicial, $request->fechaFinal])
-                ->with(["PerContratoPersona", "PerPersona"])
-                ->orderBy("fechaevento", "desc");
-
-            //filtro por PE_ID si se definio parametro
-            if (isset($conductorId) && $conductorId) {
-                $query->where("pe_id", $conductorId);
-            }
-
-            $dataReporte = $query->get()
-            ->map(function ($item) {
-                return [
-                    'identificacion' => $item->PerPersona?->identificacion,
-                    'codigo' => $item->PerContratoPersona?->codigo,
-                    'nombreCompleto' => $item->PerPersona?->nombreCompleto(),
-                    'evento' => $item->anotacion,
-                    'fechaEvento' => $item->fechaevento,
-                    /* 'agencia' => PerPersonas::where("id",$item->empcreacion)->value("nomsucursal") */
-                ];
-            });
-
-            $numeroRegistros = $dataReporte->count();
-            session(['ingSalConductores' => $dataReporte]);
+            session(['ingSalConductores' => $resultados]);
             return toastModal("Registros encontrados: ".$numeroRegistros ,"success",route("lista.ingresoSalidas"));
         }catch(Exception $e){
             Log::error('Error al obtener la lista de ingreso salida de conductores: ' . $e->getMessage());
