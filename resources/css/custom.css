@@ -248,7 +248,7 @@ body:not(.sidebar-collapse) .nav-item .nav-treeview .nav-link {
 }
 
 /* Boostrap card views */
-html body .bootstrap-table .fixed-table-container .table tbody tr .card-view .card-view-value {
+/* html body .bootstrap-table .fixed-table-container .table tbody tr .card-view .card-view-value {
     text-align: center !important;
 }
 
@@ -273,7 +273,7 @@ html body .bootstrap-table .fixed-table-container .table tbody tr .card-view .ca
 .bootstrap-table .card-view{
     border-bottom: 1px solid #cfcfcf;
     margin-top: 0.5rem;
-}
+} */
 
 /* Estilos card componente */
 .cardComponent:hover{
@@ -289,11 +289,11 @@ html body .bootstrap-table .fixed-table-container .table tbody tr .card-view .ca
 
 
 /* Detalle de la tabla en modo tarjeta */
-th.detalle-mobile,
+/* th.detalle-mobile,
 td.detalle-mobile {
     display: none;
 }
-
+ */
 
 /* Toast componente */
 .toast {
@@ -334,12 +334,12 @@ td.detalle-mobile {
     
 }
 
-@media (max-width: 576px) {
+/* @media (max-width: 576px) {
     th.detalle-mobile,
     td.detalle-mobile {
         display: table-cell !important;
     }
-}
+} */
 
 
 

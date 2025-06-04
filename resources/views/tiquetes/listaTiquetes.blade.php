@@ -25,6 +25,7 @@
 
     <div class="row p-4 g-2">
         <table
+            id="miTabla"
             class="table table-sm table-striped"
             data-page-size="25"
             data-toggle="table"
@@ -32,9 +33,9 @@
             data-search="true"
             data-pagination="true"
             data-detail-view="true"
-            data-mobile-responsive="true"
             data-check-on-init="true"
             data-detail-formatter="detalleTiquete"
+            data-detail-filter="filtrarDetalle"
             data-url="{{ route('reportes.cargarData') }}"
             data-pagination-parts="['pageSize', 'pageList', 'pageNext', 'pagePrev']">   
             <thead class="table-primary">
@@ -45,10 +46,13 @@
                     <th data-field="TerminalDestino">Terminal Destino</th>
                     <th data-field="Agencia">Agencia</th>
                     <th data-field="FechaSalida" data-sortable="true">Fecha Salida</th>
-                    <th data-field="NumerodeViaje">Numero de Viaje</th>
+                    <th data-field="NumerodeViaje" data-force-hide="true">Numero de Viaje</th>
                     <th data-field="PrecioBase" data-sortable="true">Precio Base</th>
                     <th data-field="Descuento" data-sortable="true">Descuento</th>
                     <th data-field="PrecioTotal" data-sortable="true">Precio Total</th>
+                    <th data-field="Asiento" data-sortable="true">Asiento</th>
+                    <th data-field="ImpFecReg" data-sortable="true">Fecha Impresión</th>
+                    <th data-field="ImpHorReg" data-sortable="true">Hora Impresión</th>
                 </tr>
             </thead>
         </table>
@@ -58,19 +62,12 @@
 
 @pushOnce('script')
     @vite(['resources/js/cargarModal.js'])
-    <script>
-        function detalleTiquete(index, row) { 
-            return `
-            <div class="p-3 border rounded bg-light">
-                <div class="row">
-                    <div class="col-md-12">
-                        <p><strong>Asiento:</strong> ${row.Asiento}</p>
-                        <p><strong>Fecha Impresión:</strong> ${row.ImpFecReg}</p>
-                        <p><strong>Hora Impresión:</strong> ${row.ImpHorReg}</p>
-                    </div>
-                </div>
-            </div>`;
-        }
+    <script> 
+       document.addEventListener("DOMContentLoaded", () => {
+            initTablaBootstrapTable('#miTabla', {
+                protegidas: ['NumDocPer']
+            },'detalleTiquete');
+        });
     </script>
 @endpushOnce
 

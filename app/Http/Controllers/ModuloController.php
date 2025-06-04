@@ -16,6 +16,21 @@ class ModuloController extends Controller
         return view('modulos.listaModulos', compact('modulos'));
     }
 
+    public function cargarDatos(){
+        $modulos = Modulo::with('submodulos')->get()->map(function ($item) {
+            return [
+                'IdModulo' => mb_strtoupper($item->IdModulo),
+                'ModNom' => ucfirst(mb_strtolower($item->ModNom)),
+                'ModDesc' => ucfirst(mb_strtolower($item->ModDesc)),
+                'ModEstado' => $item->ModEstado,
+                'ModFecReg' => $item->ModFechReg,
+                'ModHorReg' => $item->ModHorReg,
+            ];
+        });
+
+        return $modulos;
+    }
+
     public function create(){
         $permisos = Permission::all();
         $modulos = Modulo::with('submodulos')->get();

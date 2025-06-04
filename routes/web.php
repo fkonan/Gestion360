@@ -98,6 +98,7 @@ Route::prefix("configuracion")->middleware(['auth', 'permisos:configuracion.acce
 
         Route::prefix("modulos")->name("modulos.")->group(function(){
             Route::get("/",[ModuloController::class,"index"])->name("index");
+            Route::get("/cargarDatos",[ModuloController::class,"cargarDatos"])->middleware('soloAJAX')->name("cargarDatos");
             Route::get("/create",[ModuloController::class,"create"])->middleware('soloAJAX')->name("create");
             Route::get("/{id}",[ModuloController::class,"edit"])->middleware('soloAJAX')->name("edit");
             Route::post("/",[ModuloController::class,"store"])->name("store");

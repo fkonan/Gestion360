@@ -34,16 +34,17 @@
             data-locale="es-ES"
             data-pagination="true"
             data-responsive="true"
-            data-mobile-responsive="true"
+            data-detail-view="true"
+            data-detail-formatter="detallePersona"
             data-check-on-init="true"
             data-side-pagination="server"
             data-url="{{ route('personas.cargarDatos') }}" >   
             <thead class="table-primary">
                 <tr>
                     <th data-field="PerNumDoc">Identificación</th>
-                    <th data-field="nombreCompleto" data-formatter="nombreCompletoFormatter">Nombre Completo</th>
-                    <th data-field="municipio_nac.departamento.DepNom">Departamento</th>
-                    <th data-field="datos.PerTelefono">Telefono</th>
+                    <th data-field="nombreCompleto">Nombre Completo</th>
+                    <th data-field="DepNom">Departamento</th>
+                    <th data-field="PerTelefono">Telefono</th>
                     <th data-field="PerGenero" data-sortable="true">Genero</th>  
                     <th data-field="PerFechReg" data-sortable="true">Fecha registro</th> 
                     @permite('administracion.personas.actualizar')
@@ -100,9 +101,17 @@
         `;
     }
 
-    function nombreCompletoFormatter(value, row) {
-        return row.PerNombres + ' ' + row.PerApellidos;
-    }
+    document.addEventListener("DOMContentLoaded", () => {
+        initTablaBootstrapTable(
+            '#personasDataTable', 
+            { protegidas: ['PerNumDoc'] }, 
+            'detallePersona', 
+            { 'acciones': accionesFormatter,
+                'PerEstado': estadoFormatter,
+            }
+        );
+    });
+
     </script>
 @endpushOnce
 

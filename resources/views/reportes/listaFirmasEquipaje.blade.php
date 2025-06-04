@@ -25,13 +25,15 @@
 
     <div class="row p-4 g-2">
         <table
+            id="reporteFirmaEquipaje"
             class="table table-sm table-striped"
             data-page-size="25"
             data-toggle="table"
             data-locale="es-ES"
             data-search="true"
             data-pagination="true"
-            data-mobile-responsive="true"
+            data-detail-view="true"
+            data-detail-formatter="detalleReporteFirmaEquipaje"
             data-check-on-init="true"
             data-url="{{ route('firmaEquipaje.cargarData') }}">   
             <thead class="table-primary">
@@ -50,5 +52,14 @@
 
 @pushOnce('script')
     @vite(['resources/js/cargarModal.js'])
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+        initTablaBootstrapTable(
+            '#reporteFirmaEquipaje', 
+            { protegidas: ['NomCon'] }, 
+            'detalleReporteFirmaEquipaje'
+        );
+    });
+    </script>
 @endpushOnce
 

@@ -39,43 +39,59 @@ class PersonaController extends Controller
     } 
 
     public function cargarDatos(Request $request){
-        //paginacion
-        $limit = $request->get('limit', 25); // Número de registros por página
-        $offset = $request->get('offset', 0); // Desde qué registro empezar
-        $search = $request->get('search');
-        $sort = $request->get('sort', 'PerFechReg');
-        $order = $request->get('order', 'desc');
+        try{
+             //paginacion
+            $limit = $request->get('limit', 25); // Número de registros por página
+            $offset = $request->get('offset', 0); // Desde qué registro empezar
+            $search = $request->get('search');
+            $sort = $request->get('sort', 'PerFechReg');
+            $order = $request->get('order', 'desc');
 
-        $personas = Persona::with(['municipioNac.departamento', 'datos']);
+            $personas = Persona::with(['municipioNac.departamento', 'datos']);
 
-        //buscador
-        if (!empty($search)) {
-            $personas->where(function ($q) use ($search) {
-                $q->where('PerFechReg', 'like', "%$search%")
-                    ->orWhere('PerNombres', 'like', "%$search%")
-                    ->orWhere('PerApellidos', 'like', "%$search%")
-                    ->orWhere('PerNumDoc', 'like', "%$search%")
-                    ->orWhereHas('municipioNac.departamento', function ($q2) use ($search) {
-                        $q2->where('DepNom', 'like', "%$search%");
-                    })
-                    ->orWhereHas('datos', function ($q3) use ($search) {
-                        $q3->where('PerTelefono', 'like', "%$search%");
-                    });
+            //buscador
+            if (!empty($search)) {
+                $personas->where(function ($q) use ($search) {
+                    $q->where('PerFechReg', 'like', "%$search%")
+                        ->orWhere('PerNombres', 'like', "%$search%")
+                        ->orWhere('PerApellidos', 'like', "%$search%")
+                        ->orWhere('PerNumDoc', 'like', "%$search%")
+                        ->orWhereHas('municipioNac.departamento', function ($q2) use ($search) {
+                            $q2->where('DepNom', 'like', "%$search%");
+                        })
+                        ->orWhereHas('datos', function ($q3) use ($search) {
+                            $q3->where('PerTelefono', 'like', "%$search%");
+                        });
+                });
+            }
+
+            //datos de la pagina 
+            $total = $personas->count();
+            $rows = $personas->orderBy($sort, $order)
+                ->skip($offset)
+                ->take($limit)
+                ->get()
+                ->map(function ($item) {
+                return [
+                    'PerNumDoc' => $item->PerNumDoc,
+                    'nombreCompleto' => $item->PerNombres . ' ' . $item->PerApellidos,
+                    'DepNom' => $item->municipioNac->departamento->DepNom ?? '',
+                    'PerTelefono' => $item->datos->PerTelefono ?? '',
+                    'PerGenero' => $item->PerGenero ?? '',
+                    'PerEstado' => $item->PerEstado,
+                    'PerFechReg' => $item->PerFechReg,
+                    'IdPersona' => $item->IdPersona,
+                ];
             });
+
+            return response()->json([
+            'total' => $total,
+            'rows' => $rows
+        ]);
+
+        }catch(Exception $e){
+            Log::error('Error al cargar los datos de las personas: ' . $e->getMessage());
         }
-
-         //datos de la pagina 
-        $total = $personas->count();
-        $rows = $personas->orderBy($sort, $order)
-            ->skip($offset)
-            ->take($limit)
-            ->get();
-
-        return response()->json([
-         'total' => $total,
-         'rows' => $rows
-      ]);
-
     }
 
     public function create(){

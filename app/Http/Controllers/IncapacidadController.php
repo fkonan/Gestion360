@@ -26,9 +26,27 @@ class IncapacidadController extends Controller
     }
 
     public function cargarDatos(){
-        $incapacidades = Incapacidad::with(['causa', 'diagnostico', 'eps', 'arl'])
+        $incapacidades = Incapacidad::with(['causa', 'eps','diagnostico','arl'])
             ->where('IncapacidadEstado', '=', 'RADICADO')
-            ->get();
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'IncPerNom' => $item->IncPerNom,
+                    'PerNumDoc' => $item->PerNumDoc,                    
+                    'causaDes'  => $item->causa->ParDes ?? '',
+                    'epsNombre' => $item->eps->EPSNombre ?? '',
+                    'arlNombre' => $item->arl->ARLNombre ?? '',
+                    'IncFecIni' => $item->IncFecIni,
+                    'IncFecFin' => $item->IncFecFin,
+                    'DiagnosticoDes' => $item->diagnostico->DescCie ?? '',
+                    'IncapacidadEstado' => $item->IncapacidadEstado,
+                    'IncFecReg' => $item->IncFecReg,
+                    'IncHorReg' => $item->IncHorReg,
+                    'IdIncapacidad' => $item->IdIncapacidad,
+                    'RevisionDatos' => $item->RevisionDatos,
+                ];
+            });
+
         return $incapacidades;
     }
 

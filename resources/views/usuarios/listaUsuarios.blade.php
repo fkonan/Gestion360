@@ -36,8 +36,9 @@
             data-locale="es-ES"
             data-pagination="true"
             data-responsive="true"
-            data-mobile-responsive="true"
             data-check-on-init="true"
+            data-detail-view="true"
+            data-detail-formatter="detalleUsuario"
             data-side-pagination="server"
             data-url="{{ route('usuarios.cargarDatos') }}">   
             <thead class="table-primary">
@@ -91,16 +92,16 @@
         let urlUsuarios = "{{ route('usuarios.edit', ['id' => ':id']) }}".replace(':id', row.IdUsuario);
 
         return `
-            <div class="col-md-12 text-center">
+            <div class="d-flex flex-wrap gap-3 justify-content-start ps-3">
                 @permite('administracion.usuarios.asignar_permisos')
-                    <a class="me-3 text-decoration-none" 
+                    <a class="text-decoration-none" 
                         title="Gestionar permisos del usuario"
                         onclick="cargarModal('${urlPermisos}', 'Permisos usuario', '#formPermisoUsuario', 'modal-xl')">
                         <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/Permiso00.png" alt="Permisos" style="width: 30px; height: 30px;">
                     </a>
                 @endpermite
                 @permite('administracion.usuarios.asignar_roles')
-                    <a class="me-3 text-decoration-none" 
+                    <a class="text-decoration-none" 
                         title="Gestionar roles del usuario"
                         onclick="cargarModal('${urlRoles}', 'Roles usuario', '#formRolUsuario', 'modal-xl')">
                         <img src="{{ asset('img/rolesEdit.png') }}" alt="Roles" style="width: 32px; height: 32px;">
@@ -134,6 +135,18 @@
             passwordField.value = passwordField.dataset.previousValue; 
         }
     }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        initTablaBootstrapTable(
+            '#usuariosDataTable', 
+            { protegidas: ['persona.PerNumDoc'] }, 
+            'detalleUsuario', 
+            { 'acciones': accionesFormatter,
+                'UsuarioEstado': estadoFormatter,
+                'nombreCompleto': nombreCompletoFormatter
+            }
+        );
+    });
 </script>
 @endpushOnce
 

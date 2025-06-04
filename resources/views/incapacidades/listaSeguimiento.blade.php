@@ -18,7 +18,7 @@
         <a class="btn fw-bold my-2 bg-primary" onclick="window.history.back()">Volver</a>
     </div>
 
-    <div id="no-more-tables" class="row p-4 g-2">
+    <div class="row p-4 g-2">
         <table
             id="incapacidadesDataTable"
             class="table table-sm table-striped"
@@ -31,24 +31,23 @@
             data-sort-order="desc"
             data-detail-view="true"
             data-detail-formatter="detalleIncapacidad"
-            data-mobile-responsive="true"
             data-check-on-init="true"
             data-url="{{ route('gestion-incapacidades.seguimiento.cargarDatos') }}">   
             <thead class="table-primary">
                 <tr>
-                    <th data-field="IncPerNom">Nombre</th>
+                    <th data-field="IncPerNom" >Nombre</th>
                     <th data-field="PerNumDoc">Documento</th>
-                    <th data-field="causa.ParDes">Causa Incapacidad</th>
-                    <th data-field="eps.EPSNombre">EPS</th>
-                    <th data-field="arl.ARLNombre">ARL</th>
+                    <th data-field="causaDes">Causa Incapacidad</th>
+                    <th data-field="epsNombre">EPS</th>
+                    <th data-field="arlNombre">ARL</th>
                     <th data-field="IncFecIni" data-sortable="true">Fecha Inicio</th>
                     <th data-field="IncFecFin" data-sortable="true">Fecha Fin</th>
-                    <th data-field="detalleMobile"
-                        data-formatter="detalleIncapacidad"
-                        data-class="detalle-mobile"
-                        data-switchable="false">
-                        Detalles
-                    </th>
+                    <th data-field="DiagnosticoDes">Diagnóstico</th>
+                    <th data-field="diasIncapacidad" data-formatter="diasIncapacidadFormatter">Días Incapacidad</th>
+                    <th data-field="IncapacidadEstado">Estado</th>
+                    <th data-field="IncFecReg">Fecha Registro</th>
+                    <th data-field="IncHorReg">Hora Registro</th>
+                    <th data-field="IdIncapacidad" data-formatter="accionesFormatter">Acciones</th>
                 </tr>
             </thead>
         </table>
@@ -59,65 +58,50 @@
 @pushOnce('script')
     @vite(['resources/js/cargarModal.js'])
     <script>
-        var rutas = {
-            adjuntos: "{{ route('gestion-incapacidades.seguimiento.adjuntos', ['id' => ':id']) }}",
-            datos: "{{ route('gestion-incapacidades.incapacidades.edit', ['id' => ':id']) }}",
-            seguimientoDetalle: "{{ route('gestion-incapacidades.seguimiento.detalle', ['id' => ':id']) }}"
+        function diasIncapacidadFormatter(value, row) {
+            const fechaInicio = new Date(row.IncFecIni);
+            const fechaFin = new Date(row.IncFecFin);
+            const dias = Math.ceil((fechaFin - fechaInicio) / (1000 * 60 * 60 * 24)) + 1;
+            return dias;
         };
 
-        function detalleIncapacidad(index, row) {
-            const id = `detalle-${row.IdIncapacidad}`;
-            let fechaInicio = new Date(row.IncFecIni);
-            let fechaFin = new Date(row.IncFecFin);
-
-            let diasIncapacidad = Math.ceil((fechaFin - fechaInicio) / (1000 * 60 * 60 * 24)) + 1;
-            let urlDatos = rutas.datos.replace(':id', row.IdIncapacidad);
-            let urlAdjuntos = rutas.adjuntos.replace(':id', row.IdIncapacidad);
-            let urlSeguimientoDetalle = rutas.seguimientoDetalle.replace(':id', row.IdIncapacidad);
+        function accionesFormatter(value, row) {
+            const urlAdjuntos = "{{ route('gestion-incapacidades.seguimiento.adjuntos', ['id' => ':id']) }}".replace(':id', value);
+            const urlDatos = "{{ route('gestion-incapacidades.incapacidades.edit', ['id' => ':id']) }}".replace(':id', value);
+            const urlSeguimientoDetalle = "{{ route('gestion-incapacidades.seguimiento.detalle', ['id' => ':id']) }}".replace(':id', value);
 
             return `
-            <div class="d-sm-none">
-                <button class="btn btn-sm btn-outline-primary w-100 mb-2" type="button" data-bs-toggle="collapse" data-bs-target="#${id}" aria-expanded="false">
-                    Ver detalles
-                </button>
-            </div>
-            <div class="p-3 border rounded d-sm-block bg-light collapse detalleCard" id="${id}">
-                <div class="row">
-                    <div class="col-md-12">
-                        <p><strong>Diagnóstico:</strong> ${row.diagnostico.DescCie}</p>
-                        <p><strong>Días de Incapacidad:</strong> ${diasIncapacidad}</p>
-                        <p><strong>Estado:</strong> ${row.IncapacidadEstado}</p>
-                        <p><strong>Fecha Registro:</strong> ${row.IncFecReg}</p>
-                        <p><strong>Hora Registro:</strong> ${row.IncHorReg}</p>
-                        <div>
-                            <strong>Acciones:</strong> 
-                            <a class="ms-3 text-decoration-none" 
-                                title="Ver adjuntos"
-                                onclick="cargarModal('${urlAdjuntos}', 'Documentos Incapacidad', '', 'modal-lg')">     
-                                <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/carpetas.png" alt="Ver Adjuntos" style="width: 32px; height: 32px;">
-                            </a>
-                            <a class="ms-3 text-decoration-none" 
-                                title="Editar incapacidad"
-                                onclick="cargarModal('${urlDatos}', 'Revisión datos incapacidad', '#formIncapacidad', 'modal-xl')">
-                                <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/new_editar.png" alt="Revisión datos" style="width: 32px; height: 32px;">
-                            </a>
-                             <a class="ms-3 text-decoration-none" 
-                                title="Seguimiento incapacidad"
-                                href="${urlSeguimientoDetalle}">
-                                <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/seguimiento.png" alt="Seguimiento" style="width: 34px; height: 34px;">
-                            </a>
-                        </div>
-                    </div>
+                <div class="d-flex flex-wrap gap-3 justify-content-start ps-3">
+                    <a class="text-decoration-none"  title="Ver adjuntos"
+                        onclick="cargarModal('${urlAdjuntos}', 'Documentos Incapacidad', '', 'modal-lg')">
+                        <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/carpetas.png" 
+                            alt="Ver Adjuntos" style="width: 28px; height: 28px;">
+                    </a>
+                    <a class="text-decoration-none"  title="Editar incapacidad"
+                        onclick="cargarModal('${urlDatos}', 'Revisión datos incapacidad', '#formIncapacidad', 'modal-xl')">
+                        <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/new_editar.png" 
+                            alt="Editar" style="width: 28px; height: 28px;">
+                    </a>
+                    <a class="text-decoration-none"  title="Seguimiento"
+                        href="${urlSeguimientoDetalle}">
+                        <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/seguimiento.png" 
+                            alt="Seguimiento" style="width: 28px; height: 28px;">
+                    </a>
                 </div>
-            </div>
             `;
-        }
+        };
 
-        function habilitarInputs() {
-            document.querySelectorAll('#formIncapacidad input, #formIncapacidad select').forEach(element => {
-                if (element.id === 'IdIncapacidad') { return; }
-                element.disabled = false;
-            });
-        }
+        document.addEventListener("DOMContentLoaded", () => {
+            initTablaBootstrapTable(
+                '#incapacidadesDataTable', 
+                { protegidas: ['Nombre'] }, 
+                'detalleIncapacidad', 
+                { 'IdIncapacidad': accionesFormatter,
+                    'diasIncapacidad': diasIncapacidadFormatter
+                }
+            );
+        });
+
+
     </script>
 @endpushOnce
