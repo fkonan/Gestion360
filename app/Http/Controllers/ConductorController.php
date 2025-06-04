@@ -190,11 +190,11 @@ class ConductorController extends Controller
             // Añadir filtros según la variable "filtro"
             switch ($request->filtro) {
                 case 'identificacion':
-                    $query->where('p.identificacion', 'like', $request->identificacion);
+                    $query->where('p.identificacion', 'like', $request->parametroInput);
                     break;
 
                 case 'codigo':
-                    $query->where('pcp.codigo', 'like', $request->codigo);
+                    $query->where('pcp.codigo', 'like', $request->parametroInput);
                     break;
 
                 case 'todos':
