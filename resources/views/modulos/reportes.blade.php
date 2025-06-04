@@ -11,7 +11,7 @@
 
 @section('content')
 <div class="container-fluid pt-4" style="min-height:150px">
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4">
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-2">
         <div class="col-lg-4 col-xl-3" onclick="cargarModal(`{{ route('reportes.tiquetes') }}`, 'Impresión de Tiquetes','#fechasReporteForm','modal-lg')">
             <x-card color="bg-dark" 
                     titulo="Impresión de Tiquetes" 

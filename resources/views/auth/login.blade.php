@@ -39,10 +39,10 @@
                     </div>
 
                     <div class="d-flex flex-column my-4 align-items-center">
-                       <!--  <div class="captcha-container">
+                        <div class="captcha-container">
                             {!! NoCaptcha::display() !!}
                         </div>
- -->
+
                         @if ($errors->has('g-recaptcha-response'))
                             <small class="text-danger">{{ $errors->first('g-recaptcha-response') }}</small>
                         @endif
