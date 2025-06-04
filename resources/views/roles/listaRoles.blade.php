@@ -35,7 +35,7 @@
     ];
     @endphp
     
-    <div class="row p-4">
+    <div class="row p-4 g-2">
         <table
             id="administrarRoles"
             class="table table-striped table-hover align-middle table-bordered"

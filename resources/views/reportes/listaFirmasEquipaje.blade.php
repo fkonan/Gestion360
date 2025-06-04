@@ -23,7 +23,7 @@
         Descargar Excel 
     </button>
 
-    <div class="row p-4">
+    <div class="row p-4 g-2">
         <table
             class="table table-sm table-striped"
             data-page-size="25"

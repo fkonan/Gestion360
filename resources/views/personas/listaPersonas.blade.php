@@ -24,7 +24,7 @@
         </a>
     @endpermite
    
-    <div id="no-more-tables" class="row p-4">
+    <div id="no-more-tables" class="row p-4 g-2">
         <table
             id="personasDataTable"
             class="table table-sm table-striped"

@@ -18,7 +18,7 @@
         <a class="btn fw-bold my-2 bg-primary" onclick="window.history.back()">Volver</a>
     </div>
 
-    <div class="row p-4">
+    <div class="row p-4 g-2">
         <table
             id="incapacidadesDataTable"
             class="table table-sm table-striped"
