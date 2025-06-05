@@ -247,33 +247,28 @@ body:not(.sidebar-collapse) .nav-item .nav-treeview .nav-link {
     font-size: 18px;
 }
 
-/* Boostrap card views */
-/* html body .bootstrap-table .fixed-table-container .table tbody tr .card-view .card-view-value {
-    text-align: center !important;
-}
-
-.bootstrap-table .card-view{
-    padding: 0;
-    margin: 0;
-    height: auto;
-    font-size: .9em;
-}
-.bootstrap-table .card-view .title {
+/* Bootstrap table detail view icon----------------- */
+.bootstrap-table .detail-icon {
+    font-size: 0.7rem;  
     font-weight: bold;
-    display: block;
-    margin-bottom: 4px;
+    padding: 0;     
+    line-height: 1.5rem; 
+    color: #fff;
+    background-color: var(--bs-primary);
+    border: 3px solid #fff;
+    border-radius: 50%;
+    width: 1.5rem;             
+    height: 1.5rem;   
+    cursor: pointer;          
 }
 
-.bootstrap-table .card-view .card-view-value {
-    margin-bottom: 12px;
-    display: block;
-    font-size: 1em;
+.bootstrap-table td.detail {
+    width: 1.5rem !important; 
+    padding: 0 !important;
+    text-align: center;
+    vertical-align: middle;
 }
 
-.bootstrap-table .card-view{
-    border-bottom: 1px solid #cfcfcf;
-    margin-top: 0.5rem;
-} */
 
 /* Estilos card componente */
 .cardComponent:hover{
@@ -287,13 +282,6 @@ body:not(.sidebar-collapse) .nav-item .nav-treeview .nav-link {
     top: 185px;
 }
 
-
-/* Detalle de la tabla en modo tarjeta */
-/* th.detalle-mobile,
-td.detalle-mobile {
-    display: none;
-}
- */
 
 /* Toast componente */
 .toast {

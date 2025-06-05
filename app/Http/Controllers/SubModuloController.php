@@ -18,6 +18,21 @@ class SubModuloController extends Controller
         return view('submodulos.listaSubModulos', compact('subModulos'));
     }
 
+    public function cargarDatos(){
+        $subModulos = SubModulo::with('padre')->get()->map(function ($item) {
+            return [
+                'IdSubModulo' => $item->IdSubModulo,
+                'SubModNom' => ucfirst(mb_strtolower($item->SubModNom)),
+                'SubModDes' => ucfirst(mb_strtolower($item->SubModDes)),
+                'SubModuloEstado' => $item->SubModuloEstado,
+                'SubModFecReg' => $item->SubModFecReg,
+                'SubModHoReg' => $item->SubModHoReg,
+                'ModPadreNom' => $item->padre ? ucfirst(mb_strtolower($item->padre->ModNom)) : null,
+            ];
+        });
+        return $subModulos;
+    }
+
     public function create(){
         $permisos = Permission::all();
         $modulos = Modulo::all();

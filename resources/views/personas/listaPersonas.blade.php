@@ -34,7 +34,7 @@
             data-locale="es-ES"
             data-pagination="true"
             data-responsive="true"
-            data-detail-view="true"
+            data-detail-view="verDetalle"
             data-detail-formatter="detallePersona"
             data-check-on-init="true"
             data-side-pagination="server"
@@ -60,13 +60,10 @@
 
 @pushOnce('script')
     @vite(['resources/js/cargarModal.js'])
+   
     <script>
-    function estadoFormatter(value, row) {
-        return `
-        <span class="badge ${row.PerEstado === 'ACTIVO' ? 'bg-success' : 'bg-danger'}">
-            ${row.PerEstado}
-        </span>
-        `;
+    function verDetalle(index, row) {
+       return null;
     }
 
     function estadoFormatter(value, row) {
@@ -104,9 +101,12 @@
     document.addEventListener("DOMContentLoaded", () => {
         initTablaBootstrapTable(
             '#personasDataTable', 
-            { protegidas: ['PerNumDoc'] }, 
+            { 
+                protegidas: ['PerNumDoc']
+            }, 
             'detallePersona', 
-            { 'acciones': accionesFormatter,
+            { 
+                'acciones': accionesFormatter,
                 'PerEstado': estadoFormatter,
             }
         );

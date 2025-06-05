@@ -48,7 +48,7 @@ import { deshabilitarSubmit,
         mostrarToast
     } from './utils';
 
-import { initTablaBootstrapTable } from './tablasAjusteColumnas';
+import { initTablaBootstrapTable, generarDetalle } from './tablasAjusteColumnas';
 
 window.deshabilitarSubmit = deshabilitarSubmit;
 window.habilitarSubmit = habilitarSubmit;
@@ -58,6 +58,7 @@ window.actualizarEstado = actualizarEstado;
 window.mostrarToast = mostrarToast;
 
 window.initTablaBootstrapTable = initTablaBootstrapTable;
+window.generarDetalle = generarDetalle;
 
 //Inicializar funciones
 setInterval(actualizarReloj, 1000);

@@ -24,15 +24,17 @@
         Descargar Excel 
     </button>
    
-    <div class="row p-4">
+    <div class="row p-4 g-2">
         <table
+            id="ingresoSalidaTable"
             class="table table-sm table-striped"
             data-page-size="25"
             data-toggle="table"
             data-locale="es-ES"
             data-search="true"
             data-pagination="true"
-            data-mobile-responsive="true"
+            data-detail-view="true"
+            data-detail-formatter="detalleingresoSalida"
             data-check-on-init="true"
             data-url="{{ route('ingresoSalida.cargarData') }}">   
             <thead class="table-primary">
@@ -43,7 +45,6 @@
                     <th data-field="anotacion" data-sortable="true">Evento</th>
                     <th data-field="fechaevento" data-sortable="true">Fecha de evento</th>
                     <th data-field="agencia" data-sortable="true">Agencia</th>
-                    <!-- <th data-field="agencia" data-sortable="true">Agencia registro de evento</th> -->
                 </tr>
             </thead>
         </table>
@@ -53,5 +54,14 @@
 
 @pushOnce('script')
     @vite(['resources/js/cargarModal.js'])
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            initTablaBootstrapTable(
+                '#ingresoSalidaTable',
+                { protegidas: ['identificacion'] },
+                'detalleingresoSalida'
+            );
+        });
+    </script>
 @endpushOnce
 

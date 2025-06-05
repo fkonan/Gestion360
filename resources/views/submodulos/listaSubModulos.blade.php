@@ -35,51 +35,23 @@
             data-locale="es-ES"
             data-search="true"
             data-pagination="true"
-            data-mobile-responsive="true"
+            data-detail-view="true"
+            data-detail-formatter="detalleSubModulo"
             data-check-on-init="true"
-            data-pagination-parts="['pageSize', 'pageList', 'pageNext', 'pagePrev']">   
+            data-url="{{ route('submodulos.cargarDatos') }}"> 
             <thead class="table-primary">
                 <tr>
-                    <th>Nombre</th>
-                    <th>Descripción</th>
-                    <th>Modulo Padre</th>    
-                    <th>Fecha Registro</th>
-                    <th>Hora Registro</th>
-                    <th>Estado</th>
+                    <th data-field="SubModNom">Nombre</th>
+                    <th data-field="SubModDes">Descripción</th>
+                    <th data-field="ModPadreNom">Modulo Padre</th>    
+                    <th data-field="SubModFecReg">Fecha Registro</th>
+                    <th data-field="SubModHoReg">Hora Registro</th>
+                    <th data-field="SubModuloEstado" data-formatter="estadoFormatter">Estado</th>
                     @permite('configuracion.gestion_sistema.actualizar')
-                        <th>Opciones</th>
+                        <th data-field="acciones" data-formatter="accionesFormatter">Opciones</th>
                     @endpermite
                 </tr>
             </thead>
-            <tbody>
-            @foreach($subModulos as $modulo)
-                <tr>
-                   <td data-label="Nombre"class="text-nowrap">{{ mb_strtoupper($modulo->ModNom) }}</td>
-                   <td data-label="Descripcion"title="{{ ucfirst(mb_strtolower($modulo->ModDesc)) }}">{{ ucfirst(mb_strtolower($modulo->ModDesc)) }}</td>
-                   <td data-label="Modulo Padre">{{ $modulo->padre->ModNom }}</td>
-                   <td data-label="Fecha Registro">{{ $modulo->ModFechReg}}</td>
-                   <td data-label="Hora Registro">{{ $modulo->ModHorReg}}</td>
-                   <td class="text-center" data-label="Estado">
-                        <div class="form-check form-switch d-flex justify-content-center">
-                            <input 
-                                onchange="actualizarEstado(`{{ route('submodulos.cambiarEstado', ['id' => $modulo->IdModulo]) }}`)"
-                                class="form-check-input estado-switch" 
-                                type="checkbox" 
-                                role="switch"
-                                data-id="{{ $modulo->IdModulo }}"
-                                {{ $modulo->ModEstado == 'ACTIVO' ? 'checked' : '' }}>
-                        </div>
-                    </td>
-                    @permite('configuracion.gestion_sistema.actualizar')
-                        <td data-label="Opciones" class="text-center" style="width: 80px;">
-                                <a class="p-0 px-2" onclick="cargarModal(`{{ route('submodulos.edit', ['id' => $modulo->IdModulo]) }}`, 'Editar SubModulo', '#formFormato')">
-                                    <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/new_editar.png" alt="Editar" style="width: 30px; height: 30px;">
-                                </a>
-                        </td>
-                    @endpermite
-                </tr>
-            @endforeach
-            </tbody>
         </table>
     </div>
 </div>
@@ -87,5 +59,48 @@
 
 @pushOnce('script')
     @vite(['resources/js/cargarModal.js'])
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            initTablaBootstrapTable(
+                '#subModulosDataTable',
+                { protegidas: ['SubModNom'] },
+                'detalleSubModulo',
+                { 'IdSubModulo': accionesFormatter,
+                    'SubModuloEstado': estadoFormatter
+                }
+            );
+        });
+
+        function estadoFormatter(value, row) {
+            const checked = row.SubModuloEstado === 'ACTIVO' ? 'checked' : '';
+            const url = "{{ route('submodulos.cambiarEstado', ['id' => ':id']) }}".replace(':id', row.IdSubModulo);
+            return `
+                <div class="form-check form-switch d-flex justify-content-center">
+                    <input 
+                        onchange="actualizarEstado('${url}')"
+                        class="form-check-input estado-switch" 
+                        type="checkbox" 
+                        role="switch"
+                        data-id="${row.IdSubModulo}"
+                        ${checked}>
+                </div>
+            `;
+        }   
+
+        function accionesFormatter(index, row) {
+            let urlEditar = "{{ route('submodulos.edit', ['id' => ':id']) }}".replace(':id', row.IdSubModulo);
+            return `
+                <div class="d-flex flex-wrap gap-3 justify-content-start ps-3">
+                    @permite('configuracion.gestion_sistema.actualizar')
+                        <a class="text-decoration-none" 
+                            title="Editar submodulo"
+                            onclick="cargarModal('${urlEditar}', 'Editar SubModulo', '#formFormato')">
+                            <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/new_editar.png" alt="Editar" style="width: 30px; height: 30px;">
+                        </a>
+                    @endpermite
+                </div>
+            `;
+        }
+    </script>
 @endpushOnce
 

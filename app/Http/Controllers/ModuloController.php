@@ -27,7 +27,6 @@ class ModuloController extends Controller
                 'ModHorReg' => $item->ModHorReg,
             ];
         });
-
         return $modulos;
     }
 

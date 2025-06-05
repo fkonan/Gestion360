@@ -48,47 +48,49 @@ function initColumnaAjuste(selector, opciones = {}) {
     tabla.data('columnasOcultas', () => columnasOcultadas);
 }
 
-function generarDetalle(selector, row, opcionesFormatter = {}) {
+export function generarDetalle(selector, row, opcionesFormatter = {}) {
     const tabla = $(selector);
     const obtenerOcultas = tabla.data('columnasOcultas') || (() => []);
     const ocultas = obtenerOcultas();
     const columnas = tabla.bootstrapTable('getOptions').columns?.[0] || [];
 
-    //estable el orden del detalle segun los valores de data-order
+    //orden del detalle segun el data-order definido
     const columnasOrdenadas = columnas
         .filter(col => col.field && ocultas.includes(col.field))
-        .sort((a, b) => (a.orden ?? 999) - (b.orden ?? 999)); 
+        .sort((a, b) => (a.orden ?? 999) - (b.orden ?? 999));
 
-    let html = '<ul class="list-group list-group-flush">';
+    let html = '';
+    let hayContenido = false;
 
     for (const col of columnasOrdenadas) {
         const key = col.field;
         const label = col.title || key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());
 
-        // Si tiene formatter
+        let contenido = '';
+        //si la columna es una columna con formato
         if (opcionesFormatter[key]) {
-            html += `
-                <li class="list-group-item">
-                    <div class="d-flex align-items-center gap-2 flex-wrap">
-                        <strong style="white-space: nowrap;">${label}:</strong>
-                        <div>${opcionesFormatter[key](row[key], row)}</div>
-                    </div>
-                </li>
-            `;
+            contenido = opcionesFormatter[key](row[key], row);
         } else if (row[key] !== null && row[key] !== undefined) {
+            contenido = row[key];
+        }
+
+        if (contenido) {
+            hayContenido = true;
             html += `
                 <li class="list-group-item">
                     <div class="d-flex align-items-center gap-2 flex-wrap">
                         <strong style="white-space: nowrap;">${label}:</strong>
-                        <div>${row[key]}</div>
+                        <div>${contenido}</div>
                     </div>
                 </li>
             `;
         }
+        
     }
 
-    html += '</ul>';
-    return html;
+    if (!hayContenido) return null; 
+
+    return `<ul class="list-group list-group-flush">${html}</ul>`;
 }
 
 export function initTablaBootstrapTable(selector, opciones = {},nombreFormatter, formattersDetalle = {}) {
