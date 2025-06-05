@@ -91,6 +91,13 @@
             `;
         };
 
+        function habilitarInputs() {
+            document.querySelectorAll('#formIncapacidad input, #formIncapacidad select').forEach(element => {
+                if (element.id === 'IdIncapacidad') { return; }
+                element.disabled = false;
+            });
+        }
+
         document.addEventListener("DOMContentLoaded", () => {
             initTablaBootstrapTable(
                 '#incapacidadesDataTable', 

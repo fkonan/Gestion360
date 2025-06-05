@@ -38,7 +38,7 @@
             data-url="{{ route('firmaEquipaje.cargarData') }}">   
             <thead class="table-primary">
                 <tr class="bg-primary">
-                    <th data-field="NomCon" data-sortable="true">Nombre y apellidos</th>
+                    <th data-field="NomCon" data-sortable="true">Nombre Completo</th>
                     <th data-field="DocCon" data-sortable="true">Identificación</th>
                     <th data-field="CodCon" data-sortable="true">Codigo</th>
                     <th data-field="FirFecReg" data-sortable="true">Fecha firma</th>

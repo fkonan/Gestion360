@@ -12,7 +12,7 @@
                     style="background-color:rgba(214, 214, 214, 0.51)">
 
                     <i class="nav-icon fas {{ $modulo->ModIcono  }}" style="color:rgba(75, 75, 76, 0.7); font-size: 16px;"></i>
-                    <p class="fw-medium">{{ $modulo->nombre_formateado }}</p>
+                    <p class="fw-medium">{{ $modulo->ModNom }}</p>
                     @if($modulo->submodulos->count())   
                         <p><i class="right fas fa-angle-left"></i></p>
                     @endif
