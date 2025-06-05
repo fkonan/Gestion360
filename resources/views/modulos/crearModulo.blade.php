@@ -34,7 +34,7 @@
             </div>
         </div>
 
-        <div class="text-start ms-4 mb-4">
+        <div class="text-start ps-4 mb-4">
             <button type="submit" class="btn btn-success">Guardar</button>
             <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Cancelar</button>
         </div>

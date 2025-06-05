@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-duallistbox/dist/bootstrap-duallistbox.min.css">
 
      <!--Vite -->
-     @vite(['resources/css/app.css', 'resources/js/app.js','resources/css/custom.css','resources/css/mobile.css'])
+     @vite(['resources/css/app.css', 'resources/js/app.js','resources/css/custom.css','resources/css/mobile.css','resources/css/darkmode.css'])
 </head>
 
 <body class="sidebar-mini sidebar-collapse layout-fixed">
@@ -33,10 +33,12 @@
         
         <!-- Sidebar -->
         <aside class="main-sidebar sidebar-dark-primary elevation-4 text-dark bg-light">
-
             <div class="sidebar">
             <!-- Usuario -->
                 <div class="user-panel my-3 pt-1 pb-2 d-flex flex-column" style="border-bottom: 1px solid rgba(157, 159, 161, 0.7);">
+
+                    <i id="toggleDarkMode" class="bi bi-sun text-dark ms-3"></i>
+                
                     <div class="info" style="width: 235px; margin: 0 auto;">
                         <img src="{{ asset('img/LogoCope.png') }}" style="width:100%; height: auto;" alt="Logo Cope">
                     </div>
@@ -124,6 +126,22 @@
             }
         });
 
+        // Dark Mode Toggle
+        document.addEventListener('DOMContentLoaded', () => {
+            const body = document.body;
+            const darkModeToggle = document.getElementById('toggleDarkMode');
+            const isDarkMode = localStorage.getItem('darkMode') === 'enabled';
+
+            if (isDarkMode) {
+                body.classList.add('dark-mode');
+            }
+
+            darkModeToggle.addEventListener('click', () => {
+                body.classList.toggle('dark-mode');
+                const enabled = body.classList.contains('dark-mode');
+                localStorage.setItem('darkMode', enabled ? 'enabled' : 'disabled');
+            });
+        });
     </script>
 
     @stack('script')

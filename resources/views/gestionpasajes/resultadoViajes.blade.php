@@ -28,7 +28,6 @@
             data-locale="es-ES"
             data-search="true"
             data-pagination="true"
-            data-mobile-responsive="true"
             data-check-on-init="true">   
             <thead class="table-primary">
                 <tr>

@@ -1,0 +1,43 @@
+:root {
+    --darkmode-bg-main: #1e1e1e;
+    --darkmode-bg-secondary: #2c3643;
+    --darkmode-text: #f1f1f1;
+}
+
+/* Dark mode estilos (general) */
+body.dark-mode {
+    background-color: var(--darkmode-bg-main);
+    color: var(--darkmode-text);
+}
+
+body.dark-mode .container-fluid div {
+    background-color: var(--darkmode-bg-main);
+    color: var(--darkmode-text);
+}
+
+body.dark-mode .container-fluid td {
+    background-color: var(--darkmode-bg-secondary);
+    color: var(--darkmode-text);
+}
+
+body.dark-mode .container-fluid td div{
+    background-color: var(--darkmode-bg-secondary);
+    color: var(--darkmode-text);
+}
+
+body.dark-mode .main-sidebar {
+    background-color: var(--darkmode-bg-main) !important;
+}
+
+body.dark-mode .main-sidebar .nav-link{
+    background-color: var(--darkmode-bg-secondary) !important;
+    color: var(--darkmode-text) !important;
+}
+
+body.dark-mode .modal-body{
+    background-color: var(--darkmode-bg-main) !important;
+}
+
+body.dark-mode .breadcrumbs{
+    color: var(--darkmode-text);
+}

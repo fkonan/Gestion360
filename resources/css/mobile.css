@@ -28,20 +28,4 @@
     .container-fluid{
         padding: 0 !important;
     }
-
-    /* Card bootstrap table */
-   /*  #no-more-tables{
-        padding: 0 5px !important;
-    }
-
-    .table tr{
-        border-color: #2e2e2e80;
-    }
-
-    .detalleCard{
-        padding: 0 0 8px 0 !important;
-    }
-    .detalleCard a{
-        margin: 0 6px 0 0 !important;
-    } */
 }
