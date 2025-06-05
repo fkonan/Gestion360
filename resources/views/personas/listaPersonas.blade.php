@@ -34,7 +34,7 @@
             data-locale="es-ES"
             data-pagination="true"
             data-responsive="true"
-            data-detail-view="verDetalle"
+            data-detail-view="true"
             data-detail-formatter="detallePersona"
             data-check-on-init="true"
             data-side-pagination="server"
@@ -62,10 +62,6 @@
     @vite(['resources/js/cargarModal.js'])
    
     <script>
-    function verDetalle(index, row) {
-       return null;
-    }
-
     function estadoFormatter(value, row) {
         const checked = row.PerEstado === 'ACTIVO' ? 'checked' : '';
         const url = "{{ route('personas.cambiarEstado', ['id' => ':id']) }}".replace(':id', row.IdPersona);
