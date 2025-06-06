@@ -11,7 +11,7 @@
 @endsection
 
 @section('content')
-<div class="container-fluid p-0 border rounded" style="min-height:150px; background-color: white">
+<div class="container-fluid p-0 border rounded" style="background-color: white; padding:1.5em">
 
     <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-secondary">
         <span class="text-left text-light fs-5 fw-medium py-1">Buscar Viaje</span>
@@ -24,7 +24,7 @@
         onsubmit="deshabilitarSubmit(this)">
 
         @csrf
-        <div class="row g-3 p-4">       
+        <div class="row mx-3 py-4">       
             <div class="col-md-4">
                 <label for="origen" class="form-label">Origen del viaje *</label>
                 <select class="form-select select2" id="origen" name="origen" required>
@@ -48,7 +48,7 @@
             </div>
         </div> 
 
-        <div class="text-start ms-4 mb-4">
+        <div class="text-start ps-4 pb-4">
             <button type="submit" class="btn btn-success">Buscar</button>
         </div>
     </form>

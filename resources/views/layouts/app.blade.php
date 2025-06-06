@@ -14,7 +14,7 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
         <!--Vite -->
-        @vite(['resources/css/app.css', 'resources/js/app.js','resources/css/custom.css','resources/css/mobile.css'])
+        @vite(['resources/css/app.css', 'resources/js/app.js','resources/css/custom.css','resources/css/mobile.css','resources/css/darkmode.css'])
     </head>
     <body style="margin: 0; padding: 0;">
 
@@ -33,6 +33,24 @@
             @yield('content')
         </section>
         
+        <script>
+            // Dark Mode Toggle
+            document.addEventListener('DOMContentLoaded', () => {
+                const body = document.body;
+                const darkModeToggle = document.getElementById('toggleDarkMode');
+                const isDarkMode = localStorage.getItem('darkMode') === 'enabled';
+
+                if (isDarkMode) {
+                    body.classList.add('dark-mode');
+                }
+
+                darkModeToggle.addEventListener('click', () => {
+                    body.classList.toggle('dark-mode');
+                    const enabled = body.classList.contains('dark-mode');
+                    localStorage.setItem('darkMode', enabled ? 'enabled' : 'disabled');
+                });
+            });
+        </script>
         @stack('script')
 
         <!-- Renderizado de componentes-->

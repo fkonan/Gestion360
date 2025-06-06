@@ -11,21 +11,19 @@
 @endsection
 
 @section('content')
-<div class="container-fluid p-0 border rounded bg-white" style="min-height:150px;">
+<div class="container-fluid p-0 border rounded bg-white tableContainer" style="min-height:150px;">
 
     <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-secondary">
         <span class="text-left text-light fs-5 fw-medium py-1">Usuarios registrados</span>
     </div>
 
-    <div class="botonBoostrapTable">
-        @permite('administracion.usuarios.crear')
-            <a class="btn fw-bold ms-4 mt-4 text-dark bg-warning " 
-                onclick="cargarModal(`{{ route('usuarios.create') }}`, 'Crear Usuario', '#formCrearUsuario', 'modal-lg')">
-                Registrar usuario
-            </a>
-        @endpermite
-    </div>
-
+    @permite('administracion.usuarios.crear')
+        <a class="btn fw-bold ms-4 mt-4 text-dark bg-warning botonBoostrapTable" 
+            onclick="cargarModal(`{{ route('usuarios.create') }}`, 'Crear Usuario', '#formCrearUsuario', 'modal-lg')">
+            Registrar usuario
+        </a>
+    @endpermite
+    
     <div id="no-more-tables" class="table-responsive" style="padding:1.5em">
         <table
             id="usuariosDataTable"

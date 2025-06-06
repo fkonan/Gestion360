@@ -63,7 +63,7 @@
                         </span>
                     </div>
 
-                    <div class="info text-primary">
+                    <div class="horaComponent info text-primary">
                         <span id="horas"></span>:<span id="minutos"></span>:<span id="segundos"></span>&nbsp;<span id="ampm"></span>
                     </div>
                 </div>
@@ -89,7 +89,7 @@
             </section>
 
             <section class="content">
-                <div class="container-fluid pb-4">
+                <div class="container-fluid mb-4">
                     @yield('breadcrumb')
                     @yield('content')
                 </div>

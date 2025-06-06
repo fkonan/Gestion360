@@ -19,7 +19,7 @@
         <span class="text-left text-light fs-5 fw-medium py-1">Crear Rol</span>
     </div>
 
-    <div class="row p-4">
+    <div class="row p-4 m-0">
         <form id="formCrearRol" action="{{ route('roles.store') }}" method="POST">
             @csrf
 

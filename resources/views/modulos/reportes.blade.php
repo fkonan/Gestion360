@@ -10,7 +10,7 @@
 @endsection
 
 @section('content')
-<div class="container-fluid pt-4" style="min-height:150px">
+<div class="container-fluid mt-4 mx-1 p-0 optionsMenu">
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-2">
         <div class="col-lg-4 col-xl-3" onclick="cargarModal(`{{ route('reportes.tiquetes') }}`, 'Impresión de Tiquetes','#fechasReporteForm','modal-lg')">
             <x-card color="bg-dark" 

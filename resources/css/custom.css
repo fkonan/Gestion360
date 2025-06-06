@@ -251,11 +251,11 @@ body:not(.sidebar-collapse) .nav-item .nav-treeview .nav-link {
 .bootstrap-table .detail-icon {
     font-size: 0.7rem;  
     font-weight: bold;
-    padding: 0;     
+    padding: 0 2px;     
     line-height: 1.5rem; 
     color: #fff;
     background-color: var(--bs-primary);
-    border: 3px solid #fff;
+    border: 1px solid #fff;
     border-radius: 50%;
     width: 1.5rem;             
     height: 1.5rem;   

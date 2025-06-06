@@ -4,14 +4,17 @@
 
 @section('content')
 <br><br><br>
-<div class="container">
+<div class="container login-container">
     <div class="row" style="margin: auto;">
         <div class="col-xs-12 col-sm-2 col-md-3 col-lg-4 col-xl-4 col-xxl-4"></div>
             <div class="col-xs-12 col-sm-8 col-md-6 col-lg-4 col-xl-4 col-xxl-4">
                 <h4>Sistema: <b>Gestión</b></h4>
                 <div class="card p-1">
                 <div class="card-body login-card-body">
-                    <p class="login-box-msg" style="text-align: left; font-size: 30px;"><b>!Hola de nuevo¡</b></p>
+                     <div class="d-flex justify-content-between align-items-center mb-3">
+                        <p class="login-box-msg" style="text-align: left; font-size: 30px;"><b>!Hola de nuevo¡</b></p>
+                        <i id="toggleDarkMode" class="bi bi-sun text-dark ms-3"></i>
+                    </div>
                     <form method="POST" action="{{ route('login') }}" onsubmit="deshabilitarSubmit(this)">
                     @csrf
                     <div class="d-flex flex-column mb-3">

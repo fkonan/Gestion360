@@ -1,5 +1,5 @@
 <!-- Modal formulario de reporte -->
-<div class="container-fluid p-2 bg-white">
+<div class="container-fluid p-4 bg-white">
     <form
         id="fechasReporteForm" 
         action="{{  route('reportes.filtrarTiquetes')  }}" 

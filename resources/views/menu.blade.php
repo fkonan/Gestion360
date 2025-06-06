@@ -8,7 +8,7 @@
             @if(! $modulo->ModPermiso || auth()->user()->can($modulo->ModPermiso))
             <li class="nav-item has-treeview">
                 <a  href="{{ $modulo->ModRuta && Route::has($modulo->ModRuta) ? route($modulo->ModRuta) : '#' }}" 
-                    class="nav-link text-dark"
+                    class="nav-link module text-dark"
                     style="background-color:rgba(214, 214, 214, 0.51)">
 
                     <i class="nav-icon fas {{ $modulo->ModIcono  }}" style="color:rgba(75, 75, 76, 0.7); font-size: 16px;"></i>
@@ -24,7 +24,7 @@
                         <!-- Submodulos permiso de visualizacion -->
                         @if(! $submodulo->ModPermiso || auth()->user()->can($submodulo->ModPermiso))     
                         <li class="nav-item">
-                            <a class="nav-link text-black"  href="{{ $submodulo->ModRuta && Route::has($submodulo->ModRuta) ? route($submodulo->ModRuta) : '#' }}">
+                            <a class="nav-link submodule text-black"  href="{{ $submodulo->ModRuta && Route::has($submodulo->ModRuta) ? route($submodulo->ModRuta) : '#' }}">
                                 <i class="nav-icon fas {{ $submodulo->ModIcono }} " style="color:rgba(75, 75, 76, 0.7); font-size: 16px;"></i>
                                 <p>{{ Str::title($submodulo->ModNom) }}</p>
                             </a>
@@ -38,7 +38,7 @@
         @endforeach
 
         <li class="nav-item has-treeview">
-            <a style="background-color:#D0CCFA; color:#000000; font-size:16px;" href="#" class="nav-link">
+            <a style="background-color:#D0CCFA; color:#000000; font-size:16px;" href="#" class="nav-link sessionButton">
                 <i class="nav-icon fas fa-cloud"></i>
                 <p><b>Sesion</b></p>
                 <p><i class="right fas fa-angle-left"></i></p>

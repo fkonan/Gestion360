@@ -16,7 +16,7 @@
 
     <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-secondary">
         <span class="text-left text-light fs-5 fw-medium py-1">Viajes disponibles</span>
-        <a class="btn fw-bold my-2 bg-primary" onclick="window.history.back()">Volver</a>
+        <a class="btn fw-bold my-2 bg-primary" href="{{ route('buscar-viaje.index') }}">Volver</a>
     </div>
 
     <div id="no-more-tables" class="table-responsive" style="padding:1.5em">

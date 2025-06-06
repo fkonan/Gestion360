@@ -19,7 +19,7 @@
     <form  id="formPersonaCrear" action="{{ route('personas.store') }}" method="POST">
         @csrf
         <div>
-            <div class="row pt-4 px-4">
+            <div class="row pt-4 mx-4">
                 <div class="col-md-4 mb-3">
                     <label for="PerTipoDoc" class="form-label">Tipo de Documento</label>
                     <select class="form-select" id="PerTipoDoc" name="PerTipoDoc" required>
@@ -41,7 +41,7 @@
                 </div>
             </div>
 
-            <div class="row px-4">
+            <div class="row mx-4">
                 <div class="col-md-4 mb-3">
                     <label for="PerNombres" class="form-label">Nombres</label>
                     <input type="text" class="form-control" id="PerNombres" name="PerNombres" required>
@@ -74,7 +74,7 @@
                 </div>
             </div>
 
-            <div class="row px-4">
+            <div class="row mx-4">
             <div class="col-md-4 mb-3">
                     <label for="PerFecNac" class="form-label">Fecha de Nacimiento</label>
                     <input type="date" class="form-control" id="PerFecNac" name="PerFecNac" required>
@@ -101,7 +101,7 @@
                     <span class="error text-danger fw-bold" id="error-PerFecExp"></span>
                 </div>
             </div>
-            <div class="row px-4 pb-4">
+            <div class="row mx-4 pb-4">
                 <div class="col-md-4 mb-3">
                     <label for="PerGruRh" class="form-label">Grupo Sanguíneo</label>
                     <input type="text" class="form-control" id="PerGruRh" name="PerGruRh">
@@ -112,7 +112,7 @@
             <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-secondary">
                 <span class="text-left text-light fs-5 fw-medium ">Información adicional</span>
             </div>
-            <div class="row px-4 pt-4">
+            <div class="row mx-4 pt-4">
                 <div class="col-md-4 mb-3">
                     <label for="PerTelefono" class="form-label">Telefono</label>
                     <input type="number" class="form-control" id="PerTelefono" name="PerTelefono" required>
@@ -130,7 +130,7 @@
                 </div>
             </div>
 
-            <div class="row px-4 pb-4">
+            <div class="row mx-4 pb-4">
                 <div class="col-md-4 mb-3">
                     <label for="PerBar" class="form-label">Barrio</label>
                     <input type="text" class="form-control" id="PerBar" name="PerBar" required>

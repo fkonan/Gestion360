@@ -173,9 +173,10 @@ export function mostrarToast(message, type = 'primary') {
     const icon = icons[type] || icons.primary;
 
     // Crear el contenido del toast
+    const isDark = document.body.classList.contains('dark-mode');
     const toastId = `toast-${Date.now()}`;
     const toastHTML = `
-        <div class="toast bg-white shadow-sm show" role="alert" aria-live="assertive" aria-atomic="true" id="${toastId}">
+        <div class="toast ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'} shadow-sm show" role="alert" aria-live="assertive" aria-atomic="true" id="${toastId}">
             <div class="toast-progress bg-${type}" style="height: 3px; width: 100%;"></div>
 
             <div class="d-flex align-items-center px-2 py-1">
