@@ -176,7 +176,7 @@ export function mostrarToast(message, type = 'primary') {
     const isDark = document.body.classList.contains('dark-mode');
     const toastId = `toast-${Date.now()}`;
     const toastHTML = `
-        <div class="toast ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'} shadow-sm show" role="alert" aria-live="assertive" aria-atomic="true" id="${toastId}">
+        <div class="toast ${isDark ? 'bg-dark text-light' : 'bg-white text-dark'} shadow-sm show" role="alert" aria-live="assertive" aria-atomic="true" id="${toastId}">
             <div class="toast-progress bg-${type}" style="height: 3px; width: 100%;"></div>
 
             <div class="d-flex align-items-center px-2 py-1">
@@ -210,6 +210,22 @@ export function mostrarToast(message, type = 'primary') {
             toastEl.classList.add('toast-hide'); 
         }
     }, 4800);
+}
+
+export function darkModeEnable(){
+    const body = document.body;
+    const darkModeToggle = document.getElementById('toggleDarkMode');
+    const isDarkMode = localStorage.getItem('darkMode') === 'enabled';
+
+    if (isDarkMode) {
+        body.classList.add('dark-mode');
+    }
+
+    darkModeToggle?.addEventListener('click', () => {
+        body.classList.toggle('dark-mode');
+        const enabled = body.classList.contains('dark-mode');
+        localStorage.setItem('darkMode', enabled ? 'enabled' : 'disabled');
+    });
 }
 
 

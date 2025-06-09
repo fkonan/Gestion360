@@ -7,9 +7,14 @@
 }
 
 /* Dark mode estilos (general) */
-body.dark-mode {
+body.dark-mode,
+body.dark-mode .preloader {
     background-color: var(--darkmode-bg-main);
     color: var(--darkmode-text);
+}
+
+body.dark-mode .toggleDarkMode{
+    color: var(--darkmode-text) !important;
 }
 
 body.dark-mode input::placeholder {
@@ -55,6 +60,11 @@ body.dark-mode .container-fluid .botonBoostrapTable{
 
 body.dark-mode .modal-body{
     background-color: var(--darkmode-bg-main) !important;
+}
+
+body.dark-mode .modal-body .table{
+    background-color: var(--darkmode-bg-main) !important;
+    color: var(--darkmode-text) !important;
 }
 
 body.dark-mode .breadcrumbs{
@@ -146,7 +156,6 @@ body.dark-mode .toast{
     color: var(--darkmode-text);
 }
 
-
 /* Bootstrap table */
 body.dark-mode .bootstrap-table .detail{
     background-color: var(--darkmode-bg-main) !important;
@@ -161,7 +170,23 @@ body.dark-mode .horaComponent{
     font-weight: bold;
 }
 
+body.dark-mode a{
+    color: var(--darkmode-text);
+}
 
+/* Logo Cope */
+body.dark-mode .logoCope{
+    display:none;
+}
+
+body.dark-mode .logoCopeBlanco{
+    display: block !important;
+}
+
+/* Loader */
+body.dark-mode .spinner-border{
+    color: var(--darkmode-text) !important;
+}
 
 /* Login styles */
 body.dark-mode .login-container .card{
@@ -169,9 +194,17 @@ body.dark-mode .login-container .card{
     color: var(--darkmode-text);
 }
 
+body.dark-mode .login-container .card p{
+    color: var(--darkmode-text) !important;
+}
+
 body.dark-mode .login-container input{
     background-color: var(--darkmode-bg-main);
     color: var(--darkmode-text);
-    
+}
+
+body.dark-mode .login-container .input-group-text{
+    background-color: var(--darkmode-bg-secondary);
+    color: var(--darkmode-text);
 }
 

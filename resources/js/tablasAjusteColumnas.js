@@ -144,6 +144,11 @@ export function generarDetalle(selector, row, opcionesFormatter = {}) {
     return `<ul class="list-group list-group-flush">${html}</ul>`;
 }
 
+/* Como parametro recibe:
+1. Id de la tabla
+2. Columnas que seran visibles siempre
+3. Nombre del campo formatter donde se mostrata el detalle
+4. Columnas que vienen calculdas o modificadas con algun formatter */
 export function initTablaBootstrapTable(selector, opciones = {},nombreFormatter, formattersDetalle = {}) {
     initColumnaAjuste(selector, opciones);
     window[nombreFormatter] = (index, row) => generarDetalle(selector, row,formattersDetalle);

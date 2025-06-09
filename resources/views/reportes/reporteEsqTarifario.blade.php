@@ -43,9 +43,9 @@
                     <th data-field="origen">Origen</th>
                     <th data-field="destino">Destino</th>
                     <th data-field="servicio">Servicio</th>
-                    <th data-field="precio" data-sortable="true" data-formatter="precioFormateo">Valor tarifa</th>
-                    <th data-field="fechaInicial" data-sortable="true">Fecha inicial esquema</th>
-                    <th data-field="fechaFinal" data-sortable="true">Fecha final esquema</th>
+                    <th class="text-center" data-field="precio" data-sortable="true" data-formatter="precioFormateo">Valor tarifa</th>
+                    <th class="text-center" data-field="fechaInicial" data-sortable="true">Fecha inicial esquema</th>
+                    <th class="text-center" data-field="fechaFinal" data-sortable="true">Fecha final esquema</th>
                     <th data-field="estado" data-formatter="estadoActual">Estado</th>
                 </tr>
             </thead>

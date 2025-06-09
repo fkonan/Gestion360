@@ -45,7 +45,8 @@ import { deshabilitarSubmit,
         abrirArchivo,
         exportarExcel,
         actualizarEstado,
-        mostrarToast
+        mostrarToast,
+        darkModeEnable
     } from './utils';
 
 import { initTablaBootstrapTable, generarDetalle } from './tablasAjusteColumnas';
@@ -56,6 +57,7 @@ window.abrirArchivo = abrirArchivo;
 window.exportarExcel = exportarExcel;
 window.actualizarEstado = actualizarEstado;
 window.mostrarToast = mostrarToast;
+window.darkModeEnable = darkModeEnable;
 
 window.initTablaBootstrapTable = initTablaBootstrapTable;
 window.generarDetalle = generarDetalle;

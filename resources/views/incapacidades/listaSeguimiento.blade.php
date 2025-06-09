@@ -35,18 +35,18 @@
             data-url="{{ route('gestion-incapacidades.seguimiento.cargarDatos') }}">   
             <thead class="table-primary">
                 <tr>
-                    <th data-field="IncPerNom" >Nombre</th>
+                    <th class="text-nowrap" data-field="IncPerNom" >Nombre</th>
                     <th data-field="PerNumDoc">Documento</th>
                     <th data-field="causaDes">Causa Incapacidad</th>
                     <th data-field="epsNombre">EPS</th>
                     <th data-field="arlNombre">ARL</th>
-                    <th data-field="IncFecIni" data-sortable="true">Fecha Inicio</th>
-                    <th data-field="IncFecFin" data-sortable="true">Fecha Fin</th>
-                    <th data-field="DiagnosticoDes">Diagnóstico</th>
-                    <th data-field="diasIncapacidad" data-formatter="diasIncapacidadFormatter">Días Incapacidad</th>
+                    <th class="text-center" data-field="IncFecIni" data-sortable="true">Fecha Inicio</th>
+                    <th class="text-center" data-field="IncFecFin" data-sortable="true">Fecha Fin</th>
+                    <th class="text-nowrap" data-field="DiagnosticoDes">Diagnóstico</th>
+                    <th class="text-center" data-field="diasIncapacidad" data-formatter="diasIncapacidadFormatter">Días Incapacidad</th>
                     <th data-field="IncapacidadEstado">Estado</th>
-                    <th data-field="IncFecReg">Fecha Registro</th>
-                    <th data-field="IncHorReg">Hora Registro</th>
+                    <th class="text-center" data-field="IncFecReg">Fecha Registro</th>
+                    <th class="text-center" data-field="IncHorReg">Hora Registro</th>
                     <th data-field="IdIncapacidad" data-formatter="accionesFormatter">Acciones</th>
                 </tr>
             </thead>
@@ -71,7 +71,7 @@
             const urlSeguimientoDetalle = "{{ route('gestion-incapacidades.seguimiento.detalle', ['id' => ':id']) }}".replace(':id', value);
 
             return `
-                <div class="d-flex flex-wrap gap-3 justify-content-start ps-3">
+                <div class="d-flex flex-wrap gap-3 justify-content-center">
                     <a class="text-decoration-none"  title="Ver adjuntos"
                         onclick="cargarModal('${urlAdjuntos}', 'Documentos Incapacidad', '', 'modal-lg')">
                         <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/carpetas.png" 

@@ -35,7 +35,7 @@
                     <th>Origen</th>
                     <th>Destino</th>
                     <th data-sortable="true">Servicio</th>
-                    <th data-sortable="true">Fecha de Salida</th>
+                    <th class="text-center" data-sortable="true">Fecha de Salida</th>
                     <th>Hora</th>
                    <!--  <th>Precio</th> -->
                 </tr>

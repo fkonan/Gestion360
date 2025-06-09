@@ -15,6 +15,7 @@
 
     <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-secondary">
         <span class="text-left text-light fs-5 fw-medium py-1">Usuarios registrados</span>
+        <a class="btn fw-bold my-2 bg-primary" href="{{ route('home') }}">Volver</a>
     </div>
 
     @permite('administracion.usuarios.crear')
@@ -43,8 +44,8 @@
                 <tr>
                     <th data-field="persona.PerNumDoc" data-visible="true">Identificación</th>
                     <th data-field="nombreCompleto" data-formatter="nombreCompletoFormatter">Nombre Completo</th>
-                    <th data-field="UsuFecReg" data-sortable="true">Fecha registro</th>
-                    <th data-field="UsuHorReg" data-sortable="true">Hora registro</th>
+                    <th class="text-center" data-field="UsuFecReg" data-sortable="true">Fecha registro</th>
+                    <th class="text-center" data-field="UsuHorReg" data-sortable="true">Hora registro</th>
                     <th data-field="rol">Rol del usuario</th>
                     @permite('administracion.usuarios.actualizar')
                         <th class="text-center" data-field="UsuarioEstado" data-formatter="estadoFormatter" data-sortable="true">Estado</th>
@@ -90,7 +91,7 @@
         let urlUsuarios = "{{ route('usuarios.edit', ['id' => ':id']) }}".replace(':id', row.IdUsuario);
 
         return `
-            <div class="d-flex flex-wrap gap-3 justify-content-start ps-3">
+            <div class="d-flex flex-wrap gap-3 justify-content-center">
                 @permite('administracion.usuarios.asignar_permisos')
                     <a class="text-decoration-none" 
                         title="Gestionar permisos del usuario"

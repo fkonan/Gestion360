@@ -16,6 +16,15 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-duallistbox/dist/bootstrap-duallistbox.min.css">
 
+    <style>
+        body {
+            visibility: hidden;
+        }
+        body.show {
+            visibility: visible;
+        }
+    </style>
+
      <!--Vite -->
      @vite(['resources/css/app.css', 'resources/js/app.js','resources/css/custom.css','resources/css/mobile.css','resources/css/darkmode.css'])
 </head>
@@ -39,10 +48,10 @@
 
                     <i id="toggleDarkMode" class="bi bi-sun text-dark ms-3"></i>
                 
-                    <div class="info" style="width: 235px; margin: 0 auto;">
-                        <img src="{{ asset('img/LogoCope.png') }}" style="width:100%; height: auto;" alt="Logo Cope">
+                    <div class="info d-flex flex-column align-items-center" style="width: 235px; margin: 0 auto;">
+                        <img src="{{ asset('img/LogoCope.png') }}" class="logoCope" style="width:100%; height: auto;" alt="Logo Cope">
+                        <img src="{{ asset('img/LogoCopeBlancoFull.png') }}" class="logoCopeBlanco py-3" style="width:80%; height: auto; display:none" alt="Logo Cope ">
                     </div>
-                    
                     <div class="info" style="user-select: none; font-size: 0.75em">
                         <span class="fw-bold text-dark">Nombre:</span>
                         <span class="fw-medium">
@@ -126,22 +135,16 @@
             }
         });
 
-        // Dark Mode Toggle
+        //dark mode toggle 
         document.addEventListener('DOMContentLoaded', () => {
-            const body = document.body;
-            const darkModeToggle = document.getElementById('toggleDarkMode');
-            const isDarkMode = localStorage.getItem('darkMode') === 'enabled';
+            darkModeEnable()
+        });    
 
-            if (isDarkMode) {
-                body.classList.add('dark-mode');
-            }
-
-            darkModeToggle.addEventListener('click', () => {
-                body.classList.toggle('dark-mode');
-                const enabled = body.classList.contains('dark-mode');
-                localStorage.setItem('darkMode', enabled ? 'enabled' : 'disabled');
-            });
+        // Mostrar el cuerpo del documento después de cargar todo
+        window.addEventListener('load', function () {
+            document.body.classList.add('show');
         });
+
     </script>
 
     @stack('script')

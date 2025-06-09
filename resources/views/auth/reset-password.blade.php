@@ -4,7 +4,7 @@
 
 @section('content')
 <br><br><br><br>
-<div class="container">
+<div class="container login-container">
     <div class="row" style="margin: auto;">
         <div class="col-xs-12 col-sm-2 col-md-3 col-lg-4 col-xl-4 col-xxl-4"></div>
             <div class="col-xs-12 col-sm-8 col-md-6 col-lg-4 col-xl-4 col-xxl-4">

@@ -13,7 +13,7 @@
                 <div class="card-body login-card-body">
                      <div class="d-flex justify-content-between align-items-center mb-3">
                         <p class="login-box-msg" style="text-align: left; font-size: 30px;"><b>!Hola de nuevo¡</b></p>
-                        <i id="toggleDarkMode" class="bi bi-sun text-dark ms-3"></i>
+                        <i id="toggleDarkMode" class="bi bi-sun ms-3"></i>
                     </div>
                     <form method="POST" action="{{ route('login') }}" onsubmit="deshabilitarSubmit(this)">
                     @csrf
@@ -43,7 +43,7 @@
 
                     <div class="d-flex flex-column my-4 align-items-center">
                         <div class="captcha-container">
-                            {!! NoCaptcha::display() !!}
+                            {!! NoCaptcha::display(['data-theme' => 'light' ]) !!}
                         </div>
 
                         @if ($errors->has('g-recaptcha-response'))

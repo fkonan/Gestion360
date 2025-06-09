@@ -15,6 +15,7 @@
 
     <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-secondary">
         <span class="text-left text-light fs-5 fw-medium py-1">Lista de personas</span>
+        <a class="btn fw-bold my-2 bg-primary" href="{{ route('home') }}">Volver</a>
     </div>
 
     @permite('administracion.personas.crear')
@@ -46,7 +47,7 @@
                     <th data-field="DepNom">Departamento</th>
                     <th data-field="PerTelefono">Telefono</th>
                     <th data-field="PerGenero" data-sortable="true">Genero</th>  
-                    <th data-field="PerFechReg" data-sortable="true">Fecha registro</th> 
+                    <th class="text-center" data-field="PerFechReg" data-sortable="true">Fecha registro</th> 
                     @permite('administracion.personas.actualizar')
                         <th class="text-center" data-sortable="true" data-field="PerEstado" data-formatter="estadoFormatter">Estado</th>
                         <th class="text-center" data-field="acciones" data-formatter="accionesFormatter" >Opciones</th>

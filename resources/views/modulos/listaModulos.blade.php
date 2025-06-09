@@ -12,7 +12,7 @@
 @endsection
 
 @section('content')
-<div class="container-fluid p-0 border rounded" style="min-height:150px; background-color: white">
+<div class="container-fluid p-0 border rounded tableContainer" style="min-height:150px; background-color: white">
 
     <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-secondary">
         <span class="text-left text-light fs-5 fw-medium py-1">Módulos</span>
@@ -79,7 +79,7 @@
     function accionesFormatter(index, row) {
         let urlEditar = "{{ route('modulos.edit', ['id' => ':id']) }}".replace(':id', row.IdModulo);
         return `
-            <div class="d-flex flex-wrap gap-3 justify-content-start ps-3">
+            <div class="d-flex flex-wrap gap-3 justify-content-center">
                 @permite('configuracion.gestion_sistema.actualizar')
                     <a class="text-decoration-none" 
                         title="Editar modulo"

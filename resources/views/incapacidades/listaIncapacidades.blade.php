@@ -34,18 +34,18 @@
             data-pagination-parts="['pageSize', 'pageList', 'pageNext', 'pagePrev']">   
             <thead class="table-primary">
                 <tr class="bg-primary">
-                    <th data-field="IncPerNom" >Nombre</th>
+                    <th class="text-nowrap" data-field="IncPerNom" >Nombre</th>
                     <th data-field="PerNumDoc">Documento</th>
                     <th data-field="causaDes">Causa Incapacidad</th>
                     <th data-field="epsNombre">EPS</th>
                     <th data-field="arlNombre">ARL</th>
-                    <th data-field="IncFecIni" data-sortable="true">Fecha Inicio</th>
-                    <th data-field="IncFecFin" data-sortable="true">Fecha Fin</th>
-                    <th data-field="DiagnosticoDes">Diagnóstico</th>
-                    <th data-field="diasIncapacidad" data-formatter="diasIncapacidadFormatter">Días de Incapacidad</th>
+                    <th class="text-center" data-field="IncFecIni" data-sortable="true">Fecha Inicio</th>
+                    <th class="text-center" data-field="IncFecFin" data-sortable="true">Fecha Fin</th>
+                    <th class="text-nowrap" data-field="DiagnosticoDes">Diagnóstico</th>
+                    <th class="text-center" data-field="diasIncapacidad" data-formatter="diasIncapacidadFormatter">Días de Incapacidad</th>
                     <th data-field="IncapacidadEstado">Estado</th>
-                    <th data-field="IncFecReg">Fecha Registro</th>
-                    <th data-field="IncHorReg">Hora Registro</th>
+                    <th class="text-center" data-field="IncFecReg">Fecha Registro</th>
+                    <th class="text-center" data-field="IncHorReg">Hora Registro</th>
                     <th data-field="IdIncapacidad" data-formatter="accionesFormatter">Acciones</th>
                 </tr>
             </thead>
@@ -74,7 +74,7 @@
             const urlGestion = "{{ route('gestion-incapacidades.incapacidades.gestion', ['id' => ':id']) }}".replace(':id', row.IdIncapacidad);
 
             return `
-                <div class="d-flex flex-wrap gap-3 justify-content-start ps-3">
+                <div class="d-flex flex-wrap gap-3 justify-content-center">
                     <a class="text-decoration-none" 
                         title="Ver adjuntos"
                         onclick="cargarModal('${urlAdjuntos}', 'Documentos Incapacidad', '', 'modal-lg')">     

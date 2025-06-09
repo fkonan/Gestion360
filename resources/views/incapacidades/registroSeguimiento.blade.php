@@ -24,7 +24,7 @@
             Nuevo Seguimiento
     </a>
 
-    <div class="row p-4 g-2">
+    <div style="padding:1.5em">
         <table
             class="table table-bordered align-middle"
             data-page-size="10"

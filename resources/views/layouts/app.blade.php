@@ -5,6 +5,15 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <title>@yield('title')</title>
+
+        <script>
+            // Dark Mode Toggle
+            document.addEventListener('DOMContentLoaded', () => {
+                darkModeEnable()
+            });
+
+        </script>
+
         <link rel="icon" href="{{ asset('favicon.png') }}" type="image/png">
 
         <!-- CAPCHA js de paquete: anhskohbo/no-captcha-->
@@ -12,6 +21,15 @@
         
         <!-- Iconos -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+        <style>
+            body {
+                visibility: hidden;
+            }
+            body.show {
+                visibility: visible;
+            }
+        </style>
 
         <!--Vite -->
         @vite(['resources/css/app.css', 'resources/js/app.js','resources/css/custom.css','resources/css/mobile.css','resources/css/darkmode.css'])
@@ -32,25 +50,14 @@
         <section>
             @yield('content')
         </section>
-        
+
         <script>
-            // Dark Mode Toggle
-            document.addEventListener('DOMContentLoaded', () => {
-                const body = document.body;
-                const darkModeToggle = document.getElementById('toggleDarkMode');
-                const isDarkMode = localStorage.getItem('darkMode') === 'enabled';
-
-                if (isDarkMode) {
-                    body.classList.add('dark-mode');
-                }
-
-                darkModeToggle.addEventListener('click', () => {
-                    body.classList.toggle('dark-mode');
-                    const enabled = body.classList.contains('dark-mode');
-                    localStorage.setItem('darkMode', enabled ? 'enabled' : 'disabled');
-                });
-            });
+            // Mostrar el cuerpo del documento después de cargar todo
+            window.addEventListener('load', function () {
+                document.body.classList.add('show');
+            }); 
         </script>
+
         @stack('script')
 
         <!-- Renderizado de componentes-->

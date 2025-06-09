@@ -9,7 +9,6 @@ Route::get('/', function () {
     return Auth::check() ? redirect()->route('home') : redirect()->route('login');
 });
 
-
 Route::get('/login', [LoginController::class, 'showLoginForm']);
 Route::post('/login', [LoginController::class, 'login'])->name('login');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
