@@ -13,8 +13,10 @@ use Illuminate\Support\Facades\Log;
 
 class LoginController extends Controller
 {
-    public function showLoginForm(){
-        return view('auth.login'); 
+    public function showLoginForm(Request $request){
+        $darkMode = $request->cookie('darkMode') === 'enabled';
+        dd($request->cookie('darkMode')); 
+        return view('auth.login', compact('darkMode')); 
     }
 
     public function login(Request $request){

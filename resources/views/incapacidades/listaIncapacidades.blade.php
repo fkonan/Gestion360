@@ -34,7 +34,7 @@
             data-pagination-parts="['pageSize', 'pageList', 'pageNext', 'pagePrev']">   
             <thead class="table-primary">
                 <tr class="bg-primary">
-                    <th class="text-nowrap" data-field="IncPerNom" >Nombre</th>
+                    <th data-field="IncPerNom" >Nombre</th>
                     <th data-field="PerNumDoc">Documento</th>
                     <th data-field="causaDes">Causa Incapacidad</th>
                     <th data-field="epsNombre">EPS</th>

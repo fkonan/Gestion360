@@ -29,7 +29,7 @@
             <br>
 
             @foreach ($modulos as $modulo)
-                <div class="border border-primary rounded m-0 p-0 pb-3 mb-4">
+                <div class="border border-primary rounded m-0 p-0 pb-3 mb-4 z-3">
                 <h5 class="p-2 bg-primary text-light">{{ ucfirst($modulo->ModNom) }}</h5>
 
                 @php
@@ -46,7 +46,7 @@
                 @endif
 
                 @foreach ($modulo->submodulos as $submodulo)
-                    <div class="ms-4 rounded">
+                    <div class="ms-4 rounded rolCreate">
                         <p class="text-secondary fs-6 fw-medium m-0 p-0">{{ ucfirst($submodulo->SubModNom) }}</p>
                         <div class="row mb-2">
                             @foreach ($submodulo->permisos as $permiso)

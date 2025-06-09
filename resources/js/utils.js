@@ -225,6 +225,9 @@ export function darkModeEnable(){
         body.classList.toggle('dark-mode');
         const enabled = body.classList.contains('dark-mode');
         localStorage.setItem('darkMode', enabled ? 'enabled' : 'disabled');
+
+        //Para poder usarlo en laravel (lado del servidor) con cookies
+        document.cookie = "darkMode=" + (enabled ? 'enabled' : 'disabled') + "; path=/";
     });
 }
 

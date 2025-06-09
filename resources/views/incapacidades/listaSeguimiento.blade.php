@@ -35,7 +35,7 @@
             data-url="{{ route('gestion-incapacidades.seguimiento.cargarDatos') }}">   
             <thead class="table-primary">
                 <tr>
-                    <th class="text-nowrap" data-field="IncPerNom" >Nombre</th>
+                    <th data-field="IncPerNom" >Nombre</th>
                     <th data-field="PerNumDoc">Documento</th>
                     <th data-field="causaDes">Causa Incapacidad</th>
                     <th data-field="epsNombre">EPS</th>

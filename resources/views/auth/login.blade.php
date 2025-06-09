@@ -3,7 +3,6 @@
 @section('title','Login')
 
 @section('content')
-<br><br><br>
 <div class="container login-container">
     <div class="row" style="margin: auto;">
         <div class="col-xs-12 col-sm-2 col-md-3 col-lg-4 col-xl-4 col-xxl-4"></div>
@@ -43,7 +42,7 @@
 
                     <div class="d-flex flex-column my-4 align-items-center">
                         <div class="captcha-container">
-                            {!! NoCaptcha::display(['data-theme' => 'light' ]) !!}
+                            {!! NoCaptcha::display(['data-theme' => $darkMode ? 'dark' : 'light']) !!}
                         </div>
 
                         @if ($errors->has('g-recaptcha-response'))

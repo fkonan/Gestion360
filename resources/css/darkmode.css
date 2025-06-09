@@ -152,9 +152,14 @@ body.dark-mode .detail-view div{
 
 /* Toast alert */
 body.dark-mode .toast{
-    background-color: var(--darkmode-bg-main);
-    color: var(--darkmode-text);
+    background-color: var(--darkmode-bg-main) !important;
+    color: var(--darkmode-text) !important;
 }
+
+body.dark-mode .toast-body{
+    color: var(--darkmode-text) !important;
+}
+
 
 /* Bootstrap table */
 body.dark-mode .bootstrap-table .detail{
@@ -172,6 +177,10 @@ body.dark-mode .horaComponent{
 
 body.dark-mode a{
     color: var(--darkmode-text);
+}
+
+body.dark-mode .rolCreate p{
+    color: var(--darkmode-text) !important;
 }
 
 /* Logo Cope */
