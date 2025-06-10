@@ -21,6 +21,14 @@ Route::get('/home', function () {
     return view('home');
 })->middleware('auth')->name('home');
 
+Route::get('/', function () {
+    return view('index');
+})->name('index');
+
+Route::get('/index', function () {
+    return view('index');
+})->name('index');
+
 Route::get('/clear', function () {
     Artisan::call('storage:link');
     Artisan::call('cache:clear');

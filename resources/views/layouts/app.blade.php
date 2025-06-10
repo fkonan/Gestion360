@@ -21,6 +21,8 @@
         
         <!-- Iconos -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+        
+        @stack('styles')
 
         <style>
             body {
@@ -37,7 +39,7 @@
     <body style="margin: 0; padding: 0;">
 
         <section class="content-header mb-4 p-2 d-flex justify-content-between align-items-center sticky-top" style="min-height:60px; background-color:#0E2146; top:0; left:0; width:100%; z-index:1000;">
-            <a href="{{ route('login') }}">
+            <a href="{{ route('index') }}">
             <img 
             src="https://autogestion.copetran.com.co/cdn/img/logos/logo-blango.png" 
             alt="Logo" 

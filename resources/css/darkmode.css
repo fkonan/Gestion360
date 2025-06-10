@@ -17,6 +17,10 @@ body.dark-mode .toggleDarkMode{
     color: var(--darkmode-text) !important;
 }
 
+body.dark-mode #toggleDarkMode i{
+    color: var(--darkmode-text) !important;
+}
+
 body.dark-mode input::placeholder {
     color: var(--darkmode-text);
     opacity: 1; 
@@ -27,7 +31,7 @@ body.dark-mode .container-fluid > div{
     border: none !important;
 }
 
-body.dark-mode .container-fluid div {
+body.dark-mode .container-fluid div{
     background-color: var(--darkmode-bg-main);
     color: var(--darkmode-text);
 }
@@ -211,6 +215,23 @@ body.dark-mode #toastAlert,
 body.dark-mode .toastAJAX{
     background-color: var(--darkmode-bg-main) !important;
     color: var(--darkmode-text) !important; 
+}
+
+/* Index cards */
+body.dark-mode .cardIndex h5,
+body.dark-mode .cardIndex p,
+body.dark-mode .cardIndex i{   
+    color: var(--darkmode-text) !important;
+}
+
+body.dark-mode .indexContainer h1,
+body.dark-mode .indexContainer p{
+    color: var(--darkmode-text) !important;
+}
+
+body.dark-mode .cardIndex{
+    background-color: var(--darkmode-input) !important;
+    border: none !important;
 }
 
 

@@ -12,7 +12,9 @@
                 <div class="card-body login-card-body">
                      <div class="d-flex justify-content-between align-items-center mb-3">
                         <p class="login-box-msg" style="text-align: left; font-size: 30px;"><b>!Hola de nuevo¡</b></p>
-                        <i id="toggleDarkMode" class="bi bi-sun ms-3"></i>
+                        <button id="toggleDarkMode" class="btn btn-outline-secondary rounded-circle" title="Cambiar modo oscuro" style="border-color:rgba(0, 0, 0, 0.23);">
+                            <i class="bi bi-sun" id="darkModeIcon" style="color:rgb(0, 0, 0);"></i>
+                        </button>
                     </div>
                     <form method="POST" action="{{ route('login') }}" onsubmit="deshabilitarSubmit(this)">
                     @csrf
