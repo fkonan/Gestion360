@@ -13,10 +13,6 @@ body.dark-mode .preloader {
     color: var(--darkmode-text);
 }
 
-body.dark-mode hr{
-    background-color: var(--darkmode-text) !important;
-}
-
 body.dark-mode .toggleDarkMode{
     color: var(--darkmode-text) !important;
 }

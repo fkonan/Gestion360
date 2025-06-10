@@ -23,7 +23,7 @@
                 </div>
 
                 {{-- Mensaje --}}
-                <div class="toast-body fw-semibold text-dark">
+                <div class="toast-body fw-semibold">
                     {{ session('toast.message') }}
                 </div>
 
