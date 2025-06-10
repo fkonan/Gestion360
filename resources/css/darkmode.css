@@ -31,7 +31,8 @@ body.dark-mode .container-fluid > div{
     border: none !important;
 }
 
-body.dark-mode .container-fluid div{
+body.dark-mode .container-fluid div,
+body.dark-mode .login-container div{
     background-color: var(--darkmode-bg-main);
     color: var(--darkmode-text);
 }

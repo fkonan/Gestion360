@@ -7,6 +7,6 @@
     <br><br><br><br>
     <h1>404 - Página no encontrada</h1>
     <p>La URL solicitada no existe. Por favor, verifica la dirección e intenta de nuevo.</p>
-    <a onclick="window.history.back()" class="btn btn-primary">Volver</a>
+    <a href="{{ route('index') }}" class="btn btn-primary">Volver</a>
 </div>
 @endsection
