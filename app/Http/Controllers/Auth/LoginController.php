@@ -15,7 +15,6 @@ class LoginController extends Controller
 {
     public function showLoginForm(Request $request){
         $darkMode = $request->cookie('darkMode') === 'enabled';
-        dd($request->cookie('darkMode')); 
         return view('auth.login', compact('darkMode')); 
     }
 

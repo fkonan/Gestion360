@@ -13,6 +13,10 @@ body.dark-mode .preloader {
     color: var(--darkmode-text);
 }
 
+body.dark-mode hr{
+    background-color: var(--darkmode-text) !important;
+}
+
 body.dark-mode .toggleDarkMode{
     color: var(--darkmode-text) !important;
 }
@@ -150,17 +154,6 @@ body.dark-mode .detail-view div{
     background-color: var(--darkmode-input) !important;
 }
 
-/* Toast alert */
-body.dark-mode .toast{
-    background-color: var(--darkmode-bg-main) !important;
-    color: var(--darkmode-text) !important;
-}
-
-body.dark-mode .toast-body{
-    color: var(--darkmode-text) !important;
-}
-
-
 /* Bootstrap table */
 body.dark-mode .bootstrap-table .detail{
     background-color: var(--darkmode-bg-main) !important;
@@ -216,4 +209,12 @@ body.dark-mode .login-container .input-group-text{
     background-color: var(--darkmode-bg-secondary);
     color: var(--darkmode-text);
 }
+
+/* Toast alert */
+body.dark-mode #toastAlert,
+body.dark-mode .toastAJAX{
+    background-color: var(--darkmode-bg-main) !important;
+    color: var(--darkmode-text) !important; 
+}
+
 
