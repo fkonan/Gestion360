@@ -129,7 +129,7 @@ export function exportarExcel(button, urlDatos, nombreArchivo) {
             mostrarToast('Excel descargado','success');
         },
         error: function () {
-            alert('Error al exportar los datos. Por favor, intente nuevamente.');
+            mostrarToast('Error al exportar los datos. Por favor, intente nuevamente.', 'danger');
             btnExportar.disabled = false;
             btnExportar.innerText = textoOriginal;
         }

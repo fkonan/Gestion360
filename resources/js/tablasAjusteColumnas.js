@@ -1,28 +1,21 @@
-/**
- * Inicializa el ajuste dinámico de columnas en una tabla Bootstrap Table,
- * ocultando columnas no protegidas si hay desbordamiento horizontal,
- * y activando/desactivando la vista de detalle si no hay contenido que mostrar.
-*/
 function initColumnaAjuste(selector, opciones = {}) {
     const tabla = $(selector);
     const columnasProtegidas = opciones.protegidas || [];
     let columnasOcultadas = [];
     let ajustando = false;
 
-    // Obtiene el contenedor con scroll horizontal
-    const getContainer = () =>
-        tabla.closest('.bootstrap-table').find('.fixed-table-body')[0];
+     // Obtiene el contenedor con scroll horizontal
+    const getContainer = () => tabla.closest('.bootstrap-table').find('.fixed-table-body')[0];
 
-    // Verifica si existe scroll horizontal (indicando que el ancho es insuficiente)
+     // Verifica si existe scroll horizontal (indicando que el ancho es insuficiente)
     const tieneScrollHorizontal = () => {
         const container = getContainer();
         return container && container.scrollWidth > container.clientWidth;
     };
 
-    // Obtiene todas las columnas no protegidas para poder ocultarlas si es necesario
-    const getTodasLasColumnas = () => {
-        const opts = tabla.bootstrapTable('getOptions');
-        const columnas = opts.columns?.[0] || [];
+     // Obtiene todas las columnas no protegidas para poder ocultarlas si es necesario
+    const getTodasLasColumnasNoProtegidas = () => {
+        const columnas = tabla.bootstrapTable('getOptions')?.columns?.[0] || [];
         return columnas.filter(col => col.field && !columnasProtegidas.includes(col.field));
     };
 
@@ -31,51 +24,55 @@ function initColumnaAjuste(selector, opciones = {}) {
         const filas = tabla.bootstrapTable('getData') || [];
         return filas.some(row => {
             const contenido = generarDetalle(selector, row);
-            return contenido !== null && contenido.toString().trim() !== '';
+            return contenido !== null && String(contenido).trim() !== '';
         });
     };
 
     /**
-     * Ajusta dinámicamente las columnas según el espacio visible.
-     * También activa o desactiva el detalle si hay contenido para mostrar.
-     */
+     * Ajusta dinámicamente las columnas según el espacio visible
+     * También activa o desactiva el detalle si hay contenido para mostrar.
+     */
     const ajustarColumnas = () => {
         if (ajustando) return;
         ajustando = true;
 
-        // Esperar al próximo repintado para no forzar recálculos de layout
+         // Esperar al próximo repintado para no forzar recálculos de layout
         requestAnimationFrame(() => {
             columnasOcultadas = [];
-            tabla.bootstrapTable('showAllColumns'); // Restaurar todas las columnas primero
+            tabla.bootstrapTable('showAllColumns');
 
             // Ordenar de derecha a izquierda para ocultar las menos prioritarias
-            const columnasOrdenadas = getTodasLasColumnas().map(c => c.field).reverse();
+            const columnasOrdenadasParaOcultar = getTodasLasColumnasNoProtegidas().map(c => c.field).reverse();
             let i = 0;
 
             // Oculta columnas hasta que desaparezca el scroll horizontal
-            while (i < columnasOrdenadas.length && tieneScrollHorizontal()) {
-                const col = columnasOrdenadas[i];
-                tabla.bootstrapTable('hideColumn', col);
-                columnasOcultadas.push(col);
+            while (i < columnasOrdenadasParaOcultar.length && tieneScrollHorizontal()) {
+                const colField = columnasOrdenadasParaOcultar[i];
+                tabla.bootstrapTable('hideColumn', colField);
+                columnasOcultadas.push(colField);
                 i++;
             }
 
-            // Obtener si debe o no mostrarse el detalle por fila
+             // Obtener si debe o no mostrarse el detalle por fila
             const opcionesActuales = tabla.bootstrapTable('getOptions');
-            const mostrarDetalle = hayDetalleVisible();
+            const debeMostrarDetalle = hayDetalleVisible();
 
             // Solo recrear la tabla si ha cambiado la configuración de detalle
-            if (opcionesActuales.detailView !== mostrarDetalle) {
+            if (opcionesActuales.detailView !== debeMostrarDetalle) {
                 const data = tabla.bootstrapTable('getData');
+                const prevOnPostBody = opcionesActuales['onPostBody'];
 
-                tabla.bootstrapTable('destroy'); // Destruir tabla actual
+                tabla.bootstrapTable('destroy');
                 tabla.bootstrapTable({
                     ...opcionesActuales,
                     data,
-                    detailView: mostrarDetalle
+                    detailView: debeMostrarDetalle,
                 });
 
-                // Volver a registrar el listener de ajuste tras la reinicialización
+                if (prevOnPostBody && typeof prevOnPostBody === 'function') {
+                    tabla.on('post-body.bs.table', prevOnPostBody);
+                }
+
                 tabla.on('post-body.bs.table', ajustarColumnas);
             }
 
@@ -93,55 +90,51 @@ function initColumnaAjuste(selector, opciones = {}) {
         resizeTimeout = setTimeout(ajustarColumnas, 100);
     });
 
-    // Exponer las columnas ocultas para diagnóstico o control externo
     tabla.data('columnasOcultas', () => columnasOcultadas);
 }
 
-
-
 export function generarDetalle(selector, row, opcionesFormatter = {}) {
     const tabla = $(selector);
-    const obtenerOcultas = tabla.data('columnasOcultas') || (() => []);
-    const ocultas = obtenerOcultas();
-    const columnas = tabla.bootstrapTable('getOptions').columns?.[0] || [];
+    const obtenerColumnasOcultas = tabla.data('columnasOcultas') || (() => []);
+    const columnasOcultas = obtenerColumnasOcultas();
+    const definicionesColumnas = tabla.bootstrapTable('getOptions')?.columns?.[0] || [];
 
-    //orden del detalle segun el data-order definido
-    const columnasOrdenadas = columnas
-        .filter(col => col.field && ocultas.includes(col.field))
+     //orden del detalle segun el data-order definido
+    const columnasOrdenadasParaDetalle = definicionesColumnas
+        .filter(col => col.field && columnasOcultas.includes(col.field))
         .sort((a, b) => (a.orden ?? 999) - (b.orden ?? 999));
 
-    let html = '';
-    let hayContenido = false;
+    let htmlContenidoDetalle = '';
+    let hayContenidoEnDetalle = false;
 
-    for (const col of columnasOrdenadas) {
+    for (const col of columnasOrdenadasParaDetalle) {
         const key = col.field;
         const label = col.title || key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());
 
-        let contenido = '';
+        let contenidoCampo = '';
         //si la columna es una columna con formato
         if (opcionesFormatter[key]) {
-            contenido = opcionesFormatter[key](row[key], row);
+            contenidoCampo = opcionesFormatter[key](row[key], row);
         } else if (row[key] !== null && row[key] !== undefined) {
-            contenido = row[key];
+            contenidoCampo = row[key];
         }
 
-        if (contenido) {
-            hayContenido = true;
-            html += `
+        if (String(contenidoCampo).trim() !== '') {
+            hayContenidoEnDetalle = true;
+            htmlContenidoDetalle += `
                 <li class="list-group-item">
                     <div class="d-flex align-items-center gap-2 flex-wrap">
                         <strong style="white-space: nowrap;">${label}:</strong>
-                        <div>${contenido}</div>
+                        <div>${contenidoCampo}</div>
                     </div>
                 </li>
             `;
         }
-        
     }
 
-    if (!hayContenido) return null; 
+    if (!hayContenidoEnDetalle) return null;
 
-    return `<ul class="list-group list-group-flush">${html}</ul>`;
+    return `<ul class="list-group list-group-flush">${htmlContenidoDetalle}</ul>`;
 }
 
 /* Como parametro recibe:
@@ -149,9 +142,7 @@ export function generarDetalle(selector, row, opcionesFormatter = {}) {
 2. Columnas que seran visibles siempre
 3. Nombre del campo formatter donde se mostrata el detalle
 4. Columnas que vienen calculdas o modificadas con algun formatter */
-export function initTablaBootstrapTable(selector, opciones = {},nombreFormatter, formattersDetalle = {}) {
+export function initTablaBootstrapTable(selector, opciones = {}, nombreFormatterGlobal, formattersDetalle = {}) {
     initColumnaAjuste(selector, opciones);
-    window[nombreFormatter] = (index, row) => generarDetalle(selector, row,formattersDetalle);
+    window[nombreFormatterGlobal] = (index, row) => generarDetalle(selector, row, formattersDetalle);
 }
-
-

@@ -13,13 +13,13 @@
 @endsection
 
 @section('content')
-<div class="container-fluid p-0 border rounded shadow" style="min-height:150px; background-color: white">
+<div class="container-fluid p-0 border rounded shadow" style="background-color: white">
 
     <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-secondary">
         <span class="text-left text-light fs-5 fw-medium py-1">Editar Rol</span>
     </div>
 
-    <div class="row p-4">
+    <div class="row p-4 m-0">
         <form id="formPermisoRol" action="{{ route('roles.permisos.update', ['id' => $role->id]) }}" method="POST">
             @csrf
             @method('PUT')
@@ -54,7 +54,7 @@
                 @endif
 
                 @foreach ($modulo->submodulos as $submodulo)
-                    <div class="ms-4 rounded">
+                    <div class="mx-4 rolCreate rounded">
                         <p class="text-secondary fs-6 fw-medium m-0 p-0">{{ ucfirst($submodulo->SubModNom) }}</p>
                         <div class="row mb-2">
                             @foreach ($submodulo->permisos as $permiso)

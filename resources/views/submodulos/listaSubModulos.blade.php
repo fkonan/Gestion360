@@ -41,7 +41,7 @@
             data-url="{{ route('submodulos.cargarDatos') }}"> 
             <thead class="table-primary">
                 <tr>
-                    <th data-field="SubModNom">Nombre</th>
+                    <th class="text-nowrap" data-field="SubModNom">Nombre</th>
                     <th data-field="SubModDes">Descripción</th>
                     <th data-field="ModPadreNom">Modulo Padre</th>    
                     <th data-field="SubModFecReg">Fecha Registro</th>

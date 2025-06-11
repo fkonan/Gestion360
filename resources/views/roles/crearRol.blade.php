@@ -46,7 +46,7 @@
                 @endif
 
                 @foreach ($modulo->submodulos as $submodulo)
-                    <div class="ms-4 rounded rolCreate">
+                    <div class="mx-4 rounded rolCreate">
                         <p class="text-secondary fs-6 fw-medium m-0 p-0">{{ ucfirst($submodulo->SubModNom) }}</p>
                         <div class="row mb-2">
                             @foreach ($submodulo->permisos as $permiso)

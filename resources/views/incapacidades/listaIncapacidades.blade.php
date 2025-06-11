@@ -34,18 +34,20 @@
             data-pagination-parts="['pageSize', 'pageList', 'pageNext', 'pagePrev']">   
             <thead class="table-primary">
                 <tr class="bg-primary">
-                    <th data-field="IncPerNom" >Nombre</th>
+                    <th class="text-nowrap" data-field="IncPerNom">Nombre</th>
                     <th data-field="PerNumDoc">Documento</th>
-                    <th data-field="causaDes">Causa Incapacidad</th>
-                    <th data-field="epsNombre">EPS</th>
-                    <th data-field="arlNombre">ARL</th>
+                    <th class="text-nowrap" data-field="causaDes">Causa Incapacidad</th>
+                    <th data-field="DiagnosticoCod">Codigo CIE</th>
+                    <th class="text-nowrap" data-field="epsNombre">EPS</th>
+                    <th class="text-nowrap" data-field="arlNombre">ARL</th>
+                    <th class="text-nowrap" data-field="TipoIncapacidad">Tipo Incapacidad</th>
                     <th class="text-center" data-field="IncFecIni" data-sortable="true">Fecha Inicio</th>
                     <th class="text-center" data-field="IncFecFin" data-sortable="true">Fecha Fin</th>
                     <th class="text-nowrap" data-field="DiagnosticoDes">Diagnóstico</th>
                     <th class="text-center" data-field="diasIncapacidad" data-formatter="diasIncapacidadFormatter">Días de Incapacidad</th>
-                    <th data-field="IncapacidadEstado">Estado</th>
                     <th class="text-center" data-field="IncFecReg">Fecha Registro</th>
                     <th class="text-center" data-field="IncHorReg">Hora Registro</th>
+                    <th data-field="IncapacidadEstado">Estado</th>
                     <th data-field="IdIncapacidad" data-formatter="accionesFormatter">Acciones</th>
                 </tr>
             </thead>
@@ -116,7 +118,7 @@
         document.addEventListener("DOMContentLoaded", () => {
             initTablaBootstrapTable(
                 '#incapacidadesDataTable', 
-                { protegidas: ['Nombre'] }, 
+                { protegidas: ['PerNumDoc'] }, 
                 'detalleIncapacidad', 
                 { 'IdIncapacidad': accionesFormatter,
                     'diasIncapacidad': diasIncapacidadFormatter

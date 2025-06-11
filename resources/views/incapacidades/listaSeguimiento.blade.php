@@ -35,11 +35,11 @@
             data-url="{{ route('gestion-incapacidades.seguimiento.cargarDatos') }}">   
             <thead class="table-primary">
                 <tr>
-                    <th data-field="IncPerNom" >Nombre</th>
+                    <th class="text-nowrap" data-field="IncPerNom" >Nombre</th>
                     <th data-field="PerNumDoc">Documento</th>
-                    <th data-field="causaDes">Causa Incapacidad</th>
-                    <th data-field="epsNombre">EPS</th>
-                    <th data-field="arlNombre">ARL</th>
+                    <th class="text-nowrap" data-field="causaDes">Causa Incapacidad</th>
+                    <th class="text-nowrap" data-field="epsNombre">EPS</th>
+                    <th class="text-nowrap" data-field="arlNombre">ARL</th>
                     <th class="text-center" data-field="IncFecIni" data-sortable="true">Fecha Inicio</th>
                     <th class="text-center" data-field="IncFecFin" data-sortable="true">Fecha Fin</th>
                     <th class="text-nowrap" data-field="DiagnosticoDes">Diagnóstico</th>
@@ -101,7 +101,7 @@
         document.addEventListener("DOMContentLoaded", () => {
             initTablaBootstrapTable(
                 '#incapacidadesDataTable', 
-                { protegidas: ['Nombre'] }, 
+                { protegidas: ['PerNumDoc'] }, 
                 'detalleIncapacidad', 
                 { 'IdIncapacidad': accionesFormatter,
                     'diasIncapacidad': diasIncapacidadFormatter
