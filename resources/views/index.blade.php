@@ -29,10 +29,9 @@
                 icono="fa-users"
                 titulo="Conductores y Empleados"
                 descripcion="Gestión de recursos humanos, incluyendo información, procesos y firma de políticas."
-                ruta="#"
+                ruta="http://172.20.32.22/gestion/firmaConductores/public/"
             />  
         </div>
-        <!-- Aca se pueden agregar más opciones -->
     </div>
 </div>
 @endsection
