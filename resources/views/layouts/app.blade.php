@@ -5,6 +5,10 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <title>@yield('title')</title>
+        <link rel="preload" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript>
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+        </noscript>
 
         <script>
             // Dark Mode Toggle
@@ -36,22 +40,29 @@
         <!--Vite -->
         @vite(['resources/css/app.css', 'resources/js/app.js','resources/css/custom.css','resources/css/mobile.css','resources/css/darkmode.css'])
     </head>
-    <body style="margin: 0; padding: 0;">
+    <body class="sidebar-mini layout-fixed bodyIndex">
+        <div class="wrapper">
+            <!-- Pantalla de carga -->
+            <div class="preloader flex-column justify-content-center align-items-center">
+                <div class="spinner-border text-primary mt-2" role="status"></div>
+                <p class="mt-1 fw-medium text-muted">Cargando...</p>
+            </div>
 
-        <section class="content-header mb-4 p-2 d-flex justify-content-between align-items-center sticky-top" style="min-height:60px; background-color:#0E2146; top:0; left:0; width:100%; z-index:1000;">
-            <a href="{{ route('index') }}">
-            <img 
-            src="https://autogestion.copetran.com.co/cdn/img/logos/logo-blango.png" 
-            alt="Logo" 
-            style="height: 45px; object-fit: contain; padding-left: 50px;" 
-            />
-            </a>
-        </section>
-        <div style="height:60px;"></div>
+            <section class="content-header mb-4 p-2 d-flex justify-content-between align-items-center sticky-top" style="min-height:60px; background-color:#0E2146; top:0; left:0; width:100%; z-index:1000;">
+                <a href="{{ route('index') }}">
+                <img 
+                src="https://autogestion.copetran.com.co/cdn/img/logos/logo-blango.png" 
+                alt="Logo" 
+                style="height: 45px; object-fit: contain; padding-left: 50px;" 
+                />
+                </a>
+            </section>
+            <div style="height:60px;"></div>
 
-        <section>
-            @yield('content')
-        </section>
+            <section>
+                @yield('content')
+            </section>
+        </div>
 
         <script>
             // Mostrar el cuerpo del documento después de cargar todo
@@ -60,6 +71,7 @@
             }); 
         </script>
 
+        <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js" defer></script>
         @stack('script')
 
         <!-- Renderizado de componentes-->

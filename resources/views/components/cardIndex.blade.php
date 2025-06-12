@@ -16,7 +16,7 @@
                 <i class="fa {{ $icono }} fa-2x" style="color: #0e2146;"></i>
             </span>
         </div>
-        <h5 class="card-title fw-semibold mb-2 fw-bold" style="color: #0e2146;">{{ $titulo }}</h5>
+        <h5 class="fw-semibold mb-2 fw-bold" style="color: #0e2146;">{{ $titulo }}</h5>
         <p class="card-text text-muted mb-3">{{ $descripcion }}</p>
         <a href="{{ $ruta }}" class="btn w-75 custom-hover-btn" style="background: #0e2146; color: #fff;">Ingresar</a>
     </div>

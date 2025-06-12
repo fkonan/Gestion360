@@ -235,4 +235,8 @@ body.dark-mode .cardIndex{
     border: none !important;
 }
 
+.bodyIndex.dark-mode{
+    background-color: var(--darkmode-bg-main) !important;
+}
+
 

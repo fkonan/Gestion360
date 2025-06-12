@@ -3,7 +3,7 @@
 @section('title','Olvido contraseña')
 
 @section('content')
-<br><br><br><br>
+<br><br><br>
 <div class="container login-container">
     <div class="row" style="margin: auto;">
         <div class="col-xs-12 col-sm-2 col-md-3 col-lg-4 col-xl-4 col-xxl-4"></div>
@@ -25,8 +25,10 @@
                             <small class="text-danger fw-bold">{{ $message }}</small>
                         @enderror
 
-                        <button class="btn btn-warning btn-block mt-3" type="submit" name="Boton" value="Boton" id="Boton">Enviar enlace</button>
-                        <a href="{{ route('login') }}" class="btn btn-secondary btn-block mt-3">Atras</a>
+                        <div class="d-flex justify-content-start mt-3 gap-2">
+                            <button class="btn btn-warning" type="submit" name="Boton" value="Boton" id="Boton">Enviar enlace</button>
+                            <a href="{{ route('login') }}" class="btn btn-secondary">Atras</a>
+                        </div>
                     </form>
                 </div>
             </div>
