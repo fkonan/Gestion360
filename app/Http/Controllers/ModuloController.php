@@ -160,7 +160,21 @@ class ModuloController extends Controller
     }
 
     public function getReportes(){
-        return view('modulos.reportes');
+        $reportes = [
+        [
+            'titulo' => 'Reportes de Conductores',
+            'descripcion' => 'Análisis sobre el rendimiento y comportamiento de los conductores.',
+            'ruta' => 'reportes.conductores',
+            'permiso' => 'administracion.reportes.reportes_conductores'
+        ],
+        [
+            'titulo' => 'Reportes de Pasajes',
+            'descripcion' => 'Resumen de ventas, rutas y pasajeros por trayecto.',
+            'ruta' => 'reportes.pasajes',
+            'permiso' => 'administracion.reportes.reportes_pasajes'
+        ],
+    ];
+        return view('reportes.main',compact('reportes'));
     }
 }
 

@@ -57,7 +57,7 @@ class ConductorController extends Controller
     }
 
     public function reporteFirmaEquipaje(){
-        return view("reportes.firmaConductores");
+        return view("reportes.conductores.firmaPolEquipaje");
     }
 
 
@@ -106,7 +106,7 @@ class ConductorController extends Controller
     }
 
     public function listaFirmasEquipaje(){
-        return view('reportes.listaFirmasEquipaje');
+        return view('reportes.conductores.listaFirmasEquipaje');
     }
 
     public function cargarDataFirmaEquipaje(){
@@ -139,11 +139,11 @@ class ConductorController extends Controller
     }
 
     public function formIngSalConductores(){
-        return view("reportes.ingresoSalidaConductores");
+        return view("reportes.conductores.formIngresosSalidas");
     }
 
     public function listaIngSalConductores(){
-        return view("reportes.reporteIngresoSalida");
+        return view("reportes.conductores.ingresosSalidas");
     }
 
 

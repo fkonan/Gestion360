@@ -98,7 +98,7 @@ class GestionPasajesController extends Controller
             ->orderBy('MunNom', 'asc')
             ->get();
 
-        return view('reportes.formEsquemaTarifario',compact('municipios'));
+        return view('reportes.pasajes.formEsquemaTarifario',compact('municipios'));
     }
 
     public function filtrarEsquemaTarifario(Request $request){
@@ -148,7 +148,7 @@ class GestionPasajesController extends Controller
     }
 
     public function listaEsquemaTarifario(){
-        return view('reportes.reporteEsqTarifario');
+        return view('reportes.pasajes.esquemaTarifario');
     }
 
     public function cargarDataEsquemaTarifario(){

@@ -8,6 +8,7 @@ use App\Http\Controllers\IncapacidadController;
 use App\Http\Controllers\ModuloController;
 use App\Http\Controllers\PermisosController;
 use App\Http\Controllers\PersonaController;
+use App\Http\Controllers\ReportesController;
 use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\RolController;
 use App\Http\Controllers\SeguimientoIncapacidadController;
@@ -21,11 +22,9 @@ Route::get('/home', function () {
     return view('home');
 })->middleware('auth')->name('home');
 
-
 Route::get('/', function () {
     return view('index');
 })->name('index');
-
 
 Route::get('/index', function () {
     return view('index');
@@ -66,6 +65,12 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:administracion.ac
     });
     Route::prefix("reportes")->middleware(['permisos:administracion.reportes.acceder','submodulo.activo:22'])->group(function(){
         Route::get("/",[ModuloController::class,"getReportes"])->name("reportes.index");
+
+        //Reportes Conductores
+        Route::get("/conductores",[ReportesController::class,"reportesConductores"])->name("reportes.conductores");
+
+        //Reportes Pasajes
+        Route::get("/pasajes",[ReportesController::class,"reportesPasajes"])->name("reportes.pasajes");
 
         //Impresion tiquetes
         Route::get("/impresionTiquetes",[TiquetesImpresosController::class,"fechasReporte"])->middleware('soloAJAX')->name("reportes.tiquetes");
