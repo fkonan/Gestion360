@@ -137,8 +137,8 @@ Route::prefix("configuracion")->middleware(['auth', 'permisos:configuracion.acce
 });
 
 //Rutas Modulo Gestion RRHH
-Route::prefix("gestionRRHH")->middleware(['auth', 'permisos:gestion_de_rr_hh.acceder','modulo.activo:2'])->group(function(){
-    Route::prefix("gestion-empleado")->middleware(['auth', 'permisos:gestion_de_rr_hh.gestion_empleado.acceder','submodulo.activo:7'])->name("gestion-incapacidades.")->group(function(){
+Route::prefix("gestionRRHH")->middleware(['auth', 'permisos:gestion_rrhh.acceder','modulo.activo:2'])->group(function(){
+    Route::prefix("gestion-empleado")->middleware(['auth', 'permisos:gestion_rrhh.gestion_empleado.acceder','submodulo.activo:7'])->name("gestion-incapacidades.")->group(function(){
         Route::get("/",[ModuloController::class,"getGestionEmpleado"])->name("index");
         Route::get("/incapacidades",[IncapacidadController::class,"listaIncapacidades"])->name("incapacidades");
         Route::get("/incapacidades/cargarDatos",[IncapacidadController::class,"cargarDatos"])->middleware('soloAJAX')->name("incapacidades.cargarDatos");
