@@ -27,18 +27,8 @@ class AppServiceProvider extends ServiceProvider
         Modulo::observe(ModuloObserver::class);
         SubModulo::observe(SubmoduloObserver::class);
 
-    
         Blade::if('permite', function ($permiso) {
             return Auth::check() && Auth::user()->can($permiso);  //Ignorar erroes en el can 
         });
-
-        // Acceso total a los usuarios super admin
-       /*  Gate::before(function ($user, $ability) {
-            if ($user->hasRole('Super Admin')) {
-                return true; 
-            }      
-            return null; 
-        });  */
-        
     }
 }

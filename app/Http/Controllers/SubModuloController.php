@@ -7,6 +7,7 @@ use App\Models\GESTIONADMIN\SubModulo;
 use Exception;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Models\Permission;
 
@@ -111,10 +112,28 @@ class SubModuloController extends Controller
         }
 
         try{
-            SubModulo::findOrFail($id)->update($request->all());
+            DB::beginTransaction();
+
+            //Actualizar submodulo
+            $submodulo = SubModulo::findOrFail($id);
+            $submoduloNombreAntes = normalizarNombre($submodulo->SubModNom);
+            $submodulo->update($request->all());
+
+            //Actualizar los permisos asociados al submodulo (los permisos se relacionan al nombre)
+            $submoduloNombreDespues = normalizarNombre($request->SubModNom);
+            $permisos = Permission::where('name', 'like', '%' . $submoduloNombreAntes . '%')->get();
+
+            //Actualizar cada permiso
+            foreach ($permisos as $permiso) {
+                $permiso->name = str_replace($submoduloNombreAntes, $submoduloNombreDespues, $permiso->name);
+                $permiso->save();
+            }
+
+            DB::commit();
             return toastModal("SubModulo actualizado exitosamente", "success",route('submodulos.index'));
             
         }catch(Exception $e){
+            DB::rollBack();
             Log::error('Error al actualizar el submodulo: ' . $e->getMessage());
             return toastModal("Error al actualizar el submodulo", "error",route('submodulos.index'));
         }

@@ -2,7 +2,7 @@
 <div class="table-responsive">
     <table
         id="adjuntosDataTable"
-        class="table table-hover table-dark align-middle"
+        class="table table-hover align-middle"
         data-toggle="table"
         data-locale="es-ES"
         data-search="true"

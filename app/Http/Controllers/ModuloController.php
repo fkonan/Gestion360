@@ -6,6 +6,7 @@ use App\Models\GESTIONADMIN\Modulo;
 use Exception;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Models\Permission;
 
@@ -104,10 +105,28 @@ class ModuloController extends Controller
         }
 
         try{
-            Modulo::findOrFail($id)->update($request->all());
+            DB::beginTransaction();
+
+            //Actualizar modulo
+            $modulo = Modulo::findOrFail($id);
+            $moduloNombreAntes = normalizarNombre($modulo->ModNom);
+            $modulo->update($request->all());
+
+            //Actualizar los permisos asociados al modulo (los permisos se relacionan al nombre)
+            $moduloNombreDespues = normalizarNombre($request->ModNom);
+            $permisos = Permission::where('name', 'like', '%' . $moduloNombreAntes . '%')->get();
+
+            // Actualizar cada permiso
+            foreach ($permisos as $permiso) {
+                $permiso->name = str_replace($moduloNombreAntes, $moduloNombreDespues, $permiso->name);
+                $permiso->save();
+            }
+
+            DB::commit();
             return toastModal("Modulo actualizado exitosamente", "success",route('modulos.index'));
             
         }catch(Exception $e){
+            DB::rollBack();
             Log::error('Error al actualizar el modulo: ' . $e->getMessage());
             return toastModal("Error al actualizar el modulo", "error",route('modulos.index'));
         }

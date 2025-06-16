@@ -3,8 +3,13 @@
 @section('title','Login')
 
 @section('content')
-<div class="container login-container">
+<div class="container login-container mb-5">
     <div class="row" style="margin: auto;">
+        <div class="text-start">
+            <a class="btn fw-bold my-2 text-light border" style="background-color: #0e2146;" href="{{ route('index') }}">
+                <i class="fa fa-arrow-left me-2"></i> 
+            </a>
+        </div>
         <div class="col-xs-12 col-sm-2 col-md-3 col-lg-4 col-xl-4 col-xxl-4"></div>
             <div class="col-xs-12 col-sm-8 col-md-6 col-lg-4 col-xl-4 col-xxl-4">
                 <h4>Sistema: <b>Gestión</b></h4>
