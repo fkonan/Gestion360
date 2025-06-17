@@ -117,10 +117,13 @@ class SubModuloController extends Controller
             //Actualizar submodulo
             $submodulo = SubModulo::findOrFail($id);
             $submoduloNombreAntes = normalizarNombre($submodulo->SubModNom);
-            $submodulo->update($request->all());
+            $submoduloNombreDespues = normalizarNombre($request->SubModNom);
+            $submodulo->SubModPermiso = str_replace($submoduloNombreAntes, $submoduloNombreDespues, $submodulo->SubModPermiso);
+           
+            $submodulo->fill($request->except('SubModPermiso'));
+            $submodulo->save();
 
             //Actualizar los permisos asociados al submodulo (los permisos se relacionan al nombre)
-            $submoduloNombreDespues = normalizarNombre($request->SubModNom);
             $permisos = Permission::where('name', 'like', '%' . $submoduloNombreAntes . '%')->get();
 
             //Actualizar cada permiso

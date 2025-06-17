@@ -110,13 +110,15 @@ class ModuloController extends Controller
             //Actualizar modulo
             $modulo = Modulo::findOrFail($id);
             $moduloNombreAntes = normalizarNombre($modulo->ModNom);
-            $modulo->update($request->all());
+            $moduloNombreDespues = normalizarNombre($request->ModNom);
+
+            $modulo->ModPermiso = $moduloNombreDespues . '.acceder';
+            $modulo->fill($request->except('ModPermiso'));
+            $modulo->save();
 
             //Actualizar los permisos asociados al modulo (los permisos se relacionan al nombre)
-            $moduloNombreDespues = normalizarNombre($request->ModNom);
             $permisos = Permission::where('name', 'like', '%' . $moduloNombreAntes . '%')->get();
 
-            // Actualizar cada permiso
             foreach ($permisos as $permiso) {
                 $permiso->name = str_replace($moduloNombreAntes, $moduloNombreDespues, $permiso->name);
                 $permiso->save();
@@ -157,24 +159,6 @@ class ModuloController extends Controller
 
     public function getGestionEmpleado(){
         return view('modulos.gestionEmpleado');
-    }
-
-    public function getReportes(){
-        $reportes = [
-        [
-            'titulo' => 'Reportes de Conductores',
-            'descripcion' => 'Análisis sobre el rendimiento y comportamiento de los conductores.',
-            'ruta' => 'reportes.conductores',
-            'permiso' => 'administracion.reportes.reportes_conductores'
-        ],
-        [
-            'titulo' => 'Reportes de Pasajes',
-            'descripcion' => 'Resumen de ventas, rutas y pasajeros por trayecto.',
-            'ruta' => 'reportes.pasajes',
-            'permiso' => 'administracion.reportes.reportes_pasajes'
-        ],
-    ];
-        return view('reportes.main',compact('reportes'));
     }
 }
 

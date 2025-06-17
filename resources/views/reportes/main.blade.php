@@ -10,8 +10,9 @@
 @endsection
 
 @section('content')
-<div class="container py-4">
-    <div class="mb-4">
+<br>
+<div class="mx-3 optionsMenu">
+    <div class="pb-4 m-0">
         <h2 class="fw-bold">Panel de Reportes</h2>
         <p class="text-muted mb-0">
             Accede a los distintos reportes del sistema según tu rol y permisos. Esta vista centraliza todos los tipos de reportes disponibles en la plataforma.
@@ -23,7 +24,7 @@
             @permite($reporte['permiso'])
             <div class="col">
                 <a href="{{ route($reporte['ruta']) }}" class="text-decoration-none">
-                    <div class="card h-100 shadow-sm border-0">
+                    <div class="card cardComponent h-100 shadow-sm border">
                         <div class="card-body">
                             <h5 class="card-title fw-semibold">{{ $reporte['titulo'] }}</h5>
                             <p class="card-text text-muted">{{ $reporte['descripcion'] }}</p>

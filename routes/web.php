@@ -64,45 +64,49 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:administracion.ac
         Route::post("/{id}/cambiar-estado", [UserController::class, "cambiarEstado"])->middleware('soloAJAX')->name("usuarios.cambiarEstado");
     });
     Route::prefix("reportes")->middleware(['permisos:administracion.reportes.acceder','submodulo.activo:22'])->group(function(){
-        Route::get("/",[ModuloController::class,"getReportes"])->name("reportes.index");
+        Route::get("/",[ReportesController::class,"getReportes"])->name("reportes.index");
 
         //Reportes Conductores
-        Route::get("/conductores",[ReportesController::class,"reportesConductores"])->name("reportes.conductores");
+        Route::prefix("conductores")->middleware(['permisos:administracion.reportes.reportes_conductores'])->group(function(){
+            Route::get("/",[ReportesController::class,"reportesConductores"])->name("reportes.conductores");
 
-        //Reportes Pasajes
-        Route::get("/pasajes",[ReportesController::class,"reportesPasajes"])->name("reportes.pasajes");
+            //Actualizacion estado conductor FICS
+            Route::get("/actualizarEstadoModal",[ConductorController::class,"formActualizarEstado"])->middleware('soloAJAX')->name("conductor.estado");
+            Route::put("/actualizarEstado",[ConductorController::class,"actualizarEstadoConductor"])->name("conductor.actualizarEstado");
 
-        //Impresion tiquetes
-        Route::get("/impresionTiquetes",[TiquetesImpresosController::class,"fechasReporte"])->middleware('soloAJAX')->name("reportes.tiquetes");
-        Route::post("/impresionTiquetes/filtrar",[TiquetesImpresosController::class,"filtrarTiquetes"])->name("reportes.filtrarTiquetes");
-        Route::get("/impresionTiquetes/listaTiquetes",[TiquetesImpresosController::class,"listaTiquetes"])->name("reportes.listaTiquetes");
-        Route::get("/impresionTiquetes/cargarData",[TiquetesImpresosController::class,"cargarDataTiquetes"])->middleware('soloAJAX')->name("reportes.cargarData");
+            //Firma politica equipaje
+            Route::get("/reporteEquipajeModal",[ConductorController::class,"reporteFirmaEquipaje"])->name("conductor.firmaEquipaje");
+            Route::post("/reporteEquipajeModal",[ConductorController::class,"filtrarFirmaEquipaje"])->name("filtrar.firmaEquipaje");
+            Route::get("/reporteEquipajeModal/cargarData",[ConductorController::class,"cargarDataFirmaEquipaje"])->middleware('soloAJAX')->name("firmaEquipaje.cargarData");
+            Route::get("/reporteEquipajeModal/listaFirmasEquipaje",[ConductorController::class,"listaFirmasEquipaje"])->name("lista.firmaEquipaje");
 
-        //Actualizacion estado conductor FICS
-        Route::get("/actualizarEstadoModal",[ConductorController::class,"formActualizarEstado"])->middleware('soloAJAX')->name("conductor.estado");
-        Route::put("/actualizarEstado",[ConductorController::class,"actualizarEstadoConductor"])->name("conductor.actualizarEstado");
+            //Descanso conductores
+            Route::get("/formDescansoConductores",[ConductorController::class,"formDescansoConductores"])->name("conductor.descanso");
+            Route::post("/descansoConductores",[ConductorController::class,"registrarEvento"])->name("registrar.evento");
 
-        //Firma politica equipaje
-        Route::get("/reporteEquipajeModal",[ConductorController::class,"reporteFirmaEquipaje"])->name("conductor.firmaEquipaje");
-        Route::post("/reporteEquipajeModal",[ConductorController::class,"filtrarFirmaEquipaje"])->name("filtrar.firmaEquipaje");
-        Route::get("/reporteEquipajeModal/cargarData",[ConductorController::class,"cargarDataFirmaEquipaje"])->middleware('soloAJAX')->name("firmaEquipaje.cargarData");
-        Route::get("/reporteEquipajeModal/listaFirmasEquipaje",[ConductorController::class,"listaFirmasEquipaje"])->name("lista.firmaEquipaje");
+            //Ingreso y salidas conductores
+            Route::get("/formIngSalConductores",[ConductorController::class,"formIngSalConductores"])->name("conductor.ingresoSalidas");
+            Route::post("/formIngSalConductores/filtrar",[ConductorController::class,"reporteIngSalConductores"])->name("reporte.ingresoSalidas");
+            Route::get("/formIngSalConductores/listaDatos",[ConductorController::class,"listaIngSalConductores"])->name("lista.ingresoSalidas");
+            Route::get("/formIngSalConductores/cargarData",[ConductorController::class,"cargarDataIngSalConductores"])->name("ingresoSalida.cargarData");
+        });
 
-        //Descanso conductores
-        Route::get("/formDescansoConductores",[ConductorController::class,"formDescansoConductores"])->name("conductor.descanso");
-        Route::post("/descansoConductores",[ConductorController::class,"registrarEvento"])->name("registrar.evento");
+        Route::prefix("pasajes")->middleware(['permisos:administracion.reportes.reportes_pasajes'])->group(function(){
+            //Reportes Pasajes
+            Route::get("/",[ReportesController::class,"reportesPasajes"])->name("reportes.pasajes");
 
-        //Ingreso y salidas conductores
-        Route::get("/formIngSalConductores",[ConductorController::class,"formIngSalConductores"])->name("conductor.ingresoSalidas");
-        Route::post("/formIngSalConductores/filtrar",[ConductorController::class,"reporteIngSalConductores"])->name("reporte.ingresoSalidas");
-        Route::get("/formIngSalConductores/listaDatos",[ConductorController::class,"listaIngSalConductores"])->name("lista.ingresoSalidas");
-        Route::get("/formIngSalConductores/cargarData",[ConductorController::class,"cargarDataIngSalConductores"])->name("ingresoSalida.cargarData");
+            //Impresion tiquetes
+            Route::get("/impresionTiquetes",[TiquetesImpresosController::class,"fechasReporte"])->middleware('soloAJAX')->name("reportes.tiquetes");
+            Route::post("/impresionTiquetes/filtrar",[TiquetesImpresosController::class,"filtrarTiquetes"])->name("reportes.filtrarTiquetes");
+            Route::get("/impresionTiquetes/listaTiquetes",[TiquetesImpresosController::class,"listaTiquetes"])->name("reportes.listaTiquetes");
+            Route::get("/impresionTiquetes/cargarData",[TiquetesImpresosController::class,"cargarDataTiquetes"])->middleware('soloAJAX')->name("reportes.cargarData");
 
-        //Esquema tarifario pasajes
-        Route::get("/esquemaTarifarioPasajes",[GestionPasajesController::class,"formEsquemaTarifario"])->name("esquemaTarifario.index");
-        Route::post("/esquemaTarifarioPasajes/filtrar",[GestionPasajesController::class,"filtrarEsquemaTarifario"])->name("esquemaTarifario.filtrar");
-        Route::get("/esquemaTarifarioPasajes/listaDatos",[GestionPasajesController::class,"listaEsquemaTarifario"])->name("esquemaTarifario.listaDatos");
-        Route::get("/esquemaTarifarioPasajes/cargarData",[GestionPasajesController::class,"cargarDataEsquemaTarifario"])->name("esquemaTarifario.cargarData");
+            //Esquema tarifario pasajes
+            Route::get("/esquemaTarifarioPasajes",[GestionPasajesController::class,"formEsquemaTarifario"])->name("esquemaTarifario.index");
+            Route::post("/esquemaTarifarioPasajes/filtrar",[GestionPasajesController::class,"filtrarEsquemaTarifario"])->name("esquemaTarifario.filtrar");
+            Route::get("/esquemaTarifarioPasajes/listaDatos",[GestionPasajesController::class,"listaEsquemaTarifario"])->name("esquemaTarifario.listaDatos");
+            Route::get("/esquemaTarifarioPasajes/cargarData",[GestionPasajesController::class,"cargarDataEsquemaTarifario"])->name("esquemaTarifario.cargarData");
+        });
     });
 });
 

@@ -112,6 +112,7 @@ body.dark-mode .container-fluid .optionsMenu div{
 
 body.dark-mode .container-fluid .optionsMenu .cardComponent{
     background-color: var(--darkmode-bg-main);
+    border: none !important;
 }
 
 body.dark-mode .container-fluid .optionsMenu .cardComponent div{

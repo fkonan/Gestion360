@@ -11,12 +11,12 @@
 @endsection
 
 @section('content')
-<div class="container-fluid mt-4 mx-1 p-0 optionsMenu">
+<div class="container-fluid mt-5 mx-1 p-0 optionsMenu">
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-2">
         <div class="col-lg-4 col-xl-3" onclick="cargarModal(`{{ route('conductor.ingresoSalidas') }}`, 'Reporte de entradas y salidas conductores','#ingSalConForm','modal-lg')">
             <x-card color="bg-dark" 
                     titulo="Ingresos y Salidas Conductores" 
-                    descripcion="Reportes" 
+                    descripcion="Reporte" 
                     icono="fa-fingerprint" 
                     ruta="#"
             />
@@ -24,7 +24,7 @@
         <div class="col-lg-4 col-xl-3" onclick="cargarModal(`{{ route('conductor.estado') }}`, 'Activacion o Suspensión Conductores','#estadoConductorForm','modal-md')">
             <x-card color="bg-dark" 
                     titulo="Actualización Estado Conductores en FICS" 
-                    descripcion="Reportes" 
+                    descripcion="Reporte" 
                     icono="fa-id-badge" 
                     ruta="#"
             />
@@ -32,8 +32,8 @@
         <div class="col-lg-4 col-xl-3" onclick="cargarModal(`{{ route('conductor.firmaEquipaje') }}`, 'Reporte para listar los conductores que han firmado y/o aceptado la política de equipaje','#firmaEquipajeForm','modal-md')">
             <x-card color="bg-dark" 
                     titulo="Firma Politica Equipaje" 
-                    descripcion="Reportes" 
-                    icono="fa-id-badge" 
+                    descripcion="Reporte" 
+                    icono="fa-file-signature" 
                     ruta="#"
             />
         </div>
@@ -42,6 +42,22 @@
                     titulo="Descanso Conductores" 
                     descripcion="Reportes" 
                     icono="fa-bed" 
+                    ruta="#"
+            />
+        </div>
+        <div class="col-lg-4 col-xl-3">
+            <x-card color="bg-dark" 
+                    titulo="Documentos Conductores Pasajes por Vencer" 
+                    descripcion="Reporte" 
+                    icono="fa-hourglass-half" 
+                    ruta="#"
+            />
+        </div>
+        <div class="col-lg-4 col-xl-3">
+            <x-card color="bg-dark" 
+                    titulo="Documentos Conductores Carga por Vencer" 
+                    descripcion="Reporte" 
+                    icono="fa-hourglass-half" 
                     ruta="#"
             />
         </div>

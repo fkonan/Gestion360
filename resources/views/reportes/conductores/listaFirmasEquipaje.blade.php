@@ -6,6 +6,7 @@
 <x-breadcrumb :items="[
         ['name' => 'Inicio', 'url' => route('home')],
         ['name' => 'Reportes', 'url' => route('reportes.index')],
+        ['name' => 'Conductores', 'url' => route('reportes.conductores')],
         ['name' => 'Firmas equipaje'],
     ]" />
 <br>
