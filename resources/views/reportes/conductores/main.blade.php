@@ -11,56 +11,73 @@
 @endsection
 
 @section('content')
-<div class="container-fluid mt-5 mx-1 p-0 optionsMenu">
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-2">
-        <div class="col-lg-4 col-xl-3" onclick="cargarModal(`{{ route('conductor.ingresoSalidas') }}`, 'Reporte de entradas y salidas conductores','#ingSalConForm','modal-lg')">
-            <x-card color="bg-dark" 
-                    titulo="Ingresos y Salidas Conductores" 
-                    descripcion="Reporte" 
-                    icono="fa-fingerprint" 
-                    ruta="#"
-            />
-        </div>
-        <div class="col-lg-4 col-xl-3" onclick="cargarModal(`{{ route('conductor.estado') }}`, 'Activacion o Suspensión Conductores','#estadoConductorForm','modal-md')">
-            <x-card color="bg-dark" 
-                    titulo="Actualización Estado Conductores en FICS" 
-                    descripcion="Reporte" 
-                    icono="fa-id-badge" 
-                    ruta="#"
-            />
-        </div>
-        <div class="col-lg-4 col-xl-3" onclick="cargarModal(`{{ route('conductor.firmaEquipaje') }}`, 'Reporte para listar los conductores que han firmado y/o aceptado la política de equipaje','#firmaEquipajeForm','modal-md')">
-            <x-card color="bg-dark" 
-                    titulo="Firma Politica Equipaje" 
-                    descripcion="Reporte" 
-                    icono="fa-file-signature" 
-                    ruta="#"
-            />
-        </div>
-        <div class="col-lg-4 col-xl-3" onclick="cargarModal(`{{ route('conductor.descanso') }}`, 'Aqui puede registrar eventos no reportados de descanso de conductores','#descansoConductorForm','modal-md')">
-            <x-card color="bg-dark" 
-                    titulo="Descanso Conductores" 
-                    descripcion="Reportes" 
-                    icono="fa-bed" 
-                    ruta="#"
-            />
-        </div>
-        <div class="col-lg-4 col-xl-3">
-            <x-card color="bg-dark" 
-                    titulo="Documentos Conductores Pasajes por Vencer" 
-                    descripcion="Reporte" 
-                    icono="fa-hourglass-half" 
-                    ruta="#"
-            />
-        </div>
-        <div class="col-lg-4 col-xl-3">
-            <x-card color="bg-dark" 
-                    titulo="Documentos Conductores Carga por Vencer" 
-                    descripcion="Reporte" 
-                    icono="fa-hourglass-half" 
-                    ruta="#"
-            />
-        </div>
+<br>
+<div class="container-fluid p-0 border rounded tableContainer" style="min-height:150px; background-color: white">
+
+    <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-secondary">
+        <span class="text-left text-light fs-5 fw-medium py-1">Reportes de Conductores</span>
+        <a class="btn fw-bold my-2 bg-primary" href="{{ route('reportes.index') }}">Volver</a>
+    </div>
+
+    <div id="no-more-tables" class="table-responsive" style="padding:1.5em">
+        <table 
+            id="reportesConductores" 
+            class="table table-sm table-striped table-hover align-middle mb-0" 
+            data-toggle="table"
+            data-locale="es-ES"
+            data-search="true">
+
+            <thead class="table-primary m-0 p-0 border-bottom">
+                <tr>
+                    <th>Título</th>
+                    <th>Descripción</th>
+                    <th>Acción</th> 
+            </thead>
+            <tbody id="lista-reportes">
+                <x-reporteItem
+                    titulo="Ingresos y Salidas Conductores"
+                    descripcion="Reporta conductores que han ingreado y salido a descansos"
+                    icono="fas fa-fingerprint"
+                    onclick="cargarModal(`{{ route('conductor.ingresoSalidas') }}`, 'Reporte de entradas y salidas conductores','#ingSalConForm','modal-lg')"
+                />
+
+               <!--  <x-reporteItem 
+                    titulo="Actualización Estado Conductores en FICS"
+                    descripcion="Reporte"
+                    icono="fas fa-id-badge"
+                    onclick="cargarModal(`{{ route('conductor.estado') }}`, 'Activacion o Suspensión Conductores','#estadoConductorForm','modal-md')"
+                /> -->
+
+                <x-reporteItem
+                    titulo="Firma Politica Equipaje"
+                    descripcion="Reporta conductores que han firmado la politica de equipaje"
+                    icono="fas fa-file-signature"
+                    onclick="cargarModal(`{{ route('conductor.firmaEquipaje') }}`, 'Reporte para listar los conductores que han firmado y/o aceptado la política de equipaje','#firmaEquipajeForm','modal-md')"
+                />
+
+            <!--     <x-reporteItem
+                    titulo="Descanso Conductores"
+                    descripcion="Reportes"
+                    icono="fas fa-bed"
+                    onclick="cargarModal(`{{ route('conductor.descanso') }}`, 'Aqui puede registrar eventos no reportados de descanso de conductores','#descansoConductorForm','modal-md')"
+                /> -->
+
+                <x-reporteItem
+                    titulo="Documentos Conductores Pasajes por Vencer"
+                    descripcion="Reporta conductores de pasajes activos con documentos próximos a vencer en un rango de fecha"
+                    icono="fas fa-hourglass-half"
+                />
+
+                <x-reporteItem
+                    titulo="Documentos Conductores Carga por Vencer"
+                    descripcion="Reporta conductores de carga activos con documentos próximos a vencer en un rango de fecha"
+                    icono="fas fa-hourglass-half"
+                />
+            </tbody>
+        </table>
+
+
+
     </div>
 </div> 
 @endsection
