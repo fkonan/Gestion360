@@ -16,36 +16,35 @@ class TiquetesImpresosController extends Controller
         return view('tiquetes.fechasReporte',compact('totalTiquetes'));
     }
 
-    public function filtrarTiquetes(Request $request){
+    public function filtrarTiquetes(Request $request)
+    {
         $validator = Validator::make($request->all(), [
             'fechaInicio' => 'required|date',
             'fechaFin' => 'required|date|after_or_equal:fechaInicio',
             'agencia' => 'required',
-        ],[
-            'fechaInicio.required' => 'La fecha de inicio es obligatoria',
-            'fechaInicio.date' => 'La fecha de inicio no es una fecha válida',
-            'fechaFin.required' => 'La fecha de fin es obligatoria',
-            'fechaFin.date' => 'La fecha de fin no es una fecha válida',
-            'fechaFin.after_or_equal' => 'La fecha de fin debe ser mayor o igual a la fecha de inicio',
-            'agencia.required' => 'La agencia es obligatoria',
-        ]);
+            ], [
+                'fechaInicio.required' => 'La fecha de inicio es obligatoria',
+                'fechaInicio.date' => 'La fecha de inicio no es válida',
+                'fechaFin.required' => 'La fecha de fin es obligatoria',
+                'fechaFin.date' => 'La fecha de fin no es válida',
+                'fechaFin.after_or_equal' => 'La fecha de fin debe ser igual o posterior a la de inicio',
+                'agencia.required' => 'La agencia es obligatoria',
+            ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        try{
-            $query = TiquetesImpresos::whereBetween('ImpFecReg', [$request->fechaInicio, $request->fechaFin]);
-
-            if ($request->agencia !== 'todas') {
-                $query->where('Agencia', $request->agencia);
+            if ($validator->fails()) {
+                return response()->json([
+                    'errors' => $validator->errors()
+                ], 422);
             }
-    
-            $tiquetes = $query
-                ->get()
-                ->map(function ($item) {
+
+            try {
+                $query = TiquetesImpresos::whereBetween('ImpFecReg', [$request->fechaInicio, $request->fechaFin]);
+
+                if ($request->agencia !== 'todas') {
+                    $query->where('Agencia', $request->agencia);
+                }
+
+                $tiquetes = $query->get()->map(function ($item) {
                     return [
                         'NumDocPer' => $item->NumDocPer,
                         'NumeroPasaje' => $item->NumeroPasaje,
@@ -53,7 +52,7 @@ class TiquetesImpresosController extends Controller
                         'TerminalDestino' => $item->TerminalDestino,
                         'FechaSalida' => Carbon::parse($item->FechaSalida)->format('Y-m-d H:i'),
                         'NumerodeViaje' => $item->NumerodeViaje,
-                        'PrecioBase' => number_format($item->PrecioBase, 0, ',', ''), 
+                        'PrecioBase' => number_format($item->PrecioBase, 0, ',', ''),
                         'Descuento' => number_format($item->Descuento, 0, ',', ''),
                         'PrecioTotal' => number_format($item->PrecioTotal, 0, ',', ''),
                         'Asiento' => $item->Asiento,
@@ -62,22 +61,24 @@ class TiquetesImpresosController extends Controller
                         'ImpHorReg' => $item->ImpHorReg,
                     ];
                 });
-    
-            $numeroTiquetes = $tiquetes->count();
-    
-            if ($tiquetes->isEmpty()) {
-                return toastModal("No se han encontrado tiquetes para las fechas seleccionadas", "warning");
-            }
-    
-            session(['tiquetes' => $tiquetes]);
-            return toastModal("Se han encontrado " .$numeroTiquetes. " tiquetes para las fechas seleccionadas", "success", route('reportes.listaTiquetes'));
 
-        }catch(Exception $e){
-            Log::error('Error al filtrar los tiquetes: ' . $e->getMessage());
-            return toastModal("Error al filtrar los tiquetes", "error",route('reportes.index'));
+                $numeroTiquetes = $tiquetes->count();
+
+                $html = view('reportes.resultado_tiquetes_modal', compact('tiquetes', 'numeroTiquetes'))->render();
+
+                return response()->json([
+                    'success' => true,
+                    'html' => $html
+                ]);
+
+            } catch (Exception $e) {
+                Log::error('Error al filtrar los tiquetes: ' . $e->getMessage());
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error al procesar el reporte.'
+                ], 500);
+            }
         }
-       
-    }
 
     public function listaTiquetes(){
         return view('tiquetes.listaTiquetes');

@@ -110,8 +110,12 @@ function validarFormulario(form, TYPE="POST") {
         errorClass: "text-danger fw-bold is-invalid",
 
         submitHandler: function (form) {
-            let URL = $(form).attr("action");
-            let formData = new FormData(form);
+            const $form = $(form);
+            const URL = $form.attr("action");
+            const formData = new FormData(form);
+
+            const actionType = $form.data("success-action") || "redirect";
+            const targetSelector = $form.data("success-target");
 
             $.ajax({
                 url: URL,
@@ -121,21 +125,25 @@ function validarFormulario(form, TYPE="POST") {
                 contentType: false,
                 dataType: "json",
                 success: function (response) {
-                    habilitarSubmit(form);
-                    if(response.redirect == '#'){
-                        //si no hay redireccion se muestra directamente la alerta 
-                        mostrarToast(response.title,response.type);
-                    }else{
-                        //guarda la info de la alerta en sesion para usarla luego en el layout
-                        sessionStorage.setItem('toastTitle', response.title);
-                        sessionStorage.setItem('toastType', response.type);     
+                    let updateTarget = $(form).data("update");
+
+                    if (updateTarget && response.success && response.html) {
+                        $(updateTarget).html(response.html);
+                        habilitarSubmit(form); // por si bloqueas el botón mientras envía
+                        return;
                     }
 
-                    window.location.href = response.redirect;
+                    if(response.redirect == '#'){
+                        mostrarToast(response.title, response.type);
+                    } else {
+                        sessionStorage.setItem('toastTitle', response.title);
+                        sessionStorage.setItem('toastType', response.type);
+                        window.location.href = response.redirect;
+                    }
                 },
+
                 error: function (xhr) {
                     $(".error").text("");
-
                     if (xhr.status === 422) {
                         let errors = xhr.responseJSON.errors;
                         $.each(errors, function (key, value) {
@@ -143,7 +151,6 @@ function validarFormulario(form, TYPE="POST") {
                             $("#" + key).addClass("is-invalid");
                         });
                     }
-                    //Se habilita nuvamente el submit al usuario
                     habilitarSubmit(form);
                 }
             });

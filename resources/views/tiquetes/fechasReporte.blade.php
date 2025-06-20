@@ -1,12 +1,14 @@
 <!-- Modal formulario de reporte -->
 <div class="container-fluid p-4 bg-white">
     <form
-        id="fechasReporteForm" 
-        action="{{  route('reportes.filtrarTiquetes')  }}" 
-        method="POST" 
+        id="fechasReporteForm"
+        action="{{ route('reportes.filtrarTiquetes') }}"
+        method="POST"
         enctype="multipart/form-data"
-        onsubmit="deshabilitarSubmit(this)">
-        
+        onsubmit="deshabilitarSubmit(this)"
+        data-update="#resultadoTiquetes">
+
+
         @csrf
         <div class="row mb-3">
             <div class="col-md-4">
@@ -51,4 +53,6 @@
             </div>
         </div>
     </form>
+
+    <div id="resultadoTiquetes" class="mt-4"></div>
 </div>
