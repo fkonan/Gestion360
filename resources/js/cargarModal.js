@@ -129,7 +129,7 @@ function validarFormulario(form, TYPE="POST") {
 
                     if (updateTarget && response.success && response.html) {
                         $(updateTarget).html(response.html);
-                        habilitarSubmit(form); // por si bloqueas el botón mientras envía
+                        habilitarSubmit(form); 
                         return;
                     }
 
