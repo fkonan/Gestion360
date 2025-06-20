@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Http;
 class ApiReportes
 {
     protected $baseUrl = 'https://integration.copetran.com.co/autogestion';
-
+    
     public function obtenerToken()
     {
         $response = Http::post("{$this->baseUrl}/auth", [
