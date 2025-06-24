@@ -19,10 +19,10 @@
         <a class="btn fw-bold my-2 bg-primary" onclick="window.history.back()">Volver</a>
     </div>
 
-    <div>
+    <div class="botonBoostrapTable">
          <button id="exportar" 
             onclick="exportarExcel('exportar', `{{ route('firmaEquipaje.cargarData') }}` , 'Firmas_Conductores_Politica_Equipaje')"
-            class="btn fw-bold ms-4 mt-4 bg-success botonBoostrapTable"> 
+            class="btn fw-bold ms-4 mt-4 bg-success"> 
             Descargar Excel 
         </button>
     </div>

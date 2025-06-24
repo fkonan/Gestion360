@@ -33,8 +33,8 @@ class LoginController extends Controller
 
         try{
             $personaDatos = PersonaDatos::with(['persona.usuario'])
-            ->where('PerEmail', $request->email)
-            ->first();
+                ->where('PerEmail', $request->email)
+                ->first();
 
             $user = $personaDatos?->persona?->usuario;
 

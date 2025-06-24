@@ -31,11 +31,10 @@ class User extends Authenticatable
         'UsuFecReg','UsuHorReg','UsuReg',
         'UsuarioEstado','Verificado',
     ];
-
-    
-    
+  
     public function persona(): BelongsTo{
-        return $this->belongsTo(Persona::class,'idPersona','IdPersona');
+        return $this->belongsTo(Persona::class,'idPersona','IdPersona')
+                    ->where('PerEstado', 'ACTIVO');
     }
 
     public function sesion(): HasMany{

@@ -101,9 +101,10 @@ class UserController extends Controller
     public function store(Request $request){
 
         $validator = Validator::make($request->all(), [
-            'idPersona' => 'required',
+            'idPersona' => 'required|unique:_usuarios,idPersona',
         ],[
             'idPersona.required' => 'Debe seleccionar una persona',
+            'idPersona.unique' => 'La persona seleccionada ya tiene un usuario asignado',
         ]);
 
         if ($validator->fails()) {
@@ -133,9 +134,6 @@ class UserController extends Controller
                 'usuario' => $user->persona->datos->PerEmail,
                 'contraseña' => $contraseñaPlana,
             ];
-
-            //Se envia a una cola de correso
-            //Mail::to($user->persona->datos->PerEmail)->queue(new CorreoCredenciales($datos));
 
             Mail::to($user->persona->datos->PerEmail)->send(new CorreoCredenciales($datos));
             DB::commit();
