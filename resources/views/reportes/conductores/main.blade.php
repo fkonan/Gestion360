@@ -29,16 +29,16 @@
 
             <thead class="table-primary m-0 p-0 border-bottom">
                 <tr>
-                    <th>Título</th>
+                    <th>Reporte</th>
                     <th>Descripción</th>
                     <th>Acción</th> 
             </thead>
             <tbody id="lista-reportes">
                 <x-reporteItem
-                    titulo="Ingresos y Salidas Conductores"
-                    descripcion="Reporta conductores que han ingreado y salido a descansos"
+                    titulo="Salidas a descanso"
+                    descripcion="Reporte de conductores que han registrado ingresos y salidas para periodos de descanso"
                     icono="fas fa-fingerprint"
-                    onclick="cargarModal(`{{ route('conductor.ingresoSalidas') }}`, 'Reporte de entradas y salidas conductores','#ingSalConForm','modal-lg')"
+                    onclick="cargarModal(`{{ route('conductor.ingresoSalidas') }}`, 'Reporte salidas a descanso','#ingSalConForm','modal-lg')"
                 />
 
                <!--  <x-reporteItem 
@@ -49,10 +49,10 @@
                 /> -->
 
                 <x-reporteItem
-                    titulo="Firma Politica Equipaje"
-                    descripcion="Reporta conductores que han firmado la politica de equipaje"
+                    titulo="Firma política de equipaje"
+                    descripcion="Reporte de conductores que han firmado la política de equipaje para el transporte de pasajeros"
                     icono="fas fa-file-signature"
-                    onclick="cargarModal(`{{ route('conductor.firmaEquipaje') }}`, 'Reporte para listar los conductores que han firmado y/o aceptado la política de equipaje','#firmaEquipajeForm','modal-md')"
+                    onclick="cargarModal(`{{ route('conductor.firmaEquipaje') }}`, 'Reporte firma política de equipaje','#firmaEquipajeForm','modal-md')"
                 />
 
             <!--     <x-reporteItem
@@ -63,13 +63,13 @@
                 /> -->
 
                 <x-reporteItem
-                    titulo="Documentos Conductores Pasajes por Vencer"
+                    titulo="Documentos conductores pasajes por vencer"
                     descripcion="Reporta conductores de pasajes activos con documentos próximos a vencer en un rango de fecha"
                     icono="fas fa-hourglass-half"
                 />
 
                 <x-reporteItem
-                    titulo="Documentos Conductores Carga por Vencer"
+                    titulo="Documentos conductores carga por vencer"
                     descripcion="Reporta conductores de carga activos con documentos próximos a vencer en un rango de fecha"
                     icono="fas fa-hourglass-half"
                 />

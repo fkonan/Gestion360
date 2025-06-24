@@ -76,19 +76,26 @@ class ConductorController extends Controller
         }
 
         try{
+            $columns = [
+                DB::raw('CodCon as codigo'),
+                DB::raw('DocCon as identificacion'),
+                DB::raw('NomCon as nombre_completo'),
+                DB::raw('FirFecReg as fecha_registro'),
+                DB::raw('FirHorReg as hora_registro')
+            ];
+
+            $query = FirmaEquipajePol::select($columns);
+
             if($request->codigo != null && $request->identificacion != null){
-                $listaFirmas = FirmaEquipajePol::where("CodCon",$request->codigo)
-                    ->where("DocCon",$request->identificacion)
-                    ->get();
+                $query->where("CodCon",$request->codigo)
+                      ->where("DocCon",$request->identificacion);
             }elseif($request->codigo != null){
-                $listaFirmas = FirmaEquipajePol::where("CodCon",$request->codigo)
-                    ->get();
+                $query->where("CodCon",$request->codigo);
             }elseif($request->identificacion != null){
-                $listaFirmas = FirmaEquipajePol::where("DocCon",$request->identificacion)
-                    ->get();
-            }else{
-                $listaFirmas = FirmaEquipajePol::all();
+                $query->where("DocCon",$request->identificacion);
             }
+
+            $listaFirmas = $query->get();
 
             if ($listaFirmas->isEmpty()) {
                 return toastModal("No se encontraron resultados para los parametros ingresados.", "warning","#");
@@ -102,7 +109,6 @@ class ConductorController extends Controller
             Log::error('Error al obtener la lista de firmas politica equipaje: ' . $e->getMessage());
             return toastModal("Error al obtener los resultados","error");
         }
-
     }
 
     public function listaFirmasEquipaje(){
@@ -175,13 +181,12 @@ class ConductorController extends Controller
                 ->leftJoin('logtranspro.per_personas as p', 'p.id', '=', 'ce.pe_id')
                 ->join('logtranspro.per_contrato_persona as pcp', 'pcp.pe_id_pe', '=', 'ce.pe_id')
                 ->select(
-                    'ce.id',
                     'p.identificacion',
                     'pcp.codigo',
-                    DB::raw("p.PNOMBRE || NVL(' ' || p.SNOMBRE, '') || ' ' || p.PAPELLIDO || NVL(' ' || p.SAPELLIDO, '') as conductor"),
-                    'ce.anotacion',
-                    'ce.fechaevento',
-                    DB::raw("(SELECT s.NOMSUCURSAL FROM per_personas s WHERE s.id = ce.Empcreacion) AS agencia")
+                    DB::raw("p.PNOMBRE || NVL(' ' || p.SNOMBRE, '') || ' ' || p.PAPELLIDO || NVL(' ' || p.SAPELLIDO, '') as nombre_completo"),
+                    'ce.anotacion as evento',
+                    'ce.fechaevento as fecha_evento',
+                    DB::raw("(SELECT s.NOMSUCURSAL FROM per_personas s WHERE s.id = ce.Empcreacion) AS agencia_registra_evento")
                 )
                 ->whereRaw("TRUNC(ce.FECHAEVENTO) >= TRUNC(TO_DATE(?, 'YYYY/MM/DD'))", [$fechaIni])
                 ->whereRaw("TRUNC(ce.FECHAEVENTO) <= TRUNC(TO_DATE(?, 'YYYY/MM/DD'))", [$fechaFin])
