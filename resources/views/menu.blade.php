@@ -9,7 +9,7 @@
             <li class="nav-item has-treeview">
                 <a  href="{{ $modulo->ModRuta && Route::has($modulo->ModRuta) ? route($modulo->ModRuta) : '#' }}" 
                     class="nav-link module text-dark"
-                    style="background-color:rgba(214, 214, 214, 0.51)">
+                    style="background-color:transparent">
 
                     <i class="nav-icon fas {{ $modulo->ModIcono  }}" style="color:rgba(75, 75, 76, 0.7); font-size: 16px;"></i>
                     <p class="fw-medium">{{ $modulo->ModNom }}</p>
