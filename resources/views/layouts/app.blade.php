@@ -22,10 +22,10 @@
 
         <!-- CAPCHA js de paquete: anhskohbo/no-captcha-->
         {!! NoCaptcha::renderJs() !!}
-        
+
         <!-- Iconos -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-        
+
         @stack('styles')
 
         <style>
@@ -50,12 +50,15 @@
 
             <section class="content-header mb-4 p-2 d-flex justify-content-between align-items-center sticky-top" style="min-height:60px; background-color:#0E2146; top:0; left:0; width:100%; z-index:1000;">
                 <a href="{{ route('index') }}">
-                <img 
-                src="https://autogestion.copetran.com.co/cdn/img/logos/logo-blango.png" 
-                alt="Logo" 
-                style="height: 45px; object-fit: contain; padding-left: 50px;" 
+                <img
+                src="https://autogestion.copetran.com.co/cdn/img/logos/logo-blango.png"
+                alt="Logo"
+                style="height: 45px; object-fit: contain; padding-left: 50px;"
                 />
                 </a>
+                <button id="toggleDarkMode" class="btn rounded-circle me-3" title="Cambiar modo oscuro" style="width: 50px;">
+                    <div class="theme-icon"></div>
+                </button>
             </section>
             <div style="height:60px;"></div>
 
@@ -68,14 +71,14 @@
             // Mostrar el cuerpo del documento después de cargar todo
             window.addEventListener('load', function () {
                 document.body.classList.add('show');
-            }); 
+            });
         </script>
 
         <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js" defer></script>
         @stack('script')
 
         <!-- Renderizado de componentes-->
-        <x-alert /> 
+        <x-alert />
         <x-modal />
         <x-toast />
         <x-loader />
