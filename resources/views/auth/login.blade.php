@@ -7,19 +7,16 @@
     <div class="row" style="margin: auto;">
         <div class="text-start">
             <a class="btn fw-bold my-2 text-light border" style="background-color: #0e2146;" href="{{ route('index') }}">
-                <i class="fa fa-arrow-left me-2"></i> 
+                <i class="fa fa-arrow-left me-2"></i>
             </a>
         </div>
         <div class="col-xs-12 col-sm-2 col-md-3 col-lg-4 col-xl-4 col-xxl-4"></div>
             <div class="col-xs-12 col-sm-8 col-md-6 col-lg-4 col-xl-4 col-xxl-4">
-                <h4>Sistema: <b>Gestión</b></h4>
+                <h4>Sistema: <b>{{env('APP_NAME')}}</b></h4>
                 <div class="card p-1">
                 <div class="card-body login-card-body">
                      <div class="d-flex justify-content-between align-items-center mb-3">
                         <p class="login-box-msg" style="text-align: left; font-size: 30px;"><b>!Hola de nuevo¡</b></p>
-                        <button id="toggleDarkMode" class="btn btn-outline-secondary rounded-circle" title="Cambiar modo oscuro" style="border-color:rgba(0, 0, 0, 0.23);">
-                            <i class="bi bi-sun" id="darkModeIcon" style="color:rgb(0, 0, 0);"></i>
-                        </button>
                     </div>
                     <form method="POST" action="{{ route('login') }}" onsubmit="deshabilitarSubmit(this)">
                     @csrf
@@ -29,8 +26,8 @@
                             <div class="input-group-text">
                                 <span class="fas fa-user"></span>
                             </div>
-                        </div>   
-                        @error('email')          
+                        </div>
+                        @error('email')
                          <small class="text-danger fw-bold">{{ $message }}</small>
                         @enderror
                     </div>
@@ -47,7 +44,7 @@
                         @enderror
                     </div>
 
-                    <div class="d-flex flex-column my-4 align-items-center">
+                    <!-- <div class="d-flex flex-column my-4 align-items-center">
                         <div class="captcha-container">
                             {!! NoCaptcha::display(['data-theme' => $darkMode ? 'dark' : 'light']) !!}
                         </div>
@@ -55,7 +52,7 @@
                         @if ($errors->has('g-recaptcha-response'))
                             <small class="text-danger">{{ $errors->first('g-recaptcha-response') }}</small>
                         @endif
-                    </div>
+                    </div> -->
 
                     <div class="row">
                         <div class="col-12">
@@ -69,12 +66,12 @@
                     </form>
                 </div>
             </div>
-        </div>    
+        </div>
     </div>
 </div>
 
 <!-- Sweet alert -->
-<x-alert /> 
+<x-alert />
 @endsection
 
 @pushOnce('script')

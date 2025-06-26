@@ -7,9 +7,9 @@ export function actualizarReloj() {
     let ampm = 'a.m.';
     if (horas >= 12) {
         ampm = 'p.m.';
-        if (horas > 12) horas -= 12;  
+        if (horas > 12) horas -= 12;
     } else if (horas == 0) {
-        horas = 12;  
+        horas = 12;
     }
 
     let horaLocal = document.getElementById('horas');
@@ -17,7 +17,7 @@ export function actualizarReloj() {
     let segundosLocal = document.getElementById('segundos');
     let ampmLocal = document.getElementById('ampm');
 
-    if(horaLocal) horaLocal.innerText = String(horas).padStart(2, '0');	
+    if(horaLocal) horaLocal.innerText = String(horas).padStart(2, '0');
     if(minutosLocal) minutosLocal.innerText = String(minutos).padStart(2, '0');
     if(segundosLocal) segundosLocal.innerText = String(segundos).padStart(2, '0');
     if(ampmLocal) ampmLocal.innerText = ampm;
@@ -34,7 +34,7 @@ function ocultarLoader() {
     if (loader) loader.style.display = 'none';
 }
 
-//Evitar dobles click en forms y da un feedback de carga 
+//Evitar dobles click en forms y da un feedback de carga
 export function deshabilitarSubmit(form , validity=false) {
     const submitButton = form.querySelector('button[type="submit"], input[type="submit"]');
     if (form.checkValidity() || validity) {
@@ -43,7 +43,7 @@ export function deshabilitarSubmit(form , validity=false) {
     }
 }
 
-//vuelve a habilitar en caso de un error 
+//vuelve a habilitar en caso de un error
 export function habilitarSubmit(form) {
     const submitButton = form.querySelector('button[type="submit"], input[type="submit"]');
     submitButton.disabled = false;
@@ -53,7 +53,7 @@ export function habilitarSubmit(form) {
 //Esta funcion lleva control de cuando un elemento de menu debe ser active segun las rutas
 export function handleMenuActive() {
     var url = window.location.href.split('#')[0];
-   
+
     $('ul.nav-sidebar a').filter(function() {
         let href = this.href;
         return href !== window.location.origin + "/" && url.startsWith(href);
@@ -107,7 +107,7 @@ export function exportarExcel(button, urlDatos, nombreArchivo) {
     // Crear spinner FA dinámicamente
     const spinner = document.createElement("i");
     spinner.className = "fas fa-spinner fa-spin me-2";
-    
+
     // Insertar spinner y texto al botón
     btnExportar.appendChild(spinner);
     btnExportar.append("Descargando...");
@@ -207,7 +207,7 @@ export function mostrarToast(message, type = 'primary') {
     setTimeout(() => {
         if (toastEl.classList.contains('show')) {
             toastEl.classList.remove('show');
-            toastEl.classList.add('toast-hide'); 
+            toastEl.classList.add('toast-hide');
         }
     }, 4800);
 }
@@ -224,6 +224,7 @@ export function darkModeEnable(){
     darkModeToggle?.addEventListener('click', () => {
         body.classList.toggle('dark-mode');
         const enabled = body.classList.contains('dark-mode');
+
         localStorage.setItem('darkMode', enabled ? 'enabled' : 'disabled');
 
         //Para poder usarlo en laravel (lado del servidor) con cookies

@@ -15,14 +15,14 @@ class LoginController extends Controller
 {
     public function showLoginForm(Request $request){
         $darkMode = $request->cookie('darkMode') === 'enabled';
-        return view('auth.login', compact('darkMode')); 
+        return view('auth.login', compact('darkMode'));
     }
 
     public function login(Request $request){
         $request->validate([
             'email' => 'required|email',
             'password' => 'required|string',
-            'g-recaptcha-response' => 'required|captcha',
+            // 'g-recaptcha-response' => 'required|captcha',
         ],[
             'email.required' => 'El correo es obligatorio.',
             'email.email' => 'El correo no es válido.',
@@ -58,7 +58,7 @@ class LoginController extends Controller
             $this->registrarLogin($user->IdUsuario);
 
             Auth::login($user);
-            return redirect()->intended(route('home')); 
+            return redirect()->intended(route('home'));
         }catch(Exception $e){
             Log::error('Error al hacer el login: ' . $e);
             return toast('Error en el login', 'danger');
@@ -83,7 +83,7 @@ class LoginController extends Controller
             $session->SesionHorReg = now();
             $session->SesionTipo = "LOGOUT";
             $session->save();
-    
+
             Auth::logout();
             return toast('Sesion cerrada exitosamente', 'success',redirect()->route('login'));
 

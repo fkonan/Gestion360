@@ -39,7 +39,7 @@
             <div class="spinner-border text-primary mt-2" role="status"></div>
             <p class="mt-1 fw-medium text-muted">Cargando...</p>
         </div>
-        
+
         <!-- Sidebar -->
         <aside class="main-sidebar sidebar-dark-primary elevation-4 text-dark bg-light">
             <div class="sidebar">
@@ -50,7 +50,7 @@
                         <i id="toggleDarkMode" class="bi bi-sun text-dark" style="cursor: pointer;"></i>
                     </div>
                     </script>
-                
+
                     <div class="info d-flex flex-column align-items-center" style="width: 235px; margin: 0 auto; user-select: none;">
                         <img src="{{ asset('img/LogoCope.png') }}" class="logoCope" style="width:100%; height: auto;" alt="Logo Cope">
                         <img src="{{ asset('img/LogoCopeBlancoFull.png') }}" class="logoCopeBlanco py-3" style="width:80%; height: auto; display:none" alt="Logo Cope ">
@@ -70,8 +70,8 @@
 
                         <span class="fw-bold text-dark"> Ultima sesión:</span>
                         <span class="fw-medium">
-                            {{ $user->ultimaSesion->first()->SesionFechReg }} 
-                            {{ $user->ultimaSesion->first()->SesionHorReg }} 
+                            {{ $user->ultimaSesion->first()->SesionFechReg }}
+                            {{ $user->ultimaSesion->first()->SesionHorReg }}
                         </span>
                     </div>
 
@@ -90,13 +90,13 @@
             <section class="content-header mb-4 p-2 py-1 d-flex justify-content-between align-items-center bg-secondary"
                 style="position: sticky; top: 0; z-index: 1030;">
                 <div class="container-fluid my-2">
-                    <a class="pushmenu btn btn-sm text-light" 
-                        data-widget="pushmenu" 
-                        data-enable-remember="true" 
-                        href="#" 
+                    <a class="pushmenu btn btn-sm text-light"
+                        data-widget="pushmenu"
+                        data-enable-remember="true"
+                        href="#"
                         role="button">
                         <i class="fas fa-bars"></i>
-                    </a>    
+                    </a>
                     <img src="{{ asset('img/LogoCopeBlanco.png') }}" style="width:70px; height: 15px;" alt="Logo Cope" class="d-md-none">
                 </div>
             </section>
@@ -111,14 +111,14 @@
     </div>
 
     <!-- Renderizado de componentes-->
-    <x-alert /> 
+    <x-alert />
     <x-modal />
     <x-toast />
     <x-loader />
-    
+
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap-duallistbox/dist/jquery.bootstrap-duallistbox.min.js" defer></script>
-    
+
     <script>
         //Modal (evita errores de focus)
         document.addEventListener('hidden.bs.modal', function (event) {
@@ -126,23 +126,23 @@
                 document.activeElement.blur();
             }
         });
-        
+
         // Función para mostrar el toast
         window.addEventListener('DOMContentLoaded', function () {
             const title = sessionStorage.getItem('toastTitle');
             const type = sessionStorage.getItem('toastType');
 
             if (title && type) {
-                mostrarToast(title, type); 
+                mostrarToast(title, type);
                 sessionStorage.removeItem('toastTitle');
                 sessionStorage.removeItem('toastType');
             }
         });
 
-        //dark mode toggle 
+        //dark mode toggle
         document.addEventListener('DOMContentLoaded', () => {
             darkModeEnable()
-        });    
+        });
 
         // Mostrar el cuerpo del documento después de cargar todo
         window.addEventListener('load', function () {
