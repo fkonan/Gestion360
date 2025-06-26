@@ -46,9 +46,12 @@
             <!-- Usuario -->
                 <div class="user-panel my-3 pt-1 pb-2 d-flex flex-column" style="border-bottom: 1px solid rgba(157, 159, 161, 0.7);">
 
-                    <i id="toggleDarkMode" class="bi bi-sun text-dark ms-3"></i>
+                    <div style="width: 1.5em; display: flex; align-items: center; justify-content: flex-start;" class="ms-3">
+                        <i id="toggleDarkMode" class="bi bi-sun text-dark" style="cursor: pointer;"></i>
+                    </div>
+                    </script>
                 
-                    <div class="info d-flex flex-column align-items-center" style="width: 235px; margin: 0 auto;">
+                    <div class="info d-flex flex-column align-items-center" style="width: 235px; margin: 0 auto; user-select: none;">
                         <img src="{{ asset('img/LogoCope.png') }}" class="logoCope" style="width:100%; height: auto;" alt="Logo Cope">
                         <img src="{{ asset('img/LogoCopeBlancoFull.png') }}" class="logoCopeBlanco py-3" style="width:80%; height: auto; display:none" alt="Logo Cope ">
                     </div>
@@ -84,8 +87,9 @@
 
         <!-- Contenido Principal -->
         <div class="content-wrapper">
-            <section class="content-header mb-4 p-2 py-1 d-flex justify-content-between align-items-center bg-secondary">
-                <div class="container-fluid my-1">
+            <section class="content-header mb-4 p-2 py-1 d-flex justify-content-between align-items-center bg-secondary"
+                style="position: sticky; top: 0; z-index: 1030;">
+                <div class="container-fluid my-2">
                     <a class="pushmenu btn btn-sm text-light" 
                         data-widget="pushmenu" 
                         data-enable-remember="true" 
