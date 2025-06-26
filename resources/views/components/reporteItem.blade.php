@@ -25,7 +25,7 @@
                 onclick="{{ $onclick }}"
                 title="Ver reporte"
             >
-                <i class="fas fa-eye fs-5 text-primary"></i>
+                <i class="fas fa-eye fs-5 text-secondary"></i>
             </button>
         @endif
     </td>

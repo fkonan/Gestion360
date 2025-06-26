@@ -1,8 +1,9 @@
 :root {
-    --bs-primary: #0070C0; 
-    --bs-secondary: #2C3643;
-    --bs-secondary-rgb: 44, 54, 67;
-    --bs-primary-rgb: 0, 112, 192; 
+    --bs-primary: #888b8d; 
+    --bs-primary-rgb: 136,139,141; 
+
+    --bs-secondary: #005eb8;
+    --bs-secondary-rgb: 0,94,184;
 }
 
 .table-primary {
@@ -93,7 +94,7 @@ body:not(.sidebar-collapse) .main-sidebar .nav-sidebar .nav-icon {
 }
 
 .nav-sidebar .nav-link:hover{
-    background-color: #9d9fa1 !important;  
+    background-color: #cecece !important;  
 }
 
 .nav-sidebar .nav-treeview .nav-link.active {
@@ -114,7 +115,7 @@ body:not(.sidebar-collapse) .nav-item .nav-treeview .nav-link {
 }
 
 .nav-sidebar .nav-item{
-    border-top: 1px solid rgb(223, 223, 223);
+    border-bottom: 1px solid rgb(223, 223, 223);
 }
 
 .nav-sidebar .nav-item .nav-link.active{
@@ -248,7 +249,7 @@ body:not(.sidebar-collapse) .nav-item .nav-treeview .nav-link {
     padding: 0 2px;     
     line-height: 1.5rem; 
     color: #fff;
-    background-color: var(--bs-primary);
+    background-color: var(--bs-secondary);
     border: 1px solid #fff;
     border-radius: 50%;
     width: 1.5rem;             

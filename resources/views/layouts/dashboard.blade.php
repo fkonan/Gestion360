@@ -36,7 +36,7 @@
     <div class="wrapper">
         <!-- Pantalla de carga -->
         <div class="preloader flex-column justify-content-center align-items-center">
-            <div class="spinner-border text-primary mt-2" role="status"></div>
+            <div class="spinner-border text-secondary mt-2" role="status"></div>
             <p class="mt-1 fw-medium text-muted">Cargando...</p>
         </div>
         
@@ -44,7 +44,7 @@
         <aside class="main-sidebar sidebar-dark-primary elevation-4 text-dark bg-light">
             <div class="sidebar">
             <!-- Usuario -->
-                <div class="user-panel my-3 pt-1 pb-0 d-flex flex-column" style="border-bottom: 1px solid rgba(157, 159, 161, 0.7);">
+                <div class="user-panel mt-3 pt-1 pb-0 d-flex flex-column" style="border-bottom: 1px solid rgba(157, 159, 161, 0.7);">
 
                     <div style="width: 1.5em; display: flex; align-items: center; justify-content: flex-start;" class="ms-3">
                         <i id="toggleDarkMode" class="bi bi-sun text-dark" style="cursor: pointer;"></i>
@@ -55,8 +55,8 @@
                         <img src="{{ asset('img/LogoCopeBlancoFull.png') }}" class="logoCopeBlanco py-3" style="width:80%; height: auto; display:none" alt="Logo Cope ">
                     </div>
 
-                    <hr class="mt-3 mb-0">
-                    <div class="info" style="user-select: none; font-size: 0.75em">
+                    <div class="info" style="user-select: none; font-size: 0.75em;">
+                        <hr class="mb-2">
                         <span class="fw-bold text-dark">Nombre:</span>
                         <span class="fw-medium">
                             {{ $user->persona?->PerNombres }} {{ $user->persona?->PerApellidos }}
@@ -76,7 +76,7 @@
                         </span>
                     </div>
 
-                    <div class="horaComponent info text-primary">
+                    <div class="horaComponent info text-secondary">
                         <span id="horas"></span>:<span id="minutos"></span>:<span id="segundos"></span>&nbsp;<span id="ampm"></span>
                     </div>
                 </div>
