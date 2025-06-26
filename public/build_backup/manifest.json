@@ -1,0 +1,61 @@
+{
+  "_utils-BYN4OJDb.js": {
+    "file": "assets/utils-BYN4OJDb.js",
+    "name": "utils"
+  },
+  "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff": {
+    "file": "assets/bootstrap-icons-BOrJxbIo.woff",
+    "src": "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff"
+  },
+  "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff2": {
+    "file": "assets/bootstrap-icons-BtvjY1KL.woff2",
+    "src": "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff2"
+  },
+  "resources/css/app.css": {
+    "file": "assets/app-CjKUeldT.css",
+    "src": "resources/css/app.css",
+    "isEntry": true
+  },
+  "resources/css/custom.css": {
+    "file": "assets/custom-BcJ2xXrk.css",
+    "src": "resources/css/custom.css",
+    "isEntry": true
+  },
+  "resources/css/darkmode.css": {
+    "file": "assets/darkmode-Dx-G3xli.css",
+    "src": "resources/css/darkmode.css",
+    "isEntry": true
+  },
+  "resources/css/mobile.css": {
+    "file": "assets/mobile-BDqQYPiZ.css",
+    "src": "resources/css/mobile.css",
+    "isEntry": true
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-D95LuEHd.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true,
+    "imports": [
+      "_utils-BYN4OJDb.js"
+    ],
+    "css": [
+      "assets/app-cSZoT5Kf.css"
+    ]
+  },
+  "resources/js/cargarModal.js": {
+    "file": "assets/cargarModal-CRuV7gCO.js",
+    "name": "cargarModal",
+    "src": "resources/js/cargarModal.js",
+    "isEntry": true,
+    "imports": [
+      "_utils-BYN4OJDb.js"
+    ]
+  },
+  "resources/js/utils.js": {
+    "file": "assets/utils-l0sNRNKZ.js",
+    "name": "utils",
+    "src": "resources/js/utils.js",
+    "isEntry": true
+  }
+}

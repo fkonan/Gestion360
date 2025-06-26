@@ -178,15 +178,33 @@ class ConductorController extends Controller
 
             $query = DB::connection('oracle')
                 ->table('LOGTRANSPRO.per_conductoreseventos as ce')
+                ->where('ce.EMPCREACION', '!=', 1124882226) //PROYECTO DRUMMOND - LA LOMA
                 ->leftJoin('logtranspro.per_personas as p', 'p.id', '=', 'ce.pe_id')
                 ->join('logtranspro.per_contrato_persona as pcp', 'pcp.pe_id_pe', '=', 'ce.pe_id')
+                ->leftJoin('logtranspro.per_empresapersonas as pep', function ($join) use ($fechaIni, $fechaFin) {
+                    $join->on('pep.PE_ID_PE', '=', 'ce.pe_id')
+                        ->where('pep.TP_ID', '=', 11)
+                        ->whereNotIn('pep.PE_ID_EMP', [6761])
+                        ->whereRaw("TRUNC(pep.FECINI) <= TRUNC(TO_DATE(?, 'YYYY/MM/DD'))", [$fechaFin]) 
+                        ->whereRaw("(TRUNC(pep.FECFIN) >= TRUNC(TO_DATE(?, 'YYYY/MM/DD')) OR pep.FECFIN IS NULL)", [$fechaIni])
+                        ->where('pep.ACTIVO', '=', 1)
+                        ->where('pep.ESTBORRADO', '=', 0);
+                })
+                ->leftJoin('logtranspro.per_personas as asoc', 'asoc.id', '=', 'pep.PE_ID_EMP') 
                 ->select(
                     'p.identificacion',
                     'pcp.codigo',
                     DB::raw("p.PNOMBRE || NVL(' ' || p.SNOMBRE, '') || ' ' || p.PAPELLIDO || NVL(' ' || p.SAPELLIDO, '') as nombre_completo"),
                     'ce.anotacion as evento',
                     'ce.fechaevento as fecha_evento',
-                    DB::raw("(SELECT s.NOMSUCURSAL FROM per_personas s WHERE s.id = ce.Empcreacion) AS agencia_registra_evento")
+                    DB::raw("(SELECT s.NOMSUCURSAL FROM per_personas s WHERE s.id = ce.Empcreacion) AS agencia_registra_evento"),
+                    DB::raw("
+                        CASE 
+                            WHEN pep.carcliente IS NULL OR pep.carcliente = '0' THEN 'TURNADOR'
+                            ELSE pep.carcliente
+                        END as vehiculo
+                    "),     
+                    DB::raw("pcp.ASOCIADO as nombre_asociado")
                 )
                 ->whereRaw("TRUNC(ce.FECHAEVENTO) >= TRUNC(TO_DATE(?, 'YYYY/MM/DD'))", [$fechaIni])
                 ->whereRaw("TRUNC(ce.FECHAEVENTO) <= TRUNC(TO_DATE(?, 'YYYY/MM/DD'))", [$fechaFin])
@@ -209,7 +227,9 @@ class ConductorController extends Controller
             } 
 
             // Ordenar y ejecutar
-            $resultados = $query->orderBy('ce.FECHAEVENTO', 'desc')->get();
+            $resultados = $query->orderBy('p.identificacion', 'asc')
+                                 ->orderBy('ce.FECHAEVENTO', 'asc')
+                                 ->get();
             $numeroRegistros = $resultados->count();
 
             if ($numeroRegistros == 0) {

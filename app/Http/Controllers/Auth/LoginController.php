@@ -39,7 +39,7 @@ class LoginController extends Controller
             $user = $personaDatos?->persona?->usuario;
 
 
-            if (!$user || !Hash::check($request->password, $user->Password)) {
+            if (!$user || !password_verify($request->password, $user->Password)) {
                 return back()->withInput()->withErrors(['email' => 'Correo o contraseña incorrectos']);
             }
 
@@ -60,7 +60,7 @@ class LoginController extends Controller
             Auth::login($user);
             return redirect()->intended(route('home')); 
         }catch(Exception $e){
-            Log::error('Error al hacer el login: ' . $e->getMessage());
+            Log::error('Error al hacer el login: ' . $e);
             return toast('Error en el login', 'danger');
         }
     }

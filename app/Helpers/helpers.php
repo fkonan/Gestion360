@@ -6,7 +6,13 @@ use Illuminate\Http\JsonResponse;
 if (!function_exists('normalizarNombre')) {
     function normalizarNombre($texto)
     {
-        $texto = iconv('UTF-8', 'ASCII//TRANSLIT', $texto);
+        // Reemplaza letras con tilde por su equivalente sin tilde
+        $acentos = [
+            'á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u',
+            'Á' => 'A', 'É' => 'E', 'Í' => 'I', 'Ó' => 'O', 'Ú' => 'U',
+            'ñ' => 'n', 'Ñ' => 'N'
+        ];
+        $texto = strtr($texto, $acentos);
         $texto = preg_replace('/[\s-]+/', '_', $texto);
         $texto = preg_replace('/[^A-Za-z0-9_]/', '', $texto);
         return strtolower($texto);

@@ -46,7 +46,7 @@ class RolController extends Controller
        
         try{
             $rol = new Role();
-            $rol->names = $request->name;
+            $rol->name = $request->name;
             $rol->guard_name = 'web';
             $rol->created_at = now();
             $rol->updated_at = now();
@@ -70,7 +70,7 @@ class RolController extends Controller
 
         foreach ($modulos as $modulo) {
             $nombreModulo = normalizarNombre($modulo->ModNom); 
-            
+
             foreach ($modulo->submodulos as $submodulo) {
                 $nombreSubmodulo = normalizarNombre($submodulo->SubModNom);
         
@@ -85,6 +85,7 @@ class RolController extends Controller
         $role = Role::findOrFail($id);
         $modulos = $this->modulosConPermisos($moduloService);
         $permisosAsignados = $role->permissions->pluck('id')->toArray();
+        
         return view('roles.permisosRol', compact('modulos', 'role', 'permisosAsignados'));
     }
 

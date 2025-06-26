@@ -112,7 +112,12 @@ class ModuloController extends Controller
             $moduloNombreAntes = normalizarNombre($modulo->ModNom);
             $moduloNombreDespues = normalizarNombre($request->ModNom);
 
-            $modulo->ModPermiso = $moduloNombreDespues . '.acceder';
+            if (is_null($modulo->ModPermiso) || is_null($request->ModPermiso)) {
+                $modulo->ModPermiso = $request->ModPermiso;
+            } else {
+                $modulo->ModPermiso = $moduloNombreDespues . '.acceder';
+            }
+
             $modulo->fill($request->except('ModPermiso'));
             $modulo->save();
 

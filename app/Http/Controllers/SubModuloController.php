@@ -44,7 +44,7 @@ class SubModuloController extends Controller
     public function store(Request $request){
         $validator = Validator::make($request->all(), [
             'ModNom' =>'unique:_submodulos,SubModNom|required|string|max:50',
-            'ModDesc' =>'nullable|string|max:300',
+            'ModDesc' =>'required|string|max:300',
             'ModRuta' =>'nullable|string|max:50',
             'ModIcono' =>'nullable|string|max:20',
             'Mod_Padre_Id' =>'integer'
@@ -52,6 +52,7 @@ class SubModuloController extends Controller
             'ModNom.unique' => 'El nombre del submodulo ya existe.',
             'ModNom.required' => 'El nombre del submodulo es requerido.',
             'ModNom.max' => 'El nombre del submodulo no puede tener más de 50 caracteres.',
+            'ModDesc.required' => 'La descripción es requerida.',
             'ModDesc.max' => 'La descripción no puede tener más de 300 caracteres.',
             'ModIcono.max' => 'El icono no puede tener más de 20 caracteres.',
         ]);
@@ -95,7 +96,6 @@ class SubModuloController extends Controller
 
         $validator = Validator::make($request->all(), [
             'SubModNom' =>'required|string|max:50',
-            'SubModDes' =>'nullable|string|max:300',
             'SubModuloEstado' =>'required',
             'SubModPermiso' =>'nullable|string|max:255',
             'SubModRuta' =>'nullable|string|max:255',
@@ -103,6 +103,10 @@ class SubModuloController extends Controller
             'ModuloId' =>'integer'
         ],[
             'SubModNom.unique' => 'El nombre del modulo ya existe.',
+            'SubModNom.required' => 'El nombre del submodulo es requerido.',
+            'SubModNom.max' => 'El nombre del submodulo no puede tener más de 50 caracteres.',
+            'SubModDesc.required' => 'La descripción es requerida.',
+            'SubModDesc.max' => 'La descripción no puede tener más de 300 caracteres.',
         ]);
 
         if ($validator->fails()) {
@@ -118,7 +122,12 @@ class SubModuloController extends Controller
             $submodulo = SubModulo::findOrFail($id);
             $submoduloNombreAntes = normalizarNombre($submodulo->SubModNom);
             $submoduloNombreDespues = normalizarNombre($request->SubModNom);
-            $submodulo->SubModPermiso = str_replace($submoduloNombreAntes, $submoduloNombreDespues, $submodulo->SubModPermiso);
+            
+            if (is_null($submodulo->SubModPermiso)) {
+                $submodulo->SubModPermiso = $request->SubModPermiso;
+            } else {
+                $submodulo->SubModPermiso = str_replace($submoduloNombreAntes, $submoduloNombreDespues, $submodulo->SubModPermiso);
+            }
            
             $submodulo->fill($request->except('SubModPermiso'));
             $submodulo->save();

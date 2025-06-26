@@ -63,20 +63,17 @@ class TiquetesImpresosController extends Controller
                 });
 
                 $numeroTiquetes = $tiquetes->count();
-
-                $html = view('reportes.resultado_tiquetes_modal', compact('tiquetes', 'numeroTiquetes'))->render();
-
-                return response()->json([
-                    'success' => true,
-                    'html' => $html
-                ]);
-
-            } catch (Exception $e) {
+    
+                if ($tiquetes->isEmpty()) {
+                    return toastModal("No se han encontrado tiquetes para las fechas seleccionadas", "warning");
+                }
+    
+                session(['tiquetes' => $tiquetes]);
+                return toastModal("Se han encontrado " .$numeroTiquetes. " tiquetes para las fechas seleccionadas", "success", route('reportes.listaTiquetes'));
+                
+            }catch(Exception $e){
                 Log::error('Error al filtrar los tiquetes: ' . $e->getMessage());
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Error al procesar el reporte.'
-                ], 500);
+                return toastModal("Error al filtrar los tiquetes", "error",route('reportes.index'));
             }
         }
 

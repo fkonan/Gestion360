@@ -13,7 +13,6 @@ class SubModuloActivoMiddleware
     public function handle(Request $request, Closure $next, $moduleId)
     {
         $subModule = SubModulo::where('IdSubModulo', $moduleId)->first();
-
         if (!$subModule || $subModule->ModEstado !== 'ACTIVO' ) {
             session()->flash('alert', ['type' => 'warning','title' => 'El submódulo "' . ($subModule->ModNom ?? 'desconocido') . '" se encuentra deshabilitado.']);
             return redirect()->back();
