@@ -13,17 +13,13 @@
 @section('content')
 <div class="container-fluid p-0 border rounded bg-white tableContainer" style="min-height:150px;">
 
-    <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-secondary">
-        <span class="text-left text-light fs-5 fw-medium py-1">Lista de personas</span>
-        <a class="btn fw-bold my-2 bg-primary" href="{{ route('home') }}">Volver</a>
-    </div>
-
-    @permite('administracion.personas.crear')
-        <a class="btn fw-bold ms-4 mt-4 text-light bg-warning botonBoostrapTable" 
-            href="{{ route('personas.create') }}">
-            Registrar persona
-        </a>
-    @endpermite
+    <x-cardHeader 
+        titulo="Personas registradas"
+        crear="newpage"
+        rutaVolver="{{ route('home') }}"
+        crearRoute="{{ route('personas.create') }}"
+        crearLabel="Registrar Persona"
+    />
    
     <div id="no-more-tables" class="table-responsive" style="padding:1.5em">
         <table

@@ -14,10 +14,10 @@
 <br>
 <div class="container-fluid p-0 border rounded tableContainer" style="min-height:150px; background-color: white">
 
-    <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-secondary">
-        <span class="text-left text-light fs-5 fw-medium py-1">Reportes de Pasajes</span>
-        <a class="btn fw-bold my-2 bg-primary" href="{{ route('reportes.index') }}">Volver</a>
-    </div>
+     <x-cardHeader 
+        titulo="Reportes de Pasajes"
+        rutaVolver="{{ route('reportes.index') }}"
+    />
 
     <div id="no-more-tables" class="table-responsive" style="padding:1.5em">
         <table 
