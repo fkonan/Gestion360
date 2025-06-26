@@ -78,13 +78,17 @@ class UserController extends Controller
         $rows = $usuarios->orderBy($sort, $order)
             ->skip($offset)
             ->take($limit)
-            ->get();
-
-        // Agregar el rol principal a cada usuario
-        $rows = $rows->map(function ($usuario) {
-            $usuario->rol = $usuario->roles->pluck('name')->first();
-            return $usuario;
-        });
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'PerNumDoc' => $item->persona->PerNumDoc,
+                    'nombreCompleto' => $item->persona->PerNombres . ' ' . $item->persona->PerApellidos,
+                    'fechaHoraRegistro' => $item->UsuFecReg . ' ' . $item->UsuHorReg,
+                    'estado' => $item->UsuarioEstado,
+                    'IdUsuario' => $item->IdUsuario,
+                    'rol' => $item->roles->pluck('name')->first() ?: 'SIN ROL',
+                ];
+            });
 
         return response()->json([
          'total' => $total,

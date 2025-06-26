@@ -28,6 +28,22 @@
                     ruta="{{ route('gestion-incapacidades.seguimiento') }}"
             />
         </div>
+        <div class="col">
+            <x-card color="bg-danger" 
+                    titulo="Permisos" 
+                    descripcion="Gestión" 
+                    icono="fa-user-check" 
+                    ruta="#"
+            />
+        </div>
+        <div class="col">
+            <x-card color="bg-primary" 
+                    titulo="Vacaciones" 
+                    descripcion="Gestión" 
+                    icono="fa-umbrella-beach" 
+                    ruta="#"
+            />
+        </div>
     </div>
 </div>
 @endsection
