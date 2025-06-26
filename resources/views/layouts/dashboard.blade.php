@@ -44,17 +44,18 @@
         <aside class="main-sidebar sidebar-dark-primary elevation-4 text-dark bg-light">
             <div class="sidebar">
             <!-- Usuario -->
-                <div class="user-panel my-3 pt-1 pb-2 d-flex flex-column" style="border-bottom: 1px solid rgba(157, 159, 161, 0.7);">
+                <div class="user-panel my-3 pt-1 pb-0 d-flex flex-column" style="border-bottom: 1px solid rgba(157, 159, 161, 0.7);">
 
                     <div style="width: 1.5em; display: flex; align-items: center; justify-content: flex-start;" class="ms-3">
                         <i id="toggleDarkMode" class="bi bi-sun text-dark" style="cursor: pointer;"></i>
                     </div>
-                    </script>
                 
                     <div class="info d-flex flex-column align-items-center" style="width: 235px; margin: 0 auto; user-select: none;">
                         <img src="{{ asset('img/LogoCope.png') }}" class="logoCope" style="width:100%; height: auto;" alt="Logo Cope">
                         <img src="{{ asset('img/LogoCopeBlancoFull.png') }}" class="logoCopeBlanco py-3" style="width:80%; height: auto; display:none" alt="Logo Cope ">
                     </div>
+
+                    <hr class="mt-3 mb-0">
                     <div class="info" style="user-select: none; font-size: 0.75em">
                         <span class="fw-bold text-dark">Nombre:</span>
                         <span class="fw-medium">
