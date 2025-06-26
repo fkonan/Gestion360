@@ -81,10 +81,6 @@ body.dark-mode .main-sidebar {
     background-color: var(--darkmode-bg-main) !important;
 }
 
-body.dark-mode .main-sidebar .module{
-    background-color: #272727 !important;
-}
-
 body.dark-mode .main-sidebar .nav-link i{
     color: var(--darkmode-text) !important;
 }
@@ -99,10 +95,6 @@ body.dark-mode .main-sidebar .nav-sidebar .nav-link.active{
 
 body.dark-mode .main-sidebar .nav-sidebar .nav-link.active i{
     color: var(--darkmode-text) !important;
-}
-
-body.dark-mode .sessionButton{
-    background-color: #272727 !important;
 }
 
 /* Componente card */
@@ -238,6 +230,11 @@ body.dark-mode .cardIndex{
 
 .bodyIndex.dark-mode{
     background-color: var(--darkmode-bg-main) !important;
+}
+
+/* Header */
+body.dark-mode .content-header{
+    background-color: var(--darkmode-bg-secondary) !important;
 }
 
 

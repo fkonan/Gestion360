@@ -39,13 +39,12 @@
             data-url="{{ route('usuarios.cargarDatos') }}">   
             <thead class="table-primary">
                 <tr>
-                    <th data-field="persona.PerNumDoc" data-visible="true">Identificación</th>
-                    <th data-field="nombreCompleto" data-formatter="nombreCompletoFormatter">Nombre Completo</th>
-                    <th class="text-center" data-field="UsuFecReg" data-sortable="true">Fecha registro</th>
-                    <th class="text-center" data-field="UsuHorReg" data-sortable="true">Hora registro</th>
-                    <th data-field="rol">Rol del usuario</th>
+                    <th data-field="PerNumDoc" data-visible="true">Identificación</th>
+                    <th data-field="nombreCompleto">Nombre y apellidos</th>
+                    <th class="text-center" data-field="fechaHoraRegistro" data-sortable="true">Fecha registro</th>
+                    <th data-field="rol">Rol</th>
                     @permite('administracion.usuarios.actualizar')
-                        <th class="text-center" data-field="UsuarioEstado" data-formatter="estadoFormatter" data-sortable="true">Estado</th>
+                        <th class="text-center" data-field="estado" data-formatter="estadoFormatter" data-sortable="true">Estado</th>
                     @endpermite
                     @if(
                         auth()->user()->can('administracion.usuarios.asignar_permisos') ||
@@ -67,7 +66,7 @@
     @vite(['resources/js/cargarModal.js'])
     <script>
     function estadoFormatter(value, row) {
-        const checked = row.UsuarioEstado === 'ACTIVO' ? 'checked' : '';
+        const checked = row.estado === 'ACTIVO' ? 'checked' : '';
         const url = "{{ route('usuarios.cambiarEstado', ['id' => ':id']) }}".replace(':id', row.IdUsuario);
         return `
             <div class="form-check form-switch d-flex justify-content-center">
@@ -88,34 +87,30 @@
         let urlUsuarios = "{{ route('usuarios.edit', ['id' => ':id']) }}".replace(':id', row.IdUsuario);
 
         return `
-            <div class="d-flex flex-wrap gap-3 justify-content-center">
-                @permite('administracion.usuarios.asignar_permisos')
-                    <a class="text-decoration-none" 
-                        title="Gestionar permisos del usuario"
-                        onclick="cargarModal('${urlPermisos}', 'Permisos usuario', '#formPermisoUsuario', 'modal-xl')">
-                        <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/Permiso00.png" alt="Permisos" style="width: 30px; height: 30px;">
-                    </a>
-                @endpermite
-                @permite('administracion.usuarios.asignar_roles')
-                    <a class="text-decoration-none" 
-                        title="Gestionar roles del usuario"
-                        onclick="cargarModal('${urlRoles}', 'Roles usuario', '#formRolUsuario', 'modal-xl')">
-                        <img src="{{ asset('img/rolesEdit.png') }}" alt="Roles" style="width: 32px; height: 32px;">
-                    </a>
-                @endpermite
-                @permite('administracion.usuarios.actualizar')
-                    <a 
-                        title="Editar usuario"
-                        onclick="cargarModal('${urlUsuarios}', 'Editar Usuario', '#formEditUsuario', 'modal-lg')">
-                        <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/new_editar.png" alt="Editar" style="width: 30px; height: 30px;">
-                    </a>
-                @endpermite
+            <div class="d-flex flex-row align-items-center justify-content-center gap-2" style="flex-wrap:nowrap;">
+            @permite('administracion.usuarios.asignar_permisos')
+                <a class="text-decoration-none" 
+                title="Gestionar permisos del usuario"
+                onclick="cargarModal('${urlPermisos}', 'Permisos usuario', '#formPermisoUsuario', 'modal-xl')">
+                <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/Permiso00.png" alt="Permisos" style="width: 30px; height: 30px;">
+                </a>
+            @endpermite
+            @permite('administracion.usuarios.asignar_roles')
+                <a class="text-decoration-none" 
+                title="Gestionar roles del usuario"
+                onclick="cargarModal('${urlRoles}', 'Roles usuario', '#formRolUsuario', 'modal-xl')">
+                <img src="{{ asset('img/rolesEdit.png') }}" alt="Roles" style="width: 32px; height: 32px;">
+                </a>
+            @endpermite
+            @permite('administracion.usuarios.actualizar')
+                <a 
+                title="Editar usuario"
+                onclick="cargarModal('${urlUsuarios}', 'Editar Usuario', '#formEditUsuario', 'modal-lg')">
+                <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/new_editar.png" alt="Editar" style="width: 30px; height: 30px;">
+                </a>
+            @endpermite
             </div>
         `;
-    }
-
-    function nombreCompletoFormatter(value, row) {
-        return row.persona.PerNombres + ' ' + row.persona.PerApellidos;
     }
 
     function togglePasswordVisibility() {
@@ -138,8 +133,7 @@
             { protegidas: ['persona.PerNumDoc'] }, 
             'detalleUsuario', 
             { 'acciones': accionesFormatter,
-                'UsuarioEstado': estadoFormatter,
-                'nombreCompleto': nombreCompletoFormatter
+                'estado': estadoFormatter,
             }
         );
     });

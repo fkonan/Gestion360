@@ -53,14 +53,14 @@ class PersonaController extends Controller
             if (!empty($search)) {
                 $personas->where(function ($q) use ($search) {
                     $q->where('PerFechReg', 'like', "%$search%")
-                        ->orWhere('PerNombres', 'like', "%$search%")
-                        ->orWhere('PerApellidos', 'like', "%$search%")
+                        ->orWhere(DB::raw("CONCAT(PerNombres, ' ', PerApellidos)"), 'like', "%$search%")
                         ->orWhere('PerNumDoc', 'like', "%$search%")
                         ->orWhereHas('municipioNac.departamento', function ($q2) use ($search) {
                             $q2->where('DepNom', 'like', "%$search%");
                         })
                         ->orWhereHas('datos', function ($q3) use ($search) {
-                            $q3->where('PerTelefono', 'like', "%$search%");
+                            $q3->where('PerTelefono', 'like', "%$search%")
+                                ->orWhere('PerEmail', 'like', "%$search%");
                         });
                 });
             }
@@ -74,12 +74,11 @@ class PersonaController extends Controller
                 ->map(function ($item) {
                 return [
                     'PerNumDoc' => $item->PerNumDoc,
+                    'PerEmail' => $item->datos->PerEmail ?? '',
                     'nombreCompleto' => $item->PerNombres . ' ' . $item->PerApellidos,
-                    'DepNom' => $item->municipioNac->departamento->DepNom ?? '',
                     'PerTelefono' => $item->datos->PerTelefono ?? '',
-                    'PerGenero' => $item->PerGenero ?? '',
                     'PerEstado' => $item->PerEstado,
-                    'PerFechReg' => $item->PerFechReg,
+                    'PerFechaHoraReg' => $item->PerFechReg . ' ' . $item->PerHorReg,
                     'IdPersona' => $item->IdPersona,
                 ];
             });

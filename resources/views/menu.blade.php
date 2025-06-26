@@ -1,4 +1,4 @@
-<nav class="mt-2">
+<nav class="mt-0 pt-0">
     <!-- clase ocultar sub modulos al cerrar: nav-collapse-hide-child  -->
     <ul class="nav nav-pills nav-sidebar nav-collapse-hide-child flex-column" data-widget="treeview" role="menu">
 
@@ -9,8 +9,7 @@
             <li class="nav-item has-treeview">
                 <a  href="{{ $modulo->ModRuta && Route::has($modulo->ModRuta) ? route($modulo->ModRuta) : '#' }}" 
                     class="nav-link module text-dark"
-                    style="background-color:rgba(214, 214, 214, 0.51)">
-
+                    style="background-color:transparent;">
                     <i class="nav-icon fas {{ $modulo->ModIcono  }}" style="color:rgba(75, 75, 76, 0.7); font-size: 16px;"></i>
                     <p class="fw-medium">{{ $modulo->ModNom }}</p>
                     @if($modulo->submodulos->count())   
@@ -38,16 +37,16 @@
         @endforeach
 
         <li class="nav-item has-treeview">
-            <a style="background-color:#D0CCFA; color:#000000; font-size:16px;" href="#" class="nav-link sessionButton">
-                <i class="nav-icon fas fa-cloud"></i>
-                <p><b>Sesión</b></p>
+            <a style="font-size:16px;" href="#" class="nav-link">
+                <i class="nav-icon fas fa-cloud" style="color:rgba(75, 75, 76, 0.7);"></i>
+                <p>Sesión</p>
                 <p><i class="right fas fa-angle-left"></i></p>
             </a>
             <ul class="nav nav-treeview">
                 <li class="nav-item">
-                    <a href="#" onclick="document.getElementById('logoutForm').submit();" class="nav-link bg-danger">
+                    <a href="#" onclick="document.getElementById('logoutForm').submit();" class="nav-link text-danger">
                         <i class="fas fa-sign-out-alt"></i>
-                        <p class="text-light">Cerrar sesión</p>
+                        <p class="text-danger">Cerrar sesión</p>
                     </a>
                     <form id="logoutForm" action="{{ route('logout') }}" method="POST" style="display: none;">
                         @csrf
