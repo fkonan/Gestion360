@@ -28,6 +28,14 @@
                 ruta="http://172.20.32.22/gestion/firmaConductores/public/"
             />
         </div>
+        <div class="col-12 col-sm-6 col-lg-4">
+            <x-cardIndex 
+                icono="fa-print"
+                titulo="Otros servicios"
+                descripcion="Incluye impresión de tiquetes y reporte de salidas de terminal."
+                ruta="#"
+            />  
+        </div>
     </div>
 </div>
 @endsection

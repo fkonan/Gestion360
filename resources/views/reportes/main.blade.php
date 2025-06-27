@@ -11,32 +11,29 @@
 
 @section('content')
 <br>
-<div class="mx-3 optionsMenu">
-    <div class="pb-4 m-0">
-        <h2 class="fw-bold">Panel de Reportes</h2>
-        <p class="text-muted mb-0">
-            Accede a los distintos reportes del sistema según tu rol y permisos. Esta vista centraliza todos los tipos de reportes disponibles en la plataforma.
-        </p>
-    </div>
+<div class="container-fluid p-0 border rounded bg-white tableContainer" style="min-height:150px;">
 
-    <div class="row row-cols-1 row-cols-md-3 g-3">
-        @foreach ($reportes as $reporte)
-            @permite($reporte['permiso'])
-            <div class="col">
-                <a href="{{ route($reporte['ruta']) }}" class="text-decoration-none">
-                    <div class="card cardComponent h-100 shadow-sm border">
-                        <div class="card-body">
-                            <h5 class="card-title fw-semibold">{{ $reporte['titulo'] }}</h5>
-                            <p class="card-text text-muted">{{ $reporte['descripcion'] }}</p>
-                        </div>
-                        <div class="card-footer bg-transparent border-0 text-end">
-                            <span class="text-primary">Ver reportes <i class="bi bi-arrow-right"></i></span>
-                        </div>
+    <x-cardHeader 
+        titulo="Panel de Reportes"
+        rutaVolver="{{ route('home') }}"
+    />
+
+    <div style="padding:1.5em" class="mt-md-5">
+        <div class="row row-cols-1 row-cols-md-4 g-3 mt-2">
+            @foreach ($reportes as $reporte)
+                @permite($reporte['permiso'])
+                    <div class="col">
+                        <x-card color="bg-primary" 
+                            titulo="{{ $reporte['titulo'] }}" 
+                            descripcion="{{ $reporte['descripcion'] }}" 
+                            tooltip="{{ $reporte['tooltip'] }}"
+                            icono="{{ $reporte['icono'] }}" 
+                            ruta="{{ route($reporte['ruta']) }}"
+                        />
                     </div>
-                </a>
-            </div>
-            @endpermite
-        @endforeach
+                @endpermite
+            @endforeach
+        </div>
     </div>
 </div>
 @endsection

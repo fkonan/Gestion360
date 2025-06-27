@@ -8,13 +8,12 @@
 
 .table-primary {
     --bs-table-bg: var(--bs-primary);
-    --bs-table-color: #fff;
+    --bs-table-color: #f7f7f7;
   }
 
-  table{
-    border-radius: 0.5rem;
-    overflow: hidden;
-  }
+.botonBoostrapTable a:hover {
+    color: #e6e3ee !important;
+}
 
 /* Estilos botones asignacion de permisos */
 .form-switch .form-check-input {
@@ -53,6 +52,13 @@
 }
 
 /* Estilos menu lateral */
+.nav-collapse-hide-child .menu-open:not(.menu-is-opening) > .nav-treeview {
+  max-height: min-content;
+  animation-name: fadeIn;
+  animation-duration: 0.3s;
+  animation-fill-mode: both;
+}
+
 body.sidebar-collapse .main-sidebar {
     position: fixed;
     top: 0;

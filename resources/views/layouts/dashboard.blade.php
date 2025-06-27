@@ -44,7 +44,7 @@
         <aside class="main-sidebar sidebar-dark-primary elevation-4 text-dark bg-light">
             <div class="sidebar">
             <!-- Usuario -->
-                <div class="user-panel mt-3 pt-1 pb-0 d-flex flex-column" style="border-bottom: 1px solid rgba(157, 159, 161, 0.7);">
+                <div class="user-panel mt-3 pt-1 pb-0 d-flex flex-column" style=" border:none">
 
                     <div style="width: 1.5em; display: flex; align-items: center; justify-content: flex-start;" class="ms-3">
                         <i id="toggleDarkMode" class="bi bi-sun text-dark" style="cursor: pointer;"></i>
@@ -56,7 +56,7 @@
                     </div>
 
                     <div class="info" style="user-select: none; font-size: 0.75em;">
-                        <hr class="mb-2">
+                        <hr class="mb-2 text-muted">
                         <span class="fw-bold text-dark">Nombre:</span>
                         <span class="fw-medium">
                             {{ $user->persona?->PerNombres }} {{ $user->persona?->PerApellidos }}
@@ -78,7 +78,8 @@
 
                     <div class="horaComponent info text-secondary">
                         <span id="horas"></span>:<span id="minutos"></span>:<span id="segundos"></span>&nbsp;<span id="ampm"></span>
-                    </div>
+                        <hr class="mb-0 mt-2 text-muted">
+                    </div>   
                 </div>
 
                 <!-- Menú de Navegación -->
