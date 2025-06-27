@@ -26,10 +26,8 @@ Route::get('/', function () {
     return view('index');
 })->name('index');
 
-/* Route::get('/index', function () {
-    return view('index');
-})->name('index');
- */
+
+
 Route::get('/clear', function () {
     Artisan::call('storage:link');
     Artisan::call('cache:clear');
@@ -186,5 +184,3 @@ Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showRese
 Route::post('/reset-password', [ResetPasswordController::class, 'resetPassword'])->name('password.update');
 
 require __DIR__.'/auth.php';
-
-
