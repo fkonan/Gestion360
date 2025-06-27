@@ -261,6 +261,8 @@ body.dark-mode input:-webkit-autofill{
 body.dark-mode input:-webkit-autofill:hover {
     -webkit-text-fill-color: var(--darkmode-input);
 }
+
 body.dark-mode input:-webkit-autofill:focus {
     -webkit-text-fill-color: var(--darkmode-input);
 }
+
