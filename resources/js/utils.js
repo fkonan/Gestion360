@@ -126,11 +126,9 @@ export function exportarExcel(button, origenDatos, nombreArchivo, esURL = true) 
     btnExportar.appendChild(spinner);
     btnExportar.append("Descargando...");
 
-    const procesarExportacion = (data) => {
-        let ws = XLSX.utils.json_to_sheet(data);
-        let wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Datos");
-        XLSX.writeFile(wb, nombreArchivo + ".xlsx");
+    $.ajax({
+        url: urlDatos,
+        method: "GET",
 
         btnExportar.disabled = false;
         btnExportar.innerText = textoOriginal;
@@ -162,19 +160,17 @@ export function exportarExcel(button, origenDatos, nombreArchivo, esURL = true) 
                 }
             }
 
-            // Validar que es un array
-            if (!Array.isArray(origenDatos)) {
-                throw new Error("Los datos no tienen el formato esperado (array).");
-            }
-
-            procesarExportacion(origenDatos);
-        } catch (error) {
-            console.error("Error procesando los datos:", error);
-            mostrarToast('Error al procesar los datos.', 'danger');
+            mostrarToast("Excel descargado", "success");
+        },
+        error: function () {
+            mostrarToast(
+                "Error al exportar los datos. Por favor, intente nuevamente.",
+                "danger"
+            );
             btnExportar.disabled = false;
             btnExportar.innerText = textoOriginal;
-        }
-    }
+        },
+    });
 }
 
 //actualiza el estado de un registro de una tabla con un switch asincronamente
