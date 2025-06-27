@@ -14,7 +14,7 @@
 </div>
 
 <div class="botonBoostrapTable ms-4 mt-2">
-    <a style="width: 150px;" class="btn fw-bold bg-success" href="{{ $rutaVolver }}">Volver</a>
+    <a style="width: 150px;" class="btn btn-outline-secondary fw-bold text-dark" href="{{ $rutaVolver }}">Regresar</a>
 
     @if($crear === 'newpage')
         <a style="min-width: 150px;" class="btn fw-bold bg-warning"

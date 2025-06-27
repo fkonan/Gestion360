@@ -34,7 +34,7 @@
     <div class="row mx-0 py-4">    
         <table
             id="administrarRoles"
-            class="table table-striped table-hover align-middle table-bordered"
+            class="table table-striped table-sm table-hover align-middle table-bordered"
             data-page-size="10"
             data-toggle="table"
             data-locale="es-ES"
@@ -58,7 +58,7 @@
                 <tr>
                     <td>{{ $rol->id }}</td>
                     <td class="text-nowrap">
-                        <i class="fas {{ $icons[$rol->name] ?? 'fa-user' }} me-2 text-primary"></i> {{ $rol->name }}
+                        <i class="fas {{ $icons[$rol->name] ?? 'fa-user' }} me-2 text-secondary"></i> {{ $rol->name }}
                     </td>
                     @permite('configuracion.gestion_sistema.actualizar')
                         <td class="text-center" style="width: 80px;">
