@@ -10,7 +10,7 @@
 import { mostrarToast } from "./utils";
 
 
-function cargarModal(url, titulo = "", formularioId = null, size = null) {
+function cargarModal(url, titulo = "", formularioId = null, size = null, type = "POST") {
     const $modal = $("#globalModal");
     const $modalContent = $("#globalModalContent");
     const $modalTitle = $("#globalModalTitle");
@@ -53,7 +53,7 @@ function cargarModal(url, titulo = "", formularioId = null, size = null) {
 
             // Validar formulario si se proporciona
             if (formularioId) {
-                validarFormulario(formularioId);
+                validarFormulario(formularioId, type);
             }
 
             // Inicializar listas duales solo si existen en el DOM
@@ -114,9 +114,6 @@ function validarFormulario(form, TYPE="POST") {
             const URL = $form.attr("action");
             const formData = new FormData(form);
 
-            const actionType = $form.data("success-action") || "redirect";
-            const targetSelector = $form.data("success-target");
-
             $.ajax({
                 url: URL,
                 type: TYPE,
@@ -125,21 +122,19 @@ function validarFormulario(form, TYPE="POST") {
                 contentType: false,
                 dataType: "json",
                 success: function (response) {
-                    let updateTarget = $(form).data("update");
+                    habilitarSubmit(form); 
 
-                    if (updateTarget && response.success && response.html) {
-                        $(updateTarget).html(response.html);
-                        habilitarSubmit(form); 
-                        return;
-                    }
-
-                    if(response.redirect == '#'){
+                    if (response.success && response.html) {
+                        $("#innerHtml").html(response.html); 
+                    }else if(response.redirect == '#'){
                         mostrarToast(response.title, response.type);
                     } else {
                         sessionStorage.setItem('toastTitle', response.title);
                         sessionStorage.setItem('toastType', response.type);
                         window.location.href = response.redirect;
                     }
+
+                    habilitarSubmit(form); 
                 },
 
                 error: function (xhr) {
