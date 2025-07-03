@@ -10,18 +10,20 @@
 <br>
 @endsection
 
+
+
 @section('content')
 <div class="container-fluid p-0 border rounded bg-white tableContainer" style="min-height:150px;">
 
-    <x-cardHeader 
+    <x-cardHeader
         titulo="Personas registradas"
         crear="newpage"
         rutaVolver="{{ route('home') }}"
         crearRoute="{{ route('personas.create') }}"
         crearLabel="Registrar Persona"
     />
-   
-    <div id="no-more-tables" class="table-responsive" style="padding:1.5em">
+
+    <div id="no-more-tables" class="table-responsive " style="padding:1.5em">
         <table
             id="personasDataTable"
             class="table table-sm table-striped"
@@ -35,13 +37,14 @@
             data-detail-formatter="detallePersona"
             data-check-on-init="true"
             data-side-pagination="server"
-            data-url="{{ route('personas.cargarDatos') }}" >   
+            data-url="{{ route('personas.cargarDatos') }}" >
             <thead class="table-primary">
                 <tr>
+                    <th data-field="nombreCompleto">Nombre y apellidos</th>
                     <th data-field="PerNumDoc">Identificación</th>
-                    <th data-field="nombreCompleto">Nombre Completo</th>
-                    <th data-field="PerTelefono">Telefono</th>  
-                    <th class="text-center" data-field="PerFechaHoraReg" data-sortable="true">Fecha registro</th> 
+                    <th data-field="PerTelefono">Telefono</th>
+                    <th data-field="PerEmail">Correo electrónico</th>
+                    <th class="text-center" data-field="PerFechaHoraReg" data-sortable="true">Fecha registro</th>
                     @permite('administracion.personas.actualizar')
                         <th class="text-center" data-sortable="true" data-field="PerEstado" data-formatter="estadoFormatter">Estado</th>
                         <th class="text-center" data-field="acciones" data-formatter="accionesFormatter" >Opciones</th>
@@ -49,23 +52,23 @@
                 </tr>
             </thead>
         </table>
-    </div> 
+    </div>
 </div>
 @endsection
 
 @pushOnce('script')
     @vite(['resources/js/cargarModal.js'])
-   
+
     <script>
     function estadoFormatter(value, row) {
         const checked = row.PerEstado === 'ACTIVO' ? 'checked' : '';
         const url = "{{ route('personas.cambiarEstado', ['id' => ':id']) }}".replace(':id', row.IdPersona);
         return `
             <div class="form-check form-switch d-flex justify-content-center">
-                <input 
+                <input
                     onchange="actualizarEstado('${url}')"
-                    class="form-check-input estado-switch" 
-                    type="checkbox" 
+                    class="form-check-input estado-switch"
+                    type="checkbox"
                     role="switch"
                     data-id="${row.IdPersona}"
                     ${checked}>
@@ -91,12 +94,12 @@
 
     document.addEventListener("DOMContentLoaded", () => {
         initTablaBootstrapTable(
-            '#personasDataTable', 
-            { 
+            '#personasDataTable',
+            {
                 protegidas: ['PerNumDoc']
-            }, 
-            'detallePersona', 
-            { 
+            },
+            'detallePersona',
+            {
                 'acciones': accionesFormatter,
                 'PerEstado': estadoFormatter,
             }

@@ -32,24 +32,27 @@ $.fn.modal = function (...args) {
 
 // SweetAlert2
 import Swal from 'sweetalert2';
-window.Swal = Swal; 
+window.Swal = Swal;
 
 // XLSX (excels)
 import * as XLSX from 'xlsx';
 window.XLSX = XLSX;
 
-import { deshabilitarSubmit, 
-        habilitarSubmit, 
+import { deshabilitarSubmit,
+        habilitarSubmit,
         actualizarReloj,
-        handleMenuActive, 
+        handleMenuActive,
         abrirArchivo,
         exportarExcel,
         actualizarEstado,
         mostrarToast,
-        darkModeEnable
+        createThemeManager
     } from './utils';
 
 import { initTablaBootstrapTable, generarDetalle } from './tablasAjusteColumnas';
+
+const themeManager = createThemeManager();
+window.themeManager = themeManager;
 
 window.deshabilitarSubmit = deshabilitarSubmit;
 window.habilitarSubmit = habilitarSubmit;
@@ -57,8 +60,6 @@ window.abrirArchivo = abrirArchivo;
 window.exportarExcel = exportarExcel;
 window.actualizarEstado = actualizarEstado;
 window.mostrarToast = mostrarToast;
-window.darkModeEnable = darkModeEnable;
-
 window.initTablaBootstrapTable = initTablaBootstrapTable;
 window.generarDetalle = generarDetalle;
 
