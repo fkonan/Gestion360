@@ -75,17 +75,17 @@
                 <div class="d-flex flex-wrap gap-3 justify-content-center">
                     <a class="text-decoration-none"  title="Ver adjuntos"
                         onclick="cargarModal('${urlAdjuntos}', 'Documentos Incapacidad', '', 'modal-lg')">
-                        <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/carpetas.png" 
+                        <img src="https://autogestion.copetran.com.co/gestion_2/aFrame/library/bower_components/Ionicons/png/512/carpetas.png" 
                             alt="Ver Adjuntos" style="width: 28px; height: 28px;">
                     </a>
                     <a class="text-decoration-none"  title="Editar incapacidad"
                         onclick="cargarModal('${urlDatos}', 'Revisión datos incapacidad', '#formIncapacidad', 'modal-xl')">
-                        <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/new_editar.png" 
+                        <img src="https://autogestion.copetran.com.co/gestion_2/aFrame/library/bower_components/Ionicons/png/512/new_editar.png" 
                             alt="Editar" style="width: 28px; height: 28px;">
                     </a>
                     <a class="text-decoration-none"  title="Seguimiento"
                         href="${urlSeguimientoDetalle}">
-                        <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/seguimiento.png" 
+                        <img src="https://autogestion.copetran.com.co/gestion_2/aFrame/library/bower_components/Ionicons/png/512/seguimiento.png" 
                             alt="Seguimiento" style="width: 28px; height: 28px;">
                     </a>
                 </div>

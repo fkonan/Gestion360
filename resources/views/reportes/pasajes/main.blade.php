@@ -48,14 +48,17 @@
                 <x-reporteItem
                     titulo="Pasajes vendidos manuales" 
                     descripcion="Reporte con detalle de pasajes vendidos manuales en un rango de fecha"
+                    :onclick="'cargarModal(`' . route('reportes.formulario', ['id' => 2]) . '`, `Pasajes vendidos manuales`, `#formReporte`, `modal-lg`)'"
                 />
                 <x-reporteItem
                     titulo="Pasajes sin facturar" 
                     descripcion="Reporte de pasajes vendidos sin facturar en un rango de fecha"
+                    :onclick="'cargarModal(`' . route('reportes.formulario', ['id' => 3]) . '`, `Pasajes sin facturar`, `#formReporte`, `modal-lg`)'"
                 />
                 <x-reporteItem
                     titulo="Errores en documentos o nombres en tiquetes" 
                     descripcion="Tiquetes con errores en el número de documento o nombre/apellido del cliente, por fecha de operación"
+                    :onclick="'cargarModal(`' . route('reportes.formulario', ['id' => 4]) . '`, `Errores en documentos`, `#formReporte`, `modal-lg`)'"
                 />
             </tbody>
         </table>
