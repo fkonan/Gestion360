@@ -163,7 +163,7 @@ class ConductorController extends Controller
         ], [
             'fechaFinal.after_or_equal' => 'La fecha de fin debe ser posterior o igual a la fecha de inicio.',  
             'fechaInicial.date' => 'La fecha de fin debe ser una fecha válida.',
-            'fechaFinal.date' => 'La fecha de fin debe ser una fecha válida.', 
+            'fechaFinal.date' => 'La fecha de fin debe ser una fecha válida.',  
         ]);
 
         if ($validator->fails()) {
@@ -209,7 +209,7 @@ class ConductorController extends Controller
                 ->whereRaw("TRUNC(ce.FECHAEVENTO) >= TRUNC(TO_DATE(?, 'YYYY/MM/DD'))", [$fechaIni])
                 ->whereRaw("TRUNC(ce.FECHAEVENTO) <= TRUNC(TO_DATE(?, 'YYYY/MM/DD'))", [$fechaFin]);
                 
-                if ($request->evento == 0) {
+                 if ($request->evento == 0) {
                     $query->whereIn('ce.evento', ['49', '50']);
                 } else {
                     $query->whereIn('ce.evento', [$request->evento]);

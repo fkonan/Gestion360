@@ -42,10 +42,12 @@
                 <tr class="bg-primary">
                     <th data-field="identificacion" data-sortable="true">Identificación</th>
                     <th data-field="codigo" data-sortable="true">Código</th>
-                    <th data-field="nombre_completo" data-sortable="true">Conductor</th>
-                    <th data-field="evento" data-sortable="true">Evento</th>
-                    <th data-field="fecha_evento" data-sortable="true">Fecha de evento</th>
-                    <th data-field="agencia_registra_evento" data-sortable="true">Agencia</th>
+                    <th class="text-nowrap" data-field="nombre_completo" data-sortable="true">Conductor</th>
+                    <th class="text-nowrap" data-field="evento" data-sortable="true">Evento</th>
+                    <th class="text-nowrap" data-field="fecha_evento" data-sortable="true">Fecha de evento</th>
+                    <th class="text-nowrap" data-field="agencia_registra_evento" data-sortable="true">Agencia</th>
+                    <th class="text-nowrap" data-field="nombre_asociado" data-sortable="true">Nombre Asociado</th>
+                    <th class="text-nowrap" data-field="vehiculo" data-sortable="true">Vehículo</th>
                 </tr>
             </thead>
         </table>
