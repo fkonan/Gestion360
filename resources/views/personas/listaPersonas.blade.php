@@ -40,12 +40,11 @@
             data-url="{{ route('personas.cargarDatos') }}" >
             <thead class="table-primary">
                 <tr>
+                    <th data-field="nombreCompleto">Nombre y apellidos</th>
                     <th data-field="PerNumDoc">Identificación</th>
-                    <th data-field="nombreCompleto">Nombre Completo</th>
-                    <th data-field="DepNom">Departamento</th>
                     <th data-field="PerTelefono">Telefono</th>
-                    <th data-field="PerGenero" data-sortable="true">Genero</th>
-                    <th class="text-center" data-field="PerFechReg" data-sortable="true">Fecha registro</th>
+                    <th data-field="PerEmail">Correo electrónico</th>
+                    <th class="text-center" data-field="PerFechaHoraReg" data-sortable="true">Fecha registro</th>
                     @permite('administracion.personas.actualizar')
                         <th class="text-center" data-sortable="true" data-field="PerEstado" data-formatter="estadoFormatter">Estado</th>
                         <th class="text-center" data-field="acciones" data-formatter="accionesFormatter" >Opciones</th>

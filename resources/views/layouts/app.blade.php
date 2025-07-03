@@ -49,7 +49,7 @@
    </style>
 
    <!--Vite -->
-   @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/css/custom.css', 'resources/css/mobile.css', 'resources/css/darkmode.css'])
+   @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/css/custom.css', 'resources/css/mobile.css'])
 </head>
 
 <body class="sidebar-mini layout-fixed bodyIndex">

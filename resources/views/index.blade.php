@@ -4,11 +4,11 @@
 
 @section('content')
 <br>
-<div class="container pb-5 indexContainer">
+<div class="container pb-5">
     <div class="row mb-5 align-items-center">
         <div class="col-12 col-md-8 mx-auto text-center">
-            <h1 class="display-5 fw-bold mb-2" style="color: #0e2146;">Panel Principal de Gestión</h1>
-            <p class="lead mb-0" style="color: #0e2146; opacity: 0.8;">Accede a los módulos principales del sistema</p>
+            <h1 class="display-5 fw-bold mb-2 text-tertiary">Panel Principal de Gestión</h1>
+            <p class="lead mb-0 text-tertiary">Accede a los módulos principales del sistema</p>
         </div>
     </div>
     <div class="row g-4 justify-content-center">
@@ -29,12 +29,12 @@
             />
         </div>
         <div class="col-12 col-sm-6 col-lg-4">
-            <x-cardIndex 
+            <x-cardIndex
                 icono="fa-print"
                 titulo="Otros servicios"
                 descripcion="Incluye impresión de tiquetes y reporte de salidas de terminal."
                 ruta="#"
-            />  
+            />
         </div>
     </div>
 </div>
