@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="container text-center">
-   
+
 </div>
 @endsection
 

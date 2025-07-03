@@ -250,6 +250,7 @@ export function createThemeManager() {
     const setTheme = (theme) => {
         setStoredTheme(theme);
         document.documentElement.setAttribute("data-bs-theme", theme);
+        document.body.setAttribute("data-bs-theme", theme);
 
         // Opcional: agregar clase al body para estilos adicionales
         // if (theme === "dark") {
