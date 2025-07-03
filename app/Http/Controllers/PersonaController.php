@@ -44,10 +44,18 @@ class PersonaController extends Controller
             $limit = $request->get('limit', 25); // Número de registros por página
             $offset = $request->get('offset', 0); // Desde qué registro empezar
             $search = $request->get('search');
-            $sort = $request->get('sort', 'PerFechReg');
+
             $order = $request->get('order', 'desc');
+            $sort = $request->get('sort');
 
             $personas = Persona::with(['municipioNac.departamento', 'datos']);
+
+            // Validar campo de ordenamiento
+            if ($sort === 'PerFechaHoraReg') {
+                $personas = $personas
+                    ->orderBy('PerFechReg', $order)
+                    ->orderBy('PerHorReg', $order);
+            } 
 
             //buscador
             if (!empty($search)) {
@@ -67,7 +75,7 @@ class PersonaController extends Controller
 
             //datos de la pagina 
             $total = $personas->count();
-            $rows = $personas->orderBy($sort, $order)
+            $rows = $personas
                 ->skip($offset)
                 ->take($limit)
                 ->get()
