@@ -51,7 +51,8 @@
 
       <li class="nav-item has-treeview">
          <a href="#" class="nav-link">
-            <i class="nav-icon fas fa-cloud"></i>
+            <i class="nav-icon fas fa-cloud"
+               style="color: rgba(75, 75, 76, 0.7); font-size: 16px"></i>
             <p>Sesión</p>
             <p><i class="right fas fa-angle-left"></i></p>
          </a>
@@ -60,10 +61,10 @@
                <a
                   href="#"
                   onclick="document.getElementById('logoutForm').submit();"
-                  class="nav-link logout-link"
+                  class="nav-link logout-link bg-danger"
                >
                   <i class="fas fa-sign-out-alt"></i>
-                  <p>Cerrar sesión</p>
+                  <p class="text-light">Cerrar sesión</p>
                </a>
                <form
                   id="logoutForm"
