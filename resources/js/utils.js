@@ -96,46 +96,69 @@ export function abrirArchivo(url) {
     document.body.appendChild(overlay);
 }
 
-export function exportarExcel(button, urlDatos, nombreArchivo) {
+//exporta a excel datos desde un url con AJAX o datos pasados directamente
+export function exportarExcel(button, origenDatos, nombreArchivo, esURL = true) {
     const btnExportar = document.getElementById(button);
     const textoOriginal = btnExportar.innerText.trim();
 
-    // Desactivar botón
     btnExportar.disabled = true;
     btnExportar.innerText = "";
 
-    // Crear spinner FA dinámicamente
     const spinner = document.createElement("i");
     spinner.className = "fas fa-spinner fa-spin me-2";
-    
-    // Insertar spinner y texto al botón
     btnExportar.appendChild(spinner);
     btnExportar.append("Descargando...");
 
-    $.ajax({
-        url: urlDatos,
-        method: 'GET',
+    const procesarExportacion = (data) => {
+        let ws = XLSX.utils.json_to_sheet(data);
+        let wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Datos");
+        XLSX.writeFile(wb, nombreArchivo + ".xlsx");
 
-        success: function (data) {
-            let ws = XLSX.utils.json_to_sheet(data);
-            let wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Datos");
-            XLSX.writeFile(wb, nombreArchivo + ".xlsx");
+        btnExportar.disabled = false;
+        btnExportar.innerText = textoOriginal;
+        mostrarToast('Excel descargado', 'success');
+    };
 
-            // Restaurar estado del botón
-            btnExportar.disabled = false;
-            btnExportar.innerText = textoOriginal;
+    if (esURL) {
+        $.ajax({
+            url: origenDatos,
+            method: 'GET',
+            success: function (data) {
+                procesarExportacion(data);
+            },
+            error: function () {
+                mostrarToast('Error al exportar los datos. Por favor, intente nuevamente.', 'danger');
+                btnExportar.disabled = false;
+                btnExportar.innerText = textoOriginal;
+            }
+        });
+    } else {
+        try {
+            // Si es un string, intentar parsearlo
+            if (typeof origenDatos === 'string') {
+                try {
+                    origenDatos = JSON.parse(origenDatos);
+                } catch (parseError) {
+                    console.error("Error al parsear los datos JSON:", parseError);
+                    throw new Error("Datos mal formateados. No se pudo parsear.");
+                }
+            }
 
-            mostrarToast('Excel descargado','success');
-        },
-        error: function () {
-            mostrarToast('Error al exportar los datos. Por favor, intente nuevamente.', 'danger');
+            // Validar que es un array
+            if (!Array.isArray(origenDatos)) {
+                throw new Error("Los datos no tienen el formato esperado (array).");
+            }
+
+            procesarExportacion(origenDatos);
+        } catch (error) {
+            console.error("Error procesando los datos:", error);
+            mostrarToast('Error al procesar los datos.', 'danger');
             btnExportar.disabled = false;
             btnExportar.innerText = textoOriginal;
         }
-    });
+    }
 }
-
 
 //actualiza el estado de un registro de una tabla con un switch asincronamente
 export function actualizarEstado(ruta){

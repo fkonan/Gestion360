@@ -66,12 +66,14 @@
                     titulo="Documentos conductores pasajes por vencer"
                     descripcion="Reporta conductores de pasajes activos con documentos próximos a vencer en un rango de fecha"
                     icono="fas fa-hourglass-half"
+                    :onclick="'cargarModal(`' . route('reportes.formulario', ['id' => 5]) . '`, `Documentos conductores pasajes por vencer`, `#formReporte`, `modal-lg`)'"
                 />
 
                 <x-reporteItem
                     titulo="Documentos conductores carga por vencer"
                     descripcion="Reporta conductores de carga activos con documentos próximos a vencer en un rango de fecha"
                     icono="fas fa-hourglass-half"
+                    :onclick="'cargarModal(`' . route('reportes.formulario', ['id' => 6]) . '`, `Documentos conductores carga por vencer`, `#formReporte`, `modal-lg`)'"
                 />
             </tbody>
         </table>

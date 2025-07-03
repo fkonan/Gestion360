@@ -64,7 +64,7 @@
                         <td class="text-center" style="width: 80px;">
                             <a class="p-0 px-2" 
                                 href="{{ route('roles.permisos', ['id' => $rol->id]) }}">
-                                <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/new_editar.png" alt="Editar" style="width: 30px; height: 30px;">
+                                <img src="https://autogestion.copetran.com.co/gestion_2/aFrame/library/bower_components/Ionicons/png/512/new_editar.png" alt="Editar" style="width: 30px; height: 30px;">
                             </a>
                         </td>
                     @endpermite

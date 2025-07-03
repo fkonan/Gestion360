@@ -4,25 +4,38 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 
 class ApiReportes
 {
     protected $baseUrl = 'https://integration.copetran.com.co/autogestion';
-    
+    protected $tokenCacheKey = 'api_reportes_token';
+
     public function obtenerToken()
     {
+        // Si ya hay un token válido en caché
+        if (Cache::has($this->tokenCacheKey)) {
+            return Cache::get($this->tokenCacheKey);
+        }
+
+        // Si no, se pide a la API
         $response = Http::post("{$this->baseUrl}/auth", [
             'username' => 'autogestionCopetran',
             'password' => '2025*autogestion$',
         ]);
 
         if ($response->successful()) {
-            return $response->json()['token'];
+            $token = $response->json()['token'];
+
+            // Guarda el token en caché por 60 minutos
+            Cache::put($this->tokenCacheKey, $token, now()->addMinutes(60));
+
+            return $token;
         }
 
         return null;
     }
-
+    
     public function obtenerReporte($idReporte, $fechaInicio, $fechaFin, $agencia = null)
     {
         $token = $this->obtenerToken();

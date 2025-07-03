@@ -39,13 +39,12 @@
             <thead class="table-primary">
                 <tr>
                     <th data-field="PerNumDoc">Identificación</th>
-                    <th data-field="nombreCompleto">Nombre y apellidos</th>
-                    <th data-field="PerEmail">Correo electrónico</th>
-                    <th data-field="PerTelefono">Telefono</th>
+                    <th data-field="nombreCompleto">Nombre Completo</th>
+                    <th data-field="PerTelefono">Telefono</th>  
                     <th class="text-center" data-field="PerFechaHoraReg" data-sortable="true">Fecha registro</th> 
                     @permite('administracion.personas.actualizar')
                         <th class="text-center" data-sortable="true" data-field="PerEstado" data-formatter="estadoFormatter">Estado</th>
-                        <th class="text-center" data-field="acciones" data-formatter="accionesFormatter" >Acciones</th>
+                        <th class="text-center" data-field="acciones" data-formatter="accionesFormatter" >Opciones</th>
                     @endpermite
                 </tr>
             </thead>
@@ -83,7 +82,7 @@
                 @permite('administracion.personas.actualizar')
                      <a class="text-decoration-none" href="${rutaPersona}"
                         title="Editar persona">
-                        <img src="https://autogestion.copetran.com.co/gestion/aFrame/library/bower_components/Ionicons/png/512/new_editar.png" alt="Editar" style="width: 30px; height: 30px;">
+                        <img src="https://autogestion.copetran.com.co/gestion_2/aFrame/library/bower_components/Ionicons/png/512/new_editar.png" alt="Editar" style="width: 30px; height: 30px;">
                     </a>
                 @endpermite
             </div>

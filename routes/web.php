@@ -62,7 +62,10 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:administracion.ac
         Route::post("/{id}/cambiar-estado", [UserController::class, "cambiarEstado"])->middleware('soloAJAX')->name("usuarios.cambiarEstado");
     });
     Route::prefix("reportes")->middleware(['submodulo.activo:22'])->group(function(){
+        
         Route::get("/",[ReportesController::class,"getReportes"])->name("reportes.index");
+        Route::post("/{id}/data", [ReportesController::class, 'obtenerReporte'])->name('reportes.get'); //Esta ruta es para obtener un reporte especifico
+        Route::get("/{id}/formulario", [ReportesController::class, 'mostrarFormulario'])->name('reportes.formulario');
 
         //Reportes Conductores
         Route::prefix("conductores")->group(function(){
