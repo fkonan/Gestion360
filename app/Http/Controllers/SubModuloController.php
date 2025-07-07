@@ -16,7 +16,7 @@ class SubModuloController extends Controller
     public function index(){
         $subModulos = SubModulo::all();
 
-        return view('submodulos.listaSubModulos', compact('subModulos'));
+        return view('submodulos.index', compact('subModulos'));
     }
 
     public function cargarDatos(){

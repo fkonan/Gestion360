@@ -87,10 +87,11 @@
         let urlUsuarios = "{{ route('usuarios.edit', ['id' => ':id']) }}".replace(':id', row.IdUsuario);
 
         return `
-            <div class="d-flex flex-row align-items-center justify-content-center gap-2" style="flex-wrap:nowrap;">
+            <div class="d-flex flex-row align-items-center justify-content-center gap-3" style="flex-wrap:nowrap;">
             @permite('administracion.usuarios.asignar_permisos')
                 <a class="text-decoration-none" 
                 title="Gestionar permisos del usuario"
+                style="cursor: pointer;"
                 onclick="cargarModal('${urlPermisos}', 'Permisos usuario', '#formPermisoUsuario', 'modal-xl')">
                 <img src="https://autogestion.copetran.com.co/gestion_2/aFrame/library/bower_components/Ionicons/png/512/Permiso00.png" alt="Permisos" style="width: 30px; height: 30px;">
                 </a>
@@ -98,6 +99,7 @@
             @permite('administracion.usuarios.asignar_roles')
                 <a class="text-decoration-none" 
                 title="Gestionar roles del usuario"
+                style="cursor: pointer;"
                 onclick="cargarModal('${urlRoles}', 'Roles usuario', '#formRolUsuario', 'modal-xl')">
                 <img src="{{ asset('img/rolesEdit.png') }}" alt="Roles" style="width: 32px; height: 32px;">
                 </a>
@@ -105,8 +107,9 @@
             @permite('administracion.usuarios.actualizar')
                 <a 
                 title="Editar usuario"
+                style="cursor: pointer;"
                 onclick="cargarModal('${urlUsuarios}', 'Editar Usuario', '#formEditUsuario', 'modal-lg')">
-                <img src="https://autogestion.copetran.com.co/gestion_2/aFrame/library/bower_components/Ionicons/png/512/new_editar.png" alt="Editar" style="width: 30px; height: 30px;">
+                <img src="{{ asset('img/edit.png') }}" alt="Editar Usuario" style="width: 32px; height: 32px;">
                 </a>
             @endpermite
             </div>

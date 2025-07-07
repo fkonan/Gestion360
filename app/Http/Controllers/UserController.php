@@ -19,7 +19,7 @@ use Spatie\Permission\Models\Role;
 class UserController extends Controller
 {
     public function index(){
-        return view("usuarios.listaUsuarios");
+        return view("usuarios.index");
     }
 
     public function cambiarEstado($id){
@@ -66,10 +66,9 @@ class UserController extends Controller
             $q->where('UsuFecReg', 'like', "%$search%")
             ->orWhere('UsuHorReg', 'like', "%$search%")
             ->orWhereHas('persona', function ($q2) use ($search) {
-                $q2->where('PerApellidos', 'like', "%$search%")
-                    ->orWhere('PerNombres', 'like', "%$search%")
-                    ->orWhere('PerNumDoc', 'like', "%$search%");
-            });
+                $q2->where('PerNumDoc', 'like', "%$search%")
+                    ->orWhere(DB::raw("CONCAT(PerNombres, ' ', PerApellidos)"), 'like', "%$search%");
+                });
             });
         }
 

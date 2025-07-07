@@ -17,7 +17,7 @@ use Illuminate\Validation\Rule;
 class PersonaController extends Controller
 {
     public function index(){
-        return view("personas.listaPersonas");
+        return view("personas.index");
     }
 
     public function cambiarEstado($id){
@@ -190,7 +190,7 @@ class PersonaController extends Controller
 
     public function show($id){
         $personas = Persona::where("IdPersona",$id)->get();
-        return view("personas.listaPersonas",compact("personas"));
+        return view("personas.index",compact("personas"));
     }
 
     public function edit($id){
