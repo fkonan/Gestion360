@@ -22,7 +22,7 @@ class LoginController extends Controller
         $request->validate([
             'email' => 'required|email',
             'password' => 'required|string',
-            // 'g-recaptcha-response' => 'required|captcha',
+            'g-recaptcha-response' => 'required|captcha',
         ],[
             'email.required' => 'El correo es obligatorio.',
             'email.email' => 'El correo no es válido.',

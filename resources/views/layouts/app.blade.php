@@ -68,9 +68,9 @@
          </a>
 
          {{-- Icono cambiar theme --}}
-         <button class="btn rounded-circle me-3" title="Cambiar modo oscuro" style="width: 50px" data-theme-toggle>
-            <i class="light-icon"></i>
-         </button>
+         <div style="width: 1.5em; display: flex; align-items: center; justify-content: flex-start;" class="me-3">
+            <i id="toggleDarkMode" class="bi bi-sun text-light" style="cursor: pointer;"></i>
+         </div>
       </section>
       <div style="height: 60px"></div>
 
@@ -82,6 +82,12 @@
       window.addEventListener("load", function() {
          document.body.classList.add("show");
       });
+
+      //dark mode toggle 
+      document.addEventListener('DOMContentLoaded', () => {
+         darkModeEnable()
+      });    
+
    </script>
 
    <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js" defer></script>

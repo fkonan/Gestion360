@@ -55,10 +55,18 @@ class UserController extends Controller
         $limit = $request->get('limit', 25); // Número de registros por página
         $offset = $request->get('offset', 0); // Desde qué registro empezar
         $search = $request->get('search');
-        $sort = $request->get('sort', 'UsuFecReg');
+        
         $order = $request->get('order', 'desc');
+        $sort = $request->get('sort');
 
         $usuarios = User::with(['persona','roles']);
+
+        // Validar campo de ordenamiento
+        if ($sort === 'fechaHoraRegistro') {
+            $usuarios = $usuarios
+                ->orderBy('UsuFecReg', $order)
+                ->orderBy('UsuHorReg', $order);
+        } 
 
         //buscador
         if (!empty($search)) {
@@ -74,7 +82,7 @@ class UserController extends Controller
 
         //datos de la pagina 
         $total = $usuarios->count();
-        $rows = $usuarios->orderBy($sort, $order)
+        $rows = $usuarios
             ->skip($offset)
             ->take($limit)
             ->get()
