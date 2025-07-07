@@ -142,7 +142,7 @@ class UserController extends Controller
             $user->syncRoles($request->rol);
 
             $datos = [
-                'usuario' => $user->persona->datos->PerEmail,
+                'usuario' => $user->persona->PerNumDoc,
                 'contraseña' => $contraseñaPlana,
             ];
 

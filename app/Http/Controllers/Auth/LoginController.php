@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\GESTIONADMIN\Persona;
 use App\Models\GESTIONADMIN\PersonaDatos;
 use App\Models\GESTIONADMIN\Sesion;
 use Exception;
@@ -20,27 +21,25 @@ class LoginController extends Controller
 
     public function login(Request $request){
         $request->validate([
-            'email' => 'required|email',
+            'identificacion' => 'required|numeric',
             'password' => 'required|string',
             'g-recaptcha-response' => 'required|captcha',
         ],[
-            'email.required' => 'El correo es obligatorio.',
-            'email.email' => 'El correo no es válido.',
+            'identificacion.required' => 'La identificación es obligatoria.',
             'password.required' => 'La contraseña es obligatoria.',
             'g-recaptcha-response.required' => 'El captcha es obligatorio.',
             'g-recaptcha-response.captcha' => 'Captcha inválido, por favor inténtalo de nuevo.',
         ]);
 
         try{
-            $personaDatos = PersonaDatos::with(['persona.usuario'])
-                ->where('PerEmail', $request->email)
+            $persona = Persona::with(['usuario'])
+                ->where('PerNumDoc', $request->identificacion)
                 ->first();
 
-            $user = $personaDatos?->persona?->usuario;
-
+            $user = $persona?->usuario;
 
             if (!$user || !password_verify($request->password, $user->Password)) {
-                return back()->withInput()->withErrors(['email' => 'Correo o contraseña incorrectos']);
+                return back()->withInput()->withErrors(['identificacion' => 'Identificación o contraseña incorrectos']);
             }
 
             if($user->persona->PerEstado == "INACTIVO"){

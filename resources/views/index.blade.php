@@ -30,12 +30,13 @@
         </div>
         <div class="col-12 col-sm-6 col-lg-4">
             <x-cardIndex
-                icono="fa-print"
-                titulo="Otros servicios"
-                descripcion="Incluye impresión de tiquetes y reporte de salidas de terminal."
-                ruta="#"
+                icono="fa-search-location"
+                titulo="Rastreo de Remesas"
+                descripcion="Consulta el estado y ubicación actual de tus remesas en tiempo real."
+                ruta="{{ route('trackingRemesas.index') }}"
             />
         </div>
+        
     </div>
 </div>
 @endsection

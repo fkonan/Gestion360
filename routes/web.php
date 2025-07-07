@@ -14,6 +14,7 @@ use App\Http\Controllers\RolController;
 use App\Http\Controllers\SeguimientoIncapacidadController;
 use App\Http\Controllers\SubModuloController;
 use App\Http\Controllers\TiquetesImpresosController;
+use App\Http\Controllers\TrackingRemesas;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
@@ -185,5 +186,13 @@ Route::get('/forgot-password', [ForgotPasswordController::class, 'showForm'])->n
 Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink'])->name('password.email');
 Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
 Route::post('/reset-password', [ResetPasswordController::class, 'resetPassword'])->name('password.update');
+
+
+//Tracking remesas
+Route::get('/tracking-remesas', function () {
+    return view('remesas.trackingRemesas');
+})->name('trackingRemesas.index');
+
+Route::post('/tracking-remesas/consultar', [TrackingRemesas::class, 'consultar'])->name('trackingRemesas.consultar');
 
 require __DIR__.'/auth.php';
