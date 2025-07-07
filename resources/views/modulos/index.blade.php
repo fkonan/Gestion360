@@ -80,8 +80,9 @@
                 @permite('configuracion.gestion_sistema.actualizar')
                     <a class="text-decoration-none" 
                         title="Editar modulo"
+                        style="cursor: pointer;"
                         onclick="cargarModal('${urlEditar}', 'Editar Modulo', '#formFormato')">
-                        <img src="https://autogestion.copetran.com.co/gestion_2/aFrame/library/bower_components/Ionicons/png/512/new_editar.png" alt="Editar" style="width: 30px; height: 30px;">
+                        <img src="{{ asset('img/edit.png') }}" alt="Editar Modulo" style="width: 32px; height: 32px;">
                     </a>
                 @endpermite
             </div>

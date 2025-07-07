@@ -1,7 +1,6 @@
 :root {
     --bs-primary: #888b8d; 
     --bs-primary-rgb: 136,139,141; 
-
     --bs-secondary: #005eb8;
     --bs-secondary-rgb: 0,94,184;
 }
@@ -12,7 +11,7 @@ table{
   }
 
 .table-primary {
-    --bs-table-bg: var(--bs-primary);
+    --bs-table-bg: var(--bs-secondary);
     --bs-table-color: #f7f7f7; 
   }
 

@@ -99,15 +99,8 @@ export function abrirArchivo(url) {
 //exporta a excel datos desde un url con AJAX o datos pasados directamente
 export function exportarExcel(button, origenDatos, nombreArchivo, esURL = true) {
     const btnExportar = document.getElementById(button);
-    const textoOriginal = btnExportar.innerText.trim();
 
-    btnExportar.disabled = true;
-    btnExportar.innerText = "";
-
-    const spinner = document.createElement("i");
-    spinner.className = "fas fa-spinner fa-spin me-2";
-    btnExportar.appendChild(spinner);
-    btnExportar.append("Descargando...");
+    btnExportar.disabled = true
 
     const procesarExportacion = (data) => {
         let ws = XLSX.utils.json_to_sheet(data);
@@ -116,7 +109,6 @@ export function exportarExcel(button, origenDatos, nombreArchivo, esURL = true) 
         XLSX.writeFile(wb, nombreArchivo + ".xlsx");
 
         btnExportar.disabled = false;
-        btnExportar.innerText = textoOriginal;
         mostrarToast('Excel descargado', 'success');
     };
 
@@ -130,7 +122,6 @@ export function exportarExcel(button, origenDatos, nombreArchivo, esURL = true) 
             error: function () {
                 mostrarToast('Error al exportar los datos. Por favor, intente nuevamente.', 'danger');
                 btnExportar.disabled = false;
-                btnExportar.innerText = textoOriginal;
             }
         });
     } else {
@@ -152,10 +143,8 @@ export function exportarExcel(button, origenDatos, nombreArchivo, esURL = true) 
 
             procesarExportacion(origenDatos);
         } catch (error) {
-            console.error("Error procesando los datos:", error);
             mostrarToast('Error al procesar los datos.', 'danger');
             btnExportar.disabled = false;
-            btnExportar.innerText = textoOriginal;
         }
     }
 }

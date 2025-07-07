@@ -24,7 +24,7 @@
                 <td class="align-middle">{{ $documento->DocFecReg }}</td>
                 <td class="text-center align-middle">
                 <button type="button" class="btn btn-link m-0 p-0" onclick="abrirArchivo('{{ $documento->Ruta }}')">
-                    <img class="m-0 p-0" src="https://autogestion.copetran.com.co/gestion_2/aFrame/library/bower_components/Ionicons/png/512/pdf.png" alt="Adjunto" style="width: 35px; height: 35px;">
+                    <img src="{{ asset('img/verPDF.png') }}" alt="Adjunto" style="width: 38px; height: 38px;">
                 </button>
                 </td>
             </tr>
