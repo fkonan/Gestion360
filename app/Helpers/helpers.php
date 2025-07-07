@@ -22,7 +22,12 @@ if (!function_exists('normalizarNombre')) {
 //Permite usar los toast de forma mas directa
 if (!function_exists('toast')) {
     function toast($message, $type = 'primary', $redirect = null) {
-        $redirect = $redirect ?? redirect()->back();
+        if (is_string($redirect)) {
+            $redirect = redirect($redirect);
+        } elseif (!$redirect) {
+            $redirect = redirect()->back();
+        }
+
         return $redirect->with('toast', [
             'type' => $type,
             'message' => $message,

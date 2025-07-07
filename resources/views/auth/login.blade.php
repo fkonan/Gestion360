@@ -20,13 +20,13 @@
                   @csrf
                   <div class="d-flex flex-column mb-3">
                      <div class="input-group">
-                        <input type="email" class="form-control" id="email" name="email" placeholder="Correo"
-                           value="{{ old('email') }}" required />
+                        <input type="number" class="form-control" id="identificacion" name="identificacion" placeholder="Identificación"
+                           value="{{ old('identificacion') }}" required />
                         <div class="input-group-text">
                            <span class="fas fa-user"></span>
                         </div>
                      </div>
-                     @error('email')
+                     @error('identificacion')
                         <small class="text-danger fw-bold">{{ $message }}</small>
                      @enderror
                   </div>

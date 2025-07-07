@@ -49,7 +49,7 @@
    </style>
 
    <!--Vite -->
-   @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/css/custom.css', 'resources/css/mobile.css'])
+        @vite(['resources/css/app.css', 'resources/js/app.js','resources/css/custom.css','resources/css/mobile.css','resources/css/darkmode.css'])
 </head>
 
 <body class="sidebar-mini layout-fixed bodyIndex">
@@ -81,6 +81,18 @@
       // Mostrar el cuerpo del documento después de cargar todo
       window.addEventListener("load", function() {
          document.body.classList.add("show");
+      });
+
+      // Función para mostrar el toast
+      window.addEventListener('DOMContentLoaded', function () {
+         const title = sessionStorage.getItem('toastTitle');
+         const type = sessionStorage.getItem('toastType');
+
+         if (title && type) {
+               mostrarToast(title, type); 
+               sessionStorage.removeItem('toastTitle');
+               sessionStorage.removeItem('toastType');
+         }
       });
 
       //dark mode toggle 
