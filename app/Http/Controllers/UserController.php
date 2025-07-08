@@ -28,7 +28,7 @@ class UserController extends Controller
 
         if($id == $usuarioAuth->IdUsuario){
              return response()->json([
-                'message' => 'No se puede cambiar el estado asi mismo',
+                'message' => 'No puede cambiar a estado INACTIVO a su propio registro',
                 'type' => 'warning'
             ]);
         }
@@ -71,7 +71,6 @@ class UserController extends Controller
     }
 
     public function cargarDatos(Request $request){
-        $start = microtime(true); // inicio
 
         try{
             // 1. Obtener documentos válidos desde Oracle (solo empleados activos) y se cachean por 5 minutos
@@ -134,11 +133,6 @@ class UserController extends Controller
                     ];
                 });
             
-            $end = microtime(true); // fin
-            $duration = round(($end - $start) * 1000, 2); // en ms
-
-            Log::info("Tiempo total cargarDatos(): {$duration} ms");
-
             return response()->json([
                 'total' => $total,
                 'rows' => $rows
