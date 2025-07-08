@@ -3,7 +3,7 @@
 @section('title', 'Tracking Resultado') 
 
 @section('content')
-<div class="container mt-5">
+<div class="container-fluid container mt-5">
     <div class="card mb-5">
         <div class="card-body">
             <a style="width: 200px;" class="btn btn-danger fw-bold ms-4" href="{{ route('trackingRemesas.index') }}">Nueva consulta</a>

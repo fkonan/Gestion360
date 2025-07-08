@@ -5,8 +5,8 @@
 @section('content')
 <div class="container-fluid mt-5">
     <div class="row text-center">
-         <div class="text-start" style="margin-left: 20%;">
-            <a class="btn fw-bold my-2 text-light" style="background-color: #0E2146;" href="{{ route('index') }}">
+         <div class="text-start" style="padding-left: 20%;">
+            <a class="btn fw-bold my-2 text-light border" style="background-color: #0E2146;" href="{{ route('index') }}">
                 <i class="fa fa-arrow-left me-2"></i> 
             </a>
         </div>
@@ -14,7 +14,7 @@
         <div class="col-xs-10 col-sm-10 col-md-6 col-lg-6 col-xl-4 col-xxl-4 text-center">
             
             <img src="{{ asset('img/CopeCan-R.png') }}" alt="CopeCan-R">
-            <h4 style="color:#0E2146;" class="title">Consulta la ubicación de tu envío</h4>
+            <h4 class="title">Consulta la ubicación de tu envío</h4>
             <form action="{{  route('trackingRemesas.consultar')  }}" method="POST">
                 @csrf   
                 <div class="input-group border rounded border-primary">
