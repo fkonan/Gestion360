@@ -141,10 +141,10 @@ class RolController extends Controller
     public function updateRolUsuario(Request $request, $id){
         $usuarioAuth = Auth::user();
 
-        /* if($id == $usuarioAuth->IdUsuario){
+        if($id == $usuarioAuth->IdUsuario){
             return toastModal("No puedes cambiar tus propios roles", "warning");
         }
- */
+
         try{
             $usuario = User::findOrFail($id);
             $usuario->syncRoles($request->roles);

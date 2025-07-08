@@ -23,7 +23,18 @@ class PersonaController extends Controller
 
     public function cambiarEstado($id){
         try{
+            //Validar que no se cambie a estado inactivo asi mismo
             $persona = Persona::findOrFail($id);
+            $personaLogeada = Auth::user();
+
+            if($persona->IdPersona == $personaLogeada->persona->IdPersona){
+                return response()->json([
+                    'message' => 'No puede cambiar a estado INACTIVO a su propio registro',
+                    'type' => 'warning'
+                ]);               
+            } 
+            
+            // Cambiar el estado de la persona
             $persona->PerEstado = $persona->PerEstado === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO';
             $persona->save();
             return response()->json([
