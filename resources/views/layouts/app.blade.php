@@ -12,7 +12,7 @@
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" />
    </noscript>
 
-   <script>
+   <!-- <script>
       // Dark Mode Toggle
       document.addEventListener("DOMContentLoaded", () => {
          themeManager.initTheme();
@@ -27,7 +27,7 @@
          }
       });
    </script>
-
+ -->
    <link rel="icon" href="{{ asset('favicon.png') }}" type="image/png" />
 
    <!-- CAPCHA js de paquete: anhskohbo/no-captcha-->

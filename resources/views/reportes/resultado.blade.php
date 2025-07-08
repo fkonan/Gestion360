@@ -41,9 +41,9 @@
         const correoInput = document.getElementById('correoDestino');
         const enviarBtn = document.getElementById('enviarCorreo');
 
-        correoInput.addEventListener('input', function() {
+        /* correoInput.addEventListener('input', function() {
             enviarBtn.disabled = !correoInput.value || !correoInput.checkValidity();
-        });
+        }); */
     </script>
 </div>
 
