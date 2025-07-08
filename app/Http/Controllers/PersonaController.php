@@ -7,6 +7,7 @@ use App\Models\GESTIONADMIN\Persona;
 use App\Models\GESTIONADMIN\PersonaDatos;
 use App\Models\GESTIONADMIN\TipoDocumento;
 use Exception;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -39,25 +40,36 @@ class PersonaController extends Controller
     } 
 
     public function cargarDatos(Request $request){
-        try{
-             //paginacion
-            $limit = $request->get('limit', 25); // Número de registros por página
-            $offset = $request->get('offset', 0); // Desde qué registro empezar
-            $search = $request->get('search');
+        try {
+            // 1. Obtener documentos válidos desde Oracle (solo empleados activos) y se cachean por 5 minutos
+            $documentosEmpleados = Cache::remember('empleados_oracle', 300, function () {
+                return DB::connection('oracle')
+                    ->table('PER_CONTRATO_PERSONA')
+                    ->where('estado', 1)
+                    ->where('estborrado', 0)
+                    ->pluck('identificacion')
+                    ->toArray();
+            });
 
+            // 2. Paginación y parámetros
+            $limit = $request->get('limit', 25);
+            $offset = $request->get('offset', 0);
+            $search = $request->get('search');
             $order = $request->get('order', 'desc');
             $sort = $request->get('sort');
 
-            $personas = Persona::with(['municipioNac.departamento', 'datos']);
+            // 3. Consulta con relaciones y filtro por documentos válidos
+            $personas = Persona::with(['municipioNac.departamento', 'datos'])
+                ->whereIn('PerNumDoc', $documentosEmpleados); 
 
-            // Validar campo de ordenamiento
+            // 4. Ordenamiento
             if ($sort === 'PerFechaHoraReg') {
                 $personas = $personas
                     ->orderBy('PerFechReg', $order)
                     ->orderBy('PerHorReg', $order);
-            } 
+            }
 
-            //buscador
+            // 5. Buscador
             if (!empty($search)) {
                 $personas->where(function ($q) use ($search) {
                     $q->where('PerFechReg', 'like', "%$search%")
@@ -73,29 +85,28 @@ class PersonaController extends Controller
                 });
             }
 
-            //datos de la pagina 
+            // 6. Total y paginación
             $total = $personas->count();
             $rows = $personas
                 ->skip($offset)
                 ->take($limit)
                 ->get()
                 ->map(function ($item) {
-                return [
-                    'PerNumDoc' => $item->PerNumDoc,
-                    'PerEmail' => $item->datos->PerEmail ?? '',
-                    'nombreCompleto' => $item->PerNombres . ' ' . $item->PerApellidos,
-                    'PerTelefono' => $item->datos->PerTelefono ?? '',
-                    'PerEstado' => $item->PerEstado,
-                    'PerFechaHoraReg' => $item->PerFechReg . ' ' . $item->PerHorReg,
-                    'IdPersona' => $item->IdPersona,
-                ];
-            });
+                    return [
+                        'PerNumDoc' => $item->PerNumDoc,
+                        'PerEmail' => $item->datos->PerEmail ?? '',
+                        'nombreCompleto' => $item->PerNombres . ' ' . $item->PerApellidos,
+                        'PerTelefono' => $item->datos->PerTelefono ?? '',
+                        'PerEstado' => $item->PerEstado,
+                        'PerFechaHoraReg' => $item->PerFechReg . ' ' . $item->PerHorReg,
+                        'IdPersona' => $item->IdPersona,
+                    ];
+                });
 
             return response()->json([
-            'total' => $total,
-            'rows' => $rows
-        ]);
-
+                'total' => $total,
+                'rows' => $rows
+            ]);
         }catch(Exception $e){
             Log::error('Error al cargar los datos de las personas: ' . $e->getMessage());
         }
