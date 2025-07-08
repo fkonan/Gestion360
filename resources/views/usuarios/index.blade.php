@@ -41,6 +41,7 @@
                 <tr>
                     <th data-field="PerNumDoc" data-visible="true">Identificación</th>
                     <th data-field="nombreCompleto">Nombre y apellidos</th>
+                    <th data-field="centroCosto">Centro costo</th>
                     <th class="text-center" data-field="fechaHoraRegistro" data-sortable="true">Fecha registro</th>
                     <th data-field="rol">Rol</th>
                     @permite('administracion.usuarios.actualizar')

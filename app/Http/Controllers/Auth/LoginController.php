@@ -9,6 +9,7 @@ use App\Models\GESTIONADMIN\Sesion;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 
@@ -40,6 +41,18 @@ class LoginController extends Controller
 
             if (!$user || !password_verify($request->password, $user->Password)) {
                 return back()->withInput()->withErrors(['identificacion' => 'Identificación o contraseña incorrectos']);
+            }
+
+            //Validar si es empleado activo en Oracle
+            $esEmpleado = DB::connection('oracle')
+                ->table('PER_CONTRATO_PERSONA')
+                ->where('identificacion', $request->identificacion)
+                ->where('estado', 1)
+                ->where('estborrado', 0)
+                ->exists();
+
+            if (!$esEmpleado) {
+                return toast('Solo los empleados activos pueden iniciar sesión.', 'danger');
             }
 
             if($user->persona->PerEstado == "INACTIVO"){
