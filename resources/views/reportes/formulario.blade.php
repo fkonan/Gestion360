@@ -26,6 +26,7 @@
             <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Cancelar</button>
         </div>
 
+        <!-- Resultado del reporte por peticion AJAX -->
         <div id="innerHtml"></div>
     </div>
 </form>

@@ -19,7 +19,7 @@
         <tbody>
             @foreach($incapacidadDocumentos as $documento)
             <tr class="align-middle">
-                <td class="align-middle">{{ $documento->Radicado ?? 1 }}</td>
+                <td class="align-middle">{{ $documento->IncapacidadId ?? 1 }}</td>
                 <td class="align-middle">{{ $documento->tipoDocumento->ParNom }}</td>
                 <td class="align-middle">{{ $documento->DocFecReg }}</td>
                 <td class="text-center align-middle">
