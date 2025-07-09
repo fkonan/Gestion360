@@ -4,7 +4,7 @@ import laravel from 'laravel-vite-plugin';
 export default defineConfig({
 
    /* base: '/gestion/autogestion2/public/build/',  */
-   base: '/gestion/public/build/',
+    base: '/gestion/public/build/', 
 
     plugins: [
         laravel({

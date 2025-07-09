@@ -32,9 +32,9 @@
                             <tr>
                                 <td>{{ $remesa->remesa ? $remesa->remesa : $remesa->descripcion}}</td>
                                 <td>{{ $remesa->nombreorigen }}</td>
-                                <td>{{ strtoupper(\Carbon\Carbon::parse($remesa->fecelabora)->format('d-M-y')) }}</td>
+                                <td>{{ strtoupper(\Carbon\Carbon::parse($remesa->fecelabora)->locale('es')->isoFormat('DD-MMM-YY')) }}</td>
                                 <td>{{ $remesa->nombredestino }}</td>
-                                <td>{{ $remesa->feccumple ? strtoupper(\Carbon\Carbon::parse($remesa->feccumple)->format('d-M-y')) : '' }}</td>
+                                <td>{{ $remesa->feccumple ? strtoupper(\Carbon\Carbon::parse($remesa->feccumple)->locale('es')->isoFormat('DD-MMM-YY')) : '' }}</td>
                                 <td>{{ $remesa->feccumple ?  "BODEGA-TERMINAL EN " . $remesa->nombredestino : "EN TRANSITO"}}</td>
                                 <td>{{ $remesa->descripcion }}</td>
                             </tr>
