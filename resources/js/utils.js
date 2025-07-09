@@ -182,6 +182,7 @@ export function mostrarToast(message, type = 'primary') {
         info: 'bi-info-circle-fill text-info',
         primary: 'bi-bell-fill text-primary'
     };
+
     const icon = icons[type] || icons.primary;
 
     // Crear el contenido del toast
@@ -242,5 +243,3 @@ export function darkModeEnable(){
         document.cookie = "darkMode=" + (enabled ? 'enabled' : 'disabled') + "; path=/";
     });
 }
-
-//fabian

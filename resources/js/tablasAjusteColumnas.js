@@ -141,7 +141,7 @@ export function generarDetalle(selector, row, opcionesFormatter = {}) {
 1. Id de la tabla
 2. Columnas que seran visibles siempre
 3. Nombre del campo formatter donde se mostrata el detalle
-4. Columnas que vienen calculdas o modificadas con algun formatter */
+4. Columnas que vienen calculadas o modificadas con algun formatter */
 export function initTablaBootstrapTable(selector, opciones = {}, nombreFormatterGlobal, formattersDetalle = {}) {
     initColumnaAjuste(selector, opciones);
     window[nombreFormatterGlobal] = (index, row) => generarDetalle(selector, row, formattersDetalle);

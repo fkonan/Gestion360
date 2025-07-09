@@ -70,7 +70,7 @@ function cargarModal(url, titulo = "", formularioId = null, size = null, type = 
         })
         .fail((textStatus, errorThrown) => {
             console.error("Error al cargar el contenido:", textStatus, errorThrown);
-            alert("Error al cargar el contenido.");
+            mostrarToast("Error al cargar el contenido", "error")
         });
 
     // Resetear el estado del modal cuando se cierra
@@ -79,7 +79,6 @@ function cargarModal(url, titulo = "", formularioId = null, size = null, type = 
         $modalContent.removeData("loaded");
     });
 }
-
 
 function bootstrapDualListInit(id, nombre) {
     $(id).bootstrapDualListbox({
@@ -122,18 +121,20 @@ function validarFormulario(form, TYPE="POST") {
                 contentType: false,
                 dataType: "json",
                 success: function (response) {
-                    habilitarSubmit(form); 
-
+                    //caso 1: Se retorne un html -> se carga el html en la misma vista
                     if (response.success && response.html) {
                         $("#innerHtml").html(response.html); 
+
+                    //caso 2: No se retorne un redirect -> se queda en la misma vista y se muestra un toast con los datos  
                     }else if(response.redirect == '#'){
                         mostrarToast(response.title, response.type);
+
+                    //casi 3: Se retorna un redirect -> se redirige y al recargar se carga un toast con los datos en session
                     } else {
                         sessionStorage.setItem('toastTitle', response.title);
                         sessionStorage.setItem('toastType', response.type);
                         window.location.href = response.redirect;
                     }
-
                     habilitarSubmit(form); 
                 },
 
@@ -158,7 +159,6 @@ function validarFormulario(form, TYPE="POST") {
         $("#error-" + $(this).attr("id")).text("");
     });
 }
-
 
 window.cargarModal = cargarModal;
 window.validarFormulario = validarFormulario;

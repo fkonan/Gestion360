@@ -14,7 +14,7 @@ class Sesion extends Model
     protected $primaryKey = "IdSesion"; 
     public $timestamps = false;
     
-    protected $fillable = ['IdUser', 'IdUser', 'SesionFechReg', 'SesionHorReg', 'SesionTipo'];
+    protected $fillable = ['IdUser', 'SesionFechReg', 'SesionHorReg', 'SesionTipo'];
 
     public function user():BelongsTo{
         return $this->BelongsTo(User::class,'IdUser','IdUsuario'); 
