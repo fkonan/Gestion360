@@ -90,14 +90,14 @@ class ReportesController extends Controller
                 'icono' => 'fa-solid fa-ticket-alt'
             ],
         ];
-        return view('reportes.main',compact('reportes'));
+        return view('reportes.index',compact('reportes'));
     }
 
     public function reportesConductores(){
-        return view("reportes.conductores.main");
+        return view("reportes.conductores.index");
     }
 
     public function reportesPasajes(){
-        return view("reportes.pasajes.main");
+        return view("reportes.pasajes.index");
     }
 }

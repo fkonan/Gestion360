@@ -14,7 +14,7 @@ class ModuloController extends Controller
 {
     public function index(){
         $modulos = Modulo::all();
-        return view('modulos.listaModulos', compact('modulos'));
+        return view('modulos.index', compact('modulos'));
     }
 
     public function cargarDatos(){

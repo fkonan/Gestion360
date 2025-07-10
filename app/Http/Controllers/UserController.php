@@ -6,6 +6,7 @@ use App\Mail\CorreoCredenciales;
 use App\Models\GESTIONADMIN\Persona;
 use App\Models\User;
 use Exception;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -19,7 +20,7 @@ use Spatie\Permission\Models\Role;
 class UserController extends Controller
 {
     public function index(){
-        return view("usuarios.listaUsuarios");
+        return view("usuarios.index");
     }
 
     public function cambiarEstado($id){
@@ -27,7 +28,7 @@ class UserController extends Controller
 
         if($id == $usuarioAuth->IdUsuario){
              return response()->json([
-                'message' => 'No se puede cambiar el estado asi mismo',
+                'message' => 'No puede cambiar a estado INACTIVO a su propio registro',
                 'type' => 'warning'
             ]);
         }
@@ -50,50 +51,95 @@ class UserController extends Controller
         }
     }
 
+    function obtenerCentroCosto($identificacion)
+    {
+        return DB::connection('oracle')
+            ->table('per_contrato_persona as cp')
+            ->join('per_empresapersonas as ep', 'cp.pe_id_pe', '=', 'ep.pe_id_pe')
+            ->join('per_cargoccostos as cc', 'ep.cc_id', '=', 'cc.id')
+            ->join('per_centrocostos as ct', 'cc.ct_codigo', '=', 'ct.codigo')
+            ->where('cp.identificacion', $identificacion)
+            ->where('ep.activo', 1)
+            ->where('ep.estborrado', 0)
+            ->where('cc.activo', 1)
+            ->where('cc.estborrado', 0)
+            ->where('ct.estado', 1)
+            ->where('ct.estborrado', 0)
+            ->select('ct.descripcion')
+            ->limit(1)
+            ->value('descripcion'); 
+    }
+
     public function cargarDatos(Request $request){
-        //paginacion
-        $limit = $request->get('limit', 25); // Número de registros por página
-        $offset = $request->get('offset', 0); // Desde qué registro empezar
-        $search = $request->get('search');
-        $sort = $request->get('sort', 'UsuFecReg');
-        $order = $request->get('order', 'desc');
 
-        $usuarios = User::with(['persona','roles']);
+        try{
+            // 1. Obtener documentos válidos desde Oracle (solo empleados activos) y se cachean por 5 minutos
+            $documentosEmpleados = Cache::remember('empleados_oracle', 300, function () {
+                return DB::connection('oracle')
+                    ->table('PER_CONTRATO_PERSONA')
+                    ->where('estado', 1)
+                    ->where('estborrado', 0)
+                    ->pluck('identificacion')
+                    ->toArray();
+            });
 
-        //buscador
-        if (!empty($search)) {
-            $usuarios->where(function ($q) use ($search) {
-            $q->where('UsuFecReg', 'like', "%$search%")
-            ->orWhere('UsuHorReg', 'like', "%$search%")
-            ->orWhereHas('persona', function ($q2) use ($search) {
-                $q2->where('PerApellidos', 'like', "%$search%")
-                    ->orWhere('PerNombres', 'like', "%$search%")
-                    ->orWhere('PerNumDoc', 'like', "%$search%");
-            });
-            });
+            // 2. Paginación y parámetros
+            $limit = $request->get('limit', 25);
+            $offset = $request->get('offset', 0);
+            $search = $request->get('search');
+            $order = $request->get('order', 'desc');
+            $sort = $request->get('sort');
+
+            // 3. Consulta con relaciones y filtro por documentos válidos
+            $usuarios = User::with(['persona', 'roles'])
+                ->whereHas('persona', function ($q) use ($documentosEmpleados) {
+                    $q->whereIn('PerNumDoc', $documentosEmpleados);
+                });
+
+            // 4. Ordenamiento
+            if ($sort === 'fechaHoraRegistro') {
+                $usuarios = $usuarios
+                    ->orderBy('UsuFecReg', $order)
+                    ->orderBy('UsuHorReg', $order);
+            }
+
+            // 5. Buscador
+            if (!empty($search)) {
+                $usuarios->where(function ($q) use ($search) {
+                    $q->where('UsuFecReg', 'like', "%$search%")
+                        ->orWhere('UsuHorReg', 'like', "%$search%")
+                        ->orWhereHas('persona', function ($q2) use ($search) {
+                            $q2->where('PerNumDoc', 'like', "%$search%")
+                                ->orWhere(DB::raw("CONCAT(PerNombres, ' ', PerApellidos)"), 'like', "%$search%");
+                        });
+                });
+            }
+
+            // 6. Total y paginación
+            $total = $usuarios->count();
+            $rows = $usuarios
+                ->skip($offset)
+                ->take($limit)
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'PerNumDoc' => $item->persona->PerNumDoc,
+                        'nombreCompleto' => $item->persona->PerNombres . ' ' . $item->persona->PerApellidos,
+                        'fechaHoraRegistro' => $item->UsuFecReg . ' ' . $item->UsuHorReg,
+                        'estado' => $item->UsuarioEstado,
+                        'IdUsuario' => $item->IdUsuario,
+                        'rol' => $item->roles->pluck('name')->first() ?: 'SIN ROL',
+                        'centroCosto' => $this->obtenerCentroCosto($item->persona->PerNumDoc),
+                    ];
+                });
+            
+            return response()->json([
+                'total' => $total,
+                'rows' => $rows
+            ]);
+        }catch(Exception $e){
+            Log::error('Error al cargar los datos de los usuarios: ' . $e->getMessage());
         }
-
-        //datos de la pagina 
-        $total = $usuarios->count();
-        $rows = $usuarios->orderBy($sort, $order)
-            ->skip($offset)
-            ->take($limit)
-            ->get()
-            ->map(function ($item) {
-                return [
-                    'PerNumDoc' => $item->persona->PerNumDoc,
-                    'nombreCompleto' => $item->persona->PerNombres . ' ' . $item->persona->PerApellidos,
-                    'fechaHoraRegistro' => $item->UsuFecReg . ' ' . $item->UsuHorReg,
-                    'estado' => $item->UsuarioEstado,
-                    'IdUsuario' => $item->IdUsuario,
-                    'rol' => $item->roles->pluck('name')->first() ?: 'SIN ROL',
-                ];
-            });
-
-        return response()->json([
-         'total' => $total,
-         'rows' => $rows
-          ]);
     }
 
     public function create(){
@@ -135,7 +181,7 @@ class UserController extends Controller
             $user->syncRoles($request->rol);
 
             $datos = [
-                'usuario' => $user->persona->datos->PerEmail,
+                'usuario' => $user->persona->PerNumDoc,
                 'contraseña' => $contraseñaPlana,
             ];
 

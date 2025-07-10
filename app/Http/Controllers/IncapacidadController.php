@@ -28,7 +28,7 @@ class IncapacidadController extends Controller
 
 
         }
-        return view("incapacidades.listaIncapacidades");
+        return view("incapacidades.index");
     }
 
     public function cargarDatos(){

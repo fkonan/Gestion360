@@ -84,8 +84,9 @@
             <div class="col-md-12">
                 @permite('administracion.personas.actualizar')
                      <a class="text-decoration-none" href="${rutaPersona}"
+                        style="cursor: pointer;"
                         title="Editar persona">
-                        <img src="https://autogestion.copetran.com.co/gestion_2/aFrame/library/bower_components/Ionicons/png/512/new_editar.png" alt="Editar" style="width: 30px; height: 30px;">
+                        <img src="{{ asset('img/edit.png') }}" alt="Editar Persona" style="width: 32px; height: 32px;">
                     </a>
                 @endpermite
             </div>

@@ -14,6 +14,7 @@ use App\Http\Controllers\RolController;
 use App\Http\Controllers\SeguimientoIncapacidadController;
 use App\Http\Controllers\SubModuloController;
 use App\Http\Controllers\TiquetesImpresosController;
+use App\Http\Controllers\TrackingRemesas;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
@@ -61,14 +62,14 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:administracion.ac
         Route::put("/{id}/permisos",[PermisosController::class,"update"])->name("permisos.update");
         Route::post("/{id}/cambiar-estado", [UserController::class, "cambiarEstado"])->middleware('soloAJAX')->name("usuarios.cambiarEstado");
     });
-    Route::prefix("reportes")->middleware(['submodulo.activo:22'])->group(function(){
+    Route::prefix("reportes")->middleware(['permisos:administracion.reportes.acceder','submodulo.activo:22'])->group(function(){
         
         Route::get("/",[ReportesController::class,"getReportes"])->name("reportes.index");
         Route::post("/{id}/data", [ReportesController::class, 'obtenerReporte'])->name('reportes.get'); //Esta ruta es para obtener un reporte especifico
         Route::get("/{id}/formulario", [ReportesController::class, 'mostrarFormulario'])->name('reportes.formulario');
 
         //Reportes Conductores
-        Route::prefix("conductores")->group(function(){
+        Route::prefix("conductores")->middleware(['permisos:administracion.reportes.reportes_conductores'])->group(function(){
             Route::get("/",[ReportesController::class,"reportesConductores"])->name("reportes.conductores");
 
             //Actualizacion estado conductor FICS
@@ -92,7 +93,7 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:administracion.ac
             Route::get("/formIngSalConductores/cargarData",[ConductorController::class,"cargarDataIngSalConductores"])->name("ingresoSalida.cargarData");
         });
 
-        Route::prefix("pasajes")->group(function(){
+        Route::prefix("pasajes")->middleware(['permisos:administracion.reportes.reportes_pasajes'])->group(function(){
             //Reportes Pasajes
             Route::get("/",[ReportesController::class,"reportesPasajes"])->name("reportes.pasajes");
 
@@ -185,5 +186,12 @@ Route::get('/forgot-password', [ForgotPasswordController::class, 'showForm'])->n
 Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink'])->name('password.email');
 Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
 Route::post('/reset-password', [ResetPasswordController::class, 'resetPassword'])->name('password.update');
+
+//Tracking remesas
+Route::get('/tracking-remesas', function () {
+    return view('remesas.trackingRemesas');
+})->name('trackingRemesas.index');
+
+Route::post('/tracking-remesas/consultar', [TrackingRemesas::class, 'consultar'])->name('trackingRemesas.consultar');
 
 require __DIR__.'/auth.php';

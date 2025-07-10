@@ -149,6 +149,11 @@ body.dark-mode .detail-view div{
 }
 
 /* Bootstrap table */
+body.dark-mode .table-primary {
+    --bs-table-bg: var(--bs-table-color) !important;
+    --bs-table-color: var(--darkmode-bg-main) !important; 
+}
+
 body.dark-mode .bootstrap-table .detail{
     background-color: var(--darkmode-bg-main) !important;
 }

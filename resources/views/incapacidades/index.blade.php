@@ -80,17 +80,20 @@
                 <div class="d-flex flex-wrap gap-3 justify-content-center">
                     <a class="text-decoration-none" 
                         title="Ver adjuntos"
+                        style="cursor: pointer;"
                         onclick="cargarModal('${urlAdjuntos}', 'Documentos Incapacidad', '', 'modal-lg')">     
                         <img src="https://autogestion.copetran.com.co/gestion_2/aFrame/library/bower_components/Ionicons/png/512/carpetas.png" alt="Ver Adjuntos" style="width: 32px; height: 32px;">
                     </a>
                     <a class="text-decoration-none" 
                         title="Editar incapacidad"
+                        style="cursor: pointer;"
                         onclick="cargarModal('${urlDatos}', 'Revisión datos incapacidad', '#formIncapacidad', 'modal-xl')">
-                        <img src="https://autogestion.copetran.com.co/gestion_2/aFrame/library/bower_components/Ionicons/png/512/new_editar.png" alt="Revisión datos" style="width: 32px; height: 32px;">
+                        <img src="{{ asset('img/edit.png') }}" alt="Editar Incapacidad" style="width: 32px; height: 32px;">
                     </a>
                     ${row.RevisionDatos == 1 ? `
                     <a class="text-decoration-none" 
                         title="Gestionar el radicado"
+                        style="cursor: pointer;"
                         onclick="cargarModal('${urlGestion}', 'Gestion Incapacidad', '#formGestionIncapacidad', 'modal-lg')">
                         <img src="https://autogestion.copetran.com.co/gestion_2/aFrame/library/bower_components/Ionicons/png/512/aprobarrechazar.png" alt="AprobarRechazar" style="width: 32px; height: 32px;">
                     </a>` : ''}

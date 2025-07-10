@@ -331,7 +331,7 @@
  }
 
 .table-primary {
-    --bs-table-bg: var(--bs-primary);
+    --bs-table-bg: var(--bs-secondary);
     --bs-table-color: #f7f7f7;
   }
 

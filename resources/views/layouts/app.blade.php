@@ -12,7 +12,7 @@
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" />
    </noscript>
 
-   <script>
+   <!-- <script>
       // Dark Mode Toggle
       document.addEventListener("DOMContentLoaded", () => {
          themeManager.initTheme();
@@ -27,7 +27,7 @@
          }
       });
    </script>
-
+ -->
    <link rel="icon" href="{{ asset('favicon.png') }}" type="image/png" />
 
    <!-- CAPCHA js de paquete: anhskohbo/no-captcha-->
@@ -49,7 +49,7 @@
    </style>
 
    <!--Vite -->
-   @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/css/custom.css', 'resources/css/mobile.css'])
+        @vite(['resources/css/app.css', 'resources/js/app.js','resources/css/custom.css','resources/css/mobile.css','resources/css/darkmode.css'])
 </head>
 
 <body class="sidebar-mini layout-fixed bodyIndex">
@@ -68,9 +68,9 @@
          </a>
 
          {{-- Icono cambiar theme --}}
-         <button class="btn rounded-circle me-3" title="Cambiar modo oscuro" style="width: 50px" data-theme-toggle>
-            <i class="light-icon"></i>
-         </button>
+         <div style="width: 1.5em; display: flex; align-items: center; justify-content: flex-start;" class="me-3">
+            <i id="toggleDarkMode" class="bi bi-sun text-light" style="cursor: pointer;"></i>
+         </div>
       </section>
       <div style="height: 60px"></div>
 
@@ -82,6 +82,24 @@
       window.addEventListener("load", function() {
          document.body.classList.add("show");
       });
+
+      // Función para mostrar el toast
+      window.addEventListener('DOMContentLoaded', function () {
+         const title = sessionStorage.getItem('toastTitle');
+         const type = sessionStorage.getItem('toastType');
+
+         if (title && type) {
+               mostrarToast(title, type); 
+               sessionStorage.removeItem('toastTitle');
+               sessionStorage.removeItem('toastType');
+         }
+      });
+
+      //dark mode toggle 
+      document.addEventListener('DOMContentLoaded', () => {
+         darkModeEnable()
+      });    
+
    </script>
 
    <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js" defer></script>
