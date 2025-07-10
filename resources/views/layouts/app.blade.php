@@ -56,9 +56,9 @@
    <div class="wrapper">
       <!-- Pantalla de carga -->
       <div class="preloader flex-column justify-content-center align-items-center">
-         <div class="spinner-border text-primary mt-2" role="status"></div>
+         <div class="spinner-border text-secondary mt-2" role="status"></div>
          <p class="mt-1 fw-medium text-muted">Cargando...</p>
-      </div>
+     </div>
 
       <section class="content-header mb-4 p-2 d-flex justify-content-between align-items-center sticky-top"
          style=" min-height: 60px; background-color: #0e2146; top: 0; left: 0; width: 100%; z-index: 1000; ">

@@ -246,6 +246,14 @@ export function darkModeEnable(){
 
     darkModeToggle?.addEventListener('click', () => {
         body.classList.toggle('dark-mode');
+        const icono=document.getElementById("toggleDarkMode");
+        const isDarkMode=localStorage.getItem("darkMode");
+
+        icono.className =
+           isDarkMode == "disabled"
+              ? "dark-icon text-dark"
+              : "light-icon text-dark";
+
         const enabled = body.classList.contains('dark-mode');
         localStorage.setItem('darkMode', enabled ? 'enabled' : 'disabled');
 
@@ -254,4 +262,83 @@ export function darkModeEnable(){
     });
 }
 
-//fabian
+
+export function createThemeManager() {
+   const getStoredTheme = () => localStorage.getItem("theme");
+   const setStoredTheme = (theme) => localStorage.setItem("theme", theme);
+
+   const getDefaultTheme = () => {
+      const storedTheme = getStoredTheme();
+      if (storedTheme) {
+         return storedTheme;
+      }
+      return window.matchMedia("(prefers-color-scheme: dark)").matches
+         ? "dark"
+         : "light";
+   };
+
+   const setTheme = (theme) => {
+      setStoredTheme(theme);
+      document.documentElement.setAttribute("data-bs-theme", theme);
+      document.body.setAttribute("data-bs-theme", theme);
+
+      // Opcional: agregar clase al body para estilos adicionales
+      // if (theme === "dark") {
+      //     document.body.classList.add("dark-theme");
+      //     document.body.classList.remove("light-theme");
+      // } else {
+      //     document.body.classList.add("light-theme");
+      //     document.body.classList.remove("dark-theme");
+      // }
+
+      // Actualizar iconos de toggle si existen
+      updateThemeToggleIcon(theme);
+   };
+
+   const toggleTheme = () => {
+      const currentTheme = getStoredTheme() || getDefaultTheme();
+      const newTheme = currentTheme === "dark" ? "light" : "dark";
+      setTheme(newTheme);
+      return newTheme;
+   };
+
+   const initTheme = () => {
+      const theme = getStoredTheme() || getDefaultTheme();
+      setTheme(theme);
+      return theme;
+   };
+
+   const updateThemeToggleIcon = (theme) => {
+      const toggleButton = document.querySelector("[data-theme-toggle]");
+      if (toggleButton) {
+         const icon = toggleButton.querySelector("i");
+         if (icon) {
+            if (theme === "dark") {
+               icon.className = "light-icon";
+            } else {
+               icon.className = "dark-icon";
+            }
+         }
+      }
+   };
+
+   // Escuchar cambios en las preferencias del sistema
+   const setupSystemThemeListener = () => {
+      window
+         .matchMedia("(prefers-color-scheme: dark)")
+         .addEventListener("change", (e) => {
+            if (!getStoredTheme()) {
+               setTheme(e.matches ? "dark" : "light");
+            }
+         });
+   };
+
+   return {
+      initTheme,
+      setTheme,
+      toggleTheme,
+      getStoredTheme,
+      getDefaultTheme,
+      setupSystemThemeListener,
+   };
+}
