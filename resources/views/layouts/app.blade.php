@@ -72,9 +72,11 @@
             <i id="toggleDarkMode" class="bi bi-sun text-light" style="cursor: pointer;"></i>
          </div>
       </section>
-      <div style="height: 60px"></div>
+      
 
-      <section>@yield('content')</section>
+      <section class="mt-5">
+         @yield('content')
+      </section>
    </div>
 
    <script>

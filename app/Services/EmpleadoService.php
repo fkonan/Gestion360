@@ -34,6 +34,7 @@ class EmpleadoService
         });
     }
 
+    //lista de centros de costo para un grupo de identificaciones
     public static function obtenerCentrosCostoMasivos(array $identificaciones): array{
         return DB::connection('oracle')
             ->table('per_contrato_persona as cp')
