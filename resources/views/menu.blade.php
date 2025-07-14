@@ -12,16 +12,12 @@
       <li class="nav-item has-treeview">
          <a
             href="{{ $modulo->ModRuta && Route::has($modulo->ModRuta) ? route($modulo->ModRuta) : '#' }}"
-            class="nav-link module text-dark"
-            style="background-color: transparent"
+            class="nav-link module"
          >
-            <i
-               class="nav-icon fas {{ $modulo->ModIcono  }}"
-               style="color: rgba(75, 75, 76, 0.7); font-size: 16px"
-            ></i>
+            <i class="nav-icon fas {{ $modulo->ModIcono  }}"></i>
             <p class="fw-medium">{{ $modulo->ModNom }}</p>
             @if($modulo->submodulos->count())
-            <p><i class="right fas fa-angle-left"></i></p>
+            <i class="right fas fa-angle-left"></i>
             @endif
          </a>
          <!-- Submodulos -->
@@ -33,13 +29,10 @@
             auth()->user()->can($submodulo->ModPermiso))
             <li class="nav-item">
                <a
-                  class="nav-link submodule text-black"
+                  class="nav-link submodule"
                   href="{{ $submodulo->ModRuta && Route::has($submodulo->ModRuta) ? route($submodulo->ModRuta) : '#' }}"
                >
-                  <i
-                     class="nav-icon fas {{ $submodulo->ModIcono }} "
-                     style="color: rgba(75, 75, 76, 0.7); font-size: 16px"
-                  ></i>
+                  <i class="nav-icon fas {{ $submodulo->ModIcono }} "></i>
                   <p>{{ Str::title($submodulo->ModNom) }}</p>
                </a>
             </li>
@@ -51,8 +44,7 @@
 
       <li class="nav-item has-treeview">
          <a href="#" class="nav-link">
-            <i class="nav-icon fas fa-cloud"
-               style="color: rgba(75, 75, 76, 0.7); font-size: 16px"></i>
+            <i class="nav-icon fas fa-cloud"></i>
             <p>Sesión</p>
             <p><i class="right fas fa-angle-left"></i></p>
          </a>
@@ -64,7 +56,7 @@
                   class="nav-link logout-link bg-danger"
                >
                   <i class="fas fa-sign-out-alt"></i>
-                  <p class="text-light">Cerrar sesión</p>
+                  Cerrar sesión
                </a>
                <form
                   id="logoutForm"
