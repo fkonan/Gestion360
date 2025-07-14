@@ -2,18 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\CorreoCredenciales;
 use App\Models\GESTIONADMIN\Persona;
 use App\Models\User;
+use App\Services\EmpleadoService;
+use App\Services\UsuarioService;
 use Exception;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Models\Role;
 
@@ -24,24 +22,10 @@ class UserController extends Controller
     }
 
     public function cambiarEstado($id){
-        $usuarioAuth = Auth::user();
-
-        if($id == $usuarioAuth->IdUsuario){
-             return response()->json([
-                'message' => 'No puede cambiar a estado INACTIVO a su propio registro',
-                'type' => 'warning'
-            ]);
-        }
-
         try{
-            $usuario = User::findOrFail($id);
-            $usuario->UsuarioEstado = $usuario->UsuarioEstado === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO';
-            $usuario->save();
-            return response()->json([
-                'message' => 'Estado cambiado a ' . $usuario->UsuarioEstado,
-                'type' => 'success'
-            ]);
-           
+            $resultado = UsuarioService::cambiarEstado($id, Auth::id());
+            return response()->json($resultado);
+
         }catch(Exception $e){
             Log::error('Error al actualizar el estado del usuario: ' . $e->getMessage());
             return response()->json([
@@ -51,95 +35,80 @@ class UserController extends Controller
         }
     }
 
-    function obtenerCentroCosto($identificacion)
-    {
-        return DB::connection('oracle')
-            ->table('per_contrato_persona as cp')
-            ->join('per_empresapersonas as ep', 'cp.pe_id_pe', '=', 'ep.pe_id_pe')
-            ->join('per_cargoccostos as cc', 'ep.cc_id', '=', 'cc.id')
-            ->join('per_centrocostos as ct', 'cc.ct_codigo', '=', 'ct.codigo')
-            ->where('cp.identificacion', $identificacion)
-            ->where('ep.activo', 1)
-            ->where('ep.estborrado', 0)
-            ->where('cc.activo', 1)
-            ->where('cc.estborrado', 0)
-            ->where('ct.estado', 1)
-            ->where('ct.estborrado', 0)
-            ->select('ct.descripcion')
-            ->limit(1)
-            ->value('descripcion'); 
-    }
-
     public function cargarDatos(Request $request){
 
         try{
-            // 1. Obtener documentos válidos desde Oracle (solo empleados activos) y se cachean por 5 minutos
-            $documentosEmpleados = Cache::remember('empleados_oracle', 300, function () {
-                return DB::connection('oracle')
-                    ->table('PER_CONTRATO_PERSONA')
-                    ->where('estado', 1)
-                    ->where('estborrado', 0)
-                    ->pluck('identificacion')
-                    ->toArray();
-            });
-
-            // 2. Paginación y parámetros
+            //Paginacion y parametros de ordenamiento
             $limit = $request->get('limit', 25);
             $offset = $request->get('offset', 0);
             $search = $request->get('search');
             $order = $request->get('order', 'desc');
             $sort = $request->get('sort');
 
-            // 3. Consulta con relaciones y filtro por documentos válidos
-            $usuarios = User::with(['persona', 'roles'])
-                ->whereHas('persona', function ($q) use ($documentosEmpleados) {
-                    $q->whereIn('PerNumDoc', $documentosEmpleados);
-                });
+            //Traer documentos válidos desde Oracle (los empleados con estado 1 y estborrado 0)
+            $documentosEmpleados = EmpleadoService::documentosEmpleadosValidos();
+          
+            $query = $this->buildUsuariosQuery($documentosEmpleados, $search, $sort, $order);
+            $total = $query->count();
 
-            // 4. Ordenamiento
-            if ($sort === 'fechaHoraRegistro') {
-                $usuarios = $usuarios
-                    ->orderBy('UsuFecReg', $order)
-                    ->orderBy('UsuHorReg', $order);
-            }
-
-            // 5. Buscador
-            if (!empty($search)) {
-                $usuarios->where(function ($q) use ($search) {
-                    $q->where('UsuFecReg', 'like', "%$search%")
-                        ->orWhere('UsuHorReg', 'like', "%$search%")
-                        ->orWhereHas('persona', function ($q2) use ($search) {
-                            $q2->where('PerNumDoc', 'like', "%$search%")
-                                ->orWhere(DB::raw("CONCAT(PerNombres, ' ', PerApellidos)"), 'like', "%$search%");
-                        });
-                });
-            }
-
-            // 6. Total y paginación
-            $total = $usuarios->count();
-            $rows = $usuarios
+            //Obtener solo los paginados
+            $usuariosPaginados = $query
                 ->skip($offset)
                 ->take($limit)
-                ->get()
-                ->map(function ($item) {
-                    return [
-                        'PerNumDoc' => $item->persona->PerNumDoc,
-                        'nombreCompleto' => $item->persona->PerNombres . ' ' . $item->persona->PerApellidos,
-                        'fechaHoraRegistro' => $item->UsuFecReg . ' ' . $item->UsuHorReg,
-                        'estado' => $item->UsuarioEstado,
-                        'IdUsuario' => $item->IdUsuario,
-                        'rol' => $item->roles->pluck('name')->first() ?: 'SIN ROL',
-                        'centroCosto' => $this->obtenerCentroCosto($item->persona->PerNumDoc),
-                    ];
-                });
-            
+                ->get();
+
+            //Solo traemos los centros de costo de esos usuarios visibles
+            $identificacionesPagina = $usuariosPaginados->pluck('persona.PerNumDoc')->toArray();
+            $centrosCosto = EmpleadoService::obtenerCentrosCostoMasivos($identificacionesPagina);
+    
+            //Formar los datos de la respuesta
+            $rows = $usuariosPaginados->map(function ($item) use ($centrosCosto) {
+                $doc = $item->persona->PerNumDoc;
+
+                return [
+                    'PerNumDoc' => $doc,
+                    'nombreCompleto' => $item->persona->PerNombres . ' ' . $item->persona->PerApellidos,
+                    'fechaHoraRegistro' => $item->UsuFecReg . ' ' . $item->UsuHorReg,
+                    'estado' => $item->UsuarioEstado,
+                    'IdUsuario' => $item->IdUsuario,
+                    'rol' => $item->roles->pluck('name')->first() ?: 'SIN ROL',
+                    'centroCosto' => $centrosCosto[$doc] ?? 'No asignado',
+                ];
+            });
+
             return response()->json([
                 'total' => $total,
                 'rows' => $rows
             ]);
-        }catch(Exception $e){
+
+        }
+       catch(Exception $e){
             Log::error('Error al cargar los datos de los usuarios: ' . $e->getMessage());
         }
+    }
+
+    private function buildUsuariosQuery(array $documentosEmpleados, ?string $search, ?string $sort, string $order)
+    {
+        $query = User::with(['persona', 'roles'])
+            ->whereHas('persona', fn($q) => $q->whereIn('PerNumDoc', $documentosEmpleados));
+
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('UsuFecReg', 'like', "%$search%")
+                    ->orWhere('UsuHorReg', 'like', "%$search%")
+                    ->orWhereHas('persona', function ($q2) use ($search) {
+                        $q2->where('PerNumDoc', 'like', "%$search%")
+                            ->orWhere(DB::raw("CONCAT(PerNombres, ' ', PerApellidos)"), 'like', "%$search%");
+                    });
+            });
+        }
+
+        if ($sort === 'fechaHoraRegistro') {
+            $query->orderBy('UsuFecReg', $order)
+                ->orderBy('UsuHorReg', $order);
+        }
+
+        return $query;
     }
 
     public function create(){
@@ -163,34 +132,13 @@ class UserController extends Controller
             ], 422);
         }
 
-        DB::beginTransaction();
         try{
-            $contraseñaPlana = Str::random(12);
-
-            $user = new User();
-            $user->idPersona = $request->idPersona;
-            $user->Password =  bcrypt($contraseñaPlana);
-            $user->UsuarioEstado = "ACTIVO";
-            $user->Verificado = "TRUE";
-            $user->UsuFecReg = now();
-            $user->UsuHorReg = now();
-            $user->UsuReg = "Gestion";
-            $user->save();
-
-            //se asigna el rol 
-            $user->syncRoles($request->rol);
-
-            $datos = [
-                'usuario' => $user->persona->PerNumDoc,
-                'contraseña' => $contraseñaPlana,
-            ];
-
-            Mail::to($user->persona->datos->PerEmail)->send(new CorreoCredenciales($datos));
-            DB::commit();
+            $service = new UsuarioService();
+            $service->crearUsuarioConRol($request->only('idPersona', 'rol'));
+            
             return toastModal("Usuario creado exitosamente","success",route('usuarios.index'));
     
         }catch(Exception $e){
-            DB::rollBack();
             Log::error('Error al crear el usuario: ' . $e->getMessage());
             return toastModal("Error al crear el usuario","error",route('usuarios.index'));
         }
@@ -198,7 +146,7 @@ class UserController extends Controller
 
     public function edit($id){
         $usuario = User::findOrFail($id);
-        return view("usuarios.editarUsuario",compact("usuario"))->render();
+        return view("usuarios.editarUsuario",compact("usuario"));
     }
 
     public function update(Request $request, $id){

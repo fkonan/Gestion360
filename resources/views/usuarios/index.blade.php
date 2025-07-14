@@ -34,6 +34,8 @@
             data-responsive="true"
             data-check-on-init="true"
             data-detail-view="true"
+            data-sort-name='fechaHoraRegistro'
+            data-sort-order='desc'
             data-detail-formatter="detalleUsuario"
             data-side-pagination="server"
             data-url="{{ route('usuarios.cargarDatos') }}">   
