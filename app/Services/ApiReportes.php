@@ -5,6 +5,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class ApiReportes
 {
@@ -26,6 +27,11 @@ class ApiReportes
 
         if ($response->successful()) {
             $token = $response->json()['token'];
+
+            if (!$token) {
+                Log::error('No se pudo obtener el token de ApiReportes');
+                return null;
+            }
 
             // Guarda el token en caché por 60 minutos
             Cache::put($this->tokenCacheKey, $token, now()->addMinutes(60));
