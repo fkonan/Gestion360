@@ -7,7 +7,7 @@
     <div class="row text-center">
          <div class="text-start" style="padding-left: 20%;">
             <a class="btn fw-bold my-2 text-light border" style="background-color: #0E2146;" href="{{ route('index') }}">
-                <i class="fa fa-arrow-left me-2"></i> 
+                <i class="fa fa-arrow-left me-2"></i>Regresar 
             </a>
         </div>
         <div class="col-xs-1 col-sm-1 col-md-3 col-lg-3 col-xl-4 col-xxl-4"></div>
