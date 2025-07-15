@@ -15,14 +15,14 @@
          <!-- Mensaje informativo sobre credenciales -->
          <div class="alert alert-info d-inline-block w-100 mt-2 mb-3 px-3 py-2" style="font-size: 0.98rem;">
             Puedes iniciar sesión usando las mismas credenciales que tienes en la aplicación móvil.
-            <div class="d-flex justify-content-center align-items-center gap-4 mt-2 mb-2">
-               <a href="https://play.google.com/store/apps/details?id=tu.app.android" target="_blank" title="Descargar para Android" class="app-download-link">
+          <!--   <div class="d-flex justify-content-center align-items-center gap-4 mt-2 mb-2">
+               <a href="https://play.google.com/store/apps/details?id=co.com.copetran" target="_blank" title="Descargar para Android" class="app-download-link">
                   <img src="{{ asset('img/playStore.png') }}" alt="Android" style="height:40px; transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
                </a>
-               <a href="https://apps.apple.com/app/idTU_APP_ID" target="_blank" title="Descargar para iOS" class="app-download-link">
+               <a href="https://apps.apple.com/app/id1769416503" target="_blank" title="Descargar para iOS" class="app-download-link">
                   <img src="{{ asset('img/appstore.png') }}" alt="iOS" style="height:40px; transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
                </a>
-            </div>
+            </div> -->
          </div>
         
          <div class="card p-1">
