@@ -109,7 +109,7 @@ class ConductorController extends Controller
     }
 
     public function listaFirmasEquipaje(){
-        return view('reportes.conductores.listaFirmasEquipaje');
+        return view('reportes.conductores.politicaEquipaje');
     }
 
     public function cargarDataFirmaEquipaje(){
