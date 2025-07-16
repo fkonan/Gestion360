@@ -172,73 +172,162 @@ class ConductorController extends Controller
         try{
             $fechaIni = Carbon::parse($request->fechaInicial)->format('Y/m/d');
             $fechaFin = Carbon::parse($request->fechaFinal)->format('Y/m/d');
+            $parametroInput = $request->parametroInput;
+            $filtro = $request->filtro;
 
-            $query = DB::connection('oracle')
-                ->table('LOGTRANSPRO.per_conductoreseventos as ce')
-                ->where('ce.EMPCREACION', '!=', 1124882226) //PROYECTO DRUMMOND - LA LOMA
-                ->leftJoin('logtranspro.per_personas as p', 'p.id', '=', 'ce.pe_id')
-                ->join('logtranspro.per_contrato_persona as pcp', 'pcp.pe_id_pe', '=', 'ce.pe_id')
-                ->leftJoin('logtranspro.per_empresapersonas as pep', function ($join) use ($fechaIni, $fechaFin) {
-                    $join->on('pep.PE_ID_PE', '=', 'ce.pe_id')
-                        ->where('pep.TP_ID', '=', 11)
-                        ->whereNotIn('pep.PE_ID_EMP', [6761])
-                        ->whereRaw("TRUNC(pep.FECINI) <= TRUNC(TO_DATE(?, 'YYYY/MM/DD'))", [$fechaFin]) 
-                        ->whereRaw("(TRUNC(pep.FECFIN) >= TRUNC(TO_DATE(?, 'YYYY/MM/DD')) OR pep.FECFIN IS NULL)", [$fechaIni])
-                        ->where('pep.ACTIVO', '=', 1)
-                        ->where('pep.ESTBORRADO', '=', 0);
-                })
-                ->leftJoin('logtranspro.per_personas as asoc', 'asoc.id', '=', 'pep.PE_ID_EMP') 
-                ->select(
-                    'p.identificacion',
-                    'pcp.codigo',
-                    DB::raw("p.PNOMBRE || NVL(' ' || p.SNOMBRE, '') || ' ' || p.PAPELLIDO || NVL(' ' || p.SAPELLIDO, '') as nombre_completo"),
-                    'ce.anotacion as evento',
-                    'ce.fechaevento as fecha_evento',
-                    DB::raw("(SELECT s.NOMSUCURSAL FROM per_personas s WHERE s.id = ce.Empcreacion) AS agencia_registra_evento"),
-                    DB::raw("
-                        CASE 
-                            WHEN pep.carcliente IS NULL OR pep.carcliente = '0' THEN 'TURNADOR'
-                            ELSE pep.carcliente
-                        END as vehiculo
-                    "),     
-                    DB::raw("pcp.ASOCIADO as nombre_asociado")
+            $eventos = ($request->evento == 0) ? ['49', '50'] : [$request->evento];
+
+            $sql = "SELECT
+                p.identificacion,
+                pcp.codigo,
+                p.PNOMBRE || NVL(' ' || p.SNOMBRE, '') || ' ' || p.PAPELLIDO || NVL(' ' || p.SAPELLIDO, '') AS nombre_completo,
+                ce.anotacion AS evento,
+                ce.fechaevento AS fecha_evento,
+                (SELECT s.NOMSUCURSAL FROM per_personas s WHERE s.id = ce.Empcreacion) AS agencia_registra_evento,
+                CASE 
+                    WHEN pep.carcliente IS NULL OR pep.carcliente = '0' THEN 'TURNADOR'
+                    ELSE pep.carcliente
+                END AS vehiculo,
+                pcp.ASOCIADO AS nombre_asociado
+            FROM
+                LOGTRANSPRO.per_conductoreseventos ce
+            LEFT JOIN
+                logtranspro.per_personas p ON p.id = ce.pe_id
+            JOIN
+                logtranspro.per_contrato_persona pcp ON pcp.pe_id_pe = ce.pe_id
+            LEFT JOIN
+                logtranspro.per_empresapersonas pep ON pep.PE_ID_PE = ce.pe_id
+                AND pep.TP_ID = 11
+                AND pep.PE_ID_EMP NOT IN (6761)
+                AND TRUNC(pep.FECINI) <= TRUNC(TO_DATE(:fechaFin, 'YYYY/MM/DD'))
+                AND (TRUNC(pep.FECFIN) >= TRUNC(TO_DATE(:fechaIni, 'YYYY/MM/DD')) OR pep.FECFIN IS NULL)
+                AND pep.ACTIVO = 1
+                AND pep.ESTBORRADO = 0
+            LEFT JOIN
+                logtranspro.per_personas asoc ON asoc.id = pep.PE_ID_EMP
+            WHERE
+                ce.EMPCREACION != 1124882226
+                AND TRUNC(ce.FECHAEVENTO) >= TRUNC(TO_DATE(:fechaIni, 'YYYY/MM/DD'))
+                AND TRUNC(ce.FECHAEVENTO) <= TRUNC(TO_DATE(:fechaFin, 'YYYY/MM/DD'))
+                AND ce.evento IN (:evento1, :evento2) 
+                AND (
+                    (:filtro = 'identificacion' AND p.identificacion LIKE :parametroInput)
+                    OR (:filtro = 'codigo' AND pcp.codigo LIKE :parametroInput)
+                    OR (:filtro = 'todos' AND p.identificacion LIKE '%' AND pcp.codigo LIKE '%')
                 )
-                ->whereRaw("TRUNC(ce.FECHAEVENTO) >= TRUNC(TO_DATE(?, 'YYYY/MM/DD'))", [$fechaIni])
-                ->whereRaw("TRUNC(ce.FECHAEVENTO) <= TRUNC(TO_DATE(?, 'YYYY/MM/DD'))", [$fechaFin]);
-                
-                 if ($request->evento == 0) {
-                    $query->whereIn('ce.evento', ['49', '50']);
-                } else {
-                    $query->whereIn('ce.evento', [$request->evento]);
+            ORDER BY
+                p.identificacion ASC,
+                ce.FECHAEVENTO ASC
+            ";
+
+            $resultados = DB::connection('oracle')->select($sql, [
+                'fechaIni' => $fechaIni,
+                'fechaFin' => $fechaFin,
+                'evento1' => $eventos[0],
+                'evento2' => $eventos[1] ?? $eventos[0], // si no hay segundo evento
+                'parametroInput' => $parametroInput,
+                'filtro' => $filtro,
+            ]);
+
+            $agrupadosPorConductor = collect($resultados)->groupBy('identificacion');
+            $coleccionFinal = [];
+
+            foreach ($agrupadosPorConductor as $identificacion => $eventosConductor) {
+                $eventosOrdenados = $eventosConductor->sortBy('fecha_evento')->values();
+                $registros = [];
+                $ultimoRegistroIndex = null;
+
+                foreach ($eventosOrdenados as $index => $evento) {
+                    $eventoNombreNormalizado = strtoupper(trim($evento->evento));
+
+                    $esSalida = $eventoNombreNormalizado === 'SALIDA A DESCANSO';
+                    $esReintegro = in_array($eventoNombreNormalizado, [
+                        'REINTEGRO DE DESCANSO',
+                        'REGRESO DE DESCANSO',
+                    ]);
+
+                    $fechaEvento = $evento->fecha_evento;
+                    $agenciaEvento = trim($evento->agencia_registra_evento);
+
+                    // Inicializamos un nuevo registro base
+                    $registroBase = [
+                        'identificacion' => $evento->identificacion,
+                        'codigo' => $evento->codigo,
+                        'nombre_completo' => $evento->nombre_completo,
+                        'vehiculo' => $evento->vehiculo,
+                        'nombre_asociado' => $evento->nombre_asociado,
+                        'fecha_salida' => null,
+                        'fecha_reintegro' => null,
+                        'agencia_salida' => null,
+                        'agencia_reintegro' => null,
+                        'dias_descanso' => null,
+                    ];
+
+                    if ($index === 0) {
+                        // Primer evento del conductor
+                        if ($esSalida) {
+                            $registroBase['fecha_salida'] = $fechaEvento;
+                            $registroBase['agencia_salida'] = $agenciaEvento;
+                        } elseif ($esReintegro) {
+                            $registroBase['fecha_reintegro'] = $fechaEvento;
+                            $registroBase['agencia_reintegro'] = $agenciaEvento;
+                        }
+                        $registros[] = $registroBase;
+                        $ultimoRegistroIndex = 0;
+                    } else {
+                        $eventoAnteriorNormalizado = strtoupper(trim($eventosOrdenados[$index - 1]->evento));
+
+                        if ($eventoAnteriorNormalizado !== $eventoNombreNormalizado) {
+                            if ($eventoAnteriorNormalizado === 'SALIDA A DESCANSO' && $esReintegro) {
+                                // Actualiza el último registro con fecha de reintegro
+                                $registros[$ultimoRegistroIndex]['fecha_reintegro'] = $fechaEvento;
+                                $registros[$ultimoRegistroIndex]['agencia_reintegro'] = $agenciaEvento;
+
+                                // Calcula los días de descanso (redondeando al entero superior)
+                                $salida = $registros[$ultimoRegistroIndex]['fecha_salida'];
+                                if ($salida) {
+                                    $horas = Carbon::parse($salida)->diffInHours(Carbon::parse($fechaEvento));
+                                    $dias = (int) ceil($horas / 24);
+                                    $registros[$ultimoRegistroIndex]['dias_descanso'] = $dias;
+                                }
+                            } else {
+                                // Diferente evento, pero no es un reintegro después de salida → crear nuevo
+                                if ($eventoNombreNormalizado === 'SALIDA A DESCANSO') {
+                                    $registroBase['fecha_salida'] = $fechaEvento;
+                                    $registroBase['agencia_salida'] = $agenciaEvento;
+                                } elseif ($eventoNombreNormalizado === 'REINTEGRO DE DESCANSO') {
+                                    $registroBase['fecha_reintegro'] = $fechaEvento;
+                                    $registroBase['agencia_reintegro'] = $agenciaEvento;
+                                }
+                                $registros[] = $registroBase;
+                                $ultimoRegistroIndex = array_key_last($registros);
+                            }
+                        } else {
+                            // Mismo evento anterior y actual → crear nuevo registro
+                            if ($esSalida) {
+                                $registroBase['fecha_salida'] = $fechaEvento;
+                                $registroBase['agencia_salida'] = $agenciaEvento;
+                            } elseif ($esReintegro) {
+                                $registroBase['fecha_reintegro'] = $fechaEvento;
+                                $registroBase['agencia_reintegro'] = $agenciaEvento;
+                            }
+                            $registros[] = $registroBase;
+                            $ultimoRegistroIndex = array_key_last($registros);
+                        }
+                    }
                 }
 
-            // Añadir filtros según la variable "filtro"
-            switch ($request->filtro) {
-                case 'identificacion':
-                    $query->where('p.identificacion', 'like', $request->parametroInput);
-                    break;
+                // Unimos los registros de este conductor a la colección final
+                $coleccionFinal = array_merge($coleccionFinal, $registros);
+            }
 
-                case 'codigo':
-                    $query->where('pcp.codigo', 'like', $request->parametroInput);
-                    break;
-
-                case 'todos':
-                    $query->where('p.identificacion', 'like', '%')
-                        ->where('pcp.codigo', 'like', '%');
-                    break;
-            } 
-
-            // Ordenar y ejecutar
-            $resultados = $query->orderBy('p.identificacion', 'asc')
-                                 ->orderBy('ce.FECHAEVENTO', 'asc')
-                                 ->get();
-            $numeroRegistros = $resultados->count();
+            $numeroRegistros = count($coleccionFinal);
 
             if ($numeroRegistros == 0) {
                 return toastModal("No se encontraron resultados para los parametros ingresados.", "warning","#");
             }
 
-            session(['ingSalConductores' => $resultados]);
+            session(['ingSalConductores' => $coleccionFinal]);
             return toastModal("Registros encontrados: ".$numeroRegistros ,"success",route("lista.ingresoSalidas"));
         }catch(Exception $e){
             Log::error('Error al obtener la lista de ingreso salida de conductores: ' . $e->getMessage());
