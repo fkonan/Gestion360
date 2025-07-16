@@ -46,7 +46,7 @@ import { deshabilitarSubmit,
         exportarExcel,
         actualizarEstado,
         mostrarToast,
-        darkModeEnable,
+      //   darkModeEnable,
         createThemeManager
     } from './utils';
 
@@ -61,7 +61,7 @@ window.abrirArchivo = abrirArchivo;
 window.exportarExcel = exportarExcel;
 window.actualizarEstado = actualizarEstado;
 window.mostrarToast = mostrarToast;
-window.darkModeEnable = darkModeEnable;
+// window.darkModeEnable = darkModeEnable;
 
 window.initTablaBootstrapTable = initTablaBootstrapTable;
 window.generarDetalle = generarDetalle;

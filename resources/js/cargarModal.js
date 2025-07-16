@@ -86,7 +86,7 @@ function bootstrapDualListInit(id, nombre) {
         infoText: 'Mostrando {0} ' + nombre,
         infoTextEmpty: 'No hay ' + nombre + ' disponibles',
         infoTextFiltered: '<span class="badge bg-warning">Filtrados</span> {0} de {1}',
-        moveAllLabel: 'Mover todos', 
+        moveAllLabel: 'Mover todos',
         removeAllLabel: 'Quitar todos',
         selectorMinimalHeight: 320
     });
@@ -94,7 +94,7 @@ function bootstrapDualListInit(id, nombre) {
     $('.box1').attr('data-title', 'Todos los ' + nombre + ' disponibles');
     $('.box2').attr('data-title',  nombre + ' asignados');
     $('.moveall').text('Agregar todos »');
-    $('.removeall').text('« Quitar todos');   
+    $('.removeall').text('« Quitar todos');
 }
 
 function validarFormulario(form, TYPE="POST") {
@@ -104,7 +104,7 @@ function validarFormulario(form, TYPE="POST") {
         email: "Por favor ingrese un email válido.",
         number: "Por favor ingrese un número válido."
     });
-    
+
     $(form).validate({
         errorClass: "text-danger fw-bold is-invalid",
 
@@ -123,9 +123,9 @@ function validarFormulario(form, TYPE="POST") {
                 success: function (response) {
                     //caso 1: Se retorne un html -> se carga el html en la misma vista
                     if (response.success && response.html) {
-                        $("#innerHtml").html(response.html); 
+                        $("#innerHtml").html(response.html);
 
-                    //caso 2: No se retorne un redirect -> se queda en la misma vista y se muestra un toast con los datos  
+                    //caso 2: No se retorne un redirect -> se queda en la misma vista y se muestra un toast con los datos
                     }else if(response.redirect == '#'){
                         mostrarToast(response.title, response.type);
 
@@ -135,7 +135,7 @@ function validarFormulario(form, TYPE="POST") {
                         sessionStorage.setItem('toastType', response.type);
                         window.location.href = response.redirect;
                     }
-                    habilitarSubmit(form); 
+                    habilitarSubmit(form);
                 },
 
                 error: function (xhr) {

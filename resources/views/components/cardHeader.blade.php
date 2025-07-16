@@ -9,7 +9,7 @@
     'modalSize' => 'modal-lg', // Tamaño del modal
 ])
 
-<div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-secondary">
+<div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-primary-subtle">
     <span class="text-left text-light fs-5 fw-medium py-2">{{ $titulo }}</span>
 </div>
 

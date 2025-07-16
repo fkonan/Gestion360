@@ -50,11 +50,6 @@
     <div class="toast-container position-fixed top-0 end-0 p-3" id="toastContainer"></div>
 
     <div class="wrapper">
-        <!-- Pantalla de carga -->
-        <div class="preloader flex-column justify-content-center align-items-center">
-            <div class="spinner-border text-secondary mt-2" role="status"></div>
-            <p class="mt-1 fw-medium text-muted">Cargando...</p>
-        </div>
 
         <!-- Sidebar -->
         <aside class="main-sidebar sidebar-dark-primary elevation-4">
@@ -170,11 +165,6 @@
                 sessionStorage.removeItem('toastTitle');
                 sessionStorage.removeItem('toastType');
             }
-        });
-
-        //dark mode toggle
-        document.addEventListener('DOMContentLoaded', () => {
-            darkModeEnable()
         });
 
         // Mostrar el cuerpo del documento después de cargar todo

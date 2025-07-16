@@ -27,6 +27,7 @@ export function actualizarReloj() {
 function mostrarLoader() {
     const loader = document.getElementById('fullscreen-loader');
     if (loader) loader.style.display = 'flex';
+
 }
 
 function ocultarLoader() {
@@ -186,7 +187,6 @@ export function mostrarToast(message, type = 'primary') {
     const icon = icons[type] || icons.primary;
 
     // Crear el contenido del toast
-    const isDark = document.body.classList.contains('dark-mode');
     const toastId = `toast-${Date.now()}`;
     const toastHTML = `
         <div class="toast shadow-sm show toastAJAX" role="alert" aria-live="assertive" aria-atomic="true" id="${toastId}">
@@ -196,7 +196,7 @@ export function mostrarToast(message, type = 'primary') {
                 <div class="p-2">
                     <i class="bi ${icon} fs-4 me-3 flex-shrink-0"></i>
                 </div>
-                <div class="toast-body fw-semibold text-dark">
+                <div class="toast-body fw-semibold">
                     ${message}
                 </div>
                 <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>
@@ -225,32 +225,32 @@ export function mostrarToast(message, type = 'primary') {
     }, 4800);
 }
 
-export function darkModeEnable(){
-    const body = document.body;
-    const darkModeToggle = document.getElementById('toggleDarkMode');
-    const isDarkMode = localStorage.getItem('darkMode') === 'enabled';
+// export function darkModeEnable(){
+//     const body = document.body;
+//     const darkModeToggle = document.getElementById('toggleDarkMode');
+//     const isDarkMode = localStorage.getItem('darkMode') === 'enabled';
 
-    if (isDarkMode) {
-        body.classList.add('dark-mode');
-    }
+//     if (isDarkMode) {
+//         body.classList.add('dark-mode');
+//     }
 
-    darkModeToggle?.addEventListener('click', () => {
-        body.classList.toggle('dark-mode');
-        const icono=document.getElementById("toggleDarkMode");
-        const isDarkMode=localStorage.getItem("darkMode");
+//     darkModeToggle?.addEventListener('click', () => {
+//         body.classList.toggle('dark-mode');
+//         const icono=document.getElementById("toggleDarkMode");
+//         const isDarkMode=localStorage.getItem("darkMode");
 
-        icono.className =
-           isDarkMode == "disabled"
-              ? "dark-icon text-dark"
-              : "light-icon text-dark";
+//         icono.className =
+//            isDarkMode == "disabled"
+//               ? "dark-icon text-dark"
+//               : "light-icon text-dark";
 
-        const enabled = body.classList.contains('dark-mode');
-        localStorage.setItem('darkMode', enabled ? 'enabled' : 'disabled');
+//         const enabled = body.classList.contains('dark-mode');
+//         localStorage.setItem('darkMode', enabled ? 'enabled' : 'disabled');
 
-        //Para poder usarlo en laravel (lado del servidor) con cookies
-        document.cookie = "darkMode=" + (enabled ? 'enabled' : 'disabled') + "; path=/";
-    });
-}
+//         //Para poder usarlo en laravel (lado del servidor) con cookies
+//         document.cookie = "darkMode=" + (enabled ? 'enabled' : 'disabled') + "; path=/";
+//     });
+// }
 
 
 export function createThemeManager() {

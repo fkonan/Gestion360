@@ -144,7 +144,7 @@
    --bs-danger-text-emphasis: #ea868f;
    --bs-light-text-emphasis: #f8f9fa;
    --bs-dark-text-emphasis: #dee2e6;
-   --bs-primary-bg-subtle: #031633;
+   --bs-primary-bg-subtle: #084298;
    --bs-secondary-bg-subtle: #161719;
    --bs-success-bg-subtle: #051b11;
    --bs-info-bg-subtle: #032830;
@@ -187,6 +187,7 @@
    --bs-secondary: #89898c;
    --bs-tertiary: #193366;
    --bg-rgb:#2d6dec10;
+   --bs-primary-bg-subtle:#005eb8;
 
    --bs-heading-color:var(--bs-tertiary);
 
@@ -194,7 +195,7 @@
    --bs-secondary-rgb: 137,137,140;
    --bs-tertiary-rgb: 25, 51, 102;
 
-   --logo-url: url('/public/img/LogoCope.png');
+   --logo-url: url('/public/img/logo_copetran_blue.png');
 }
 
 :root,[data-bs-theme=dark] {
@@ -202,13 +203,13 @@
    --bs-secondary: #89898c;
    --bs-tertiary: #fff;
    --bg-rgb:#2d6dec75;
-
+   --bs-primary-bg-subtle: #005eb8;
    --bs-heading-color: var(--bs-emphasis-color);
 
    --bs-primary-rgb: 255, 255, 255;
    --bs-secondary-rgb: 137, 137, 140;
    --bs-tertiary-rgb: 255, 255, 255;
-   --logo-url: url('/public/img/LogoCopeBlancoFull.png');
+   --logo-url: url('/public/img/logo_copetran_white.png');
    --bs-body-bg: var(--bs-secondary-bg);
 }
 
@@ -245,10 +246,13 @@
 
 [data-bs-theme=dark] [class*="sidebar-dark-"] {
    background-color: var(--bs-dark-bg-subtle);
+   border-color:var(--bg-rgb) !important
+
 }
 
 [data-bs-theme=light] [class*="sidebar-dark-"] {
    background-color: var(--bs-body-bg);
+   border-color: var(--bs-secondary) !important
 }
 
 [data-bs-theme=light] {
@@ -331,8 +335,8 @@
  }
 
 .table-primary {
-    --bs-table-bg: var(--bs-secondary);
-    --bs-table-color: #f7f7f7;
+    --bs-table-bg: var(--bs-primary-bg-subtle);
+    --bs-table-color: var(--bs-light);
   }
 
 .botonBoostrapTable a:hover {
@@ -360,21 +364,6 @@
     box-shadow: none;
 }
 
-/* Estilos bootstrap table */
-.pagination .page-item.active .page-link {
-    background-color: var(--bs-primary) !important;
-    border-color: var(--bs-primary) !important;
-    color: white !important;
-}
-
-.pagination .page-link {
-    color: var(--bs-primary) !important;
-}
-
-.pagination .page-link:hover {
-    background-color: rgba(var(--bs-primary-rgb), 0.1) !important;
-    border-color: var(--bs-primary) !important;
-}
 
 .table{
     border-radius: 0.5em;
