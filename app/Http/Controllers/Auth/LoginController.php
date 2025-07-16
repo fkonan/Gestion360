@@ -22,7 +22,7 @@ class LoginController extends Controller
         $request->validate([
             'identificacion' => 'required|numeric',
             'password' => 'required|string',
-            'g-recaptcha-response' => 'required|captcha',
+            // 'g-recaptcha-response' => 'required|captcha',
         ],[
             'identificacion.required' => 'La identificación es obligatoria.',
             'password.required' => 'La contraseña es obligatoria.',
