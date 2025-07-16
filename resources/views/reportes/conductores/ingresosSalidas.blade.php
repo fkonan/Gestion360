@@ -41,13 +41,15 @@
             <thead class="table-primary">
                 <tr class="bg-primary">
                     <th data-field="identificacion" data-sortable="true">Identificación</th>
-                    <th data-field="codigo" data-sortable="true">Código</th>
-                    <th class="text-nowrap" data-field="nombre_completo" data-sortable="true">Conductor</th>
-                    <th class="text-nowrap" data-field="evento" data-sortable="true">Evento</th>
-                    <th class="text-nowrap" data-field="fecha_evento" data-sortable="true">Fecha de evento</th>
-                    <th class="text-nowrap" data-field="agencia_registra_evento" data-sortable="true">Agencia</th>
-                    <th class="text-nowrap" data-field="nombre_asociado" data-sortable="true">Nombre Asociado</th>
+                    <th data-field="codigo" data-sortable="true">Código conductor</th>
+                    <th class="text-nowrap" data-field="nombre_completo" data-sortable="true">Nombre conductor</th>
+                    <th class="text-nowrap" data-field="fecha_salida" data-sortable="true">Fecha salida</th>
+                    <th class="text-nowrap" data-field="fecha_reintegro" data-sortable="true">Fecha reintegro</th>
+                    <th class="text-nowrap" data-field="dias_descanso" data-sortable="true">Dias descanso</th>
                     <th class="text-nowrap" data-field="vehiculo" data-sortable="true">Vehículo</th>
+                    <th class="text-nowrap" data-field="nombre_asociado" data-sortable="true">Nombre asociado</th>
+                    <th class="text-nowrap" data-field="agencia_salida" data-sortable="true">Agencia salida</th>
+                    <th class="text-nowrap" data-field="agencia_reintegro" data-sortable="true">Agencia reintegro</th>
                 </tr>
             </thead>
         </table>
