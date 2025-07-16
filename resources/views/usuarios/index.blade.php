@@ -34,6 +34,8 @@
             data-responsive="true"
             data-check-on-init="true"
             data-detail-view="true"
+            data-sort-name='fechaHoraRegistro'
+            data-sort-order='desc'
             data-detail-formatter="detalleUsuario"
             data-side-pagination="server"
             data-url="{{ route('usuarios.cargarDatos') }}">
@@ -42,8 +44,8 @@
                     <th data-field="PerNumDoc" data-visible="true">Identificación</th>
                     <th data-field="nombreCompleto">Nombre y apellidos</th>
                     <th data-field="centroCosto">Centro de costo</th>
-                    <th class="text-center" data-field="fechaHoraRegistro" data-sortable="true">Fecha registro</th>
-                    <th data-field="rol">Rol</th>
+                    <th class="text-nowrap text-center" data-field="fechaHoraRegistro" data-sortable="true">Fecha registro</th>
+                    <th class="text-nowrap" data-field="rol">Rol</th>
                     @permite('administracion.usuarios.actualizar')
                         <th class="text-center" data-field="estado" data-formatter="estadoFormatter">Estado</th>
                     @endpermite

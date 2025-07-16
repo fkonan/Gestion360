@@ -36,6 +36,8 @@
             data-detail-view="true"
             data-detail-formatter="detallePersona"
             data-check-on-init="true"
+            data-sort-name='PerFechaHoraReg'
+            data-sort-order='desc'
             data-side-pagination="server"
             data-url="{{ route('personas.cargarDatos') }}" >
             <thead class="table-primary">

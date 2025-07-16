@@ -72,9 +72,11 @@
             <i class="light-icon"></i>
          </button>
       </section>
-      <div style="height: 60px"></div>
+      
 
-      <section>@yield('content')</section>
+      <section class="mt-5">
+         @yield('content')
+      </section>
    </div>
 
    <script>

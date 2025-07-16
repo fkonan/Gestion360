@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="es">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -57,28 +57,28 @@
             <!-- Usuario -->
                 <div class="user-panel mt-3 pt-1 pb-0 d-flex flex-column" style="border:none">
 
-                    <!-- <div style="width: 2em; display: flex; align-items: center; justify-content: flex-start;" class="ms-3">
+                   <!--  <div style="width: 2em; display: flex; align-items: center; justify-content: flex-start;" class="ms-3">
                         <i id="toggleDarkMode" class="light-icon text-dark" style="cursor: pointer;"></i>
-                    </div> -->
-
+                    </div>
+ -->
                     {{-- Icono cambiar theme --}}
                     <button class="btn rounded-circle me-3" title="Cambiar modo oscuro" style="width: 50px" data-theme-toggle>
                        <i class="light-icon"></i>
                     </button>
 
-                    <!-- <div class="info d-flex flex-column align-items-center" style="width: 235px; margin: 0 auto; user-select: none;">
+                    <div class="info d-flex flex-column align-items-center" style="width: 235px; margin: 0 auto; user-select: none;">
                         <img src="{{ asset('img/LogoCope.png') }}" class="logoCope" style="width:100%; height: auto;" alt="Logo Cope">
                         <img src="{{ asset('img/LogoCopeBlancoFull.png') }}" class="logoCopeBlanco py-3" style="width:80%; height: auto; display:none" alt="Logo Cope ">
-                    </div> -->
+                    </div>
 
-                    <div class="info d-flex flex-column align-items-center logo-container">
+                    <!-- <div class="info d-flex flex-column align-items-center logo-container">
                         <img class="logo-responsive" alt="Logo Cope">
-                     </div>
+                     </div> -->
 
                     <div class="info text-muted" style="user-select: none; font-size: 0.75em;">
                         <hr class="mb-2">
                         <span class="fw-bold">Nombre:</span>
-                        <span class="fw-medium">
+                        <span class="fw-medium" title="{{ $user->persona?->PerNombres }} {{ $user->persona?->PerApellidos }}">
                             {{ $user->persona?->PerNombres }} {{ $user->persona?->PerApellidos }}
                         </span>
                         <br>
@@ -86,6 +86,12 @@
                         <span class="fw-bold"> Rol:</span>
                         <span class="fw-medium">
                             {{ $user->rol }}
+                        </span>
+                        <br>
+
+                        <span class="fw-bold"> Centro costo:</span>
+                        <span class="fw-medium" title="{{ $user->obtenerDescripcionCentroCosto() }}">
+                            {{ $user->obtenerDescripcionCentroCosto() }}
                         </span>
                         <br>
 

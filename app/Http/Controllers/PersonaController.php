@@ -6,8 +6,8 @@ use App\Models\GESTIONADMIN\Departamento;
 use App\Models\GESTIONADMIN\Persona;
 use App\Models\GESTIONADMIN\PersonaDatos;
 use App\Models\GESTIONADMIN\TipoDocumento;
+use App\Services\EmpleadoService;
 use Exception;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -53,14 +53,7 @@ class PersonaController extends Controller
     public function cargarDatos(Request $request){
         try {
             // 1. Obtener documentos válidos desde Oracle (solo empleados activos) y se cachean por 5 minutos
-            $documentosEmpleados = Cache::remember('empleados_oracle', 300, function () {
-                return DB::connection('oracle')
-                    ->table('PER_CONTRATO_PERSONA')
-                    ->where('estado', 1)
-                    ->where('estborrado', 0)
-                    ->pluck('identificacion')
-                    ->toArray();
-            });
+            $documentosEmpleados = EmpleadoService::documentosEmpleadosValidos();
 
             // 2. Paginación y parámetros
             $limit = $request->get('limit', 25);
@@ -137,7 +130,7 @@ class PersonaController extends Controller
                 'PerTipoDoc' => 'required',
                 'PerNumDoc' => 'unique:_personas,PerNumDoc|required|string|max:10',
                 'PerTelefono' => 'unique:_personas_datos,PerTelefono|required',
-                'PerEmail' => 'unique:_personas_datos,PerEmail|required|email',
+                'PerEmail' => 'required|email',
                 'PerApellidos' => 'required|string|regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ]+(?:\s[A-Za-zÁÉÍÓÚáéíóúÑñ]+)*$/|max:50',
                 'PerNombres' => 'required|string|regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ]+(?:\s[A-Za-zÁÉÍÓÚáéíóúÑñ]+)*$/|max:50',
                 'PerGenero' => 'required',
