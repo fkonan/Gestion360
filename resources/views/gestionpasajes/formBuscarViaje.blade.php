@@ -11,9 +11,9 @@
 @endsection
 
 @section('content')
-<div class="container-fluid p-0 border rounded" style="background-color: white; padding:1.5em">
+<div class="container-fluid p-0 sidebar-dark-primary border rounded" style="padding:1.5em">
 
-    <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-secondary">
+    <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-primary-subtle">
         <span class="text-left text-light fs-5 fw-medium py-1">Buscar Viaje</span>
     </div>
 

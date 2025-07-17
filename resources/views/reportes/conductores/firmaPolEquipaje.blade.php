@@ -1,5 +1,5 @@
 <!-- Modal reporte firma politica de equipaje conductores -->
-<div class="container-fluid p-2 bg-white">
+<div class="container-fluid p-2">
     <form
         id="firmaEquipajeForm" 
         action="{{  route('filtrar.firmaEquipaje')  }}" 

@@ -8,7 +8,7 @@
             confirmButtonColor: "#3366CC",
             confirmButtonText: "Aceptar",
             customClass: {
-                popup: 'responsive-swal'
+                popup: 'swalAlert'
             }
         });
     });

@@ -12,7 +12,7 @@
 
 @section('content')
 <br>
-<div class="container-fluid p-0 border rounded tableContainer" style="min-height:150px; background-color: white">
+<div class="container-fluid p-0 border rounded sidebar-dark-primary tableContainer" style="min-height:150px">
 
      <x-cardHeader 
         titulo="Reportes de Pasajes"

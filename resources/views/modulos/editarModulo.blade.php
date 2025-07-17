@@ -1,5 +1,5 @@
 <!-- modal para listarModulos-->
-<div class="container-fluid p-0 bg-white rounded">
+<div class="container-fluid p-0 rounded">
     <form 
         id="formFormato" 
         action="{{  route('modulos.update', ['id' => $moduloEdit->IdModulo])  }}" 

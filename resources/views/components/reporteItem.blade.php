@@ -6,7 +6,7 @@
 
 <tr class="align-middle reporte-item" data-titulo="{{ $titulo }}">
     {{-- Columna 1: Título --}}
-    <td class="text-dark py-2 px-2">
+    <td class="py-2 px-2">
         <div class="d-flex align-items-center gap-2">
             <span class="fw-medium">{{ $titulo }}</span>
         </div>

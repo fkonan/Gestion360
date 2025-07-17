@@ -13,9 +13,9 @@
 @endsection
 
 @section('content')
-<div class="container-fluid p-0 border rounded shadow bg-white">
+<div class="container-fluid p-0 border rounded shadow sidebar-dark-primary">
 
-    <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-secondary">
+    <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-primary-subtle">
         <span class="text-left text-light fs-5 fw-medium py-1">Crear Rol</span>
     </div>
 
@@ -30,7 +30,7 @@
 
             @foreach ($modulos as $modulo)
                 <div class="border border-primary rounded m-0 p-0 pb-3 mb-4 z-3">
-                <h5 class="p-2 bg-primary text-light">{{ ucfirst($modulo->ModNom) }}</h5>
+                <h5 class="p-2 bg-primary-subtle">{{ ucfirst($modulo->ModNom) }}</h5>
 
                 @php
                     $nombreModulo = normalizarNombre($modulo->ModNom);

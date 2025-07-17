@@ -42,7 +42,7 @@
     </style>
 
      <!--Vite -->
-     @vite(['resources/css/app.css', 'resources/js/app.js','resources/css/custom.css','resources/css/mobile.css','resources/css/darkmode.css'])
+     @vite(['resources/css/app.css', 'resources/js/app.js','resources/css/custom.css','resources/css/mobile.css'])
 </head>
 
 <body class="sidebar-mini sidebar-collapse layout-fixed">
@@ -50,6 +50,12 @@
     <div class="toast-container position-fixed top-0 end-0 p-3" id="toastContainer"></div>
 
     <div class="wrapper">
+
+        <!-- Pantalla de carga -->
+        <div class="preloader sidebar-dark-primary flex-column justify-content-center align-items-center">
+            <div class="spinner-border text-secondary mt-2" role="status"></div>
+            <p class="mt-1 fw-medium text-muted">Cargando...</p>
+        </div>
 
         <!-- Sidebar -->
         <aside class="main-sidebar sidebar-dark-primary elevation-4">

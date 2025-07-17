@@ -1,6 +1,6 @@
 <!-- Modal crear usuario -->
 
-<div class="container-fluid p-0 bg-white rounded">
+<div class="container-fluid p-0 rounded">
     <form 
         id="formCrearUsuario" 
         action="{{  route('usuarios.store')  }}" 

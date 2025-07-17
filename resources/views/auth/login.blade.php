@@ -15,14 +15,7 @@
          <!-- Mensaje informativo sobre credenciales -->
          <div class="alert alert-info d-inline-block w-100 mt-2 mb-3 px-3 py-2" style="font-size: 0.98rem;">
             Puedes iniciar sesión usando las mismas credenciales que tienes en la aplicación móvil.
-          <!--   <div class="d-flex justify-content-center align-items-center gap-4 mt-2 mb-2">
-               <a href="https://play.google.com/store/apps/details?id=co.com.copetran" target="_blank" title="Descargar para Android" class="app-download-link">
-                  <img src="{{ asset('img/playStore.png') }}" alt="Android" style="height:40px; transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
-               </a>
-               <a href="https://apps.apple.com/app/id1769416503" target="_blank" title="Descargar para iOS" class="app-download-link">
-                  <img src="{{ asset('img/appstore.png') }}" alt="iOS" style="height:40px; transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
-               </a>
-            </div> -->
+           
          </div>
         
          <div class="card p-1">
@@ -79,6 +72,21 @@
 
                   <div class="mt-3 text-end">
                      <a href="{{ route('password.request') }}" class="text-decoration-none">¿Olvidaste tu contraseña?</a>
+                  </div>
+                  <hr>
+                  <div class="text-center my-3">
+                     <span class="fw-semibold" style="font-size: 1.05rem;">
+                        ¿Aún no tienes la app móvil? <br>
+                        <span class="text-secondary">Descárgala aquí:</span>
+                     </span>
+                  </div>
+                   <div class="d-flex justify-content-center align-items-center gap-4 mt-2 mb-2">
+                     <a href="https://play.google.com/store/apps/details?id=co.com.copetran" target="_blank" title="Descargar para Android" class="app-download-link">
+                        <img src="{{ asset('img/playStore.png') }}" alt="Android" style="height:40px; transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                     </a>
+                     <a href="https://apps.apple.com/app/id1769416503" target="_blank" title="Descargar para iOS" class="app-download-link">
+                        <img src="{{ asset('img/appstore.png') }}" alt="iOS" style="height:40px; transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                     </a>
                   </div>
                </form>
             </div>
