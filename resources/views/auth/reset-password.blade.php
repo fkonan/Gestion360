@@ -10,7 +10,7 @@
             <div class="col-xs-12 col-sm-8 col-md-6 col-lg-4 col-xl-4 col-xxl-4">
                 <h4>Sistema: <b>Gestión</b></h4>
                 <div class="card p-1">
-                <div class="card-body login-card-body p-4">
+                <div class="card-body p-4">
                     <p class="mb-3 text-muted">
                         Por favor, ingresa tu nueva contraseña y confírmala para restablecer el acceso a tu cuenta.
                     </p>

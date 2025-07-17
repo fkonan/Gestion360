@@ -325,6 +325,32 @@
    color:var(--bs-dark)!important;
 }
 
+[data-bs-theme="dark"] .select2-selection__rendered,
+[data-bs-theme="dark"] .select2-results,
+[data-bs-theme="dark"] .select2-selection,
+[data-bs-theme="dark"] .swalAlert
+{
+    background-color: var(--bs-gray-800) !important;
+    color: var(--bs-light) !important;
+}
+
+[data-bs-theme="light"] .list-group-item{
+    background-color: var(--bs-btn-color) !important;
+    color: var(--bs-dark) !important;
+}
+
+[data-bs-theme="dark"] .fixed-table-loading {
+   background-color: var(--bs-gray-800) !important;
+    color: var(--bs-light) !important;
+    border: none !important;
+}
+
+[data-bs-theme="dark"] .bootstrap-duallistbox-container .box1, 
+[data-bs-theme="dark"] .bootstrap-duallistbox-container .box2,
+[data-bs-theme="dark"] .bootstrap-duallistbox-container select{
+    background-color: var(--bs-gray-800) !important;
+    color: var(--bs-light) !important;
+}
 
 .content-wrapper{
    background-color:var(--bs-light-rgb)
@@ -605,7 +631,7 @@ body:not(.sidebar-collapse) .nav-item .nav-treeview .nav-link {
 .botonBoostrapTable{
     position: absolute;
     box-shadow:#1a1a1a;
-    top: 210px;
+    top: 205px;
 }
 
 

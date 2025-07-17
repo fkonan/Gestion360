@@ -12,8 +12,8 @@
 @endsection
 
 @section('content')
-<div class="container-fluid p-0 border shadow bg-white rounded">
-    <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-secondary">
+<div class="container-fluid p-0 border shadow rounded sidebar-dark-primary">
+    <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-primary-subtle">
         <span class="text-left text-light fs-5 fw-medium">Datos persona</span>
     </div>
     <form id="formEditPersona" action="{{  route('personas.update', ['id' => $persona->IdPersona])  }}" method="POST">
@@ -119,7 +119,7 @@
                 </div>
             </div>
 
-            <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-secondary">
+            <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-primary-subtle">
                 <span class="text-left text-light fs-5 fw-medium ">Información adicional</span>
             </div>
             <div class="row mx-4 pt-4">

@@ -13,7 +13,7 @@
 @endsection
     
 @section('content')
-<div class="container-fluid p-0 border rounded" style="min-height:150px; background-color: white">
+<div class="container-fluid p-0 border rounded sidebar-dark-primary" style="min-height:150px">
     
     <x-cardHeader 
         titulo="Registro Seguimiento"

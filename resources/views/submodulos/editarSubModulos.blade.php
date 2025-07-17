@@ -1,5 +1,5 @@
 <!-- modal para listarSubModulos-->
-<div class="container-fluid p-0 bg-white rounded">
+<div class="container-fluid p-0 rounded">
     <form 
         id="formFormato" 
         action="{{  route('submodulos.update', ['id' => $moduloEdit->IdModulo])  }}" 

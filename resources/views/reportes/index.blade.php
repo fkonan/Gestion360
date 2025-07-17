@@ -11,7 +11,7 @@
 
 @section('content')
 <br>
-<div class="container-fluid p-0 border rounded bg-white tableContainer" style="min-height:150px;">
+<div class="container-fluid p-0 border rounded sidebar-dark-primary tableContainer" style="min-height:150px;">
 
     <x-cardHeader 
         titulo="Panel de Reportes"
@@ -19,11 +19,11 @@
     />
 
     <div style="padding:1.5em" class="mt-md-5">
-        <div class="row row-cols-1 row-cols-md-4 g-3 mt-2">
+        <div class="row row-cols-1 row-cols-md-3 g-3 mt-2">
             @foreach ($reportes as $reporte)
                 @permite($reporte['permiso'])
-                    <div class="col">
-                        <x-card color="bg-primary" 
+                    <div class="col" style="max-width:400px">
+                        <x-card color="bg-teriary" 
                             titulo="{{ $reporte['titulo'] }}" 
                             descripcion="{{ $reporte['descripcion'] }}" 
                             tooltip="{{ $reporte['tooltip'] }}"

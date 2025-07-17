@@ -1,7 +1,7 @@
 <!-- Componente de tarjeta-->
 <a href="{{ $ruta }}" class="text-decoration-none" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ $tooltip ?? '' }}">
-    <div class="card cardComponent d-flex flex-row align-items-center p-2 shadow">
-        <div class="{{ $color }} text-white p-3 d-flex align-items-center justify-content-center text-center rounded">
+    <div class="card cardComponent d-flex flex-row align-items-center p-2 shadow sidebar-dark-primary">
+        <div class="{{ $color }} p-3 d-flex align-items-center justify-content-center text-center rounded">
             <i class="fas {{ $icono }} fa-2x" style="width: 35px"></i>
         </div>
         <div class="ms-3">

@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-
+<html lang="es">
 <head>
    <meta charset="utf-8" />
    <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -49,13 +48,13 @@
    </style>
 
    <!--Vite -->
-        @vite(['resources/css/app.css', 'resources/js/app.js','resources/css/custom.css','resources/css/mobile.css','resources/css/darkmode.css'])
+        @vite(['resources/css/app.css', 'resources/js/app.js','resources/css/custom.css','resources/css/mobile.css'])
 </head>
 
 <body class="sidebar-mini layout-fixed bodyIndex">
    <div class="wrapper">
       <!-- Pantalla de carga -->
-      <div class="preloader flex-column justify-content-center align-items-center">
+      <div class="preloader sidebar-dark-primary flex-column justify-content-center align-items-center">
          <div class="spinner-border text-secondary mt-2" role="status"></div>
          <p class="mt-1 fw-medium text-muted">Cargando...</p>
      </div>
@@ -74,7 +73,7 @@
       </section>
       
 
-      <section class="mt-5">
+      <section class="py-5">
          @yield('content')
       </section>
    </div>

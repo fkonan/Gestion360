@@ -1,5 +1,5 @@
 <!-- Modal reporte esquema tarifario pasajes -->
-<div class="container-fluid p-2 bg-white">
+<div class="container-fluid p-2">
     <form
         id="esquemaTarifarioForm" 
         action="{{ route('esquemaTarifario.filtrar') }}" 

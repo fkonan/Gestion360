@@ -12,7 +12,7 @@
 @endsection
     
 @section('content')
-<div class="container-fluid p-0 border shadow rounded bg-white" style="min-height:150px;">
+<div class="container-fluid p-0 border shadow rounded sidebar-dark-primary" style="min-height:150px;">
 
     <x-cardHeader 
         titulo="Incapacidades"

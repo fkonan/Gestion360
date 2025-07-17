@@ -12,8 +12,8 @@
 @endsection
 
 @section('content')
-<div class="container-fluid border p-0 mb-5 bg-white rounded">
-    <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-secondary">
+<div class="container-fluid border p-0 mb-5 sidebar-dark-primary rounded">
+    <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-primary-subtle">
         <span class="text-left text-light fs-5 fw-medium">Datos persona</span>
     </div>
     <form  id="formPersonaCrear" action="{{ route('personas.store') }}" method="POST">
@@ -109,7 +109,7 @@
                 </div> 
             </div>
 
-            <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-secondary">
+            <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-primary-subtle">
                 <span class="text-left text-light fs-5 fw-medium ">Información adicional</span>
             </div>
             <div class="row mx-4 pt-4">

@@ -1,5 +1,5 @@
 <!-- Modal actualizar ingreso y salida conductores -->
-<div class="container-fluid p-2 bg-white">
+<div class="container-fluid p-2">
     <form
         id="ingSalConForm" 
         action="{{ route('reporte.ingresoSalidas') }}" 
