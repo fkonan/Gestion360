@@ -25,7 +25,7 @@
                 icono="fa-users"
                 titulo="Conductores y Empleados"
                 descripcion="Gestión de recursos humanos, incluyendo información, procesos y firma de políticas."
-                ruta="http://172.20.32.22/gestion/firmaConductores/public/"
+                ruta="https://autogestion.copetran.com.co/firmaConductores/public/index.php"
             />
         </div>
         <div class="col-12 col-sm-6 col-lg-4">

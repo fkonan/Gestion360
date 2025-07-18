@@ -1,69 +1,71 @@
+<br>
 <footer class="footer mt-5">
-   <div class="container-fluid card bg-light p-5">
+   <div class="container-fluid bg-footer card p-5 m-0">
       <div class="container">
          <div class="row">
-            <h3 class="text-dark mb-5">Cooperativa Santandereana de Transportadores LTDA</h3>
+            <h3 class="mb-5">Cooperativa Santandereana de Transportadores LTDA</h3>
             <div class="col-8">
-               <p class="text-dark text-bold mb-0">
+               <p class="text-bold mb-0">
                   Oficina Principal
                </p>
-               <p class="text-dark mb-0">
+               <p class="mb-0">
                   Calle 55 No. 17B - 17 <br>
                   Bucaramanga - Santander - Colombia
                </p>
-               <p class="text-dark text-bold mb-0">
+               <p class="text-bold mb-0">
                   Oficina de Atención al Usuario
                </p>
-               <p class="text-dark mb-5">
+               <p class="mb-5">
                   Calle 54 No. 17B - 17 <br>
                   Bucaramanga - Santander - Colombia
                </p>
             </div>
             <div class="col-4">
-               <p class="text-dark text-bold mb-0">
+               <p class="text-bold mb-0">
                   Horario de Atención al Público
                </p>
-               <p class="text-dark mb-0">
+               <p class="mb-0">
                   Lunes a Viernes <br>
                   7:00 am - 12:00 m / 2:00 pm - 5:30 pm
                </p>
-               <p class="text-dark text-bold mb-0">
+               <p class="text-bold mb-0">
                   Línea Nacional de Servicio al Cliente
                </p>
-               <p class="text-dark mb-0">
+               <p class="mb-0">
                   323 5639139
+                  <br>
                   Email: servicioalcliente@copetran.com
                </p>
             </div>
          </div>
          <div class="row">
-            <h4 class="text-dark text-bold">
+            <h4 class="text-bold">
                Vigilado y Controlado por
             </h4>
          </div>
          <div class="row align-items-center mb-3">
-            <div class="col">
+            <div class="col img-footer">
                <img src="https://autogestion.copetran.com.co/cdn/img/logos/LogoSIC-sinfondo-AZUL.png" width="100%">
             </div>
-            <div class="col">
+            <div class="col img-footer">
                <img src="https://autogestion.copetran.com.co/cdn/img/logos/supertransporteblanco_azul.png" width="100%">
             </div>
-            <div class="col">
+            <div class="col img-footer">
                <img src="https://autogestion.copetran.com.co/cdn/img/logos/LOGO_TIC_AZUL.png" width="100%">
             </div>
-            <div class="col">
+            <div class="col img-footer img-basc">
                <img src="https://autogestion.copetran.com.co/cdn/img/logos/BASC.svg" width="100%">
             </div>
-            <div class="col">
+            <div class="col img-footer">
                <img src="https://autogestion.copetran.com.co/cdn/img/logos/ISO-9001-AZUL.png" width="50%">
             </div>
-            <div class="col">
+            <div class="col img-footer">
                <img src="https://autogestion.copetran.com.co/cdn/img/logos/ISO-14001-AZUL.png" width="50%">
             </div>
-            <div class="col">
+            <div class="col img-footer">
                <img src="https://autogestion.copetran.com.co/cdn/img/logos/ISO-39001-AZUL.png" width="50%">
             </div>
-            <div class="col">
+            <div class="col img-footer">
                <img src="https://autogestion.copetran.com.co/cdn/img/logos/ISO-45001-AZUL.png" width="50%">
             </div>
          </div>

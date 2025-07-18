@@ -15,7 +15,7 @@
 @section('content')
 <div class="container-fluid tableContainer p-0 border rounded sidebar-dark-primary" style="min-height:150px">
     <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-primary-subtle">
-        <span class="text-left fs-5 fw-medium py-1">Resultado ingreso-salida conductores</span>
+        <span class="text-left text-light fs-5 fw-medium py-1">Resultado ingreso-salida conductores</span>
         <a class="btn btn-warning fw-bold my-2" href="{{ route('reportes.conductores') }}">Volver</a>
     </div>
 

@@ -72,14 +72,14 @@
                        <i class="light-icon"></i>
                     </button>
 
-                    <div class="info d-flex flex-column align-items-center" style="width: 235px; margin: 0 auto; user-select: none;">
+                    <!-- <div class="info d-flex flex-column align-items-center" style="width: 235px; margin: 0 auto; user-select: none;">
                         <img src="{{ asset('img/LogoCope.png') }}" class="logoCope" style="width:100%; height: auto;" alt="Logo Cope">
                         <img src="{{ asset('img/LogoCopeBlancoFull.png') }}" class="logoCopeBlanco py-3" style="width:80%; height: auto; display:none" alt="Logo Cope ">
-                    </div>
+                    </div> -->
 
-                    <!-- <div class="info d-flex flex-column align-items-center logo-container">
+                    <div class="info d-flex flex-column align-items-center logo-container">
                         <img class="logo-responsive" alt="Logo Cope">
-                     </div> -->
+                     </div>
 
                     <div class="info text-muted" style="user-select: none; font-size: 0.75em;">
                         <hr class="mb-2">
