@@ -6,6 +6,7 @@ use App\Http\Controllers\GestionPasajesController;
 use App\Http\Controllers\GestionWebController;
 use App\Http\Controllers\IncapacidadController;
 use App\Http\Controllers\ModuloController;
+use App\Http\Controllers\PagosYConveniosController;
 use App\Http\Controllers\PermisosController;
 use App\Http\Controllers\PersonaController;
 use App\Http\Controllers\ReportesController;
@@ -186,6 +187,15 @@ Route::get('/forgot-password', [ForgotPasswordController::class, 'showForm'])->n
 Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink'])->name('password.email');
 Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
 Route::post('/reset-password', [ResetPasswordController::class, 'resetPassword'])->name('password.update');
+
+//Rutas modulo pagos y recaudos
+Route::prefix("pagos-recaudos")->middleware(['auth', 'permisos:pagos_y_recaudos.acceder','modulo.activo:16'])->group(function(){
+    Route::prefix("pago-convenio")->middleware(['permisos:pagos_y_recaudos.pagos_convenios.acceder','submodulo.activo:26'])->group(function(){
+        Route::get("/",[PagosYConveniosController::class,"index"])->name("pagosConvenios.index");
+        Route::post("/consultar",[PagosYConveniosController::class,"consultar"])->name("pagosConvenios.consultar");
+    });
+});
+
 
 //Tracking remesas
 Route::get('/tracking-remesas', function () {

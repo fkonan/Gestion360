@@ -39,7 +39,7 @@
         <div class="row gx-3 px-4">
             <div class="mb-3">
                 <label for="ModDesc" class="form-label">Descripción</label>
-                <textarea class="form-control" id="ModDesc" name="ModDesc" maxlength="300" rows="5"></textarea>
+                <textarea class="form-control" id="ModDesc" name="ModDesc" maxlength="300" rows="5" required></textarea>
                 <div class="form-text">Máximo 300 caracteres.</div>
                 <span class="error text-danger fw-bold" id="error-ModDesc"></span>
             </div>

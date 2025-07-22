@@ -14,17 +14,15 @@
     
 @section('content')
 <div class="container-fluid tableContainer p-0 border rounded sidebar-dark-primary" style="min-height:150px">
-    <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-primary-subtle">
-        <span class="text-left text-light fs-5 fw-medium py-1">Resultado ingreso-salida conductores</span>
-        <a class="btn btn-warning fw-bold my-2" href="{{ route('reportes.conductores') }}">Volver</a>
-    </div>
 
-    <button id="exportar" 
-        onclick="exportarExcel('exportar', `{{ route('ingresoSalida.cargarData') }}` , 'Informe_ingreso_salida_conductores')"
-        class="btn fw-bold ms-4 mt-4 bg-success botonBoostrapTable"> 
-        Descargar Excel 
-    </button>
-   
+    <x-sectionHeader 
+        titulo="Resultado ingreso-salida conductores"
+        rutaVolver="{{ route('reportes.conductores') }}"
+        excel="true"
+        excelRoute="{{ route('ingresoSalida.cargarData') }}"
+        excelName="Informe_ingreso_salida_conductores"
+    />
+
     <div style="padding:1.5em">
         <table
             id="ingresoSalidaTable"
