@@ -76,6 +76,15 @@ class SubModuloController extends Controller
             $modulo->ModHorReg = now();
             $modulo->save();
 
+            $moduloPadre = Modulo::find($request->Mod_Padre_Id);
+
+            $permisoAcceso = new Permission();
+            $permisoAcceso->name = normalizarNombre($moduloPadre->ModNom).".".normalizarNombre($request->ModNom).".acceder";
+            $permisoAcceso->guard_name = "web";
+            $permisoAcceso->created_at = now();
+            $permisoAcceso->updated_at = now();
+            $permisoAcceso->save();            
+
             return toastModal("Submodulo creado exitosamente", "success",route('submodulos.index'));
 
         }catch(Exception $e){

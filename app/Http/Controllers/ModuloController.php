@@ -65,10 +65,17 @@ class ModuloController extends Controller
             $modulo->ModEstado = "ACTIVO";
             $modulo->ModRuta = $request->ModRuta;
             $modulo->ModIcono = $request->ModIcono;
-            $modulo->ModPermiso = null;
+            $modulo->ModPermiso = normalizarNombre($request->ModNom).".acceder";
             $modulo->ModFechReg = now();
             $modulo->ModHorReg = now();
             $modulo->save();
+
+            $permisoAcceso = new Permission();
+            $permisoAcceso->name = normalizarNombre($request->ModNom).".acceder";
+            $permisoAcceso->guard_name = "web";
+            $permisoAcceso->created_at = now();
+            $permisoAcceso->updated_at = now();
+            $permisoAcceso->save();            
 
             return toastModal("Modulo creado exitosamente","success",route('modulos.index'));
 

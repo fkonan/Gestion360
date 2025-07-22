@@ -52,7 +52,7 @@
     <div class="wrapper">
 
         <!-- Pantalla de carga -->
-        <div class="preloader sidebar-dark-primary flex-column justify-content-center align-items-center">
+        <div id="mainLoader" class="preloader sidebar-dark-primary flex-column justify-content-center align-items-center">
             <div class="spinner-border text-secondary mt-2" role="status"></div>
             <p class="mt-1 fw-medium text-muted">Cargando...</p>
         </div>

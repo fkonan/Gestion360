@@ -19,6 +19,7 @@ class ApiAsopagos
 
         try{
             $response = Http::asForm()
+                ->retry(3, 300)
                 ->timeout(30)
                 ->post(config('apiAsopagos.token_url'), [
                     'username'      => config('apiAsopagos.credentials.auth_username'),
@@ -190,7 +191,7 @@ class ApiAsopagos
                 $resultado['sequenceId']);
 
             // Verifica si el reverso también falló
-            if (isset($reverso['error']) && isset($reverso['reverso']['responseCode']) && $reverso['reverso']['responseCode'] == true) {
+            if (($reverso['reverso']['responseCode'])  == false || isset($reverso['error'])) {
                 Log::critical('⚠️ Fallo reverso tras timeout en retiro. Acción manual requerida.', [
                     'retiro_error'   => $resultado['error'] ?? $resultado['errorID'] ?? 'Error desconocido',
                     'reverso_error'  => $reverso['error'] ?? $reverso['errorID'],
