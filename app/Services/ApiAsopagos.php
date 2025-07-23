@@ -73,8 +73,8 @@ class ApiAsopagos
             'partnerId'            => config('apiAsopagos.partner_id'),
             'originId'             => config('apiAsopagos.origin_id'),
             'clientId'             => config('apiAsopagos.client_id_value'),
-            'sequenceId'           => $sequenceId ?? now()->timestamp, //<-- mirar este dato como se calcularia
-            'transactionId'        => $transactionId ?? now()->timestamp, //<-- mirar este dato como se calcularia
+            'sequenceId'           => $sequenceId ?? now()->timestamp, //<-- mirar este dato como se calcula
+            'transactionId'        => $transactionId ?? now()->timestamp, //<-- mirar este dato como se calcula
             'currencyCode'         => '170',
             'transmissionDateTime' => now()->format('Y-m-d H:i:s'),
             'businessLine'         => '03',
@@ -230,7 +230,5 @@ class ApiAsopagos
             'identificationType' => $tipoDoc,
             'identification'     => $documento,
         ],$transactionId,$sequenceId);
-
-
     }
 }

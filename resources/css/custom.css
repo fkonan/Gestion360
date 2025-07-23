@@ -403,15 +403,6 @@
 }
 
 /* Estilos menu lateral */
-.nav-collapse-hide-child .menu-open:not(.menu-is-opening) > .nav-treeview {
-  max-height: min-content;
-  animation-name: fadeIn;
-  animation-duration: 0.3s;
-  animation-fill-mode: both;
-}
-
-
-
 body.sidebar-collapse .main-sidebar {
     position: fixed;
     top: 0;
