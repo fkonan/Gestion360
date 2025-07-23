@@ -121,6 +121,8 @@ function validarFormulario(form, TYPE="POST") {
                 contentType: false,
                 dataType: "json",
                 success: function (response) {
+                    $("#innerHtml").html(''); 
+
                     //caso 1: Se retorne un html -> se carga el html en la misma vista
                     if (response.success && response.html) {
                         $("#innerHtml").html(response.html);

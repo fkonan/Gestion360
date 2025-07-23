@@ -13,7 +13,7 @@
 ])
 
 <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-primary-subtle">
-    <span class="text-left text-light fs-5 fw-medium py-2">{{ $titulo }}</span>
+    <span class="text-left text-light fs-5 fw-medium py-1">{{ $titulo }}</span>
 </div>
 
 <div class="botonBoostrapTable ms-4 mt-2">
