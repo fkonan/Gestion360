@@ -10,13 +10,14 @@
     'excel' => false,               // Mostrar boton de descargar en excel 
     'excelRoute' => '',             // Ruta de la data del excel
     'excelName' => '',              // Nombre del archivo excel
+    'clasePosition' => true,        // Clase "botonBoostrapTable" la cual ayuda a que los botones se vean bien si estan antes de una tabla
 ])
 
 <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-primary-subtle">
     <span class="text-left text-light fs-5 fw-medium py-1">{{ $titulo }}</span>
 </div>
 
-<div class="botonBoostrapTable ms-4 mt-2">
+<div class="{{ $clasePosition ? 'botonBoostrapTable mt-2' : 'mt-3' }} ms-4">
     <a style="width: 150px;" class="btn btn-success fw-bold" href="{{ $rutaVolver }}">Regresar</a>
 
     @if($crear === 'newpage')

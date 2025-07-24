@@ -36,7 +36,9 @@
         </div>
 
         <div class="text-end mb-2">
-            <button type="button" class="btn btn-success shadow-sm me-1">
+            <button type="button" 
+                    class="btn btn-success shadow-sm me-1"
+                    onclick="cargarModal(`{{ route('pagosConvenios.validarModal') }}`, 'Validar pago', '#formPago', 'modal-lg')">
                 <i class="fas fa-check-circle me-1"></i> Validar
             </button>
         </div>

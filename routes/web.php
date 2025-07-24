@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AppmovilController;
 use App\Http\Controllers\ConductorController;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\GestionPasajesController;
@@ -178,8 +179,19 @@ Route::prefix("gestionPasajes")->middleware(['auth', 'permisos:gestion_pasajes.a
 });
 
 //Rutas Modulo Gestion Web
-Route::prefix("gestionWeb")->middleware(['auth','permisos:gestion_web.acceder','modulo.activo:14'])->group(function(){ 
+Route::prefix("gestion-web")->middleware(['auth','permisos:gestion_web.acceder','modulo.activo:14'])->group(function(){ 
     Route::get("/chatbot",[GestionWebController::class,"loginChatBot"])->name("chatbot.index");
+
+    //Submodulo gestion appmovil
+    Route::prefix("gestion-appmovil")->middleware(['submodulo.activo:27'])->group(function(){
+        Route::get("/",[AppmovilController::class,"indexGestionMovil"])->name("gestion-appmovil.index");
+
+        Route::prefix("notificaciones")->name("notificaciones.")->group(function(){
+            Route::get("/",[AppmovilController::class,"notificaciones"])->name("index");
+            Route::post("/registrar",[AppmovilController::class,"registrarNotificacion"])->name("registrar");
+            Route::get("/usuarios/buscar", [AppmovilController::class, 'usuariosConAppmovil'])->name('usuarios-disponibles');
+        });
+    });
 });
 
 //Rutas olvido/restablecimiento de contraseña
@@ -193,6 +205,7 @@ Route::prefix("pagos-recaudos")->middleware(['auth', 'permisos:pagos_y_recaudos.
     Route::prefix("pago-convenio")->middleware(['permisos:pagos_y_recaudos.pagos_convenios.acceder','submodulo.activo:26'])->group(function(){
         Route::get("/",[PagosYConveniosController::class,"index"])->name("pagosConvenios.index");
         Route::post("/consultar",[PagosYConveniosController::class,"consultar"])->name("pagosConvenios.consultar");
+        Route::get("/validar-pago",[PagosYConveniosController::class,"validarModal"])->name("pagosConvenios.validarModal");
     });
 });
 

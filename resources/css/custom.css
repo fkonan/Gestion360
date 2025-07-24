@@ -327,7 +327,6 @@
    color:var(--bs-dark)!important;
 }
 
-[data-bs-theme="dark"] .select2-selection__rendered,
 [data-bs-theme="dark"] .select2-results,
 [data-bs-theme="dark"] .select2-selection,
 [data-bs-theme="dark"] .swalAlert
@@ -351,6 +350,12 @@
 [data-bs-theme="dark"] .bootstrap-duallistbox-container .box2,
 [data-bs-theme="dark"] .bootstrap-duallistbox-container select{
     background-color: var(--bs-gray-800) !important;
+    color: var(--bs-light) !important;
+}
+
+[data-bs-theme="dark"] #formNotificacion .form-control,
+[data-bs-theme="dark"] #formNotificacion .select-control{
+    background-color: var(--bs-dark-bg-subtle);
     color: var(--bs-light) !important;
 }
 

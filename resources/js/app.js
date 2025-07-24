@@ -18,6 +18,9 @@ import 'bootstrap-table/dist/locale/bootstrap-table-es-ES.min.js';
 import 'bootstrap-table/dist/bootstrap-table.min.css';
 import 'bootstrap-table/dist/extensions/mobile/bootstrap-table-mobile.min.js';
 
+// Select2 estilos
+import 'select2/dist/css/select2.min.css';
+import 'select2-bootstrap-5-theme/dist/select2-bootstrap-5-theme.min.css';
 
 // Bootstrap modal
 import { Modal } from 'bootstrap';
