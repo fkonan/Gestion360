@@ -58,7 +58,7 @@
 @pushOnce('script')
     @vite(['resources/js/cargarModal.js'])
     <script>
-    function estadoFormatter(value, row) {s
+    function estadoFormatter(value, row) {
         const checked = row.ModEstado === 'ACTIVO' ? 'checked' : '';
         const url = "{{ route('modulos.cambiarEstado', ['id' => ':id']) }}".replace(':id', row.IdModulo);
         return `

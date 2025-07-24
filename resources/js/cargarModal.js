@@ -46,6 +46,7 @@ function cargarModal(url, titulo = "", formularioId = null, size = null, type = 
             // Inicializar select2 solo si aún no está activado
             if ($('.select2').data('select2') === undefined) {
                 $('.select2').select2({
+                    theme: 'bootstrap-5',
                     dropdownParent: $modal,
                     width: '100%'
                 });

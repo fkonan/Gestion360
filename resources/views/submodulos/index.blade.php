@@ -21,6 +21,7 @@
         crearRoute="{{ route('submodulos.create') }}"
         crearLabel="Crear SubModulo"
         crearModalTarget="#formSubModulo"
+        modalSize="modal-xl"
     />
     
     <div id="no-more-tables" class="table-responsive" style="padding:1.5em">
@@ -92,7 +93,7 @@
                         <a class="text-decoration-none" 
                             title="Editar submodulo"
                             style="cursor: pointer;"
-                            onclick="cargarModal('${urlEditar}', 'Editar SubModulo', '#formFormato')">
+                            onclick="cargarModal('${urlEditar}', 'Editar SubModulo', '#formFormato','modal-xl')">
                             <img src="{{ asset('img/edit.png') }}" alt="Editar SubModulo" style="width: 32px; height: 32px;">
                         </a>
                     @endpermite
