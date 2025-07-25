@@ -354,8 +354,10 @@
 }
 
 [data-bs-theme="dark"] #formNotificacion .form-control,
-[data-bs-theme="dark"] #formNotificacion .select-control{
-    background-color: var(--bs-dark-bg-subtle);
+[data-bs-theme="dark"] #formNotificacion .select-control,
+[data-bs-theme="dark"] #formNotificacion .select2-selection,
+[data-bs-theme="dark"] #formNotificacion .select2-selection__choice{   
+    background-color: var(--bs-dark-bg-subtle) !important;
     color: var(--bs-light) !important;
 }
 

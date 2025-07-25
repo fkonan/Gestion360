@@ -12,11 +12,11 @@ class EmpleadoService
     {
         return DB::connection('oracle')
             ->table('per_empresapersonas as ep')
-            ->join('per_contrato_persona as cp', 'ep.pe_id_pe', '=', 'cp.pe_id_pe')
+            ->join('per_personas as p', 'ep.pe_id_pe', '=', 'p.id')
             ->where('ep.activo', 1)
             ->where('ep.estborrado', 0)
             ->where('ep.tp_id', 1)
-            ->where('cp.identificacion', $identificacion)
+            ->where('p.identificacion', $identificacion)
             ->exists();
     }
 
@@ -25,11 +25,11 @@ class EmpleadoService
         return Cache::remember('empleados_oracle', 300, function () {
             return DB::connection('oracle')
                 ->table('per_empresapersonas as ep')
-                ->join('per_contrato_persona as cp', 'ep.pe_id_pe', '=', 'cp.pe_id_pe')
+                ->join('per_personas as p', 'ep.pe_id_pe', '=', 'p.id')
                 ->where('ep.activo', 1)
                 ->where('ep.estborrado', 0)
                 ->where('ep.tp_id', 1)
-                ->pluck('cp.identificacion')
+                ->pluck('p.identificacion')
                 ->toArray();
         });
     }
@@ -37,18 +37,18 @@ class EmpleadoService
     //lista de centros de costo para un grupo de identificaciones
     public static function obtenerCentrosCostoMasivos(array $identificaciones): array{
         return DB::connection('oracle')
-            ->table('per_contrato_persona as cp')
-            ->join('per_empresapersonas as ep', 'cp.pe_id_pe', '=', 'ep.pe_id_pe')
+            ->table('per_personas as p')
+            ->join('per_empresapersonas as ep', 'p.id', '=', 'ep.pe_id_pe')
             ->join('per_cargoccostos as cc', 'ep.cc_id', '=', 'cc.id')
             ->join('per_centrocostos as ct', 'cc.ct_codigo', '=', 'ct.codigo')
-            ->whereIn('cp.identificacion', $identificaciones)
+            ->whereIn('p.identificacion', $identificaciones)
             ->where('ep.activo', 1)
             ->where('ep.estborrado', 0)
             ->where('cc.activo', 1)
             ->where('cc.estborrado', 0)
             ->where('ct.estado', 1)
             ->where('ct.estborrado', 0)
-            ->pluck('ct.descripcion', 'cp.identificacion') 
+            ->pluck('ct.descripcion', 'p.identificacion') 
             ->toArray();
     }
 }

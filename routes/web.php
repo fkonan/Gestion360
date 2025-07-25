@@ -184,12 +184,16 @@ Route::prefix("gestion-web")->middleware(['auth','permisos:gestion_web.acceder',
 
     //Submodulo gestion appmovil
     Route::prefix("gestion-appmovil")->middleware(['submodulo.activo:27'])->group(function(){
+        //index
         Route::get("/",[AppmovilController::class,"indexGestionMovil"])->name("gestion-appmovil.index");
 
+        //Notificaciones
         Route::prefix("notificaciones")->name("notificaciones.")->group(function(){
             Route::get("/",[AppmovilController::class,"notificaciones"])->name("index");
+            Route::get("/crear",[AppmovilController::class,"crearNotificacion"])->name("create");
             Route::post("/registrar",[AppmovilController::class,"registrarNotificacion"])->name("registrar");
             Route::get("/usuarios/buscar", [AppmovilController::class, 'usuariosConAppmovil'])->name('usuarios-disponibles');
+            Route::get("/cargarDatos",[AppmovilController::class,"cargarNotificaciones"])->middleware('soloAJAX')->name("cargarDatos");
         });
     });
 });
