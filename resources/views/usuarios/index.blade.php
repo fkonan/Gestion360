@@ -1,78 +1,92 @@
 @extends('layouts.dashboard')
-
-@section('title','Lista usuarios')
-
-@section('breadcrumb')
-<x-breadcrumb :items="[
+@section('title','Lista usuarios') @section('breadcrumb')
+<x-breadcrumb
+   :items="[
         ['name' => 'Inicio', 'url' => route('home')],
         ['name' => 'Usuarios'],
-    ]" />
-<br>
-@endsection
+    ]"
+/>
+<br />
+@endsection @section('content')
+<div
+   class="container-fluid p-0 border rounded sidebar-dark-primary tableContainer"
+   style="min-height: 150px"
+>
+   <x-cardHeader
+      titulo="Usuarios registrados"
+      :crear="true"
+      rutaVolver="{{ route('home') }}"
+      crearRoute="{{ route('usuarios.create') }}"
+      crearLabel="Crear Usuario"
+      crearModalTarget="#formCrearUsuario"
+   />
 
-@section('content')
-<div class="container-fluid p-0 border rounded sidebar-dark-primary tableContainer" style="min-height:150px;">
-
-    <x-cardHeader
-        titulo="Usuarios registrados"
-        :crear="true"
-        rutaVolver="{{ route('home') }}"
-        crearRoute="{{ route('usuarios.create') }}"
-        crearLabel="Crear Usuario"
-        crearModalTarget="#formCrearUsuario"
-    />
-
-    <div id="no-more-tables" class="table-responsive" style="padding:1.5em">
-        <table
-            id="usuariosDataTable"
-            class="table table-sm table-striped"
-            data-toggle="table"
-            data-page-size="25"
-            data-search="true"
-            data-locale="es-ES"
-            data-pagination="true"
-            data-responsive="true"
-            data-check-on-init="true"
-            data-detail-view="true"
-            data-sort-name='fechaHoraRegistro'
-            data-sort-order='desc'
-            data-detail-formatter="detalleUsuario"
-            data-side-pagination="server"
-            data-url="{{ route('usuarios.cargarDatos') }}">
-            <thead class="table-primary">
-                <tr>
-                    <th data-field="PerNumDoc" data-visible="true">Identificación</th>
-                    <th data-field="nombreCompleto">Nombre y apellidos</th>
-                    <th data-field="centroCosto">Centro de costo</th>
-                    <th class="text-nowrap text-center" data-field="fechaHoraRegistro" data-sortable="true">Fecha registro</th>
-                    <th class="text-nowrap" data-field="rol">Rol</th>
-                    @permite('administracion.usuarios.actualizar')
-                        <th class="text-center" data-field="estado" data-formatter="estadoFormatter">Estado</th>
-                    @endpermite
-                    @if(
-                        auth()->user()->can('administracion.usuarios.asignar_permisos') ||
-                        auth()->user()->can('administracion.usuarios.asignar_roles') ||
-                        auth()->user()->can('administracion.usuarios.actualizar')
-                    )
-                        <th data-field="acciones" data-formatter="accionesFormatter">Acciones</th>
-                    @endif
-
-                </tr>
-            </thead>
-        </table>
-    </div>
+   <div id="no-more-tables" class="table-responsive" style="padding: 1.5em">
+      <table
+         id="usuariosDataTable"
+         class="table table-sm table-striped"
+         data-toggle="table"
+         data-page-size="25"
+         data-search="true"
+         data-locale="es-ES"
+         data-pagination="true"
+         data-responsive="true"
+         data-check-on-init="true"
+         data-detail-view="true"
+         data-sort-name="fechaHoraRegistro"
+         data-sort-order="desc"
+         data-detail-formatter="detalleUsuario"
+         data-side-pagination="server"
+         data-url="{{ route('usuarios.cargarDatos') }}"
+      >
+         <thead class="table-primary">
+            <tr>
+               <th data-field="PerNumDoc" data-visible="true">
+                  Identificación
+               </th>
+               <th data-field="nombreCompleto">Nombre y apellidos</th>
+               <th data-field="centroCosto">Centro de costo</th>
+               <th
+                  class="text-nowrap text-center"
+                  data-field="fechaHoraRegistro"
+                  data-sortable="true"
+               >
+                  Fecha registro
+               </th>
+               <th class="text-nowrap" data-field="rol">Rol</th>
+               @permite('administracion.usuarios.actualizar')
+               <th
+                  class="text-center"
+                  data-field="estado"
+                  data-formatter="estadoFormatter"
+               >
+                  Estado
+               </th>
+               @endpermite @if(
+               auth()->user()->can('administracion.usuarios.asignar_permisos')
+               || auth()->user()->can('administracion.usuarios.asignar_roles')
+               || auth()->user()->can('administracion.usuarios.actualizar') )
+               <th data-field="acciones" data-formatter="accionesFormatter">
+                  Acciones
+               </th>
+               @endif
+            </tr>
+         </thead>
+      </table>
+   </div>
 </div>
 
-@endsection
+@endsection @pushOnce('script') @vite(['resources/js/cargarModal.js'])
 
-
-@pushOnce('script')
-    @vite(['resources/js/cargarModal.js'])
-    <script>
-    function estadoFormatter(value, row) {
-        const checked = row.estado === 'ACTIVO' ? 'checked' : '';
-        const url = "{{ route('usuarios.cambiarEstado', ['id' => ':id']) }}".replace(':id', row.IdUsuario);
-        return `
+<script>
+   function estadoFormatter(value, row) {
+      const checked = row.estado === "ACTIVO" ? "checked" : "";
+      const url =
+         "{{ route('usuarios.cambiarEstado', ['id' => ':id']) }}".replace(
+            ":id",
+            row.IdUsuario
+         );
+      return `
             <div class="form-check form-switch d-flex justify-content-center">
                 <input
                     onchange="actualizarEstado('${url}')"
@@ -83,14 +97,23 @@
                     ${checked}>
             </div>
         `;
-    }
+   }
 
-    function accionesFormatter(index, row) {
-        let urlPermisos = "{{ route('permisos.edit', ['id' => ':id']) }}".replace(':id', row.IdUsuario);
-        let urlRoles = "{{ route('roles.edit', ['id' => ':id']) }}".replace(':id', row.IdUsuario);
-        let urlUsuarios = "{{ route('usuarios.edit', ['id' => ':id']) }}".replace(':id', row.IdUsuario);
+   function accionesFormatter(index, row) {
+      let urlPermisos = "{{ route('permisos.edit', ['id' => ':id']) }}".replace(
+         ":id",
+         row.IdUsuario
+      );
+      let urlRoles = "{{ route('roles.edit', ['id' => ':id']) }}".replace(
+         ":id",
+         row.IdUsuario
+      );
+      let urlUsuarios = "{{ route('usuarios.edit', ['id' => ':id']) }}".replace(
+         ":id",
+         row.IdUsuario
+      );
 
-        return `
+      return `
             <div class="d-flex flex-row align-items-center justify-content-center gap-3" style="flex-wrap:nowrap;">
             @permite('administracion.usuarios.asignar_permisos')
                 <a class="text-decoration-none"
@@ -118,32 +141,29 @@
             @endpermite
             </div>
         `;
-    }
+   }
 
-    function togglePasswordVisibility() {
-        let passwordField = document.getElementById("Password");
-        if (passwordField.disabled) {
-            passwordField.disabled = false;
-            passwordField.type = "text";
-            passwordField.dataset.previousValue = passwordField.value;
-            passwordField.value = "";
-        } else {
-            passwordField.disabled = true;
-            passwordField.type = "password";
-            passwordField.value = passwordField.dataset.previousValue;
-        }
-    }
+   function togglePasswordVisibility() {
+      let passwordField = document.getElementById("Password");
+      if (passwordField.disabled) {
+         passwordField.disabled = false;
+         passwordField.type = "text";
+         passwordField.dataset.previousValue = passwordField.value;
+         passwordField.value = "";
+      } else {
+         passwordField.disabled = true;
+         passwordField.type = "password";
+         passwordField.value = passwordField.dataset.previousValue;
+      }
+   }
 
-    document.addEventListener("DOMContentLoaded", () => {
-        initTablaBootstrapTable(
-            '#usuariosDataTable',
-            { protegidas: ['persona.PerNumDoc'] },
-            'detalleUsuario',
-            { 'acciones': accionesFormatter,
-                'estado': estadoFormatter,
-            }
-        );
-    });
+   document.addEventListener("DOMContentLoaded", () => {
+      initTablaBootstrapTable(
+         "#usuariosDataTable",
+         { protegidas: ["persona.PerNumDoc"] },
+         "detalleUsuario",
+         { acciones: accionesFormatter, estado: estadoFormatter }
+      );
+   });
 </script>
 @endpushOnce
-

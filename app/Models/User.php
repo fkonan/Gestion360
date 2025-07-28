@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
@@ -31,7 +32,7 @@ class User extends Authenticatable
         'UsuFecReg','UsuHorReg','UsuReg',
         'UsuarioEstado','Verificado',
     ];
-  
+
     public function persona(): BelongsTo{
         return $this->belongsTo(Persona::class,'idPersona','IdPersona')
                     ->where('PerEstado', 'ACTIVO');
@@ -98,5 +99,15 @@ class User extends Authenticatable
                 ->first();
         });
     }
+
+
+
+
+   // Verificar contraseña con SHA-1
+   public function validateCredentials($password)
+   {
+      $sha1Driver = Hash::driver('sha1');
+      return $sha1Driver->check($password, $this->clave);
+   }
 
 }
