@@ -95,11 +95,11 @@
                         </select>
                     <span class="error text-danger fw-bold" id="error-PerLugExp"></span>
                 </div>
-                <div class="col-md-4 mb-3">
+               <!--  <div class="col-md-4 mb-3">
                     <label for="PerGruRh" class="form-label">Grupo Sanguíneo</label>
                     <input type="text" class="form-control" id="PerGruRh" name="PerGruRh" value="{{ $persona->PerGruRh }}">
                     <span class="error text-danger fw-bold" id="error-PerGruRh"></span>
-                </div>
+                </div> -->
             </div>
 
             <div class="row mx-4 pb-4">

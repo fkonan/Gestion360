@@ -2,6 +2,7 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Session\TokenMismatchException;
 use Spatie\Permission\Exceptions\UnauthorizedException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -50,6 +51,10 @@ class Handler extends ExceptionHandler
         if ($exception instanceof UnauthorizedException) {
             session()->flash('alert', ['type' => 'warning','title' => 'No tienes los permisos necesarios para acceder.']);
             return redirect()->back();
+        }
+
+        if ($exception instanceof TokenMismatchException) {
+            return toast('Tu sesión ha expirado. Por favor, inicia sesión de nuevo.', 'danger', route('login.form'));
         }
 
         return parent::render($request, $exception);
