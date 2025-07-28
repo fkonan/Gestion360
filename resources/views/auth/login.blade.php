@@ -17,7 +17,12 @@
             Puedes iniciar sesión usando las mismas credenciales que tienes en la aplicación móvil.
            
          </div>
-        
+         @if (request()->has('expired'))
+            <div class="alert alert-warning">
+               Tu sesión ha expirado. Por favor, inicia sesión nuevamente.
+            </div>
+         @endif
+
          <div class="card p-1">
             <div class="card-body">
                <div class="d-flex justify-content-between align-items-center mb-3">

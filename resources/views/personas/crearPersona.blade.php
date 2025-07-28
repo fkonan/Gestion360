@@ -75,7 +75,7 @@
             </div>
 
             <div class="row mx-4">
-            <div class="col-md-4 mb-3">
+            <div class="col-md-4 mb-5">
                     <label for="PerFecNac" class="form-label">Fecha de Nacimiento</label>
                     <input type="date" class="form-control" id="PerFecNac" name="PerFecNac" required>
                     <span class="error text-danger fw-bold" id="error-PerFecNac"></span>
@@ -101,14 +101,14 @@
                     <span class="error text-danger fw-bold" id="error-PerFecExp"></span>
                 </div>
             </div>
-            <div class="row mx-4 pb-4">
+            <!-- <div class="row mx-4 pb-4">
                 <div class="col-md-4 mb-3">
                     <label for="PerGruRh" class="form-label">Grupo Sanguíneo</label>
                     <input type="text" class="form-control" id="PerGruRh" name="PerGruRh">
                     <span class="error text-danger fw-bold" id="error-PerGruRh"></span>
                 </div> 
             </div>
-
+ -->
             <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-primary-subtle">
                 <span class="text-left text-light fs-5 fw-medium ">Información adicional</span>
             </div>

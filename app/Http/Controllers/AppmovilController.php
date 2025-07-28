@@ -42,11 +42,17 @@ class AppmovilController extends Controller
         return view("gestionWeb.appmovil.notificaciones.index");
     }
 
+    public function crearNotificacion(){
+        return view("gestionWeb.appmovil.notificaciones.crearNotificacion");
+    }
+
     public function registrarNotificacion(Request $request){
 
         $data = $request->all();
+        $usuarios = $data['usuarios'] ?? null;
+        $grupos = $data['grupos'] ?? null;
 
-         $validator = Validator::make($data, [
+        $validator = Validator::make($data, [
             'titulo' => 'required|string|max:100',
             'bodyPush' => 'required|string|max:140',
             'bodyCompleto' => 'required|string',
@@ -68,21 +74,17 @@ class AppmovilController extends Controller
             'programada.date_format' => 'La fecha no tiene el formato correcto'
         ]);
 
-        //validaciones adicionales para el destino de la notificacion
-        $usuarios = $data['usuarios'] ?? null;
-        $grupos = $data['grupos'] ?? null;
-
-        if ((is_array($usuarios) && count($usuarios) > 0) && (is_array($grupos) && count($grupos) > 0)) {
+        // Validación personalizada para evitar enviar a usuarios y grupos al mismo tiempo
+        if (!empty($usuarios) && !empty($grupos)) {
             $validator->after(function ($validator) {
                 $validator->errors()->add('destino', 'No puede seleccionar usuarios y grupos al mismo tiempo.');
-                $validator->errors()->add('grupodestinos', 'No puede seleccionar usuarios y grupos al mismo tiempo.');
             });
         }
 
-        if ((!is_array($usuarios) || count($usuarios) === 0) && (!is_array($grupos) || count($grupos) === 0)) {
+        // Validación personalizada para asegurarse de que se seleccione al menos un destino
+        if (empty($usuarios) && empty($grupos)) {
             $validator->after(function ($validator) {
                 $validator->errors()->add('destino', 'Debe seleccionar al menos un usuario o un grupo.');
-                $validator->errors()->add('destino', 'Debe seleccionar al menos un grupo o un usuario.');
             });
         }
 
@@ -95,30 +97,30 @@ class AppmovilController extends Controller
         try{
             //Informacion adicional para la notificacion
             $destinatarios = null;
+            $privacidad = 'privada';
 
-            if (!empty($data['usuarios'])) {
-                $usuarios = array_map('intval', $data['usuarios']); 
+            if (!empty($usuarios)) {
+                $usuarios = array_map('intval', $usuarios);
                 $destinatarios = json_encode(['usuarios' => $usuarios]);
-            }
-
-            if (!empty($data['grupos'])) {
-                $grupos = array_map('strval', $data['grupos']);
+            } elseif (!empty($grupos)) {
+                $grupos = array_map('strval', $grupos);
                 $destinatarios = json_encode(['grupos' => $grupos]);
+
+                if (in_array('clientes', $grupos)) {
+                    $privacidad = 'publica';
+                }
             }
 
-            // Define la privacidad de la notificacion
-            if (in_array('clientes', $grupos)) {
-                $privacidad = 'publica'; 
-            }
-
-            $notificacion = new Notificaciones();
-            $notificacion->titulo = $request->titulo;
-            $notificacion->bodyPush = $request->bodyPush;
-            $notificacion->bodyCompleto = $request->bodyCompleto;
-            $notificacion->destino = $destinatarios;
-            $notificacion->privacidad = $privacidad ?? 'privada';
-            $notificacion->programada = $request->programada ?? null;
-            $notificacion->save();
+            // Crear la notificación
+            Notificaciones::create([
+                'titulo' => $request->titulo,
+                'bodyPush' => $request->bodyPush,
+                'bodyCompleto' => $request->bodyCompleto,
+                'destino' => $destinatarios,
+                'privacidad' => $privacidad ?? 'privada',
+                'programada' => $request->programada,
+                'createdBy' => 'Gestion360'
+            ]);
 
             return toastModal("Notificacion creada correctamente","success",route('notificaciones.index'));
 
@@ -127,5 +129,23 @@ class AppmovilController extends Controller
             return toastModal("Error al registrar la notificacion","error",route('notificaciones.index'));
         }
 
+    }
+
+    public function cargarNotificaciones(){
+        $notificaciones = Notificaciones::where('createdBy', 'Gestion360')->get()->map(function ($item) {
+            return [
+                'titulo' => $item->titulo,
+                'bodyPush' => $item->bodyPush,
+                'bodyCompleto' => $item->bodyCompleto,
+                'destino' => $item->destino,
+                'estado' => $item->estado,
+                'privacidad' => $item->privacidad,
+                'proceso' => $item->proceso,
+                'programada' => $item->programada,
+                'createdAt' => $item->createdAt,
+            ];
+        });
+        
+        return $notificaciones;
     }
 }
