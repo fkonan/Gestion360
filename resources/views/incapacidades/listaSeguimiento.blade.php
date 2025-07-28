@@ -14,7 +14,7 @@
 @section('content')
 <div class="container-fluid p-0 border sidebar-dark-primary rounded" style="min-height:150px;">
 
-    <x-cardHeader 
+    <x-sectionHeader 
         titulo="Seguimiento incapacidades"
         rutaVolver="{{ route('gestion-incapacidades.index') }}"
     />

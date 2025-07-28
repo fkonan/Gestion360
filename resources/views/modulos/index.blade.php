@@ -14,13 +14,14 @@
 @section('content')
 <div class="container-fluid p-0 border rounded sidebar-dark-primary tableContainer" style="min-height:150px">
 
-    <x-cardHeader 
+    <x-sectionHeader 
         titulo="Módulos"
         rutaVolver="{{ route('gestion-sistema.index') }}"
         :crear="true"
         crearRoute="{{ route('modulos.create') }}"
         crearLabel="Crear Modulo"
         crearModalTarget="#formFormato"
+        modalSize="modal-xl"
     />
 
     <div id="no-more-tables" class="table-responsive" style="padding:1.5em">

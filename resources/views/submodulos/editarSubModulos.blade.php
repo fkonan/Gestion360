@@ -12,7 +12,7 @@
         <div class="row g-3 p-4">       
             <div class="col-md-4">
                 <label for="SubModNom" class="form-label">Nombre</label>
-                <input type="text" class="form-control" id="SubModNom" name="SubModNom" maxlength="100" value="{{ $moduloEdit->ModNom }}" required>
+                <input type="text" class="form-control" id="SubModNom" name="SubModNom" maxlength="100" value="{{ $moduloEdit->ModNom }}" readonly>
                 <span class="error text-danger fw-bold" id="error-SubModNom"></span>
             </div>
 

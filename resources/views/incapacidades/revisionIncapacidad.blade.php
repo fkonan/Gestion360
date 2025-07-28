@@ -1,5 +1,5 @@
 <!-- Modal datos incapacidad -->
-<div class="container-fluid p-0 bg-white rounded">
+<div class="container-fluid p-0 rounded">
     <form 
         id="formIncapacidad" 
         action="{{ route('gestion-incapacidades.incapacidades.update', ['id' => $incapacidad->IdIncapacidad]) }}" 

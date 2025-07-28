@@ -72,7 +72,6 @@
          </button>
       </section>
       
-
       <section class="py-5">
          @yield('content')
       </section>
