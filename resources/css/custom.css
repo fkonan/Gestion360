@@ -329,8 +329,8 @@
 
 [data-bs-theme="dark"] .select2-results,
 [data-bs-theme="dark"] .select2-selection,
-[data-bs-theme="dark"] .swalAlert
-{
+[data-bs-theme="dark"] .swalAlert,
+[data-bs-theme="dark"] .select2-selection__rendered{
     background-color: var(--bs-gray-800) !important;
     color: var(--bs-light) !important;
 }
@@ -361,6 +361,10 @@
     color: var(--bs-light) !important;
 }
 
+[data-bs-theme="dark"] .form-control[readonly]{
+    background-color: rgba(var(--bs-dark-rgb), var(--bs-bg-opacity)) !important;
+}
+ 
 .content-wrapper{
    background-color:var(--bs-light-rgb)
 }
