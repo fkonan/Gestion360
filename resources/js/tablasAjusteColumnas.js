@@ -122,7 +122,7 @@ export function generarDetalle(selector, row, opcionesFormatter = {}) {
         if (String(contenidoCampo).trim() !== '') {
             hayContenidoEnDetalle = true;
             htmlContenidoDetalle += `
-                <li class="list-group-item">
+                <li class="list-group-item sidebar-dark-primary">
                     <div class="d-flex align-items-center gap-2 flex-wrap">
                         <strong style="white-space: nowrap;">${label}:</strong>
                         <div>${contenidoCampo}</div>

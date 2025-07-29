@@ -38,15 +38,16 @@
             data-url="{{ route('notificaciones.cargarDatos') }}">
             <thead class="table-primary">
                 <tr>
-                    <th data-field="titulo">Título</th>
-                    <th data-field="bodyPush">Nombre</th>
-                    <th data-field="bodyCompleto">Descripción</th>
-                    <th data-field="destino">Destinatarios</th>
-                    <th data-field="estado">Estado</th>
-                    <th data-field="privacidad">Privacidad</th>
-                    <th data-field="proceso">Proceso</th>
-                    <th data-field="programada">Programada</th>
-                    <th data-field="createdAt">Fecha Creación</th> 
+                    <th class="text-nowrap" data-field="titulo" data-sortable="true">Título</th>
+                    <th class="text-nowrap" data-field="usuarioCrea" data-sortable="true">Usuario crea</th>
+                    <th class="text-nowrap" data-field="estado" data-sortable="true">Estado</th>
+                    <th class="text-nowrap" data-field="privacidad" data-sortable="true">Privacidad</th>
+                    <th class="text-nowrap" data-field="proceso" data-sortable="true"> Proceso</th>
+                    <th class="text-nowrap" data-field="programada" data-sortable="true">Fecha programada</th>
+                    <th class="text-nowrap" data-field="createdAt" data-sortable="true">Fecha Creación</th> 
+                    <th class="text-nowrap" data-field="destino" data-sortable="true" data-escape="false">Destinatarios</th>
+                    <th class="text-nowrap" data-field="bodyPush">Resumen Push</th>
+                    <th class="text-nowrap" data-field="bodyCompleto">Descripción</th>
                 </tr>
             </thead>
         </table>

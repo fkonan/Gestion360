@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\GESTIONADMIN\Notificaciones;
 use App\Models\User;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
@@ -116,10 +117,12 @@ class AppmovilController extends Controller
                 'titulo' => $request->titulo,
                 'bodyPush' => $request->bodyPush,
                 'bodyCompleto' => $request->bodyCompleto,
+                'usuarioCrea' => Auth::user()->IdUsuario,
                 'destino' => $destinatarios,
                 'privacidad' => $privacidad ?? 'privada',
                 'programada' => $request->programada,
                 'createdBy' => 'Gestion360'
+                
             ]);
 
             return toastModal("Notificacion creada correctamente","success",route('notificaciones.index'));
@@ -131,21 +134,86 @@ class AppmovilController extends Controller
 
     }
 
-    public function cargarNotificaciones(){
-        $notificaciones = Notificaciones::where('createdBy', 'Gestion360')->get()->map(function ($item) {
-            return [
-                'titulo' => $item->titulo,
-                'bodyPush' => $item->bodyPush,
-                'bodyCompleto' => $item->bodyCompleto,
-                'destino' => $item->destino,
-                'estado' => $item->estado,
-                'privacidad' => $item->privacidad,
-                'proceso' => $item->proceso,
-                'programada' => $item->programada,
-                'createdAt' => $item->createdAt,
-            ];
-        });
-        
-        return $notificaciones;
+    public function cargarNotificaciones(Request $request)
+    {
+        $limit = $request->input('limit', 25);
+        $offset = $request->input('offset', 0);
+        $search = $request->input('search');
+
+        $query = Notificaciones::where('createdBy', 'Gestion360');
+
+        // Filtros de búsqueda
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('titulo', 'like', "%$search%")
+                ->orWhere('bodyPush', 'like', "%$search%")
+                ->orWhere('bodyCompleto', 'like', "%$search%")
+                ->orWhere('estado', 'like', "%$search%")
+                ->orWhere('privacidad', 'like', "%$search%")
+                ->orWhere('proceso', 'like', "%$search%")
+                ->orWhere('programada', 'like', "%$search%")
+                ->orWhere('createdAt', 'like', "%$search%");
+            });
+        }
+
+        $total = $query->count();
+        $sort = $request->input('sort', 'createdAt'); 
+        $order = $request->input('order', 'desc');    
+
+        $notificaciones = $query
+            ->orderBy($sort, $order)
+            ->skip($offset)
+            ->take($limit)
+            ->get()
+            ->map(function ($item) {
+                $destino = json_decode($item->destino, true);
+                $destinoFormateado = '';
+
+                if (isset($destino['grupos'])) {
+                    $destinoFormateado .= collect($destino['grupos'])->map(fn($grupo) =>
+                        "<span class='badge bg-secondary me-1'>$grupo</span>"
+                    )->implode(' ');
+                } elseif (isset($destino['usuarios'])) {
+                    // Obtener los usuarios relacionados al destino
+                    $usuarios = User::with('persona')
+                        ->whereIn('IdUsuario', $destino['usuarios'])
+                        ->get();
+
+                    $nombres = $usuarios->map(function ($user) {
+                        if ($user->persona) {
+                            return $user->persona->PerNombres . ' ' . $user->persona->PerApellidos;
+                        }
+                        return 'Sin nombre';
+                    })->toArray();
+
+                    $destinoFormateado .= collect($nombres)->map(fn($nombre) =>
+                        "<span class='badge bg-secondary me-1'>$nombre</span>"
+                    )->implode(' ');
+                }   
+
+                // Nombre del usuario que creó la notificación
+                $usuario = User::with('persona')->find($item->usuarioCrea);
+                $nombreUsuario = $usuario && $usuario->persona
+                    ? $usuario->persona->PerNombres . ' ' . $usuario->persona->PerApellidos
+                    : 'Sin nombre';
+
+                return [
+                    'titulo' => $item->titulo,
+                    'bodyPush' => $item->bodyPush,
+                    'bodyCompleto' => $item->bodyCompleto,
+                    'destino' => $destinoFormateado,
+                    'estado' => $item->estado,
+                    'privacidad' => $item->privacidad,
+                    'proceso' => $item->proceso,
+                    'usuarioCrea' => $nombreUsuario,
+                    'programada' => $item->programada ?? 'No',
+                    'createdAt' => Carbon::parse($item->createdAt)->format('d/m/Y h:i A'),
+                ];
+            });
+
+        return response()->json([
+            'total' => $total,
+            'rows' => $notificaciones,
+        ]);
     }
 }
