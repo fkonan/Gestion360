@@ -337,6 +337,7 @@
 
 [data-bs-theme="light"] .list-group-item{
     background-color: var(--bs-btn-color) !important;
+    border-color: #e7ebef !important;
     color: var(--bs-dark) !important;
 }
 
