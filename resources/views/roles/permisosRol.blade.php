@@ -37,7 +37,7 @@
 
             @foreach ($modulos as $modulo)
                 <div class="border border-primary rounded m-0 p-0 pb-3 mb-4">
-                <h5 class="p-2 bg-primary-subtle">{{ ucfirst($modulo->ModNom) }}</h5>
+                <h5 class="p-2 bg-primary-subtle text-light">{{ ucfirst($modulo->ModNom) }}</h5>
 
                 @php
                     $nombreModulo = normalizarNombre($modulo->ModNom);

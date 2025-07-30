@@ -54,7 +54,7 @@ class AppmovilController extends Controller
         $grupos = $data['grupos'] ?? null;
 
         $validator = Validator::make($data, [
-            'titulo' => 'required|string|max:100',
+            'titulo' => 'required|string|max:50',
             'bodyPush' => 'required|string|max:140',
             'bodyCompleto' => 'required|string',
             'programada' => 'nullable|date_format:Y-m-d\TH:i',
@@ -198,6 +198,7 @@ class AppmovilController extends Controller
                     : 'Sin nombre';
 
                 return [
+                    'id' => $item->id,
                     'titulo' => $item->titulo,
                     'bodyPush' => $item->bodyPush,
                     'bodyCompleto' => $item->bodyCompleto,
@@ -206,7 +207,7 @@ class AppmovilController extends Controller
                     'privacidad' => $item->privacidad,
                     'proceso' => $item->proceso,
                     'usuarioCrea' => $nombreUsuario,
-                    'programada' => $item->programada ?? 'No',
+                    'programada' => $item->programada ? Carbon::parse($item->programada)->format('d/m/Y h:i A') : 'No',
                     'createdAt' => Carbon::parse($item->createdAt)->format('d/m/Y h:i A'),
                 ];
             });
@@ -215,5 +216,23 @@ class AppmovilController extends Controller
             'total' => $total,
             'rows' => $notificaciones,
         ]);
+    }
+
+    public function cambiarEstadoNotificacion($id){
+        try{
+            $notificacion = Notificaciones::findOrFail($id);
+            $notificacion->estado = $notificacion->estado === 'activo' ? 'inactivo' : 'activo';
+            $notificacion->save();
+            return response()->json([
+                'message' => 'Estado cambiado a ' . $notificacion->estado,
+                'type' => 'success'
+            ]);
+        }catch(Exception $e){
+            Log::error('Error al actualizar el estado de la notificacion: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Error al actualizar el estado de la notificacion',
+                'type' => 'danger'
+            ]);
+        }
     }
 }

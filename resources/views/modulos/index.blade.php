@@ -13,13 +13,14 @@
 
 @section('content')
 <div class="container-fluid p-0 border rounded sidebar-dark-primary tableContainer" style="min-height:150px">
-
+    
     <x-sectionHeader 
         titulo="Módulos"
         rutaVolver="{{ route('gestion-sistema.index') }}"
         :crear="true"
         crearRoute="{{ route('modulos.create') }}"
         crearLabel="Crear Modulo"
+        :permisoCrear="\App\Constants\Permisos::CONFIGURACION_GESTION_SISTEMA_CREAR"
         crearModalTarget="#formFormato"
         modalSize="modal-xl"
     />
@@ -45,7 +46,7 @@
                     <th data-field="ModFecReg">Fecha Registro</th>
                     <th data-field="ModHorReg">Hora Registro</th>
                     <th data-field="ModEstado" data-formatter="estadoFormatter">Estado</th>
-                    @permite('configuracion.gestion_sistema.actualizar')
+                    @permite(\App\Constants\Permisos::CONFIGURACION_GESTION_SISTEMA_ACTUALIZAR)
                         <th data-field="acciones" data-formatter="accionesFormatter">Opciones</th>
                     @endpermite
                 </tr>
@@ -78,7 +79,7 @@
         let urlEditar = "{{ route('modulos.edit', ['id' => ':id']) }}".replace(':id', row.IdModulo);
         return `
             <div class="d-flex flex-wrap gap-3 justify-content-center">
-                @permite('configuracion.gestion_sistema.actualizar')
+                @permite(\App\Constants\Permisos::CONFIGURACION_GESTION_SISTEMA_ACTUALIZAR)
                     <a class="text-decoration-none" 
                         title="Editar modulo"
                         style="cursor: pointer;"

@@ -47,7 +47,7 @@
                     <th data-field="PerTelefono">Telefono</th>
                     <th data-field="PerEmail">Correo electrónico</th>
                     <th class="text-center" data-field="PerFechaHoraReg" data-sortable="true">Fecha registro</th>
-                    @permite('administracion.personas.actualizar')
+                    @permite(\App\Constants\Permisos::ADMINISTRACION_PERSONAS_ACTUALIZAR)
                         <th class="text-center" data-sortable="true" data-field="PerEstado" data-formatter="estadoFormatter">Estado</th>
                         <th class="text-center" data-field="acciones" data-formatter="accionesFormatter" >Opciones</th>
                     @endpermite
@@ -84,7 +84,7 @@
 
         return `
             <div class="col-md-12">
-                @permite('administracion.personas.actualizar')
+                @permite(\App\Constants\Permisos::ADMINISTRACION_PERSONAS_ACTUALIZAR)
                      <a class="text-decoration-none" href="${rutaPersona}"
                         style="cursor: pointer;"
                         title="Editar persona">

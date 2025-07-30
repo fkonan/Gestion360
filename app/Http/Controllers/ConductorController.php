@@ -171,8 +171,8 @@ class ConductorController extends Controller
         }
 
         try{
-            $fechaIni = Carbon::parse($request->fechaInicial)->format('Y/m/d');
-            $fechaFin = Carbon::parse($request->fechaFinal)->format('Y/m/d');
+            $fechaIni = Carbon::parse($request->fechaInicial)->subMonth()->format('Y/m/d');
+            $fechaFin = Carbon::parse($request->fechaFinal)->addMonth()->format('Y/m/d');
             $parametroInput = $request->parametroInput;
             $filtro = $request->filtro;
 
@@ -242,7 +242,7 @@ class ConductorController extends Controller
             return toastModal("Registros encontrados: ".$numeroRegistros ,"success",route("lista.ingresoSalidas"));
         }catch(Exception $e){
             Log::error('Error al obtener la lista de ingreso salida de conductores: ' . $e->getMessage());
-            return toastModal("Error al obtener los resultados","error");
+            return toastModal("Error al obtener los resultados","danger");
         }
     }
 
