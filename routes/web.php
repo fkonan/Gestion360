@@ -195,6 +195,8 @@ Route::prefix("gestion-web")->middleware(['auth','permisos:gestion_web.acceder',
             Route::get("/usuarios/buscar", [AppmovilController::class, 'usuariosConAppmovil'])->name('usuarios-disponibles');
             Route::get("/cargarDatos",[AppmovilController::class,"cargarNotificaciones"])->middleware('soloAJAX')->name("cargarDatos");
             Route::post("/{id}/cambiar-estado", [AppmovilController::class, "cambiarEstadoNotificacion"])->middleware('soloAJAX')->name("cambiarEstado");
+            Route::get("/{id}/edit",[AppmovilController::class,"editarNotificacion"])->name("edit");
+            Route::put("/{id}",[AppmovilController::class,"updateNotificacion"])->name("update");
         });
     });
 });

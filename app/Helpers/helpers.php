@@ -1,6 +1,9 @@
 <?php
 
+use App\Models\GESTIONADMIN\Permisos;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Cache;
+use Spatie\Permission\Models\Permission;
 
 //Formatea el nombre de los modulos en un formato que permita relacionarlos con los permisos
 if (!function_exists('normalizarNombre')) {
@@ -46,5 +49,22 @@ if (!function_exists('toastModal')) {
         ]);
     }
 }
+
+//Verifica si un permiso existe en la base de datos
+if (!function_exists('permisoExiste')) {
+    function permisoExiste($permiso, $guard = 'web'): bool
+    {
+        if (empty($permiso)) return false;
+
+        $permisos = Cache::remember("permisos_guard_{$guard}", 3600, function () use ($guard) {
+            return Permisos::where('guard_name', $guard)
+                ->pluck('name')
+                ->toArray();
+        });
+
+        return in_array($permiso, $permisos);
+    }
+}
+
 
 

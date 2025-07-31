@@ -5,7 +5,7 @@
     'crear' => false,               // Mostrar botón crear, 1. true => crear en modal , 2 "newpage" => el crear es en una nueva pagina
     'crearRoute' => '',             // Ruta para el botón crear
     'crearLabel' => 'Crear',        // Texto del botón crear
-    'permisoCrear' => 'null',       // Permiso para mostrar el botón crear
+    'permisoCrear' => null,       // Permiso para mostrar el botón crear
     'crearModalTarget' => '',       // Selector del formulario/modal
     'modalSize' => 'modal-lg',      // Tamaño del modal
     'excel' => false,               // Mostrar boton de descargar en excel 
@@ -20,20 +20,21 @@
 
 <div class="{{ $clasePosition ? 'botonBoostrapTable mt-2' : 'mt-3' }} ms-4">
     <a style="width: 150px;" class="btn btn-success fw-bold" href="{{ $rutaVolver }}">Regresar</a>
-
-    @permite($permisoCrear)
+    
+    @if((!$permisoCrear || auth()->user()->can('$permisoCrear')) && $crear)
         @if($crear === 'newpage')
             <a style="min-width: 150px;" class="btn fw-bold bg-warning"
                 href="{{ $crearRoute }}">
                 {{ $crearLabel }}
             </a>
-        @elseif($crear)
+        @else
             <a style="min-width: 150px;" class="btn fw-bold bg-warning"
                 onclick="cargarModal(`{{ $crearRoute }}`, '{{ $crearLabel }}', '{{ $crearModalTarget }}', '{{ $modalSize }}')">
                 {{ $crearLabel }}
-            </a>    
+            </a>
         @endif
-    @endpermite
+    @endif
+
 
     @if($excel)
         <a id="exportar" class="btn fw-bold btn-primary" 

@@ -207,8 +207,8 @@ class AppmovilController extends Controller
                     'privacidad' => $item->privacidad,
                     'proceso' => $item->proceso,
                     'usuarioCrea' => $nombreUsuario,
-                    'programada' => $item->programada ? Carbon::parse($item->programada)->format('d/m/Y h:i A') : 'No',
-                    'createdAt' => Carbon::parse($item->createdAt)->format('d/m/Y h:i A'),
+                    'programada' => $item->programada ? Carbon::parse($item->programada)->format('Y-m-d H:i:s') : 'No',
+                    'createdAt' => Carbon::parse($item->createdAt)->format('Y-m-d H:i:s'),
                 ];
             });
 
@@ -218,7 +218,81 @@ class AppmovilController extends Controller
         ]);
     }
 
-    public function cambiarEstadoNotificacion($id){
+    public function editarNotificacion($id)
+    {
+        $notificacion = Notificaciones::findOrFail($id);
+        $editable = false;
+
+        // Verificar si la notificación está programada y si la fecha programada es futura
+        if ($notificacion->programada) {
+            $fechaProgramada = Carbon::createFromFormat('Y-m-d H:i:s', $notificacion->programada);
+            $editable = $fechaProgramada->greaterThan(Carbon::now());
+        }
+
+        //Decodificar el destino y obtener los usuarios y grupos seleccionados
+        $destino = json_decode($notificacion->destino, true);
+        $usuariosSeleccionados = $destino['usuarios'] ?? [];
+        $gruposSeleccionados = $destino['grupos'] ?? [];
+
+        return view("gestionWeb.appmovil.notificaciones.editarNotificacion", compact(
+            'notificacion',
+            'editable',
+            'usuariosSeleccionados',
+            'gruposSeleccionados'
+        ));
+    }
+
+    public function updateNotificacion(Request $request, $id)
+    {
+        $data = $request->all();
+        $notificacion = Notificaciones::findOrFail($id);
+
+        $validator = Validator::make($data, [
+            'titulo' => 'required|string|max:50',
+            'bodyPush' => 'required|string|max:140',
+            'bodyCompleto' => 'required|string',
+            'programada' => 'nullable|date_format:Y-m-d\TH:i',
+        ], [
+            'titulo.required' => 'El título es obligatorio.',
+            'titulo.string' => 'El título debe ser una cadena de texto.',
+            'titulo.max' => 'El título no debe superar los 100 caracteres.',
+
+            'bodyPush.required' => 'El mensaje corto (push) es obligatorio.',
+            'bodyPush.string' => 'El mensaje corto debe ser una cadena de texto.',
+            'bodyPush.max' => 'El mensaje corto no debe superar los 140 caracteres.',
+
+            'bodyCompleto.required' => 'El mensaje completo es obligatorio.',
+            'bodyCompleto.string' => 'El mensaje completo debe ser una cadena de texto.',
+
+            'programada.date_format' => 'La fecha no tiene el formato correcto'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            // Actualizar la notificación
+            $notificacion->update([
+                'titulo' => $data['titulo'],
+                'bodyPush' => $data['bodyPush'],
+                'bodyCompleto' => $data['bodyCompleto'],
+                'programada' => $data['programada'] ?? null,
+                'usuarioModifica' => Auth::user()->IdUsuario,
+                'updatedAt' => now()->format('Y-m-d H:i:s')
+            ]);
+
+            return toastModal("Notificación actualizada correctamente", "success", route('notificaciones.index'));
+        } catch (Exception $e) {
+            Log::error('Error al actualizar la notificación: ' . $e->getMessage());
+            return toastModal("Error al actualizar la notificación", "error", route('notificaciones.index'));
+        }
+    }
+
+    public function cambiarEstadoNotificacion($id)
+    {
         try{
             $notificacion = Notificaciones::findOrFail($id);
             $notificacion->estado = $notificacion->estado === 'activo' ? 'inactivo' : 'activo';
