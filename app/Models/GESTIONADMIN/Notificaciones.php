@@ -13,7 +13,8 @@ class Notificaciones extends Model
     protected $fillable = [
         'id','titulo','bodyPush','bodyCompleto','imagen',
         'datos','destino','estado','privacidad','proceso',
-        'programada','createdAt','createdBy', 'usuarioCrea'
+        'programada','createdAt','createdBy', 'usuarioCrea',
+        'updatedAt', 'usuarioModifica'
     ];
 
     public $timestamps = false;

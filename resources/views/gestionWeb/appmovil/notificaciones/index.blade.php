@@ -48,6 +48,7 @@
                     <th class="text-nowrap" data-field="destino" data-sortable="true" data-escape="true">Destinatarios</th>
                     <th class="text-nowrap" data-field="bodyPush" data-escape="true">Resumen Push</th>
                     <th class="text-nowrap" data-field="bodyCompleto" data-escape="true">Descripción</th>
+                    <th data-field="acciones" data-formatter="accionesFormatter">Opciones</th>
                 </tr>
             </thead>
         </table>
@@ -62,9 +63,27 @@
             '#notificacionesTable', 
             { protegidas: ['titulo'] }, 
             'detalleNotificacion', 
-            {'estado': estadoFormatter}
+            {
+                'estado': estadoFormatter,
+                'acciones': accionesFormatter
+            }
         );
     });
+
+    function accionesFormatter(index, row) {
+        let ruta = "{{ route('notificaciones.edit', ['id' => ':id']) }}"
+        let rutaNotificion = ruta.replace(':id',row.id);
+
+        return `
+            <div class="col-md-12">
+                <a class="text-decoration-none" href="${rutaNotificion}"
+                    style="cursor: pointer;"
+                    title="Editar notificación">
+                    <img src="{{ asset('img/edit.png') }}" alt="Editar notificación" style="width: 32px; height: 32px;">
+                </a>
+            </div>
+        `;
+    }
 
     function estadoFormatter(value, row) {
         const checked = row.estado === 'activo' ? 'checked' : '';

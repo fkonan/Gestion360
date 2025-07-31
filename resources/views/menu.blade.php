@@ -25,8 +25,7 @@
             <ul class="nav nav-treeview">
                @foreach($modulo->submodulos as $submodulo)
                   <!-- Submodulos permiso de visualizacion -->
-                  @if(! $submodulo->ModPermiso ||
-                  auth()->user()->can($submodulo->ModPermiso))
+                  @if(! $submodulo->SubModPermiso || auth()->user()->can($submodulo->ModPermiso))
                   <li class="nav-item">
                      <a
                         class="nav-link submodule"
