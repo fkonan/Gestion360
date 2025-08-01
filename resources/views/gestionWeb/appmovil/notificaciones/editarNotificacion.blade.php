@@ -72,29 +72,19 @@
                 <div class="mb-4">
                 <label class="form-label fw-bold">Destino de la notificación</label>
 
-                @if ($editable)
-                    <div class="alert alert-info small border-start border-3 border-primary">
-                    <ul class="mb-0 ps-3">
-                        <li>Puedes enviar a <strong>usuarios individuales</strong> o a <strong>grupos</strong>, no ambos.</li>
-                        <li>Solo se enviará a usuarios con la app instalada y sesión iniciada al menos una vez.</li>
-                        <li><strong>Importante:</strong> Si seleccionas <strong>Clientes</strong>, se enviará a <u>todos</u>, incluyendo Socios y Empleados.</li>
-                    </ul>
-                    </div>
-                @else
-                    <div class="alert alert-warning small">
-                    <strong>Nota:</strong> El destino no se puede modificar porque la notificación ya fue enviada o está en proceso.
-                    </div>
-                @endif
-
+                <div class="alert alert-warning small">
+                    <strong>Nota:</strong> El destino no se puede ser modificado luego de ser creada la notificacion.
+                </div>
+               
                 <div class="row g-3 mt-4">
                     <div class="col-md-6">
                     <label for="usuarios" class="form-label">Seleccionar Usuarios</label>
-                    <select id="usuarios" name="usuarios[]" class="form-select form-select-sm" multiple {{ $editable ? '' : 'disabled' }}></select>
+                    <select id="usuarios" name="usuarios[]" class="form-select form-select-sm" multiple disabled></select>
                     <span class="error text-danger fw-bold" id="error-usuarios"></span>
                     </div>
                     <div class="col-md-6">
                     <label for="grupos" class="form-label">Seleccionar Grupos</label>
-                    <select id="grupos" name="grupos[]" class="form-select form-select-sm select2" multiple {{ $editable ? '' : 'disabled' }}>
+                    <select id="grupos" name="grupos[]" class="form-select form-select-sm select2" multiple disabled>
                         <option value="clientes (todos)" {{ in_array('clientes', $gruposSeleccionados) ? 'selected' : '' }}>Clientes (todos)</option>
                         <option value="socios" {{ in_array('socios', $gruposSeleccionados) ? 'selected' : '' }}>Socios</option>
                         <option value="empleados" {{ in_array('empleados', $gruposSeleccionados) ? 'selected' : '' }}>Empleados</option>

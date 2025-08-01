@@ -75,7 +75,7 @@ class EventoConductorService
             return toastModal("El conductor no tiene bloqueo para realizar el REGRESO ANTICIPADO, debe realizar REGRESO DE DESCANSO", "warning");
         }
 
-        return toastModal("Se registró el evento REGRESO ANTICIPADO", "success",route("gestion-empleado.index"));
+        return toastModal("Se registró el evento REGRESO ANTICIPADO", "success",route("gestion-incapacidad.index"));
     } 
 
 
