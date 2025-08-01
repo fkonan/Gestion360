@@ -1,9 +1,7 @@
 @extends('layouts.dashboard')
-
-@section('title','Lista usuarios')
-
-@section('breadcrumb')
-<x-breadcrumb :items="[
+@section('title','Lista usuarios') @section('breadcrumb')
+<x-breadcrumb
+   :items="[
         ['name' => 'Inicio', 'url' => route('home')],
         ['name' => 'Usuarios'],
     ]" />
@@ -64,16 +62,17 @@
     </div>
 </div>
 
-@endsection
+@endsection @pushOnce('script') @vite(['resources/js/cargarModal.js'])
 
-
-@pushOnce('script')
-    @vite(['resources/js/cargarModal.js'])
-    <script>
-    function estadoFormatter(value, row) {
-        const checked = row.estado === 'ACTIVO' ? 'checked' : '';
-        const url = "{{ route('usuarios.cambiarEstado', ['id' => ':id']) }}".replace(':id', row.IdUsuario);
-        return `
+<script>
+   function estadoFormatter(value, row) {
+      const checked = row.estado === "ACTIVO" ? "checked" : "";
+      const url =
+         "{{ route('usuarios.cambiarEstado', ['id' => ':id']) }}".replace(
+            ":id",
+            row.IdUsuario
+         );
+      return `
             <div class="form-check form-switch d-flex justify-content-center">
                 <input
                     onchange="actualizarEstado('${url}')"
@@ -84,14 +83,23 @@
                     ${checked}>
             </div>
         `;
-    }
+   }
 
-    function accionesFormatter(index, row) {
-        let urlPermisos = "{{ route('permisos.edit', ['id' => ':id']) }}".replace(':id', row.IdUsuario);
-        let urlRoles = "{{ route('roles.edit', ['id' => ':id']) }}".replace(':id', row.IdUsuario);
-        let urlUsuarios = "{{ route('usuarios.edit', ['id' => ':id']) }}".replace(':id', row.IdUsuario);
+   function accionesFormatter(index, row) {
+      let urlPermisos = "{{ route('permisos.edit', ['id' => ':id']) }}".replace(
+         ":id",
+         row.IdUsuario
+      );
+      let urlRoles = "{{ route('roles.edit', ['id' => ':id']) }}".replace(
+         ":id",
+         row.IdUsuario
+      );
+      let urlUsuarios = "{{ route('usuarios.edit', ['id' => ':id']) }}".replace(
+         ":id",
+         row.IdUsuario
+      );
 
-        return `
+      return `
             <div class="d-flex flex-row align-items-center justify-content-center gap-3" style="flex-wrap:nowrap;">
             @permite(\App\Constants\Permisos::ADMINISTRACION_USUARIOS_ASIGNAR_PERMISOS)
                 <a class="text-decoration-none"
@@ -119,32 +127,29 @@
             @endpermite
             </div>
         `;
-    }
+   }
 
-    function togglePasswordVisibility() {
-        let passwordField = document.getElementById("Password");
-        if (passwordField.disabled) {
-            passwordField.disabled = false;
-            passwordField.type = "text";
-            passwordField.dataset.previousValue = passwordField.value;
-            passwordField.value = "";
-        } else {
-            passwordField.disabled = true;
-            passwordField.type = "password";
-            passwordField.value = passwordField.dataset.previousValue;
-        }
-    }
+   function togglePasswordVisibility() {
+      let passwordField = document.getElementById("Password");
+      if (passwordField.disabled) {
+         passwordField.disabled = false;
+         passwordField.type = "text";
+         passwordField.dataset.previousValue = passwordField.value;
+         passwordField.value = "";
+      } else {
+         passwordField.disabled = true;
+         passwordField.type = "password";
+         passwordField.value = passwordField.dataset.previousValue;
+      }
+   }
 
-    document.addEventListener("DOMContentLoaded", () => {
-        initTablaBootstrapTable(
-            '#usuariosDataTable',
-            { protegidas: ['persona.PerNumDoc'] },
-            'detalleUsuario',
-            { 'acciones': accionesFormatter,
-                'estado': estadoFormatter,
-            }
-        );
-    });
+   document.addEventListener("DOMContentLoaded", () => {
+      initTablaBootstrapTable(
+         "#usuariosDataTable",
+         { protegidas: ["persona.PerNumDoc"] },
+         "detalleUsuario",
+         { acciones: accionesFormatter, estado: estadoFormatter }
+      );
+   });
 </script>
 @endpushOnce
-

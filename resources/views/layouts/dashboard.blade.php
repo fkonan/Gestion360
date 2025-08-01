@@ -40,9 +40,9 @@
             visibility: visible;
         }
     </style>
-
      <!--Vite -->
      @vite(['resources/css/app.css', 'resources/js/app.js','resources/css/custom.css','resources/css/mobile.css'])
+     @stack('css')
 </head>
 
 <body class="sidebar-mini sidebar-collapse layout-fixed">
@@ -66,7 +66,7 @@
                    <!--  <div style="width: 2em; display: flex; align-items: center; justify-content: flex-start;" class="ms-3">
                         <i id="toggleDarkMode" class="light-icon text-dark" style="cursor: pointer;"></i>
                     </div>
- -->
+                  -->
                     {{-- Icono cambiar theme --}}
                     <button class="btn rounded-circle me-3" title="Cambiar modo oscuro" style="width: 50px" data-theme-toggle>
                        <i class="light-icon"></i>
@@ -153,6 +153,8 @@
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap-duallistbox/dist/jquery.bootstrap-duallistbox.min.js" defer></script>
 
+
+
     <script>
         //Modal (evita errores de focus)
         document.addEventListener('hidden.bs.modal', function (event) {
@@ -183,3 +185,6 @@
     @stack('script')
 </body>
 </html>
+
+
+

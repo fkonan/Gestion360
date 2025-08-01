@@ -64,6 +64,10 @@ return [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', App\Models\User::class),
         ],
+      'personas' => [
+         'driver' => 'sha1',
+         'model' => App\Models\LOGTRANS\PerPersonas::class,
+      ],
 
         // 'users' => [
         //     'driver' => 'database',
