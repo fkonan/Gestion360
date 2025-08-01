@@ -5,8 +5,8 @@
 @section('breadcrumb')
 <x-breadcrumb :items="[
         ['name' => 'Inicio', 'url' => route('home')],
-        ['name' => 'Gestión Empleado', 'url' => route('gestion-incapacidades.index')],
-        ['name' => 'Seguimiento Incapacidades', 'url' => route('gestion-incapacidades.seguimiento')],
+        ['name' => 'Gestión Empleado', 'url' => route('gestion-incapacidad.index')],
+        ['name' => 'Seguimiento Incapacidades', 'url' => route('gestion-empleado.seguimiento')],
         ['name' => 'Registro Seguimiento']
     ]" />
 <br>
@@ -18,8 +18,8 @@
     <x-sectionHeader 
         titulo="Registro Seguimiento"
         :crear="true"
-        rutaVolver="{{ route('gestion-incapacidades.seguimiento') }}"
-        crearRoute="{{ route('gestion-incapacidades.seguimiento.detalle.crear', ['id' => $incapacidad->IdIncapacidad]) }}"
+        rutaVolver="{{ route('gestion-empleado.seguimiento') }}"
+        crearRoute="{{ route('gestion-empleado.seguimiento.detalle.crear', ['id' => $incapacidad->IdIncapacidad]) }}"
         crearLabel="Nuevo Seguimiento"
         crearModalTarget="#formNuevoSeguimiento"
         modalSize="modal-lg"

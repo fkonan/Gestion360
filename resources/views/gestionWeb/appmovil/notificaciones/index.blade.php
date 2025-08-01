@@ -38,15 +38,17 @@
             data-url="{{ route('notificaciones.cargarDatos') }}">
             <thead class="table-primary">
                 <tr>
-                    <th data-field="titulo">Título</th>
-                    <th data-field="bodyPush">Nombre</th>
-                    <th data-field="bodyCompleto">Descripción</th>
-                    <th data-field="destino">Destinatarios</th>
-                    <th data-field="estado">Estado</th>
-                    <th data-field="privacidad">Privacidad</th>
-                    <th data-field="proceso">Proceso</th>
-                    <th data-field="programada">Programada</th>
-                    <th data-field="createdAt">Fecha Creación</th> 
+                    <th class="text-nowrap" data-field="titulo" data-sortable="true" data-escape="true">Título</th>
+                    <th class="text-nowrap" data-field="usuarioCrea" data-sortable="true" data-escape="true">Usuario crea</th>
+                    <th class="text-nowrap" data-field="createdAt" data-sortable="true" data-escape="true">Fecha Creación</th> 
+                    <th class="text-nowrap" data-field="programada" data-sortable="true" data-escape="true">Fecha programada</th>
+                    <th class="text-nowrap" data-field="estado" data-sortable="true" data-escape="true" data-formatter="estadoFormatter">Estado</th>
+                    <th class="text-nowrap" data-field="privacidad" data-sortable="true" data-escape="true">Privacidad</th>
+                    <th class="text-nowrap" data-field="proceso" data-sortable="true" data-escape="true"> Proceso</th>
+                    <th class="text-nowrap" data-field="destino" data-sortable="true" data-escape="true">Destinatarios</th>
+                    <th class="text-nowrap" data-field="bodyPush" data-escape="true">Resumen Push</th>
+                    <th class="text-nowrap" data-field="bodyCompleto" data-escape="true">Descripción</th>
+                    <th data-field="acciones" data-formatter="accionesFormatter">Opciones</th>
                 </tr>
             </thead>
         </table>
@@ -56,13 +58,48 @@
 
 @pushOnce('script')
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-    initTablaBootstrapTable(
-        '#notificacionesTable', 
-        { protegidas: ['titulo'] }, 
-        'detalleNotificacion', 
-    );
-});
+    document.addEventListener("DOMContentLoaded", () => {
+        initTablaBootstrapTable(
+            '#notificacionesTable', 
+            { protegidas: ['titulo'] }, 
+            'detalleNotificacion', 
+            {
+                'estado': estadoFormatter,
+                'acciones': accionesFormatter
+            }
+        );
+    });
+
+    function accionesFormatter(index, row) {
+        let ruta = "{{ route('notificaciones.edit', ['id' => ':id']) }}"
+        let rutaNotificion = ruta.replace(':id',row.id);
+
+        return `
+            <div class="col-md-12">
+                <a class="text-decoration-none" href="${rutaNotificion}"
+                    style="cursor: pointer;"
+                    title="Editar notificación">
+                    <img src="{{ asset('img/edit.png') }}" alt="Editar notificación" style="width: 32px; height: 32px;">
+                </a>
+            </div>
+        `;
+    }
+
+    function estadoFormatter(value, row) {
+        const checked = row.estado === 'activo' ? 'checked' : '';
+        const url = "{{ route('notificaciones.cambiarEstado', ['id' => ':id']) }}".replace(':id', row.id);
+        return `
+            <div class="form-check form-switch d-flex justify-content-center">
+                <input 
+                    onchange="actualizarEstado('${url}')"
+                    class="form-check-input estado-switch" 
+                    type="checkbox" 
+                    role="switch"
+                    data-id="${row.id}"
+                    ${checked}>
+            </div>
+        `;
+    }   
 </script>
 @endpushOnce
 

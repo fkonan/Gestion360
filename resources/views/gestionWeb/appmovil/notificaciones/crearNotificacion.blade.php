@@ -38,10 +38,10 @@
 
                     <div class="mb-4">
                         <label for="titulo" class="form-label">Título</label>
-                        <input type="text" class="form-control form-control-sm" id="titulo" name="titulo" maxlength="100" required>
+                        <input type="text" class="form-control form-control-sm" id="titulo" name="titulo" maxlength="50" required>
                         <div class="d-flex justify-content-between small">
                             <span class="error text-danger fw-bold" id="error-titulo"></span>
-                            <span class="text-muted" id="count-titulo">0 / 100</span>
+                            <span class="text-muted" id="count-titulo">0 / 50</span>
                         </div>
                     </div>
 
@@ -167,7 +167,7 @@
             });
         };
 
-        updateCounter(document.getElementById("titulo"), document.getElementById("count-titulo"), 100);
+        updateCounter(document.getElementById("titulo"), document.getElementById("count-titulo"), 50);
         updateCounter(document.getElementById("bodyPush"), document.getElementById("count-bodyPush"), 140);
         updateCounter(document.getElementById("bodyCompleto"), document.getElementById("count-bodyCompleto"));
     });

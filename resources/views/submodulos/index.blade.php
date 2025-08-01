@@ -45,7 +45,7 @@
                     <th data-field="SubModFecReg">Fecha Registro</th>
                     <th data-field="SubModHoReg">Hora Registro</th>
                     <th data-field="SubModuloEstado" data-formatter="estadoFormatter">Estado</th>
-                    @permite('configuracion.gestion_sistema.actualizar')
+                    @permite(\App\Constants\Permisos::CONFIGURACION_GESTION_SISTEMA_ACTUALIZAR)
                         <th data-field="acciones" data-formatter="accionesFormatter">Opciones</th>
                     @endpermite
                 </tr>
@@ -89,7 +89,7 @@
             let urlEditar = "{{ route('submodulos.edit', ['id' => ':id']) }}".replace(':id', row.IdSubModulo);
             return `
                 <div class="d-flex flex-wrap gap-3 justify-content-center">
-                    @permite('configuracion.gestion_sistema.actualizar')
+                    @permite(\App\Constants\Permisos::CONFIGURACION_GESTION_SISTEMA_ACTUALIZAR)
                         <a class="text-decoration-none" 
                             title="Editar submodulo"
                             style="cursor: pointer;"

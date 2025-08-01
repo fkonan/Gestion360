@@ -129,7 +129,7 @@ class PersonaController extends Controller
             $request->all(),[
                 'PerTipoDoc' => 'required',
                 'PerNumDoc' => 'unique:_personas,PerNumDoc|required|string|max:10',
-                'PerTelefono' => 'unique:_personas_datos,PerTelefono|required',
+                'PerTelefono' => 'required',
                 'PerEmail' => 'required|email',
                 'PerApellidos' => 'required|string|regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ]+(?:\s[A-Za-zÁÉÍÓÚáéíóúÑñ]+)*$/|max:50',
                 'PerNombres' => 'required|string|regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ]+(?:\s[A-Za-zÁÉÍÓÚáéíóúÑñ]+)*$/|max:50',
@@ -154,7 +154,10 @@ class PersonaController extends Controller
                 'PerGenero.required' => 'El género es requerido',
 
                 'PerNumDoc.unique' => 'El número de documento ya esta registrado',
-                'PerTelefono.unique' => 'El número de telefono ya esta registrado',
+                'PerTelefono.required' => 'El teléfono es requerido',
+                
+                'PerEmail.required' => 'El correo electrónico es requerido',
+                'PerEmail.email' => 'El correo electrónico debe ser válido',
                 'PerEmail.unique' => 'El correo ya esta registrado',
             ]
             );

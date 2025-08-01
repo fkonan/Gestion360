@@ -5,7 +5,7 @@
 @section('breadcrumb')
 <x-breadcrumb :items="[
         ['name' => 'Inicio', 'url' => route('home')],
-        ['name' => 'Gestión Empleado', 'url' => route('gestion-incapacidades.index')],
+        ['name' => 'Gestión Empleado', 'url' => route('gestion-incapacidad.index')],
         ['name' => 'Incapacidades'],
     ]" />
 <br>
@@ -16,7 +16,7 @@
 
     <x-sectionHeader 
         titulo="Incapacidades"
-        rutaVolver="{{ route('gestion-incapacidades.index') }}"
+        rutaVolver="{{ route('gestion-incapacidad.index') }}"
     />
 
     <div style="padding:1.5em">
@@ -31,7 +31,7 @@
             data-check-on-init="true"
             data-detail-view="true"
             data-detail-formatter="detalleIncapacidad"
-            data-url="{{ route('gestion-incapacidades.incapacidades.cargarDatos') }}"        
+            data-url="{{ route('gestion-empleado.incapacidades.cargarDatos') }}"        
             data-pagination-parts="['pageSize', 'pageList', 'pageNext', 'pagePrev']">   
             <thead class="table-primary">
                 <tr class="bg-primary">
@@ -72,9 +72,9 @@
             let fechaFin = new Date(row.IncFecFin);
 
             // Ruta para cargar los adjuntos de la incapacidad con el ID correspondiente
-            const urlAdjuntos = "{{ route('gestion-incapacidades.seguimiento.adjuntos', ['id' => ':id']) }}".replace(':id', row.IdIncapacidad);
-            const urlDatos = "{{ route('gestion-incapacidades.incapacidades.edit', ['id' => ':id']) }}".replace(':id', row.IdIncapacidad);
-            const urlGestion = "{{ route('gestion-incapacidades.incapacidades.gestion', ['id' => ':id']) }}".replace(':id', row.IdIncapacidad);
+            const urlAdjuntos = "{{ route('gestion-empleado.seguimiento.adjuntos', ['id' => ':id']) }}".replace(':id', row.IdIncapacidad);
+            const urlDatos = "{{ route('gestion-empleado.incapacidades.edit', ['id' => ':id']) }}".replace(':id', row.IdIncapacidad);
+            const urlGestion = "{{ route('gestion-empleado.incapacidades.gestion', ['id' => ':id']) }}".replace(':id', row.IdIncapacidad);
 
             return `
                 <div class="d-flex flex-wrap gap-3 justify-content-center">

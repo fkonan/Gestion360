@@ -19,6 +19,7 @@
         rutaVolver="{{ route('home') }}"
         crearRoute="{{ route('usuarios.create') }}"
         crearLabel="Crear Usuario"
+        modalSize="modal-xl"
         crearModalTarget="#formCrearUsuario"
     />
 
@@ -46,13 +47,13 @@
                     <th data-field="centroCosto">Centro de costo</th>
                     <th class="text-nowrap text-center" data-field="fechaHoraRegistro" data-sortable="true">Fecha registro</th>
                     <th class="text-nowrap" data-field="rol">Rol</th>
-                    @permite('administracion.usuarios.actualizar')
+                    @permite(\App\Constants\Permisos::CONFIGURACION_GESTION_SISTEMA_ACTUALIZAR)
                         <th class="text-center" data-field="estado" data-formatter="estadoFormatter">Estado</th>
                     @endpermite
                     @if(
-                        auth()->user()->can('administracion.usuarios.asignar_permisos') ||
-                        auth()->user()->can('administracion.usuarios.asignar_roles') ||
-                        auth()->user()->can('administracion.usuarios.actualizar')
+                        auth()->user()->can(\App\Constants\Permisos::ADMINISTRACION_USUARIOS_ASIGNAR_PERMISOS) ||
+                        auth()->user()->can(\App\Constants\Permisos::ADMINISTRACION_USUARIOS_ASIGNAR_ROLES) ||
+                        auth()->user()->can(\App\Constants\Permisos::ADMINISTRACION_USUARIOS_ACTUALIZAR)
                     )
                         <th data-field="acciones" data-formatter="accionesFormatter">Acciones</th>
                     @endif
@@ -92,7 +93,7 @@
 
         return `
             <div class="d-flex flex-row align-items-center justify-content-center gap-3" style="flex-wrap:nowrap;">
-            @permite('administracion.usuarios.asignar_permisos')
+            @permite(\App\Constants\Permisos::ADMINISTRACION_USUARIOS_ASIGNAR_PERMISOS)
                 <a class="text-decoration-none"
                 title="Gestionar permisos del usuario"
                 style="cursor: pointer;"
@@ -100,7 +101,7 @@
                 <img src="https://autogestion.copetran.com.co/gestion_2/aFrame/library/bower_components/Ionicons/png/512/Permiso00.png" alt="Permisos" style="width: 30px; height: 30px;">
                 </a>
             @endpermite
-            @permite('administracion.usuarios.asignar_roles')
+            @permite(\App\Constants\Permisos::ADMINISTRACION_USUARIOS_ASIGNAR_ROLES)
                 <a class="text-decoration-none"
                 title="Gestionar roles del usuario"
                 style="cursor: pointer;"
@@ -108,7 +109,7 @@
                 <img src="{{ asset('img/rolesEdit.png') }}" alt="Roles" style="width: 32px; height: 32px;">
                 </a>
             @endpermite
-            @permite('administracion.usuarios.actualizar')
+            @permite(\App\Constants\Permisos::ADMINISTRACION_USUARIOS_ACTUALIZAR)
                 <a
                 title="Editar usuario"
                 style="cursor: pointer;"

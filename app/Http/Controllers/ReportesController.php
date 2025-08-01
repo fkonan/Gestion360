@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Constants\Permisos;
 use App\Models\GESTIONADMIN\Reporteador;
 use App\Services\ApiReportes;
 use Exception;
@@ -78,7 +79,7 @@ class ReportesController extends Controller
                 'descripcion' => 'Consultar',
                 'tooltip' => 'Incluye diversos reportes relacionados con la gestión y actividad de los conductores.',
                 'ruta' => 'reportes.conductores',
-                'permiso' => 'administracion.reportes.reportes_conductores',
+                'permiso' => Permisos::ADMINISTRACION_REPORTES_CONDUCTORES,
                 'icono' => 'fa-solid fa-users'
             ],
             [
@@ -86,7 +87,7 @@ class ReportesController extends Controller
                 'descripcion' => 'Consultar',
                 'tooltip' => 'Incluye reportes relacionados con la gestión y análisis de pasajes, tiquetes y esquemas tarifarios.',
                 'ruta' => 'reportes.pasajes',
-                'permiso' => 'administracion.reportes.reportes_pasajes',
+                'permiso' => Permisos::ADMINISTRACION_REPORTES_PASAJES,
                 'icono' => 'fa-solid fa-ticket-alt'
             ],
         ];

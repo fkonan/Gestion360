@@ -105,8 +105,8 @@ class IngresoSalidaConducService
             return $coleccionFinal;
            
         }catch(Exception $e){
-            Log::error('Error al obtener la lista de ingreso salida de conductores: ' . $e->getMessage());
-            return toastModal("Error al obtener los resultados","error");
+            Log::error('Error al formatear los datos de ingreso y salida de conductores: ' . $e->getMessage());
+            throw new Exception("Error al formatear los datos de ingreso y salida de conductores.");
         }
        
     }

@@ -32,7 +32,9 @@
             <div class="col-md-12">
                 <select multiple="multiple" id="roles" name="roles[]" class="form-control">
                     @foreach ($rolesDisponibles as $rol)
-                        <option class="fw-medium text-uppercase sidebar-dark-primary" value="{{ $rol->name }}"
+                        <option class="fw-medium text-uppercase sidebar-dark-primary" 
+                                value="{{ $rol->name }}"
+                                style="cursor: pointer;"
                             @if ($rolesUsuario->contains($rol->name)) selected @endif>
                             {{ $rol->name }}
                         </option>

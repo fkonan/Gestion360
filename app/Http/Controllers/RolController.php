@@ -46,7 +46,7 @@ class RolController extends Controller
        
         try{
             $rol = new Role();
-            $rol->name = $request->name;
+            $rol->name = strtoupper($request->name);
             $rol->guard_name = 'web';
             $rol->created_at = now();
             $rol->updated_at = now();
@@ -64,17 +64,23 @@ class RolController extends Controller
     }
 
     //relaciona los permisos con los modulos en base al nombre => formato permiso: "modulo.submodulo.permiso"
+    //ejemplo: "administracion.reportes.acceder"
     private function modulosConPermisos($moduloService){
 
         $modulos = $moduloService->modulosActivosConSubmodulos();
 
         foreach ($modulos as $modulo) {
+            // Normalizar el nombre del módulo para evitar problemas con caracteres especiales
             $nombreModulo = normalizarNombre($modulo->ModNom); 
 
             foreach ($modulo->submodulos as $submodulo) {
+                // Normalizar el nombre del submódulo
                 $nombreSubmodulo = normalizarNombre($submodulo->SubModNom);
         
+                // Crear el prefijo para los permisos
                 $prefix = "$nombreModulo.$nombreSubmodulo";
+
+                // Asignar los permisos al submódulo
                 $submodulo->permisos = Permission::where('name', 'like', "$prefix.%")->get();
             }
         }

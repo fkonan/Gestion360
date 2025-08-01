@@ -48,7 +48,7 @@
                 <tr class="bg-primary">
                     <th data-sortable="true">ID</th>
                     <th>Nombre</th>
-                    @permite('configuracion.gestion_sistema.actualizar')
+                    @permite(\App\Constants\Permisos::CONFIGURACION_GESTION_SISTEMA_ACTUALIZAR)
                         <th>Acciones</th>
                     @endpermite
                 </tr>
@@ -60,7 +60,7 @@
                     <td class="text-nowrap">
                         <i class="fas {{ $icons[$rol->name] ?? 'fa-user' }} me-2 text-secondary"></i> {{ $rol->name }}
                     </td>
-                    @permite('configuracion.gestion_sistema.actualizar')
+                    @permite(\App\Constants\Permisos::CONFIGURACION_GESTION_SISTEMA_ACTUALIZAR)
                         <td class="text-center" style="width: 80px;">
                             <a class="p-0 px-2" 
                                 title="Editar Rol"
