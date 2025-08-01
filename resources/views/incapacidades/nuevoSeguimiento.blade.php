@@ -2,7 +2,7 @@
 <div class="container-fluid p-0 bg-whit rounded">
     <form 
         id="formNuevoSeguimiento" 
-        action="{{ route('gestion-incapacidades.seguimiento.detalle.store', ['id' => $incapacidad->IdIncapacidad]) }}"
+        action="{{ route('gestion-empleado.seguimiento.detalle.store', ['id' => $incapacidad->IdIncapacidad]) }}"
         method="POST" 
         enctype="multipart/form-data">
         

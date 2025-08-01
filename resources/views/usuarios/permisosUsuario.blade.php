@@ -38,14 +38,13 @@
                         @endphp
                         <option 
                             class="fw-medium sidebar-dark-primary {{ $isInherited ? 'isInherited' : '' }}" 
+                            style="cursor: pointer;"
                             @if ($isInherited) disabled @endif
                             value="{{ $permiso->name }}"
-                            title="{{ $isInherited ? 'Este permiso no puede eliminarse manualmente porque es parte del ROL' : '' }}"
+                            title="{{ $isInherited ? 'Este permiso no puede eliminarse manualmente porque es parte del ROL: ' . $rolName : '' }}"
                             @if ($isDirect || $isInherited) selected @endif>
+                            @if ($isInherited)🔒@endif
                             {{ $permiso->name }}
-                            @if ($isInherited)
-                                (🔒 Rol: {{ $rolName }})
-                            @endif
                         </option>
                     @endforeach
                 </select>

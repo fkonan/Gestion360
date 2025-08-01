@@ -11,4 +11,9 @@ class Tripulantes extends Model
     protected $primaryKey = "Id";
     public $incrementing = false;
     public $timestamps = false;
+
+    public function bloqueos()
+    {
+        return $this->hasMany(PePersonalEstados::class, 'PersonalID', 'Id');
+    }
 }

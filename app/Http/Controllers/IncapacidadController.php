@@ -20,7 +20,7 @@ class IncapacidadController extends Controller
         $incapacidadesPorGestionar = Incapacidad::where('IncapacidadEstado', '=', 'RADICADO')->exists();
 
         if($incapacidadesPorGestionar == null){
-           /*  return toast("No hay incapacidades radicadas para gestionar","danger",redirect()->route('gestion-incapacidades.index')); */
+           /*  return toast("No hay incapacidades radicadas para gestionar","danger",redirect()->route('gestion-incapacidad.index')); */
             return redirect()->back()->with('alert', [
                 'type' => 'success', 
                 'title' => 'No existen incapacidades radicadas pendientes de gestión en este momento.'
@@ -103,12 +103,12 @@ class IncapacidadController extends Controller
         try{
             //Valida de que ruta viene (incapacidad o seguimiento)
             $referer = $request->headers->get('referer');
-            $redirect = route('gestion-incapacidades.incapacidades');
+            $redirect = route('gestion-empleado.incapacidades');
 
             $incapacidad->update($request->all());
     
-            if ($referer == route('gestion-incapacidades.seguimiento')) {
-                $redirect = route('gestion-incapacidades.seguimiento');
+            if ($referer == route('gestion-empleado.seguimiento')) {
+                $redirect = route('gestion-empleado.seguimiento');
             }
 
             return toastModal("Se han actualizado los datos del radicado exitosamente", "success",$redirect);
@@ -143,7 +143,7 @@ class IncapacidadController extends Controller
                 }
     
                 $incapacidad->update($request->all());
-                return toastModal("Se ha RECHAZADO el radicado ". $id ." exitosamente", "success",route('gestion-incapacidades.incapacidades'));
+                return toastModal("Se ha RECHAZADO el radicado ". $id ." exitosamente", "success",route('gestion-empleado.incapacidades'));
             }
 
             $incapacidad->fill($request->all());
@@ -154,17 +154,17 @@ class IncapacidadController extends Controller
 
             if ($bloqueo == "bloqueado") {
                 $incapacidad->save();
-                return toastModal("El radicado ". $id ." ha sido APROBADO exitosamente y se ha generado el bloqueo en Logtrans", "success",route('gestion-incapacidades.incapacidades'));
+                return toastModal("El radicado ". $id ." ha sido APROBADO exitosamente y se ha generado el bloqueo en Logtrans", "success",route('gestion-empleado.incapacidades'));
             }else if($bloqueo === "error"){
                 $incapacidad->refresh();
-                return toastModal("Error al generar el bloqueo en Logtrans, por favor verifique la información", "error",route('gestion-incapacidades.incapacidades'));
+                return toastModal("Error al generar el bloqueo en Logtrans, por favor verifique la información", "error",route('gestion-empleado.incapacidades'));
             }else{ 
                 $incapacidad->save();
-                return toastModal("El radicado ". $id ." ha sido APROBADO exitosamente", "success",route('gestion-incapacidades.incapacidades'));
+                return toastModal("El radicado ". $id ." ha sido APROBADO exitosamente", "success",route('gestion-empleado.incapacidades'));
             }
         }catch(Exception $e){
             Log::error('Error al actualizar el estado de la incapacidad: ' . $e->getMessage());
-            return toastModal("Error al actualizar el estado de la incapacidad", "error",route('gestion-incapacidades.incapacidades'));
+            return toastModal("Error al actualizar el estado de la incapacidad", "error",route('gestion-empleado.incapacidades'));
         }
     }
 }

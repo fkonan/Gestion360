@@ -1,5 +1,5 @@
 <!-- Modal registro descanso de conductores -->
-<div class="container-fluid p-2 bg-white">
+<div class="container-fluid p-2">
     <form
         id="descansoConductorForm" 
         action="{{ route('registrar.evento') }}" 

@@ -15,9 +15,9 @@
          <!-- Mensaje informativo sobre credenciales -->
          <div class="alert alert-info d-inline-block w-100 mt-2 mb-3 px-3 py-2" style="font-size: 0.98rem;">
             Puedes iniciar sesión usando las mismas credenciales que tienes en la aplicación móvil.
-           
          </div>
-         @if (request()->has('expired'))
+
+         @if(request()->has('expired'))
             <div class="alert alert-warning">
                Tu sesión ha expirado. Por favor, inicia sesión nuevamente.
             </div>
@@ -58,7 +58,7 @@
 
                   <div class="d-flex flex-column my-4 align-items-center">
                      <!-- <div class="captcha-container">
-                           {!! NoCaptcha::display(['data-theme' => $darkMode ? 'dark' : 'light']) !!}
+                           {!! NoCaptcha::display() !!}
                      </div> -->
 
                      @if ($errors->has('g-recaptcha-response'))

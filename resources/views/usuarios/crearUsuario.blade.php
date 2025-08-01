@@ -15,7 +15,9 @@
                     <select class="form-select select2" id="idPersona" name="idPersona" required>
                         <option value="" disabled selected>Seleccione una persona</option>
                         @foreach($personas as $persona)
-                            <option value="{{ $persona->IdPersona }}">{{ $persona->PerNombres }} {{ $persona->PerApellidos }}</option>
+                            <option value="{{ $persona->IdPersona }}">
+                                {{ $persona->PerNombres }} {{ $persona->PerApellidos }} - {{ $persona->PerNumDoc }}
+                            </option>
                         @endforeach
                     </select>
                     <span class="error text-danger fw-bold" id="error-idPersona"></span>

@@ -30,7 +30,7 @@ class PagosYConveniosController extends Controller
                 return toastModal('Error en la consulta, intentelo nuevamente más tarde', 'danger');
             }
 
-            //Informacion adicional del usuario
+            //Informacion adicional del usuario (prueba)
             $userData = [
                 'identificacion' => $request->identificacion,
                 'nombre' => 'Sergio Andrés Carrillo'

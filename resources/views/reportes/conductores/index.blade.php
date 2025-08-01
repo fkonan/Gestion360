@@ -55,7 +55,7 @@
                     onclick="cargarModal(`{{ route('conductor.firmaEquipaje') }}`, 'Reporte firma política de equipaje','#firmaEquipajeForm','modal-md')"
                 />
 
-            <!--     <x-reporteItem
+              <!--   <x-reporteItem
                     titulo="Descanso Conductores"
                     descripcion="Reportes"
                     icono="fas fa-bed"

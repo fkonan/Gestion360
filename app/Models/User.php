@@ -56,11 +56,17 @@ class User extends Authenticatable
 
     //determina si tiene permisos un usuario y permite al super admin ignorar los permisos
     public function can($ability, $arguments = []){
+        if (empty($ability)) {
+            return false;
+        }
+
         if ($this->isSuperAdmin()) {
             return true;
         }
-        return $this->hasPermissionTo($ability);
+
+        return $this->checkPermissionTo($ability); 
     }
+
 
     public function canAny($abilities, $arguments = []){
         if ($this->isSuperAdmin()) {
