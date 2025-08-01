@@ -19,6 +19,7 @@
         rutaVolver="{{ route('home') }}"
         crearRoute="{{ route('usuarios.create') }}"
         crearLabel="Crear Usuario"
+        modalSize="modal-xl"
         crearModalTarget="#formCrearUsuario"
     />
 

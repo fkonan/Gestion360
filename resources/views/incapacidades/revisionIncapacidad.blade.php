@@ -2,7 +2,7 @@
 <div class="container-fluid p-0 rounded">
     <form 
         id="formIncapacidad" 
-        action="{{ route('gestion-incapacidades.incapacidades.update', ['id' => $incapacidad->IdIncapacidad]) }}" 
+        action="{{ route('gestion-empleado.incapacidades.update', ['id' => $incapacidad->IdIncapacidad]) }}" 
         method="POST" 
         enctype="multipart/form-data">
         

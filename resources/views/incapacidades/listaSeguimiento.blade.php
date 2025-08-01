@@ -5,7 +5,7 @@
 @section('breadcrumb')
 <x-breadcrumb :items="[
         ['name' => 'Inicio', 'url' => route('home')],
-        ['name' => 'Gestión Empleado', 'url' => route('gestion-incapacidades.index')],
+        ['name' => 'Gestión Empleado', 'url' => route('gestion-empleado.index')],
         ['name' => 'Seguimiento Incapacidades'],
     ]" />
 <br>
@@ -16,7 +16,7 @@
 
     <x-sectionHeader 
         titulo="Seguimiento incapacidades"
-        rutaVolver="{{ route('gestion-incapacidades.index') }}"
+        rutaVolver="{{ route('gestion-empleado.index') }}"
     />
 
     <div style="padding:1.5em">
@@ -33,7 +33,7 @@
             data-detail-view="true"
             data-detail-formatter="detalleIncapacidad"
             data-check-on-init="true"
-            data-url="{{ route('gestion-incapacidades.seguimiento.cargarDatos') }}">   
+            data-url="{{ route('gestion-empleado.seguimiento.cargarDatos') }}">   
             <thead class="table-primary">
                 <tr>
                     <th class="text-nowrap" data-field="IncPerNom" >Nombre</th>
@@ -67,9 +67,9 @@
         };
 
         function accionesFormatter(value, row) {
-            const urlAdjuntos = "{{ route('gestion-incapacidades.seguimiento.adjuntos', ['id' => ':id']) }}".replace(':id', value);
-            const urlDatos = "{{ route('gestion-incapacidades.incapacidades.edit', ['id' => ':id']) }}".replace(':id', value);
-            const urlSeguimientoDetalle = "{{ route('gestion-incapacidades.seguimiento.detalle', ['id' => ':id']) }}".replace(':id', value);
+            const urlAdjuntos = "{{ route('gestion-empleado.seguimiento.adjuntos', ['id' => ':id']) }}".replace(':id', value);
+            const urlDatos = "{{ route('gestion-empleado.incapacidades.edit', ['id' => ':id']) }}".replace(':id', value);
+            const urlSeguimientoDetalle = "{{ route('gestion-empleado.seguimiento.detalle', ['id' => ':id']) }}".replace(':id', value);
 
             return `
                 <div class="d-flex flex-wrap gap-3 justify-content-center">
