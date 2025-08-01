@@ -46,7 +46,7 @@ class RolController extends Controller
        
         try{
             $rol = new Role();
-            $rol->name = $request->name;
+            $rol->name = strtoupper($request->name);
             $rol->guard_name = 'web';
             $rol->created_at = now();
             $rol->updated_at = now();

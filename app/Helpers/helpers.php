@@ -56,11 +56,16 @@ if (!function_exists('permisoExiste')) {
     {
         if (empty($permiso)) return false;
 
-        $permisos = Cache::remember("permisos_guard_{$guard}", 3600, function () use ($guard) {
+        $permisos = Permisos::where('guard_name', $guard)
+            ->pluck('name')
+            ->toArray();
+
+        //cacheado
+       /*  $permisos = Cache::remember("permisos_guard_{$guard}", 3600, function () use ($guard) {
             return Permisos::where('guard_name', $guard)
                 ->pluck('name')
                 ->toArray();
-        });
+        }); */
 
         return in_array($permiso, $permisos);
     }

@@ -17,7 +17,7 @@
                     titulo="Incapacidades" 
                     descripcion="Gestión" 
                     icono="fa-procedures" 
-                    ruta="{{ route('gestion-incapacidades.incapacidades') }}"
+                    ruta="{{ route('gestion-empleado.incapacidades') }}"
             />
         </div>
         <div class="col">
@@ -25,9 +25,39 @@
                     titulo="Incapacidades" 
                     descripcion="Seguimiento" 
                     icono="fa-phone" 
-                    ruta="{{ route('gestion-incapacidades.seguimiento') }}"
+                    ruta="{{ route('gestion-empleado.seguimiento') }}"
+            />
+        </div>
+
+        <div class="col" onclick="cargarModal(`{{ route('conductor.descanso') }}`, 'Aqui puede registrar eventos no reportados de descanso de conductores','#descansoConductorForm','modal-md')">
+            <x-card color="bg-primary" 
+                    titulo="Descanso Conductores"
+                    descripcion="Gestión"
+                    icono="fas fa-bed"
+                    ruta="#"
             />
         </div>
     </div>
 </div>
 @endsection
+
+@pushOnce('script')
+    @vite(['resources/js/cargarModal.js'])
+    <script>
+        function habilitarOpciones() {   
+            const opciones = document.getElementById('opciones');
+            const opcionEvento = document.getElementById('opcionEvento');
+            const opcionEventoLabel = document.getElementById('opcionEventoLabel');
+            const evento = document.getElementById('evento');
+            
+            opciones.style.display = 'block';
+            opcionEvento.style.display = 'block';
+
+            if(evento.value == '50'){
+                opcionEventoLabel.innerHTML = 'Fecha de salida a descanso';
+            }else{
+                opcionEventoLabel.innerHTML = 'Fecha de reingreso de descanso';
+            }   
+        }
+    </script>
+@endPushOnce

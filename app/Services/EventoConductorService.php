@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\FICS\Tripulantes;
 use App\Models\GESTIONPASAJES\ParametrosPasajes;
-use App\Models\LOGTRANS\PerBloqueoConNov;
 use App\Models\LOGTRANS\PerConductoresEventos;
 use App\Models\LOGTRANS\PerPersonas;
 use Carbon\Carbon;
@@ -68,21 +68,51 @@ class EventoConductorService
     }
 
     private function registrarRegresoAnticipado($conductor){
-        $conductorBloqueo = PerBloqueoConNov::where("id_conducevento", $conductor->id)
-                    ->where("estborrado", 0)
-                    ->where("fecha_fin", ">", Carbon::now())
-                    ->orderBy('id', 'desc')
-                    ->first();
+       
+        $bloqueo = $this->levantarBloqueoFICS($conductor->identificacion, 11);
 
-        if(!$conductorBloqueo){
-            return toastModal("El conductor no presenta bloqueo para realizar el REGRESO ANTICIPADO, debe realizar REGRESO DE DESCANSO", "warning");
+        if(!$bloqueo){    
+            return toastModal("El conductor no tiene bloqueo para realizar el REGRESO ANTICIPADO, debe realizar REGRESO DE DESCANSO", "warning");
         }
 
-        //Se cambia la fecha de bloqueo por 1 dia antes al actual
-        $conductorBloqueo->fecha_fin = Carbon::now()->subDay();
-        $conductorBloqueo->save();
-
-        return toastModal("Se registró el evento REGRESO ANTICIPADO", "success",route("reportes.index"));
+        return toastModal("Se registró el evento REGRESO ANTICIPADO", "success",route("gestion-empleado.index"));
     } 
+
+
+    public function levantarBloqueoFICS($docConductor,$idBloqueo): bool{
+
+        //Verifica si el conductor tiene un bloqueo activo
+        $tieneBloqueo = $this->tieneBloqueoFICS($docConductor, $idBloqueo);
+        if(!$tieneBloqueo){
+            return false;
+        }
+
+        //Levanta el bloqueo
+        $tripulante = Tripulantes::with('bloqueos')
+            ->where('Documento', $docConductor)
+            ->where('Estado',0)
+            ->first();
+
+        $tripulanteBloqueo = $tripulante->bloqueos()
+            ->where('PersonalEstadoTipoID', $idBloqueo)
+            ->where('FechaFinalizacion', '>', Carbon::now()->format('Y-d-m H:i:s'))
+            ->first();
+
+        $tripulanteBloqueo->FechaFinalizacion = Carbon::now()->subDay()->format('Y-d-m H:i:s');
+        $tripulanteBloqueo->save();
+        return true;
+    }
+
+    public function tieneBloqueoFICS($docConductor,$idBloqueo){
+
+        $estBloqueado = Tripulantes::where('Documento', $docConductor)
+            ->where('Estado',0)
+            ->whereHas('bloqueos', function ($query) use ($idBloqueo) {
+                $query->where('PersonalEstadoTipoID', $idBloqueo)
+                    ->where('FechaFinalizacion', '>', Carbon::now()->format('Y-d-m H:i:s'));
+            })->exists();
+
+        return $estBloqueado;
+    }
   
 }

@@ -87,11 +87,11 @@ class SeguimientoIncapacidadController extends Controller
             $incapacidadSeguimiento->Estado = "ACTIVO";
             $incapacidadSeguimiento->save();
 
-            return toastModal("Seguimiento radicado N° '. $id .' registrado exitosamente", "success",route('gestion-incapacidades.seguimiento.detalle', ['id' => $incapacidadSeguimiento->IncapacidadId]));
+            return toastModal("Seguimiento radicado N° '. $id .' registrado exitosamente", "success",route('gestion-empleado.seguimiento.detalle', ['id' => $incapacidadSeguimiento->IncapacidadId]));
     
         }catch(Exception $e){
             Log::error('Error al registrar el seguimiento: ' . $e->getMessage());
-            return toastModal("Error al registrar el seguimiento", "error",route('gestion-incapacidades.seguimiento.detalle', ['id' => $incapacidadSeguimiento->IncapacidadId]));
+            return toastModal("Error al registrar el seguimiento", "error",route('gestion-empleado.seguimiento.detalle', ['id' => $incapacidadSeguimiento->IncapacidadId]));
         }
     }
 }
