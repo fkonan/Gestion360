@@ -71,7 +71,7 @@
             <i class="light-icon"></i>
          </button>
       </section>
-      
+
       <section class="py-5">
          @yield('content')
       </section>
@@ -110,7 +110,7 @@
    <x-modal />
    <x-toast />
    <x-loader />
-   @include('footer')
+   <!-- @include('footer') -->
 </body>
 
 </html>
