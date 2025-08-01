@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Route;
 //Rutas Modulo Gestion RRHH
 Route::prefix("gestionRRHH")->middleware(['auth', 'permisos:'.Permisos::GESTION_RRHH_ACCEDER,'modulo.activo:2'])->group(function(){
     Route::prefix("gestion-empleado")->middleware(['auth', 'permisos:'.Permisos::GESTION_RRHH_GESTION_EMPLEADO_ACCEDER,'submodulo.activo:7'])->group(function(){
-        Route::get("/",[ModuloController::class,"getGestionEmpleado"])->name("gestion-incapacidades.index");
+        Route::get("/",[ModuloController::class,"getGestionEmpleado"])->name("gestion-incapacidad.index");
         Route::get("/incapacidades",[IncapacidadController::class,"listaIncapacidades"])->name("gestion-empleado.incapacidades");
         Route::get("/incapacidades/cargarDatos",[IncapacidadController::class,"cargarDatos"])->middleware('soloAJAX')->name("gestion-empleado.incapacidades.cargarDatos");
         Route::get("/incapacidades/{id}/datos",[IncapacidadController::class,"editIncapacidad"])->middleware('soloAJAX')->name("gestion-empleado.incapacidades.edit");

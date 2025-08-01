@@ -20,7 +20,7 @@ class IncapacidadController extends Controller
         $incapacidadesPorGestionar = Incapacidad::where('IncapacidadEstado', '=', 'RADICADO')->exists();
 
         if($incapacidadesPorGestionar == null){
-           /*  return toast("No hay incapacidades radicadas para gestionar","danger",redirect()->route('gestion-empleado.index')); */
+           /*  return toast("No hay incapacidades radicadas para gestionar","danger",redirect()->route('gestion-incapacidad.index')); */
             return redirect()->back()->with('alert', [
                 'type' => 'success', 
                 'title' => 'No existen incapacidades radicadas pendientes de gestión en este momento.'
