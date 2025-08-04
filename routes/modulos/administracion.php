@@ -63,8 +63,9 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:'.Permisos::ADMIN
             Route::get("/formIngSalConductores/cargarData",[ConductorController::class,"cargarDataIngSalConductores"])->name("ingresoSalida.cargarData");
         });
 
+        //Reportes Pasajes
         Route::prefix("pasajes")->middleware(['permisos:'.Permisos::ADMINISTRACION_REPORTES_PASAJES])->group(function(){
-            //Reportes Pasajes
+            
             Route::get("/",[ReportesController::class,"reportesPasajes"])->name("reportes.pasajes");
 
             //Impresion tiquetes
@@ -78,6 +79,11 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:'.Permisos::ADMIN
             Route::post("/esquemaTarifarioPasajes/filtrar",[GestionPasajesController::class,"filtrarEsquemaTarifario"])->name("esquemaTarifario.filtrar");
             Route::get("/esquemaTarifarioPasajes/listaDatos",[GestionPasajesController::class,"listaEsquemaTarifario"])->name("esquemaTarifario.listaDatos");
             Route::get("/esquemaTarifarioPasajes/cargarData",[GestionPasajesController::class,"cargarDataEsquemaTarifario"])->name("esquemaTarifario.cargarData");
+        });
+
+        //Reportes Carga
+        Route::prefix("carga")->group(function(){
+            Route::get("/",[ReportesController::class,"reportesCarga"])->name("reportes.carga");
         });
     });
 });

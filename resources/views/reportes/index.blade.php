@@ -21,7 +21,18 @@
     <div style="padding:1.5em" class="mt-md-5">
         <div class="row row-cols-1 row-cols-md-3 g-3 mt-2">
             @foreach ($reportes as $reporte)
-                @permite($reporte['permiso'])
+                @if(!isset($reporte['permiso']) || $reporte['permiso'] === null)
+                    <div class="col" style="max-width:400px">
+                        <x-card color="bg-teriary" 
+                            titulo="{{ $reporte['titulo'] }}" 
+                            descripcion="{{ $reporte['descripcion'] }}" 
+                            tooltip="{{ $reporte['tooltip'] }}"
+                            icono="{{ $reporte['icono'] }}" 
+                            ruta="{{ route($reporte['ruta']) }}"
+                        />
+                    </div>      
+                @else
+                    @permite($reporte['permiso'])
                     <div class="col" style="max-width:400px">
                         <x-card color="bg-teriary" 
                             titulo="{{ $reporte['titulo'] }}" 
@@ -31,7 +42,8 @@
                             ruta="{{ route($reporte['ruta']) }}"
                         />
                     </div>
-                @endpermite
+                    @endpermite
+                @endif
             @endforeach
         </div>
     </div>

@@ -15,7 +15,11 @@ class ReportesController extends Controller
     //vista general para el formulario de reportes, aca se ingresan los parametros
     public function mostrarFormulario($id)
     {
-        return view('reportes.formulario', compact('id'));
+        $query = Reporteador::where('id', $id)->value('parametros');
+        $parametrosArray = json_decode($query, true);
+        $parametros = array_column($parametrosArray, 'nombre');
+
+        return view('reportes.formulario', compact('id', 'parametros'));
     }
 
 
@@ -67,7 +71,7 @@ class ReportesController extends Controller
 
         }catch(Exception $e){
             Log::error('Error al obtener el reporte ' . $id . ': ' . $e->getMessage());
-            return toastModal("Error al obtener el reporte","error");
+            return toastModal("Error al obtener el reporte","danger");
         }
     }
 
@@ -90,7 +94,15 @@ class ReportesController extends Controller
                 'permiso' => Permisos::ADMINISTRACION_REPORTES_PASAJES,
                 'icono' => 'fa-solid fa-ticket-alt'
             ],
+            [
+                'titulo' => 'Reportes de Carga',
+                'descripcion' => 'Consultar',
+                'tooltip' => 'Incluye reportes relacionados con la gestión y análisis de carga.',
+                'ruta' => 'reportes.carga',
+                'icono' => 'fa-solid fa-truck-loading'
+            ],
         ];
+
         return view('reportes.index',compact('reportes'));
     }
 
@@ -100,5 +112,9 @@ class ReportesController extends Controller
 
     public function reportesPasajes(){
         return view("reportes.pasajes.index");
+    }
+
+    public function reportesCarga(){
+        return view("reportes.carga.index");
     }
 }

@@ -55,4 +55,5 @@ class Permisos
 
     // PAGOS Y RECAUDOS
     const PAGOS_Y_RECAUDOS_ACCEDER = 'pagos_y_recaudos.acceder';
+    const PAGOS_Y_RECAUDOS_PAGOS_CONVENIOS_ACCEDER = 'pagos_y_recaudos.pagos_convenios.acceder';
 }

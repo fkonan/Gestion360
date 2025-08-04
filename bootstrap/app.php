@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\CajaActivaMiddleware;
 use App\Http\Middleware\ModuloActivoMiddleware;
 use App\Http\Middleware\SoloAjaxMiddleware;
 use App\Http\Middleware\SubModuloActivoMiddleware;
@@ -19,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'permisos' => PermissionMiddleware::class,
             'role' => RoleMiddleware::class,
+            'caja.activa' => CajaActivaMiddleware::class,
             'soloAJAX' => SoloAjaxMiddleware::class, 
             'modulo.activo' => ModuloActivoMiddleware::class,
             'submodulo.activo' => SubModuloActivoMiddleware::class
