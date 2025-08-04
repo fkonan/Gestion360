@@ -67,7 +67,7 @@ class EventoConductorService
        
     }
 
-    private function registrarRegresoAnticipado($conductor){
+    private function registrarRegresoAnticipado($conductor, $request){
        
         $bloqueo = $this->levantarBloqueoFICS($conductor->identificacion, 11);
 
@@ -75,7 +75,27 @@ class EventoConductorService
             return toastModal("El conductor no tiene bloqueo para realizar el REGRESO ANTICIPADO, debe realizar REGRESO DE DESCANSO", "warning");
         }
 
-        return toastModal("Se registró el evento REGRESO ANTICIPADO", "success",route("gestion-incapacidad.index"));
+        //formatear fecha a formato correcto
+        $fecha = Carbon::parse($request->fecha)->format('Y/m/d');
+        $eventoDesc = ParametrosPasajes::where("ParNom", $request->evento)->value('ParDes');
+
+        $conductorEvento = new PerConductoresEventos();
+        $conductorEvento->pe_id = $conductor->id;
+        $conductorEvento->fechaevento = $request->fecha;
+        $conductorEvento->evento = $request->evento;
+        $conductorEvento->anotacion = $eventoDesc;
+        $conductorEvento->fecmodifica = $fecha;
+        $conductorEvento->usrmodifica = 1149061885;
+        $conductorEvento->rolmodifica = 60;
+        $conductorEvento->empmodifica = 6831;
+        $conductorEvento->estborrado = 0;
+        $conductorEvento->feccreacion = $fecha;
+        $conductorEvento->usrcreacion = 1149061885;
+        $conductorEvento->empcreacion = 6831;
+        $conductorEvento->tiporegistro = 0;
+        $conductorEvento->save();
+
+        return toastModal("Se registró el evento REGRESO ANTICIPADO", "success",route("gestion-incapacidades.index"));
     } 
 
 

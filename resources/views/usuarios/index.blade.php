@@ -32,7 +32,6 @@
             data-pagination="true"
             data-responsive="true"
             data-check-on-init="true"
-            data-detail-view="true"
             data-sort-name='fechaHoraRegistro'
             data-sort-order='desc'
             data-detail-formatter="detalleUsuario"
@@ -146,7 +145,7 @@
    document.addEventListener("DOMContentLoaded", () => {
       initTablaBootstrapTable(
          "#usuariosDataTable",
-         { protegidas: ["persona.PerNumDoc"] },
+         { protegidas: ["PerNumDoc"] },
          "detalleUsuario",
          { acciones: accionesFormatter, estado: estadoFormatter }
       );
