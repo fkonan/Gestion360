@@ -6,8 +6,9 @@ use App\Models\GESTIONADMIN\Persona;
 use App\Models\GESTIONADMIN\PersonaDatos;
 use App\Models\User;
 use App\Services\EmpleadoService;
+use App\Services\UsuarioService;
 use Auth;
-use DB;
+use Illuminate\Support\Facades\DB;
 use Hash;
 use Exception;
 use Log;
@@ -16,10 +17,10 @@ class LoginValidatorService
 {
    public function validar(User $user, string $identificacion): ?array
    {
-      if (!EmpleadoService::esEmpleadoActivo($identificacion)) {
+      /* if (!EmpleadoService::esEmpleadoActivo($identificacion)) {
          return ['message' => 'Solo los empleados activos pueden iniciar sesión.', 'type' => 'danger'];
       }
-
+ */
       if ($user->persona->PerEstado === 'INACTIVO') {
          return ['message' => 'Persona inactiva, contacte con un administrador', 'type' => 'warning'];
       }
@@ -34,10 +35,11 @@ class LoginValidatorService
    public function validarLogtrans(string $identificacion, string $password)
    {
       $persona = EmpleadoService::esEmpleadoActivo($identificacion, true);
-      dd($persona);
+      
       if (!$persona) {
          return ['message' => 'Solo los empleados activos pueden iniciar sesión.', 'type' => 'danger'];
       }
+      
       if ($this->checkSHA1Password($password, $persona->clave)) {
          //crear el registro en autogestion trayendo los campos de logtrans
          $rh = $persona->rh == '0' ? '+' : '-';
@@ -100,6 +102,15 @@ class LoginValidatorService
             $user->UsuarioEstado = "ACTIVO";
             $user->Verificado = "TRUE";
             $user->save();
+
+            // Asignar roles de logtrans en autogestion
+            EmpleadoService::asignarRolesLogtrans($identificacion, $user);
+
+            // Asignar rol al usuario appmovil
+            UsuarioService::crearRolApp($user);
+
+            dd($user->roles);
+
             DB::commit();
             return $user;
 
@@ -110,7 +121,7 @@ class LoginValidatorService
          }
          // return redirect()->intended('/dashboard');
       }
-      return ['message' => 'Contraseña incorrecta.', 'type' => 'danger'];
+      throw new Exception('Identificación o contraseña incorrectos');
    }
 
    private function checkSHA1Password($plainPassword, $hashedPassword)

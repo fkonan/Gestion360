@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use Spatie\Permission\Models\Role;
 
 class EmpleadoService
 {
@@ -57,5 +58,32 @@ class EmpleadoService
          ->where('ct.estborrado', 0)
          ->pluck('ct.descripcion', 'p.identificacion')
          ->toArray();
+   }
+
+   // Verifica si un empleado tiene un rol específico
+   public static function rolesLogtrans($identificacion)
+   {
+      $rolesLogtrans = DB::connection('oracle')
+         ->table('per_personas as p')
+         ->join('per_empresapersonas as ep', 'ep.pe_id_pe', '=', 'p.id')
+         ->join('arq_personaroles as pr', 'pr.ep_id', '=', 'ep.id')
+         ->join('arq_roles as r', 'r.id', '=', 'pr.ro_id')
+         ->where('p.identificacion', $identificacion)
+         ->orderBy('r.descripcion')
+         ->pluck('pr.ro_id');
+
+      return $rolesLogtrans;
+   }
+
+   //Asignar roles en autogestion según el rol de Logtrans
+   public static function asignarRolesLogtrans($identificacion, $user){
+      $rolesLogtrans = EmpleadoService::rolesLogtrans($identificacion);
+
+      //Roles que se asignan en autogestion según los roles de Logtrans
+      $rolesParaAsignar = Role::whereIn('idLogtrans', $rolesLogtrans)->get();
+
+      if ($rolesParaAsignar->isNotEmpty()) {
+         $user->assignRole($rolesParaAsignar); 
+      }
    }
 }

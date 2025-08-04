@@ -5,7 +5,7 @@
 @section('breadcrumb')
 <x-breadcrumb :items="[
         ['name' => 'Inicio', 'url' => route('home')],
-        ['name' => 'Gestión Empleado', 'url' => route('gestion-incapacidad.index')],
+        ['name' => 'Gestión Empleado', 'url' => route('gestion-incapacidades.index')],
         ['name' => 'Incapacidades'],
     ]" />
 <br>
@@ -16,7 +16,7 @@
 
     <x-sectionHeader 
         titulo="Incapacidades"
-        rutaVolver="{{ route('gestion-incapacidad.index') }}"
+        rutaVolver="{{ route('gestion-incapacidades.index') }}"
     />
 
     <div style="padding:1.5em">

@@ -36,6 +36,7 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:'.Permisos::ADMIN
         Route::put("/{id}/permisos",[PermisosController::class,"update"])->name("permisos.update");
         Route::post("/{id}/cambiar-estado", [UserController::class, "cambiarEstado"])->middleware('soloAJAX')->name("usuarios.cambiarEstado");
     });
+
     Route::prefix("reportes")->middleware(['permisos:'.Permisos::ADMINISTRACION_REPORTES_ACCEDER,'submodulo.activo:22'])->group(function(){
         Route::get("/",[ReportesController::class,"getReportes"])->name("reportes.index");
         Route::post("/{id}/data", [ReportesController::class, 'obtenerReporte'])->name('reportes.get');

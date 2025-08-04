@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Mail\CorreoCredenciales;
 use App\Models\GESTIONADMIN\RolApp;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -32,7 +31,7 @@ class UsuarioService
             $user->syncRoles($data['rol']);
 
             // Asignar rol al usuario appmovil
-            $this->crearRolApp($user);
+            self::crearRolApp($user);
 
             $correo = $user->persona->datos->PerEmail ?? null;
 
@@ -60,9 +59,9 @@ class UsuarioService
     }
 
 
-    public function crearRolApp(User $usuario): void{
+    public static function crearRolApp(User $usuario): void{
 
-        $tipoCargo = $this->obtenerTipoCargo($usuario->persona->PerNumDoc);
+        $tipoCargo = self::obtenerTipoCargo($usuario->persona->PerNumDoc);
 
         $RolSocio = "FALSE";
         $RolEmp = "FALSE";
@@ -90,7 +89,7 @@ class UsuarioService
         $rol->save();
     }
 
-    public function obtenerTipoCargo($documento){
+    public static function obtenerTipoCargo($documento){
         return DB::connection('oracle')
             ->table('per_empresapersonas as ep')
             ->join('per_personas as p', 'ep.pe_id_pe', '=', 'p.id')
