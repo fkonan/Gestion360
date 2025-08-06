@@ -153,7 +153,7 @@ class ApiAsopagos
         ]);
     }
 
-    public function retirar(string $tipoDoc, int $documento, string $monto, int $departamento, int $ciudad)
+    public function retirar(string $tipoDoc, int $documento, string $monto, int $departamento, int $ciudad, int $transactionId , int $sequenceId)
     {
         $resultado = $this->ejecutarTransaccion([
             'transactionType'    => '01',
@@ -162,7 +162,7 @@ class ApiAsopagos
             'city'               => $ciudad,
             'identificationType' => $tipoDoc,
             'identification'     => $documento,
-        ]);
+        ],$transactionId,$sequenceId);
 
         $error = $resultado['error'] ?? null;
 

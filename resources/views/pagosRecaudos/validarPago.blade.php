@@ -2,7 +2,7 @@
 <div class="container-fluid p-0">
     <form 
         id="formPago" 
-        action="" 
+        action="{{ route('pagosConvenios.pagar') }}" 
         method="POST" 
         enctype="multipart/form-data"
         onsubmit="deshabilitarSubmit(this)">
@@ -17,11 +17,11 @@
                 <div class="card-body">
                     <div class="row mb-2">
                         <div class="col-sm-4 fw-semibold text-muted">Nombre principal:</div>
-                        <div class="col-sm-8">{{ $userData['nombre'] }}</div>
+                        <div class="col-sm-8">{{ $clienteData['nombre'] }}</div>
                     </div>
                     <div class="row mb-2">
                         <div class="col-sm-4 fw-semibold text-muted">Identificación principal:</div>
-                        <div class="col-sm-8">{{ $userData['identificacion'] }}</div>
+                        <div class="col-sm-8">{{ $clienteData['identificacion'] }}</div>
                     </div>
                     <div class="row mb-2">
                         <div class="col-sm-4 fw-semibold text-muted">Valor total a pagar:</div>
@@ -44,7 +44,7 @@
                             </label>
                             <select class="form-select" id="registrar_nombre" name="registrar_nombre" required>
                                 <option value="" selected disabled>Seleccione una opción</option>
-                                <option value="{{ $userData['nombre'] }}">{{ $userData['nombre'] }}</option>
+                                <option value="{{ $clienteData['nombre'] }}">{{ $clienteData['nombre'] }}</option>
                                 
                             </select>
                         </div>
