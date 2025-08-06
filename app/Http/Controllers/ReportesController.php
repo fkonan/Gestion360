@@ -59,6 +59,9 @@ class ReportesController extends Controller
                 return toastModal("No se encontraron resultados","warning");
             }
 
+            //Se aumenta el contador de consultas del reporte
+            $reporte->increment('total_consultas');
+
             return response()->json([
                 'success' => true,
                 'html' => view('reportes.resultado', [

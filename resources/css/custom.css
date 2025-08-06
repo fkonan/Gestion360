@@ -200,7 +200,7 @@
 }
 
 :root,[data-bs-theme=dark] {
-   --bs-primary: #fff;
+   --bs-primary: #ffffff;
    --bs-secondary: #89898c;
    --bs-tertiary: #fff;
    --bg-rgb:#2d6dec75;
@@ -364,6 +364,10 @@
 
 [data-bs-theme="dark"] .form-control[readonly]{
     background-color: rgba(var(--bs-dark-rgb), var(--bs-bg-opacity)) !important;
+}
+
+[data-bs-theme="dark"] .header-info{
+    color: var(--bs-gray-800);
 }
  
 .content-wrapper{

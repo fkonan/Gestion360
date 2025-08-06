@@ -131,7 +131,10 @@
                         role="button">
                         <i class="fas fa-bars"></i>
                     </a>
-                    <img src="{{ asset('img/LogoCopeBlanco.png') }}" style="width:70px; height: 15px;" alt="Logo Cope" class="d-md-none">
+                    <!-- <img src="{{ asset('img/LogoCopeBlanco.png') }}" style="width:70px; height: 15px;" alt="Logo Cope" class="d-md-none"> -->
+                </div>
+                <div class="d-none d-md-flex align-items-center gap-3 flex-wrap header-info" style="white-space: nowrap;">
+                    @yield('headerInfo')
                 </div>
             </section>
 

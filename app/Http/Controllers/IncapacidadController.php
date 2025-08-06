@@ -21,12 +21,7 @@ class IncapacidadController extends Controller
 
         if($incapacidadesPorGestionar == null){
            /*  return toast("No hay incapacidades radicadas para gestionar","danger",redirect()->route('gestion-incapacidades.index')); */
-            return redirect()->back()->with('alert', [
-                'type' => 'success', 
-                'title' => 'No existen incapacidades radicadas pendientes de gestión en este momento.'
-            ]);
-
-
+            return sweetAlert('No existen incapacidades radicadas pendientes de gestión en este momento.','success');
         }
         return view("incapacidades.index");
     }

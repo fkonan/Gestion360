@@ -72,4 +72,26 @@ if (!function_exists('permisoExiste')) {
 }
 
 
+if (!function_exists('sweetAlert')) {
+    /**
+     * Crear una alerta con SweetAlert2
+     *
+     * @param string $message Mensaje de la alerta
+     * @param string $type Tipo de alerta: success, error, warning, info
+     * @param string|null $redirectUrl URL de redirección después de aceptar (opcional)
+     */
+    function sweetAlert($message, $type = 'success', $redirectUrl = null) {
+        $alertData = [
+            'type' => $type,
+            'title' => $message,
+        ];
+
+        if ($redirectUrl) {
+            $alertData['redirect_url'] = $redirectUrl;
+        }
+
+        return redirect()->back()->with('alert', $alertData);
+    }
+}
+
 

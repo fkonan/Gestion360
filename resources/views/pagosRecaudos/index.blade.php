@@ -10,6 +10,20 @@
 <br>
 @endsection
 
+@section('headerInfo')
+    <div class="row me-3">
+        <div class="col-12">
+            <span>
+                <span class="fw-bold small">CAJA ACTIVA</span>
+                &nbsp;&nbsp;&nbsp;
+                <small>Sucursal:</small> <span class="fw-bold small">{{ $cajaActiva[0]->nomsucursal }}</span>
+                &nbsp;&nbsp;&nbsp;
+                <small>Fecha apertura:</small> <span class="fw-bold small">{{ \Carbon\Carbon::parse($cajaActiva[0]->fecini)->format('d/m/Y H:i:s') }}</span>
+            </span>
+        </div>
+    </div>
+@endsection
+
 @section('content')
 <div class="container-fluid p-0 border rounded sidebar-dark-primary tableContainer pb-3" style="min-height:150px">
 
@@ -34,8 +48,6 @@
                 <label for="empresa" class="form-label">Seleccione empresa</label>
                 <select class="form-select" id="empresa" name="empresa" required>
                     <option value="CAJASAN" selected>CAJASAN</option>
-                    <option value="EMPRESA2">EMPRESA2</option>
-                    <option value="EMPRESA3">EMPRESA3</option>
                 </select>
             </div>
 
