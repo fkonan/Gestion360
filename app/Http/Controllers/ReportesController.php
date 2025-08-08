@@ -54,7 +54,12 @@ class ReportesController extends Controller
             }
 
             //se obtiene el reporte a traves del servicio ApiReportes
-            $data = $apiReportes->obtenerReporte($id, $fechaInicio, $fechaFin);
+            $data = $apiReportes->obtenerReporte([
+                'idReporte'   => $id,
+                'fechaInicio' => $fechaInicio,
+                'fechaFin'    => $fechaFin,
+            ]);
+
             if (!$data) {
                 return toastModal("No se encontraron resultados","warning");
             }
