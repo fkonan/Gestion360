@@ -41,7 +41,7 @@ class ApiReportes
         return null;
     }
     
-    public function obtenerReporte($idReporte, $fechaInicio, $fechaFin, $agencia = null)
+    public function obtenerReporte(array $params)
     {
         $token = $this->obtenerToken();
 
@@ -49,18 +49,27 @@ class ApiReportes
             return null;
         }
 
-        $response = Http::withToken($token)
-            ->withHeaders(['Content-Type' => 'application/json'])
-            ->post(config('apiReportes.base_url')."/reporte/{$idReporte}", [
-                'paramFechaInicio' => $fechaInicio,
-                'paramFechaFin' => $fechaFin,
-                'paramAgencia' => $agencia,
-            ]);
-
-        if ($response->successful()) {
-            return $response->json()['data'];
+        // Validar que los parámetros obligatorios existan
+        foreach (['idReporte', 'fechaInicio', 'fechaFin'] as $obligatorio) {
+            if (empty($params[$obligatorio])) {
+                return null;
+            }
         }
 
-        return null;
+        $payload = array_filter([
+            'paramFechaInicio'  => $params['fechaInicio'] ?? null,
+            'paramFechaFin'     => $params['fechaFin'] ?? null,
+            'paramAgencia'      => $params['agencia'] ?? null,
+            'paramTipoFiltro'   => $params['tipoFiltro'] ?? null,
+            'paramValorFiltro'  => $params['valorFiltro'] ?? null,
+        ], fn($value) => !is_null($value));
+
+        $response = Http::withToken($token)
+            ->withHeaders(['Content-Type' => 'application/json'])
+            ->post(config('apiReportes.base_url') . "/reporte/{$params['idReporte']}", $payload);
+
+        return $response->successful()
+            ? $response->json()['data']
+            : null;
     }
 }

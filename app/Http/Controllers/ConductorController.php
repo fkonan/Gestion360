@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 use Exception;
 use Illuminate\Support\Facades\Log;
 use App\Models\FICS\Tripulantes;
+use App\Models\GESTIONADMIN\Reporteador;
 use App\Models\GESTIONPASAJES\FirmaEquipajePol;
 use App\Models\GESTIONPASAJES\ParametrosPasajes;
+use App\Services\ApiReportes;
 use App\Services\EventoConductorService;
 use App\Services\IngresoSalidaConducService;
 use Carbon\Carbon;
@@ -151,7 +153,7 @@ class ConductorController extends Controller
     }
 
 
-    public function reporteIngSalConductores(Request $request, IngresoSalidaConducService $ingresoSalidaConducService){
+    /* public function reporteIngSalConductores(Request $request, IngresoSalidaConducService $ingresoSalidaConducService){
         $validator = Validator::make($request->all(), [
             'fechaInicial' => 'date',
             'fechaFinal' => [
@@ -240,6 +242,72 @@ class ConductorController extends Controller
 
             session(['ingSalConductores' => $coleccionFinal]);
             return toastModal("Registros encontrados: ".$numeroRegistros ,"success",route("lista.ingresoSalidas"));
+        }catch(Exception $e){
+            Log::error('Error al obtener la lista de ingreso salida de conductores: ' . $e->getMessage());
+            return toastModal("Error al obtener los resultados","danger");
+        }
+    } */
+
+    public function reporteIngSalConductores(Request $request, ApiReportes $apiReportes){
+        $validator = Validator::make($request->all(), [
+            'fechaInicial' => 'date',
+            'fechaFinal' => [
+                'date',
+                'after_or_equal:fechaInicial',
+            ],
+        ], [
+            'fechaFinal.after_or_equal' => 'La fecha de fin debe ser posterior o igual a la fecha de inicio.',  
+            'fechaInicial.date' => 'La fecha de fin debe ser una fecha válida.',
+            'fechaFinal.date' => 'La fecha de fin debe ser una fecha válida.',  
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try{
+            $fechaIni = Carbon::parse($request->fechaInicial)->subMonth()->format('Y-m-d');
+            $fechaFin = Carbon::parse($request->fechaFinal)->addMonth()->format('Y-m-d');
+            $tipoFiltro = $request->filtro;
+            $filtroValor = $request->parametroInput;
+            
+            //Consulta el reporte por la API
+            $resultados = $apiReportes->obtenerReporte([
+                'idReporte'   => 9,
+                'fechaInicio' => $fechaIni,
+                'fechaFin'    => $fechaFin,
+                'tipoFiltro'  => $tipoFiltro,
+                'valorFiltro' => $filtroValor
+            ]);
+
+            //Formato especial de las fechas
+            $camposFecha = ['FECHA_SALIDA', 'FECHA_REINTEGRO'];
+
+            $resultados = collect($resultados)->map(function ($item) use ($camposFecha) {
+                foreach ($camposFecha as $campo) {
+                    if (!empty($item[$campo])) {
+                        $item[$campo] = Carbon::parse($item[$campo])
+                            ->timezone('America/Bogota')
+                            ->format('d/m/Y H:i');
+                    }
+                }
+                return $item;
+            })->toArray();
+
+            $totalResultados = count($resultados);
+
+            if ($totalResultados == 0) {
+                return toastModal("No se encontraron resultados para los parametros ingresados.", "warning","#");
+            }
+
+            //Aumentar el contador de consultas del reporte
+            $reporte = Reporteador::findOrFail(9);
+            $reporte->increment('total_consultas');
+
+            session(['ingSalConductores' => $resultados]);
+            return toastModal("Registros encontrados: ".$totalResultados ,"success",route("lista.ingresoSalidas"));
         }catch(Exception $e){
             Log::error('Error al obtener la lista de ingreso salida de conductores: ' . $e->getMessage());
             return toastModal("Error al obtener los resultados","danger");

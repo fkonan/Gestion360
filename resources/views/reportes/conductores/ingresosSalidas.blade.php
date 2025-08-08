@@ -7,7 +7,7 @@
         ['name' => 'Inicio', 'url' => route('home')],
         ['name' => 'Reportes', 'url' => route('reportes.index')],
         ['name' => 'Conductores', 'url' => route('reportes.conductores')],
-        ['name' => 'Ingreso-Salida conductores'],
+        ['name' => 'Descanso conductores'],
     ]" />
 <br>
 @endsection
@@ -16,11 +16,11 @@
 <div class="container-fluid tableContainer p-0 border rounded sidebar-dark-primary" style="min-height:150px">
 
     <x-sectionHeader 
-        titulo="Resultado ingreso-salida conductores"
+        titulo="Resultado descanso conductores"
         rutaVolver="{{ route('reportes.conductores') }}"
         excel="true"
         excelRoute="{{ route('ingresoSalida.cargarData') }}"
-        excelName="Informe_ingreso_salida_conductores"
+        excelName="Informe_descanso_conductores"
     />
 
     <div style="padding:1.5em">
@@ -38,16 +38,14 @@
             data-url="{{ route('ingresoSalida.cargarData') }}">   
             <thead class="table-primary">
                 <tr class="bg-primary">
-                    <th data-field="identificacion" data-sortable="true">Identificación</th>
-                    <th data-field="codigo" data-sortable="true">Código conductor</th>
-                    <th class="text-nowrap" data-field="nombre_completo" data-sortable="true">Nombre conductor</th>
-                    <th class="text-nowrap" data-field="fecha_salida" data-sortable="true">Fecha salida</th>
-                    <th class="text-nowrap" data-field="fecha_reintegro" data-sortable="true">Fecha reintegro</th>
-                    <th class="text-nowrap" data-field="dias_descanso" data-sortable="true">Dias descanso</th>
-                    <th class="text-nowrap" data-field="vehiculo" data-sortable="true">Vehículo</th>
-                    <th class="text-nowrap" data-field="nombre_asociado" data-sortable="true">Nombre asociado</th>
-                    <th class="text-nowrap" data-field="agencia_salida" data-sortable="true">Agencia salida</th>
-                    <th class="text-nowrap" data-field="agencia_reintegro" data-sortable="true">Agencia reintegro</th>
+                    <th data-field="IDENTIFICACION" data-sortable="true">Identificación</th>
+                    <th data-field="CODIGO_CONDUCTOR" data-sortable="true">Código conductor</th>
+                    <th class="text-nowrap" data-field="NOMBRE_COMPLETO" data-sortable="true">Nombre conductor</th>
+                    <th class="text-nowrap" data-field="FECHA_SALIDA" data-sortable="true">Fecha salida</th>
+                    <th class="text-nowrap" data-field="FECHA_REINTEGRO" data-sortable="true" data-formatter="formatearReintegro">Fecha reintegro</th>
+                    <th class="text-nowrap" data-field="DIAS_DESCANSO" data-sortable="true" data-formatter="formatearDias">Dias descanso</th>
+                    <th class="text-nowrap" data-field="VEHICULO" data-sortable="true">Vehículo</th>
+                    <th class="text-nowrap" data-field="NOMBRE_ASOCIADO" data-sortable="true">Nombre asociado</th>
                 </tr>
             </thead>
         </table>
@@ -58,10 +56,18 @@
 @pushOnce('script')
     @vite(['resources/js/cargarModal.js'])
     <script>
+        function formatearReintegro(value) {
+            return value ? value : 'No registrado';
+        }
+
+        function formatearDias(value) {
+            return value ? value : 'No aplica';
+        }
+
         document.addEventListener("DOMContentLoaded", () => {
             initTablaBootstrapTable(
                 '#ingresoSalidaTable',
-                { protegidas: ['identificacion'] },
+                { protegidas: ['NOMBRE_COMPLETO'] },
                 'detalleingresoSalida'
             );
         });

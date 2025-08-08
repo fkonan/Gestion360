@@ -22,16 +22,8 @@
         </div>
 
          <div class="row mb-3 mx-1">
-           
-           <!--  <div class="col-12 col-md-6">
-                <label for="perfil" class="form-label">Perfil</label>
-                <select name="perfil" id="perfil" class="form-select" required>
-                    <option value="CONDUCTOR" selected>CONDUCTOR</option>
-                </select>
-                <span class="error text-danger fw-bold" id="error-perfil"></span>
-            </div> -->
 
-            <div class="col-12 col-md-6">
+           <!--  <div class="col-12 col-md-6">
                 <label for="evento" class="form-label">Evento</label>
                 <select name="evento" id="evento" class="form-select" required>
                     <option value="0" selected>Todos</option>
@@ -39,7 +31,7 @@
                     <option value="49">Reintegro de conductores</option>
                 </select>
                 <span class="error text-danger fw-bold" id="error-evento"></span>
-            </div>
+            </div> -->
 
              <div class="col-12 col-md-6 mt-3">
                 <label class="form-label d-block">Filtrar por</label>
@@ -57,10 +49,8 @@
                 </div>
                 <span class="error text-danger fw-bold" id="error-filtro"></span>
             </div>
-        </div>
 
-        <div class="row mb-3 mx-1" id="parametro" style="display: none">
-            <div class="col-12 col-md-6">
+            <div class="col-12 col-md-6" id="parametro" style="display: none">
                 <label for="parametroInput" class="form-label">Ingrese el parametro</label>
                 <input type="text" name="parametroInput" id="parametroInput" class="form-control" required>
                 <span class="error text-danger fw-bold" id="error-parametroInput"></span>

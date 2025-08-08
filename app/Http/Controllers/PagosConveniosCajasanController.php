@@ -48,6 +48,7 @@ class PagosConveniosCajasanController extends Controller
             // Validar identificación
             $cliente = $this->validarCliente($request->identificacion);
             if (!$cliente) {
+                Log::error('El documento no es valido: ' . $request->identificacion);
                 return toastModal('El documento no es válido.', 'danger');
             }
 
@@ -55,6 +56,7 @@ class PagosConveniosCajasanController extends Controller
             $respuesta = $this->consultarSaldoApi($apiAsopagos, $request->identificacion);
 
             if ($this->tieneErrorRespuesta($respuesta)) {
+                Log::error('Error con API asopagos.' . $respuesta);
                 return toastModal('Error en la consulta, verifique la información proporcionada', 'danger');
             }
 
@@ -111,6 +113,7 @@ class PagosConveniosCajasanController extends Controller
             // Manejar respuesta del pago
             if (!$this->esPagoExitoso($pagoResponse)) {
                 $this->manejarPagoFallido($pagoResponse, $detallePago);
+                Log::error('Error al realizar el pago cajasan, pago no exitoso' . $pagoResponse);
                 return sweetAlert('Error al realizar el pago, verifique e intente nuevamente','error');
             }
 
@@ -199,14 +202,14 @@ class PagosConveniosCajasanController extends Controller
 
 
         // Caso de prueba con error y reverso (satisfactorio/fallido)
-      /*     return [
+        /*   return [
             'error' => 'Error al procesar el pago',
             'responseCode' => false, 
-            'status' => 'fallo_timeout_sin_reverso', 
+            'status' => 'fallo_timeout_con_reverso', 
             'reverso' => [
                 'transactionId' => $idPagoDetalle, 
                 'transmissionDataTime' => now()->format('d/m/y H:i:s'), 
-                'responseCode' => false, 
+                'responseCode' => true, 
                 'authorizationRspCode' => 636771870,
                 'errorID' => '99'
             ]
