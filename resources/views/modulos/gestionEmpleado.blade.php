@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
 
-@section('title','Incapacidades')
+@section('title','Gestión empleados')
 
 @section('breadcrumb')
 <x-breadcrumb :items="[
@@ -30,10 +30,19 @@
         </div>
 
         <div class="col" onclick="cargarModal(`{{ route('conductor.descanso') }}`, 'Aqui puede registrar eventos no reportados de descanso de conductores','#descansoConductorForm','modal-md')">
-            <x-card color="bg-primary" 
+            <x-card color="bg-secondary" 
                     titulo="Descanso Conductores"
                     descripcion="Gestión"
                     icono="fas fa-bed"
+                    ruta="#"
+            />
+        </div>
+
+        <div class="col" onclick="cargarModal(`{{ route('politicas.index') }}`, 'Politicas firmadas por el conductor','#formPoliticas','modal-lg')">
+            <x-card color="bg-danger" 
+                    titulo="Firmas conductores" 
+                    descripcion="Politicas" 
+                    icono="fa-signature" 
                     ruta="#"
             />
         </div>

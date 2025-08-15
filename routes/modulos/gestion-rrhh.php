@@ -4,6 +4,7 @@ use App\Constants\Permisos;
 use App\Http\Controllers\ConductorController;
 use App\Http\Controllers\IncapacidadController;
 use App\Http\Controllers\ModuloController;
+use App\Http\Controllers\PoliticasController;
 use App\Http\Controllers\SeguimientoIncapacidadController;
 use Illuminate\Support\Facades\Route;
 
@@ -30,5 +31,11 @@ Route::prefix("gestionRRHH")->middleware(['auth', 'permisos:'.Permisos::GESTION_
         //Registrar descanso conductores
         Route::get("/formDescansoConductores",[ConductorController::class,"formDescansoConductores"])->name("conductor.descanso");
         Route::post("/descansoConductores",[ConductorController::class,"registrarEvento"])->name("registrar.evento");
+
+        //Consulta firmas politicas conductores
+        Route::get("/firma-politicas",[PoliticasController::class,"index"])->name("politicas.index");
+        Route::post("/firma-politicas/conductor",[PoliticasController::class,"politicasFirmadas"])->name("politicas.conductor");
+        Route::post('/firmas/descargar', [PoliticasController::class, 'generarPDFPolitica'])->name('firmas.descargar');
+
     });
 });

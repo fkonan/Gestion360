@@ -359,6 +359,7 @@ class PagosConveniosCajasanController extends Controller
         
         $detalle->save();
 
+        session()->forget('idsucursal');
         return $detalle->id;
     }
 
@@ -376,7 +377,6 @@ class PagosConveniosCajasanController extends Controller
         }
 
         $idsucursal = session('idsucursal');
-        session()->forget('idsucursal');
         
         return $idsucursal;
     }

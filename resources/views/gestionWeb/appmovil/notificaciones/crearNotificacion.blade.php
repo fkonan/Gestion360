@@ -56,7 +56,7 @@
 
                     <div class="mb-4">
                         <label for="bodyCompleto" class="form-label">Cuerpo completo</label>
-                        <textarea class="form-control form-control-sm" id="bodyCompleto" name="bodyCompleto" rows="4" required></textarea>
+                        <textarea class="form-control form-control-sm" id="bodyCompleto" name="bodyCompleto" rows="4"></textarea>
                         <div class="d-flex justify-content-between small">
                             <span class="error text-danger fw-bold" id="error-bodyCompleto"></span>
                             <span class="text-muted" id="count-bodyCompleto">0 caracteres</span>

@@ -3,14 +3,12 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Mail\Mailables\Address;
 use Illuminate\Queue\SerializesModels;
 
-class CorreoRecuperacion extends Mailable /* implements ShouldQueue */
+class CorreoRecuperacion extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -21,9 +19,6 @@ class CorreoRecuperacion extends Mailable /* implements ShouldQueue */
         $this->datos = $datos;
     }
 
-    /**
-     * Get the message envelope.
-     */
     public function envelope(): Envelope
     {
         return new Envelope(
@@ -31,21 +26,13 @@ class CorreoRecuperacion extends Mailable /* implements ShouldQueue */
         );
     }
 
-    /**
-     * Get the message content definition.
-     */
     public function content(): Content
     {
         return new Content(
-            view: 'correos.recuperacion',
+            view: 'emails.recuperacion',
         );
     }
 
-    /**
-     * Get the attachments for the message.
-     *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
-     */
     public function attachments(): array
     {
         return [];

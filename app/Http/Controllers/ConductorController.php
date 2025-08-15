@@ -5,7 +5,8 @@ use Exception;
 use Illuminate\Support\Facades\Log;
 use App\Models\FICS\Tripulantes;
 use App\Models\GESTIONADMIN\Reporteador;
-use App\Models\GESTIONPASAJES\FirmaEquipajePol;
+use App\Models\GESTIONPASAJES\Cargos;
+use App\Models\GESTIONPASAJES\FirmaPoliticas;
 use App\Models\GESTIONPASAJES\ParametrosPasajes;
 use App\Services\ApiReportes;
 use App\Services\EventoConductorService;
@@ -84,7 +85,7 @@ class ConductorController extends Controller
                 DB::raw('FirHorReg as hora_registro')
             ];
 
-            $query = FirmaEquipajePol::select($columns);
+            $query = FirmaPoliticas::select($columns);
 
             if($request->codigo != null && $request->identificacion != null){
                 $query->where("CodCon",$request->codigo)
@@ -317,5 +318,13 @@ class ConductorController extends Controller
     public function cargarDataIngSalConductores(){
         $data = session('ingSalConductores') ?? [] ;
         return $data;
+    }
+
+    static public function funcionesCargo($cargoNombre){
+        $cargo = Cargos::with('funciones')
+            ->where('CarNom', $cargoNombre)
+            ->first();
+
+        return $cargo->funciones()->get();
     }
 }
