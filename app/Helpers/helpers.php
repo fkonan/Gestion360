@@ -2,8 +2,6 @@
 
 use App\Models\GESTIONADMIN\Permisos;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Cache;
-use Spatie\Permission\Models\Permission;
 
 //Formatea el nombre de los modulos en un formato que permita relacionarlos con los permisos
 if (!function_exists('normalizarNombre')) {

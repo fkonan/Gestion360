@@ -56,7 +56,7 @@ class AppmovilController extends Controller
         $validator = Validator::make($data, [
             'titulo' => 'required|string|max:50',
             'bodyPush' => 'required|string|max:140',
-            'bodyCompleto' => 'required|string',
+            'bodyCompleto' => 'nullable|string',
             'programada' => 'nullable|date_format:Y-m-d\TH:i',
             'usuarios' => 'nullable|array|min:1',
             'grupos' => 'nullable|array|min:1',

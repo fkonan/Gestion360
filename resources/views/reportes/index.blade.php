@@ -19,6 +19,12 @@
     />
 
     <div style="padding:1.5em" class="mt-md-5">
+        <!--  <div class="alert alert-info" role="alert">
+            Bienvenido al módulo de reportes. Aquí encontrarás diferentes tipos de reportes organizados por categorías como conductores, pasajes, carga, entre otros. 
+            Selecciona el menú correspondiente para consultar el reporte específico que necesites. 
+            Este espacio está diseñado para facilitarte el acceso y la consulta de información relevante de manera sencilla y amigable.
+        </div> -->
+
         <div class="row row-cols-1 row-cols-md-3 g-3 mt-2">
             @foreach ($reportes as $reporte)
                 @if(!isset($reporte['permiso']) || $reporte['permiso'] === null)
