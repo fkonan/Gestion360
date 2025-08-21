@@ -46,20 +46,23 @@ class EmpleadoController extends Controller
             ], 422);
         }
 
+        DB::beginTransaction();
+        
         try{
-            DB::beginTransaction();
-
             //Crear usuario temporal
             $token = Str::random(40);
             $nombreCompleto = $request->nombres ." ". $request->apellidos;
 
-            $usuarioTemporal = new UsuarioTemporal();
-            $usuarioTemporal->correo = $request->email;
-            $usuarioTemporal->token = $token; 
-            $usuarioTemporal->identificacion = $request->identificacion;
-            $usuarioTemporal->nombreCompleto = $nombreCompleto;
-            $usuarioTemporal->estado = true;
-            $usuarioTemporal->save();
+            //Crear o actualizar un nuevo registro de usuario temporal
+            UsuarioTemporal::updateOrCreate(
+                ['identificacion' => $request->identificacion], 
+                [
+                    'correo' => $request->email,
+                    'token' => $token,
+                    'nombreCompleto' => $nombreCompleto,
+                    'estado' => true,
+                ]
+            );
 
             //URL validacion de token 
             $baseUrl = config('app.validar_temporal_url');
