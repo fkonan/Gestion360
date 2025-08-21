@@ -152,6 +152,7 @@ function validarFormulario(form, TYPE = "POST") {
             const URL = $form.attr("action");
             
             if (!URL) {
+                habilitarSubmit(form);
                 mostrarToast("Error: No se encontró la URL del formulario", "error");
                 return;
             }

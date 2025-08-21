@@ -30,6 +30,7 @@ class Permisos
 
     const ADMINISTRACION_REPORTES_ACCEDER = 'administracion.reportes.acceder';
     const ADMINISTRACION_REPORTES_CONDUCTORES = 'administracion.reportes.reportes_conductores';
+    const ADMINISTRACION_REPORTES_CARGA = 'administracion.reportes.reportes_carga';
     const ADMINISTRACION_REPORTES_PASAJES = 'administracion.reportes.reportes_pasajes';
 
     const ADMINISTRACION_EMPLEADOS_ACCEDER = 'administracion.empleados.acceder';

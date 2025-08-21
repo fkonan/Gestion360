@@ -56,10 +56,12 @@ class PoliticasController extends Controller
 
     public function generarPDFPolitica(Request $request){
         $firma = FirmaPoliticas::findOrFail($request->firma_id);
-        $politica = ConfigPoliticas::findOrFail($firma->PoliticaId);
+
+        $politicaId = $firma->PoliticaId;
+        $politica = ConfigPoliticas::findOrFail($politicaId);
 
         //Plantilla pdf camaras
-        if($firma->PoliticaId == self::ID_POLITICA_CAMARAS){
+        if($politicaId == self::ID_POLITICA_CAMARAS){
             $funcionesCargo = ConductorController::funcionesCargo($firma->Cargo);
 
             $pdf = Pdf::loadView('politicas.plantillasPDF.camaras',compact('firma', 'funcionesCargo'));
@@ -68,7 +70,14 @@ class PoliticasController extends Controller
         }
 
         //Plantilla defecto - otras politicas
-        $pdf = Pdf::loadView('politicas.plantillasPDF.default',compact('firma'));
+        $pdf = Pdf::loadView('politicas.plantillasPDF.default', [
+            'firma' => $firma,
+            'politicaId' => $politicaId,
+            'ID_POLITICA_EQUIPAJE' => self::ID_POLITICA_EQUIPAJE,
+            'ID_POLITICA_MENORES' => self::ID_POLITICA_MENORES,
+            'ID_POLITICA_MASCOTAS' => self::ID_POLITICA_MASCOTAS,
+        ]);
+
         $pdf->setPaper('A4', 'portrait');
         return $pdf->download($politica->politica . '-' . $firma->NomCon . '.pdf');
     }

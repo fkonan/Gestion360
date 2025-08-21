@@ -107,6 +107,7 @@ class ReportesController extends Controller
                 'descripcion' => 'Consultar',
                 'tooltip' => 'Incluye reportes relacionados con la gestión y análisis de carga.',
                 'ruta' => 'reportes.carga',
+                'permiso' => Permisos::ADMINISTRACION_REPORTES_CARGA,
                 'icono' => 'fa-solid fa-truck-loading'
             ],
         ];

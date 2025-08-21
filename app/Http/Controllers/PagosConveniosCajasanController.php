@@ -144,7 +144,7 @@ class PagosConveniosCajasanController extends Controller
 
     private function consultarSaldoApi(ApiAsopagos $apiAsopagos, string $identificacion): array
     {
-        // Respuesta de prueba (comentar cuando uses la API real)
+        // Respuesta de prueba
         return [
             'responseCode' => true,
             'additionalData' => [
@@ -152,7 +152,7 @@ class PagosConveniosCajasanController extends Controller
             ],
         ];
 
-        // Descomenta para usar la API real:
+        // Descomenta para usar la API real
         // return $apiAsopagos->consultarSaldo('CC', $identificacion, 11, 11001);
     }
 
@@ -197,7 +197,7 @@ class PagosConveniosCajasanController extends Controller
         );
         */
 
-        // Respuesta de prueba (comentar cuando uses la API real)
+        // Respuesta de prueba
         return ['responseCode' => true];
 
 
