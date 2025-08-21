@@ -4,15 +4,12 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\GESTIONADMIN\Persona;
-use App\Models\LOGTRANS\PerPersonas;
 use App\Services\Auth\LoginValidatorService;
 use App\Services\Auth\RegistroSesionService;
-use App\Services\EmpleadoService;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Hash;
 
 class LoginController extends Controller
 {
@@ -37,33 +34,37 @@ class LoginController extends Controller
 
       try {
          $validador = new LoginValidatorService();
-         // Buscar usuario relacionado a la persona en autogestion
+
          $persona = Persona::with(['usuario'])
             ->where('PerNumDoc', $request->identificacion)
             ->first();
+
          $user = $persona?->usuario;
+
+         //CASO 1 - No existe usuario en autogestion -> se crea uno si existe en logtrans
          if (!$user) {
-            // Buscar la persona en logtrans, valido que sea empleado y este activo
             $user = $validador->validarLogtrans($request->identificacion, $request->password);
          } else {
-            // Validar credenciales autogestion
+            
+         //CASO 2 - Si existe usuario en autogestion -> se valida
             if (!password_verify($request->password, $user->Password)) {
                return back()->withInput()->withErrors(['identificacion' => 'Identificación o contraseña incorrectos']);
             }
-            // Validaciones adicionales (empleado activo, estados, etc.)
+
+            //Validaciones adicionales
             $resultado = $validador->validar($user, $request->identificacion);
             if ($resultado) {
                return toast($resultado['message'], $resultado['type']);
             }
          }
-         // Registrar evento de login
+
          RegistroSesionService::registrar('LOGIN', $user->IdUsuario);
-         // Iniciar sesión
          Auth::login($user);
+
          return redirect()->intended(route('home'));
       } catch (Exception $e) {
          Log::error('Error al hacer login', ['exception' => $e]);
-         return toast('Error en el login', 'danger');
+         return toast('Error en el login, verfique la información', 'danger');
       }
    }
 

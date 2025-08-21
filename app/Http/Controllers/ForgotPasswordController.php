@@ -30,7 +30,7 @@ class ForgotPasswordController extends Controller
                 return toast('El correo no está registrado en el sistema, verifique la información.', 'danger');
             }
 
-            $token = Str::random(60);
+            $token = Str::random(40);
 
             DB::table('password_resets')->updateOrInsert(
                 ['email' => $request->email],

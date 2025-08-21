@@ -36,7 +36,7 @@
         document.addEventListener('DOMContentLoaded', function () {
             const toastEl = document.getElementById('toastAlert');
             if (toastEl) {
-                const toast = new bootstrap.Toast(toastEl, { delay: 5000 });
+                const toast = new bootstrap.Toast(toastEl, { delay: 7000 });
                 toast.show();
 
                 setTimeout(() => {

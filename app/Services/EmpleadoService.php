@@ -9,7 +9,7 @@ use Spatie\Permission\Models\Role;
 class EmpleadoService
 {
    //empleado activo en LOGTRANS
-   public static function esEmpleadoActivo($identificacion,$retornarPersona=false): bool|object
+   public static function esEmpleadoActivo($identificacion,$retornarPersona=false): bool|object|null
    {
       $query = DB::connection('oracle')
          ->table('per_empresapersonas as ep')
@@ -20,7 +20,7 @@ class EmpleadoService
          ->where('p.identificacion', $identificacion);
 
       if ($retornarPersona) {
-         return $query->first(); // Devuelve el primer registro encontrado
+         return $query->first() ?? null; // Devuelve el primer registro encontrado
       }
 
       return $query->exists(); // Solo valida existencia

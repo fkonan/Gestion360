@@ -2,6 +2,7 @@
 
 use App\Constants\Permisos;
 use App\Http\Controllers\ConductorController;
+use App\Http\Controllers\EmpleadoController;
 use App\Http\Controllers\IncapacidadController;
 use App\Http\Controllers\ModuloController;
 use App\Http\Controllers\PoliticasController;
@@ -36,6 +37,10 @@ Route::prefix("gestionRRHH")->middleware(['auth', 'permisos:'.Permisos::GESTION_
         Route::get("/firma-politicas",[PoliticasController::class,"index"])->name("politicas.index");
         Route::post("/firma-politicas/conductor",[PoliticasController::class,"politicasFirmadas"])->name("politicas.conductor");
         Route::post('/firmas/descargar', [PoliticasController::class, 'generarPDFPolitica'])->name('firmas.descargar');
+
+        //Solicitar nuevo ingreso empleado
+        Route::get("/solicitud-nuevo-ingreso",[EmpleadoController::class,"nuevoIngreso"])->name("empleado.nuevoIngreso");
+        Route::post("/gestion-nuevo-ingreso",[EmpleadoController::class,"gestionNuevoIngreso"])->name("gestion.nuevoIngreso");
 
     });
 });

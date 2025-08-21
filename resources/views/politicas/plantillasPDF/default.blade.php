@@ -6,8 +6,9 @@
     <style>
         body {
             font-family: DejaVu Sans, sans-serif;
-            margin: 10px 25px;
+            margin: 15px 30px;
             font-size: 11px;
+            line-height: 1.4;
         }
 
         .header, .footer {
@@ -15,86 +16,199 @@
         }
 
         .header h2 {
-            margin: 5px 0;
-            font-size: 14px;
+            margin: 8px 0;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .header p {
+            margin: 3px 0;
         }
 
         .section {
-            margin-top: 10px;
+            margin-top: 15px;
         }
 
         .section h4 {
             font-size: 12px;
-            margin-bottom: 5px;
-            border-bottom: 1px solid #ccc;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #000;
+            font-weight: bold;
+            padding-bottom: 2px;
         }
 
-        .info-box p {
-            margin: 2px 0;
-        }
-
-        ul {
-            margin: 0;
-            padding-left: 15px;
-        }
-
-        .row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .info-box span {
+            margin: 4px 0;
+            line-height: 1.3;
+            font-size: 12px;
         }
 
         .footer p {
             font-size: 10px;
+            margin: 3px 0;
         }
 
         hr {
-            margin: 10px 0;
+            margin: 12px 0;
+            border: 1px solid #000;
         }
 
         .savePDF {
-        font-family: 'DejaVu Sans', sans-serif;
-        font-size: 10pt;
-        line-height: 1.2;
-        color: #000;
+            font-family: 'DejaVu Sans', sans-serif;
+            font-size: 11pt;
+            line-height: 1.4;
+            color: #000;
+        }
+
+        .politica-detalle {
+            border: 1px solid #000;
+            padding: 8px;
+            margin: 8px 0;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .politica-item {
+            margin-bottom: 10px;
+            width: 100%;
+        }
+
+        .politica-titulo {
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 11px;
+        }
+
+        .importante {
+            padding: 8px;
+            margin: 10px 0;
+            text-align: center;
+            font-weight: bold;
+            font-size: 10px;
+            line-height: 1.3;
+        }
+
+        .politicas-container {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .info-row {
+            margin: 3px 0;
+        }
+
+        .info-label {
+            font-weight: bold;
+            display: inline-block;
+            width: 80px;
+        }
+
+        .datos-grid {
+            width: 100%;
+        }
+
+        .datos-grid td {
+            padding: 2px 5px;
+            vertical-align: top;
+        }
+
+        .punto-importante {
+            font-weight: bold;
+            margin: 0 3px;
         }
     </style>
 </head>
 <body class="savePDF">
 
     <div class="header">
-        <h2>Recibo de Firma</h2>
-        <p>Generado: {{ ucfirst(\Carbon\Carbon::parse($firma->FirFecReg)->locale('es')->isoFormat('D [de] MMMM [de] YYYY')) }}</p>
+        <h2>COMPROBANTE DE FIRMA</h2>
+        <p><strong>Generado:</strong> {{ ucfirst(\Carbon\Carbon::parse($firma->FirFecReg)->locale('es')->isoFormat('D [de] MMMM [de] YYYY')) }}</p>
     </div>
 
     <div class="section">
-        <h4>Datos del Usuario</h4>
+        <h4>DATOS DEL USUARIO</h4>
         <div class="info-box">
-            <p><strong>Nombre:</strong> {{ $firma->NomCon }}</p>
-            <p><strong>Documento:</strong> {{ $firma->DocCon }}</p>
-            <p><strong>Correo:</strong> {{ $firma->Correo }}</p>
-            <p><strong>Departamento de firma:</strong> {{ $firma->DepFir }}</p>
-            <p><strong>Municipio de firma:</strong> {{ $firma->MunFir }}</p>
-            <p><strong>Fecha y hora:</strong> {{ $firma->FirFecReg }} {{ $firma->FirHorReg }}</p>
+            <span><strong>Nombre:</strong> {{ $firma->NomCon }}</span><br>
+            <span><strong>Documento:</strong> {{ $firma->DocCon }}</span><br>
+            <span><strong>Correo:</strong> {{ $firma->Correo }}</span><br>
+            <span><strong>Lugar:</strong> {{ $firma->DepFir ?? 'NO REGISTRA' }}, {{ $firma->MunFir ?? 'NO REGISTRA' }}</span><br>
+            <span><strong>Fecha y hora de firma:</strong> {{ $firma->FirFecReg }} {{ $firma->FirHorReg }}</span>
         </div>
     </div>
 
     <div class="section">
-        <h4>Políticas Aceptadas</h4>
-        <ul>
-            <li>Viaje de menores</li>
-            <li>Transporte de mascotas</li>
-            <li>Política de equipaje</li>
-        </ul>
+        <h4>DETALLES FIRMA</h4>
+        <div class="politicas-container">
+
+            @if($politicaId == $ID_POLITICA_MENORES)
+            <div class="politica-item">
+                <div class="politica-titulo">POLÍTICA VIAJE CON MENORES</div>
+                    <div class="politica-detalle">
+                        <p><strong>Aplicación:</strong> Menores de 0 a 18 años requieren documentación específica según edad:</p>
+                        <ul>
+                            <li><strong>0-7 años:</strong> Registro Civil de Nacimiento</li>
+                            <li><strong>7-17 años:</strong> Tarjeta de Identidad, NUIP o pasaporte</li>
+                        </ul>
+                        <p><strong>Restricciones de asientos:</strong> No pueden ocupar asientos 1, 2, 3, 4 (fila del conductor) ni asientos 13, 14, 15, 16 (primera fila segundo piso en Doble Piso).</p>
+                        <p><strong>Supervisión:</strong> Menores de 0-12 años requieren acompañante adulto. A partir de 13 años pueden viajar solos con autorización (Formato FT-FS-16).</p>
+                    <div class="highlight"><strong>Descuentos aplicables:</strong> 50% para menores de 2-12 años en temporada baja</div>
+                </div>
+            </div>
+            @endif
+
+            @if($politicaId == $ID_POLITICA_MASCOTAS)
+            <div class="politica-item">
+                <div class="politica-titulo">POLÍTICA TRANSPORTE DE MASCOTAS</div>
+                    <div class="politica-detalle">
+                        <p><strong>Mascotas permitidas:</strong> Solo perros y gatos domésticos, de asistencia o soporte emocional.</p>
+                        <p><strong>Restricciones de tamaño:</strong> Máximo 28 cm de alto (excepto animales de asistencia/soporte emocional).</p>
+                        <p><strong>Requisitos del guacal:</strong> Dimensiones 31x44x34 cm, capacidad máxima 10 kg, con ventilación adecuada.</p>
+                        <p><strong>Documentación requerida:</strong></p>
+                        <ul>
+                            <li>Carné de vacunación (copia)</li>
+                            <li>Formato FT-FS-15 diligenciado</li>
+                            <li>Certificado especial para animales de asistencia/soporte emocional</li>
+                        </ul>
+                    <div class="highlight">Servicio gratuito - Responsabilidad total del propietario por daños</div>
+                </div>
+            </div>
+            @endif
+
+            @if($politicaId == $ID_POLITICA_EQUIPAJE)
+            <div class="politica-item">
+                <div class="politica-titulo">POLÍTICA DE EQUIPAJE</div>
+                    <div class="politica-detalle">
+                        <p><strong>Equipaje de mano:</strong> 1 pieza máximo, 10 kg, dimensiones 40x35x25 cm.</p>
+                        <p><strong>Equipaje de bodega por categoría:</strong></p>
+                        <ul>
+                            <li><strong>Doble Piso/Preferenciales:</strong> 2 piezas, 25 kg c/u, 90x50x30 cm</li>
+                            <li><strong>Buseton/Sprinter/Traffic:</strong> 1 pieza, 25 kg, 90x50x30 cm</li>
+                        </ul>
+                        <p><strong>Elementos prohibidos en bodega:</strong> Documentos, dinero, joyas, electrónicos, medicamentos, artículos frágiles o de valor.</p>
+                        <p><strong>Totalmente prohibidos:</strong> Armas, municiones, sustancias peligrosas, materiales inflamables, cadáveres.</p>
+                        <div class="important-note">
+                            <strong>Importante:</strong> Declarar valor si excede límite indemnizable (12 SMLDV). Conservar ficho numerado para reclamar equipaje.
+                        </div>
+                    <div class="highlight"><strong>Límite total:</strong> 85 kg entre equipaje de mano y bodega por pasajero</div>
+                </div>
+            </div>
+            @endif
+        </div>
     </div>
 
     <div class="section firmas">
-        <h4>Firmas</h4>
         <table style="width: 100%">
             <tr>
                 <td style="width: 50%; text-align: left;">
                     <b>El Empleador:</b>
-                    <div style="height: 3.8em;">
+                    <div style="height: 3.7em;">
                         <img src="img/FirmaJorgeGallo.png" alt="Firma del gerente" style="width: 80%;">
                     </div>
                     <br>
@@ -108,22 +222,23 @@
                             Documento Firmado Digitalmente<br>
                             Fecha: {{ $firma->FirFecReg }}
                             Hora: {{ $firma->FirHorReg }} <br>
-                            Ip: <b>{{ $firma->FirmaIp }}</b> <br>
+                            Ip: <b>{{ $firma->FirmaIp ?? 'NO REGISTRA' }}</b> <br>
                             www.copetran.com<br>
                             <label id='sitio'><b>{!! 'http&#8203;s://autogestion.copetran.com.co/firmaConduc&#8203;tores' !!}</b></label>
                         </div>
                     </div>
                     <br>
-                    <div style="border-bottom: solid 1px #000000; width: 100%; margin: 10px 0;"></div>
+                    <div style="border-bottom: solid 1px #000000; width: 100%; margin: 6px 0;"></div>
                     <b>{{ $firma->NomCon }}</b>
                 </td>
             </tr>
         </table>
     </div>
 
-    <div class="footer section pt-5">
-        <hr>
-        <p><small>Este comprobante certifica la aceptación de políticas. Conserve este documento como respaldo.</small></p>
+
+    <div class="footer section">
+        <hr style="border-top: 1px solid #000;">
+        <p><strong>Este comprobante certifica la aceptación de las políticas de transporte de COPETRAN.</strong></p>
     </div>
 </body>
 </html>

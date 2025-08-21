@@ -209,7 +209,7 @@ export function mostrarToast(message, type = 'primary') {
 
     // Mostrarlo
     const toastEl = document.getElementById(toastId);
-    const bsToast = new bootstrap.Toast(toastEl, { delay: 5000 });
+    const bsToast = new bootstrap.Toast(toastEl, { delay: 7000 });
 
     toastEl.addEventListener('hidden.bs.toast', () => {
         toastEl.remove();

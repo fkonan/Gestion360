@@ -123,4 +123,7 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /* Validacion usuario temporal para ingreso nuevo empleado */
+    'validar_temporal_url' => env('VALIDAR_TEMPORAL_URL'),
+
 ];
