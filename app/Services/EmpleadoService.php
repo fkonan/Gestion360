@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\LOGTRANS\PerPersonas;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Spatie\Permission\Models\Role;
@@ -24,6 +25,11 @@ class EmpleadoService
       }
 
       return $query->exists(); // Solo valida existencia
+   }
+
+   //ID per_persona LOGTRANS
+   public static function idPersonaLogtrans($identificacion){
+      return PerPersonas::where('identificacion',$identificacion)->value('id');
    }
 
    //Obtener documentos válidos desde Oracle (solo empleados activos) y se cachean por 5 minutos

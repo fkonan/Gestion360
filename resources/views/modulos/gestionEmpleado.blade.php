@@ -55,6 +55,15 @@
                     ruta="#"
             />
         </div>
+
+        <div class="col">
+            <x-card color="bg-warning" 
+                    titulo="Firmas normas preingreso" 
+                    descripcion="Normas" 
+                    icono="fa-signature" 
+                    ruta="#"
+            />
+        </div>
     </div>
 </div>
 @endsection

@@ -12,6 +12,7 @@ class BloqueoService
 {   
     // Bloqueos de Logtrans
     public const ID_BLOQUEO_LOGTRANS_INCAPACIDAD = 45;
+    public const ID_BLOQUEO_LOGTRANS_SIPLAFT = 77;
 
     //Cargos que reciben bloqueos
     public const CARGOS_BLOQUEO = [
@@ -21,7 +22,8 @@ class BloqueoService
         1138045159, // CONDUCTOR CACIQUE DE ORO
     ];
     
-    public function bloqNovedadLogtransInc($IdPerOracle,$incapacidadDatos){
+    public function bloqNovedadLogtransInc($IdPerOracle,$incapacidadDatos)
+    {
         try{
             $persona = PerPersonas::where('id', $IdPerOracle)
                 ->where('estado', 'ACTIVO')
@@ -62,9 +64,67 @@ class BloqueoService
             $bloqueo->save();
             return "bloqueado";
         }catch(Exception $e){
-            Log::error('Error al bloquear la novedad en Logtrans: ' . $e->getMessage());
+            Log::error('Error al generar la novedad en Logtrans: ' . $e->getMessage());
             return "error";
         }
+    }
+
+    public static function tieneBloqueoLogtrans($identificacion, $idBloqueo)
+    {
+        return PerPersonaBloqueo::where('cedula_conductor', $identificacion)
+            ->where('tb_id', $idBloqueo)
+            ->where('estborrado', 0)
+            ->where('activo', 1)
+            ->where(function ($q) {
+                $q->whereNull('fec_fin')            
+                ->orWhere('fec_fin', '>=', now()); 
+            })
+            ->exists();
+    }
+
+    public static function crearNovedadEmpleado($identificacion, $descripcion, $idBloqueo)
+    {
+        try{
+            $estBloqueado = BloqueoService::tieneBloqueoLogtrans($identificacion,$idBloqueo);
+            
+            //Si ya tiene el bloqueo no se genera otro
+            if($estBloqueado){
+                return true;
+            }
+
+            //Información para generar el bloqueo
+            $ultimoId = PerPersonaBloqueo::max('id') + 1;
+            $fecha = Carbon::now()->format('Y-m-d H:i:s');
+            $usuarioId = EmpleadoService::idPersonaLogtrans($identificacion);
+        
+            $bloqueo = new PerPersonaBloqueo();
+            $bloqueo->id = $ultimoId;
+            $bloqueo->cedula_conductor = $identificacion;
+            $bloqueo->tb_id = $idBloqueo;
+            $bloqueo->descripcion = $descripcion;
+            $bloqueo->pe_id_bloqueo = $usuarioId;
+            $bloqueo->fecbloqueo = $fecha;
+            $bloqueo->activo = 1;
+            $bloqueo->pe_id_desbloqueo = null;
+            $bloqueo->fecdesbloqueo = null;
+            $bloqueo->estborrado = 0;
+            $bloqueo->fecmodifica = $fecha;
+            $bloqueo->empmodifica = 6761;
+            $bloqueo->usrmodifica = $usuarioId;
+            $bloqueo->rolmodifica = 60;
+            $bloqueo->feccreacion = $fecha;
+            $bloqueo->empcreacion = 6761;
+            $bloqueo->usrcreacion = $usuarioId;
+            $bloqueo->fec_inicio = $fecha;
+            $bloqueo->fec_fin = null;
+            $bloqueo->save();
+
+            return true;
+        }catch(Exception $e){
+            Log::error('Error al generar la novedad en Logtrans: ' . $e->getMessage());
+            return false;
+        }
+        
     }
   
 }

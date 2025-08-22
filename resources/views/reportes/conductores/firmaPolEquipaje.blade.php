@@ -9,7 +9,7 @@
         
         @csrf
         <div class="row mb-2">
-            <p class="text-justify lh-sm">Haga una búsqueda parametrizada de los conductores que han firmado y aceptado la política de equipaje, usted podrá consultar por número de identificación, código y/o todos los conductores.</p>
+            <p class="text-justify lh-sm">Haga una búsqueda parametrizada de los conductores que han firmado y aceptado las diferentes políticas, usted podrá consultar por número de identificación, código y/o todos los conductores.</p>
         </div>
 
         <div class="row mb-3 mx-1">

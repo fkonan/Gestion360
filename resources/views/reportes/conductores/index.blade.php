@@ -48,11 +48,11 @@
                     onclick="cargarModal(`{{ route('conductor.estado') }}`, 'Activacion o Suspensión Conductores','#estadoConductorForm','modal-md')"
                 /> -->
 
-               <!--  <x-reporteItem
-                    titulo="Firma política de equipaje"
-                    descripcion="Reporte de conductores que han firmado la política de equipaje para el transporte de pasajeros"
+                <!-- <x-reporteItem
+                    titulo="Firma de políticas"
+                    descripcion="Reporte de conductores que han firmado las diferentes políticas"
                     icono="fas fa-file-signature"
-                    onclick="cargarModal(`{{ route('conductor.firmaEquipaje') }}`, 'Reporte firma política de equipaje','#firmaEquipajeForm','modal-md')"
+                    onclick="cargarModal(`{{ route('conductor.firmaEquipaje') }}`, 'Reporte firma de políticas','#firmaEquipajeForm','modal-md')"
                 /> -->
 
               <!--   <x-reporteItem

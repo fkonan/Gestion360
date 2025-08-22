@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\CorreoUsuarioTemporal;
 use App\Models\GESTIONADMIN\UsuarioTemporal;
+use App\Services\BloqueoService;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -46,9 +47,22 @@ class EmpleadoController extends Controller
             ], 422);
         }
 
-        DB::beginTransaction();
-        
         try{
+            //Crear bloqueo SIPLAFT
+            $descripcionBloqueo = "REQUIERE FIRMA NORMAS SIPLAFT";
+
+            $bloqueo = BloqueoService::crearNovedadEmpleado(
+                $request->identificacion, 
+                $descripcionBloqueo, 
+                BloqueoService::ID_BLOQUEO_LOGTRANS_SIPLAFT
+            );
+
+            if(!$bloqueo){
+                return toastModal("Error al registrar la solicitud, intente nuevamente", "error",route('gestion-incapacidades.index'));
+            }
+
+            DB::beginTransaction();
+
             //Crear usuario temporal
             $token = Str::random(40);
             $nombreCompleto = $request->nombres ." ". $request->apellidos;
