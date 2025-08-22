@@ -64,10 +64,8 @@ class ConductorController extends Controller
 
     public function filtrarFirmaEquipaje(Request $request){
         $validator = Validator::make($request->all(), [
-            'codigo' => ['nullable', 'regex:/^\d{4}$/'],
+            'codigo' => ['nullable', 'numeric'],
             'identificacion' => ['nullable', 'numeric'],
-        ], [
-            'codigo.regex' => 'El legajo debe ser un número de 4 dígitos.',
         ]);
 
         if ($validator->fails()) {

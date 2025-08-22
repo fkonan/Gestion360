@@ -85,5 +85,11 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:'.Permisos::ADMIN
         Route::prefix("carga")->group(function(){
             Route::get("/",[ReportesController::class,"reportesCarga"])->name("reportes.carga");
         });
+
+
+        //Reportes Empleados
+        Route::prefix("empleados")->group(function(){
+            Route::get("/",[ReportesController::class,"reportesEmpleados"])->name("reportes.empleados");
+        });
     });
 });
