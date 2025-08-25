@@ -66,7 +66,7 @@ class PoliticasController extends Controller
 
             $pdf = Pdf::loadView('politicas.plantillasPDF.camaras',compact('firma', 'funcionesCargo'));
             $pdf->setPaper('A4', 'portrait');
-            return $pdf->download($politica->politica . '-' . $firma->NomCon . '.pdf');
+            return $pdf->stream($politica->politica . '-' . $firma->NomCon . '.pdf');
         }
 
         //Plantilla defecto - otras politicas
@@ -79,6 +79,6 @@ class PoliticasController extends Controller
         ]);
 
         $pdf->setPaper('A4', 'portrait');
-        return $pdf->download($politica->politica . '-' . $firma->NomCon . '.pdf');
+        return $pdf->stream($politica->politica . '-' . $firma->NomCon . '.pdf');
     }
 }

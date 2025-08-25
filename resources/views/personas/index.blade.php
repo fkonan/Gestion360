@@ -10,8 +10,6 @@
 <br>
 @endsection
 
-
-
 @section('content')
 <div class="container-fluid p-0 border rounded sidebar-dark-primary tableContainer" style="min-height:150px;">
 
@@ -49,7 +47,7 @@
                     <th class="text-center" data-field="PerFechaHoraReg" data-sortable="true">Fecha registro</th>
                     @permite(\App\Constants\Permisos::ADMINISTRACION_PERSONAS_ACTUALIZAR)
                         <th class="text-center" data-sortable="true" data-field="PerEstado" data-formatter="estadoFormatter">Estado</th>
-                        <th class="text-center" data-field="acciones" data-formatter="accionesFormatter" >Opciones</th>
+                        <th class="text-center" data-field="acciones" data-formatter="accionesFormatter" >Acciones</th>
                     @endpermite
                 </tr>
             </thead>

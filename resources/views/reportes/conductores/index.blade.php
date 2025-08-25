@@ -48,7 +48,7 @@
                     onclick="cargarModal(`{{ route('conductor.estado') }}`, 'Activacion o Suspensión Conductores','#estadoConductorForm','modal-md')"
                 /> -->
 
-                <!-- <x-reporteItem
+              <!--   <x-reporteItem
                     titulo="Firma de políticas"
                     descripcion="Reporte de conductores que han firmado las diferentes políticas"
                     icono="fas fa-file-signature"

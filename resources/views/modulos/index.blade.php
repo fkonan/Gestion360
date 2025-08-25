@@ -47,7 +47,7 @@
                     <th data-field="ModHorReg">Hora Registro</th>
                     <th data-field="ModEstado" data-formatter="estadoFormatter">Estado</th>
                     @permite(\App\Constants\Permisos::CONFIGURACION_GESTION_SISTEMA_ACTUALIZAR)
-                        <th data-field="acciones" data-formatter="accionesFormatter">Opciones</th>
+                        <th data-field="acciones" data-formatter="accionesFormatter">Acciones</th>
                     @endpermite
                 </tr>
             </thead>

@@ -8,6 +8,7 @@ use App\Http\Controllers\RolController;
 use App\Http\Controllers\ReportesController;
 use App\Http\Controllers\TiquetesImpresosController;
 use App\Http\Controllers\ConductorController;
+use App\Http\Controllers\EmpleadoController;
 use App\Http\Controllers\GestionPasajesController;
 
 use Illuminate\Support\Facades\Route;
@@ -90,6 +91,14 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:'.Permisos::ADMIN
         //Reportes Empleados
         Route::prefix("empleados")->group(function(){
             Route::get("/",[ReportesController::class,"reportesEmpleados"])->name("reportes.empleados");
+
+            //Firma normas SIPLAFT empleados
+            Route::get("/firmaNormas",[EmpleadoController::class,"reporteFirmaNormas"])->name("empleados.firmaNormas");
+            Route::post("/firmaNormas/filtrar",[EmpleadoController::class,"filtrarFirmaNormas"])->name("filtrar.firmaNormas");
+            Route::get("/firmaNormas/listaFirmasNormas",[EmpleadoController::class,"listaFirmasNormas"])->name("lista.firmaNormas");
+            Route::get("/firmaNormas/cargarData",[EmpleadoController::class,"cargarDataFirmaNormas"])->middleware('soloAJAX')->name("firmaNormas.cargarData");
+            Route::get("/firmaNormas/{identificacion}/comprobante",[EmpleadoController::class,"generarComprobantePDF"])->name("firmaNormas.comprobantePDF");
         });
+
     });
 });

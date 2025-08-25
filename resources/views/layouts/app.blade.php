@@ -110,7 +110,7 @@
    <x-modal />
    <x-toast />
    <x-loader />
-   <!-- @include('footer') -->
+   @include('footer')
 </body>
 
 </html>

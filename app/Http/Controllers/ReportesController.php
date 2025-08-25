@@ -115,6 +115,7 @@ class ReportesController extends Controller
                 'descripcion' => 'Consultar',
                 'tooltip' => 'Incluye reportes relacionados con la firma de normas y otras actividades de los empleados',
                 'ruta' => 'reportes.empleados',
+                'permiso' => Permisos::ADMINISTRACION_REPORTES_EMPLEADOS,
                 'icono' => 'fas fa-user'
             ],
         ];
