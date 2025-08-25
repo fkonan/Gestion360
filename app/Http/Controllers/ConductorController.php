@@ -74,7 +74,7 @@ class ConductorController extends Controller
             ], 422);
         }
 
-        try{
+        try {
             $columns = [
                 DB::raw('CodCon as codigo'),
                 DB::raw('DocCon as identificacion'),
@@ -85,39 +85,60 @@ class ConductorController extends Controller
 
             $query = FirmaPoliticas::select($columns);
 
-            if($request->codigo != null && $request->identificacion != null){
-                $query->where("CodCon",$request->codigo)
-                      ->where("DocCon",$request->identificacion);
-            }elseif($request->codigo != null){
-                $query->where("CodCon",$request->codigo);
-            }elseif($request->identificacion != null){
-                $query->where("DocCon",$request->identificacion);
+            if ($request->filled('codigo')) {
+                $query->where("CodCon", $request->codigo);
+            }
+
+            if ($request->filled('identificacion')) {
+                $query->where("DocCon", $request->identificacion);
             }
 
             $listaFirmas = $query->get();
 
             if ($listaFirmas->isEmpty()) {
-                return toastModal("No se encontraron resultados para los parametros ingresados.", "warning","#");
-            }else{
-                session(['firmasEquipaje' => $listaFirmas]);
-                $numeroRegistros = $listaFirmas->count();
-                return toastModal('Se han encontrado ' . $numeroRegistros . ' registros para los parametros seleccionadas', "success",route("lista.firmaEquipaje"));
+                return toastModal("No se encontraron resultados para los parametros ingresados.", "warning", "#");
+            } else {
+                $params = http_build_query($request->only(['codigo','identificacion']));
+                return toastModal(
+                    'Se han encontrado ' . $listaFirmas->count() . ' registros para los parámetros seleccionados',
+                    "success",
+                    route("lista.firmaEquipaje") . "?" . $params
+                );
             }
-        
-        }catch(Exception $e){
+
+        } catch (Exception $e) {
             Log::error('Error al obtener la lista de firmas politica equipaje: ' . $e->getMessage());
-            return toastModal("Error al obtener los resultados","error");
+            return toastModal("Error al obtener los resultados", "error");
         }
     }
+
 
     public function listaFirmasEquipaje(){
         return view('reportes.conductores.politicaEquipaje');
     }
 
-    public function cargarDataFirmaEquipaje(){
-        $firmasEquipaje = session('firmasEquipaje') ?? [] ;
-        return $firmasEquipaje;
+    public function cargarDataFirmaEquipaje(Request $request){
+        $columns = [
+            DB::raw('CodCon as codigo'),
+            DB::raw('DocCon as identificacion'),
+            DB::raw('NomCon as nombre_completo'),
+            DB::raw('FirFecReg as fecha_registro'),
+            DB::raw('FirHorReg as hora_registro')
+        ];
+
+        $query = FirmaPoliticas::select($columns);
+
+        if ($request->filled('codigo')) {
+            $query->where("CodCon", $request->codigo);
+        }
+
+        if ($request->filled('identificacion')) {
+            $query->where("DocCon", $request->identificacion);
+        }
+
+        return $query->get();
     }
+
 
     public function formDescansoConductores(){
         $parametrosDescansoConductores = ParametrosPasajes::getDescansoConductores();

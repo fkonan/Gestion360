@@ -29,16 +29,12 @@
                             <td>{{ $firma->politica }}</td>
                             <td>{{ $firma->FirFecReg }}   {{ $firma->FirHorReg }}</td>
                             <td class="text-center">
-                                <form action="{{ route('firmas.descargar') }}" method="POST" class="d-inline">
-                                    @csrf
-                                    <input type="hidden" name="firma_id" value="{{ $firma->IdFirma }}">
-                                    <button type="submit" class="btn btn-link m-0 p-0">
-                                        <img src="{{ asset('img/descargarPDF.png') }}" 
-                                            alt="Descargar" 
-                                            title="Descargar PDF"
-                                            style="width: 38px; height: 38px;">
-                                    </button>
-                                </form>
+                                <a href="{{ route('firmas.descargar', ['firma_id' => $firma->IdFirma]) }}" target="_blank" class="btn btn-link m-0 p-0">
+                                    <img src="{{ asset('img/descargarPDF.png') }}" 
+                                        alt="Descargar" 
+                                        title="Descargar PDF"
+                                        style="width: 38px; height: 38px;">
+                                </a>
                             </td>
                         </tr>
                         @endforeach

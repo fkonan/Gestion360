@@ -48,7 +48,7 @@
                     <th class="text-nowrap" data-field="destino" data-sortable="true" data-escape="true">Destinatarios</th>
                     <th class="text-nowrap" data-field="bodyPush" data-escape="true">Resumen Push</th>
                     <th class="text-nowrap" data-field="bodyCompleto" data-escape="true">Descripción</th>
-                    <th data-field="acciones" data-formatter="accionesFormatter">Opciones</th>
+                    <th data-field="acciones" data-formatter="accionesFormatter">Acciones</th>
                 </tr>
             </thead>
         </table>

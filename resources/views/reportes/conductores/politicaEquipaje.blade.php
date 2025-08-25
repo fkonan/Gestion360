@@ -19,7 +19,7 @@
         titulo="Resultado firma equipaje"
         rutaVolver="{{ route('reportes.conductores') }}"
         excel="true"
-        excelRoute="{{ route('firmaEquipaje.cargarData') }}"
+        excelRoute="{{ route('firmaEquipaje.cargarData') }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}"
         excelName="Firmas_Conductores_Politica_Equipaje"
     />
    
@@ -35,7 +35,7 @@
             data-detail-view="true"
             data-detail-formatter="detalleReporteFirmaEquipaje"
             data-check-on-init="true"
-            data-url="{{ route('firmaEquipaje.cargarData') }}">   
+            data-url="{{ route('firmaEquipaje.cargarData') }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}">
             <thead class="table-primary">
                 <tr class="bg-primary">
                     <th data-field="nombre_completo" data-sortable="true">Nombre Completo</th>

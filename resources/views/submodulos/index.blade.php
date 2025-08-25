@@ -46,7 +46,7 @@
                     <th data-field="SubModHoReg">Hora Registro</th>
                     <th data-field="SubModuloEstado" data-formatter="estadoFormatter">Estado</th>
                     @permite(\App\Constants\Permisos::CONFIGURACION_GESTION_SISTEMA_ACTUALIZAR)
-                        <th data-field="acciones" data-formatter="accionesFormatter">Opciones</th>
+                        <th data-field="acciones" data-formatter="accionesFormatter">Acciones</th>
                     @endpermite
                 </tr>
             </thead>

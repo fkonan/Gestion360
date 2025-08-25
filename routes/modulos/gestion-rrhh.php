@@ -36,7 +36,7 @@ Route::prefix("gestionRRHH")->middleware(['auth', 'permisos:'.Permisos::GESTION_
         //Consulta firmas politicas conductores
         Route::get("/firma-politicas",[PoliticasController::class,"index"])->name("politicas.index");
         Route::post("/firma-politicas/conductor",[PoliticasController::class,"politicasFirmadas"])->name("politicas.conductor");
-        Route::post('/firmas/descargar', [PoliticasController::class, 'generarPDFPolitica'])->name('firmas.descargar');
+        Route::get('/firmas/descargar', [PoliticasController::class, 'generarPDFPolitica'])->name('firmas.descargar');
 
         //Solicitar nuevo ingreso empleado
         Route::get("/solicitud-nuevo-ingreso",[EmpleadoController::class,"nuevoIngreso"])->name("empleado.nuevoIngreso");

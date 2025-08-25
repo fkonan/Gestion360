@@ -6,7 +6,7 @@
 <x-breadcrumb :items="[
         ['name' => 'Inicio', 'url' => route('home')],
         ['name' => 'Reportes', 'url' => route('reportes.index')],
-        ['name' => 'Carga']
+        ['name' => 'Empleados']
     ]" />
 @endsection
 
@@ -36,9 +36,9 @@
             </thead>
             <tbody id="lista-reportes">
                 <x-reporteItem
-                    titulo="Firma empleados preingreso" 
+                    titulo="Firma empleados preingreso SIPLAFT" 
                     descripcion="Reporte de los empleados que firmaron las normas correspondiente preingreso a la empresa"
-                    onclick="cargarModal(`{{ route('conductor.descanso') }}`, 'Aqui puede registrar eventos no reportados de descanso de conductores','#descansoConductorForm','modal-md')"
+                    onclick="cargarModal(`{{ route('empleados.firmaNormas') }}`, 'Reporte firma normas SIPLAFT','#firmaNormasForm','modal-md')" 
                 />
             </tbody>
         </table>
