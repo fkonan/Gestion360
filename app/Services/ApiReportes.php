@@ -66,6 +66,7 @@ class ApiReportes
 
         $response = Http::withToken($token)
             ->withHeaders(['Content-Type' => 'application/json'])
+            ->timeout(120) 
             ->post(config('apiReportes.base_url') . "/reporte/{$params['idReporte']}", $payload);
 
         return $response->successful()

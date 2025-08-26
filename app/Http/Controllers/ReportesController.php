@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Constants\Permisos;
 use App\Models\GESTIONADMIN\Reporteador;
 use App\Services\ApiReportes;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -37,7 +38,18 @@ class ReportesController extends Controller
             'fechaFin.after_or_equal' => 'La fecha de fin debe ser igual o posterior a la fecha de inicio.',
         ]);
 
-        if ($validator->fails()) {
+        if (!$validator->fails()) {
+            $fechaInicio = Carbon::parse($request->fechaInicio);
+            $fechaFin = Carbon::parse($request->fechaFin);
+
+            // Validar que el rango entre las fechas no sea mayor a 1 mes
+            if ($fechaInicio->diffInMonths($fechaFin) > 1 || $fechaFin->gt($fechaInicio->addMonth())) {
+                $validator->errors()->add('fechaFin', 'El rango entre las fechas no puede ser mayor a 1 mes.');
+                 return response()->json([
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+        } else{
             return response()->json([
                 'errors' => $validator->errors()
             ], 422);

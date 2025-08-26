@@ -9,7 +9,7 @@
         
         <p style="font-size: 16px; margin-bottom: 20px;">
             Le damos la bienvenida al sistema de <strong>Autogestión</strong>. 
-            Para continuar con el proceso, utilice el siguiente enlace de acceso temporal:
+            Para continuar con el proceso de contratación, utilice el siguiente enlace de acceso temporal:
         </p>
 
         <!-- Enlace de acceso -->

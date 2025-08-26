@@ -36,9 +36,9 @@
             </thead>
             <tbody id="lista-reportes">
                 <x-reporteItem
-                    titulo="Firma empleados preingreso SIPLAFT" 
+                    titulo="Firma empleados preingreso SARLAFT" 
                     descripcion="Reporte de los empleados que firmaron las normas correspondiente preingreso a la empresa"
-                    onclick="cargarModal(`{{ route('empleados.firmaNormas') }}`, 'Reporte firma normas SIPLAFT','#firmaNormasForm','modal-md')" 
+                    onclick="cargarModal(`{{ route('empleados.firmaNormas') }}`, 'Reporte firma normas SARLAFT','#firmaNormasForm','modal-md')" 
                 />
             </tbody>
         </table>

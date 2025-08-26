@@ -7,7 +7,18 @@
     onsubmit="deshabilitarSubmit(this)">
     
     @csrf
-    <div class="p-3">
+    <div class="p-4">
+        <!-- Mensaje informativo sobre el rango de fechas -->
+        <div class="alert alert-info mb-4" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-info-circle me-2 text-info"></i>
+                <div>
+                    <strong>Importante:</strong> El rango de fechas para la búsqueda no puede ser mayor a 1 mes (30 días). 
+                    <br><small class="text-muted">Seleccione fechas dentro de este límite para generar el reporte correctamente.</small>
+                </div>
+            </div>
+        </div>
+        
         <div class="row mb-3 mx-1 pb-2">
             @if(in_array('paramFechaInicio', $parametros))
                 <div class="col-md-6">
@@ -24,7 +35,7 @@
                 </div>
             @endif  
         </div>
-        <div class="ms-3">
+        <div class="d-flex justify-content-end ms-3 pt-2 gap-2">
             <button type="submit" class="btn btn-success">Generar Reporte</button>
             <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Cancelar</button>
         </div>
