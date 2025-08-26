@@ -22,7 +22,7 @@ class CorreoUsuarioTemporal extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Usuario temporal plataforma gestión',
+            subject: 'Proceso de contratación - Acceso Temporal',
         );
     }
 

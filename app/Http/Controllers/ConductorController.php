@@ -310,7 +310,8 @@ class ConductorController extends Controller
                     if (!empty($item[$campo])) {
                         $item[$campo] = Carbon::parse($item[$campo])
                             ->timezone('America/Bogota')
-                            ->format('d/m/Y H:i');
+                            ->format('d/m/Y');
+                            /* ->format('d/m/Y H:i'); */
                     }
                 }
                 return $item;

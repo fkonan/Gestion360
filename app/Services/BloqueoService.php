@@ -12,7 +12,7 @@ class BloqueoService
 {   
     // Bloqueos de Logtrans
     public const ID_BLOQUEO_LOGTRANS_INCAPACIDAD = 45;
-    public const ID_BLOQUEO_LOGTRANS_SIPLAFT = 77;
+    public const ID_BLOQUEO_LOGTRANS_SARLAFT = 77;
 
     //Cargos que reciben bloqueos
     public const CARGOS_BLOQUEO = [

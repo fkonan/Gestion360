@@ -7,7 +7,7 @@
         ['name' => 'Inicio', 'url' => route('home')],
         ['name' => 'Reportes', 'url' => route('reportes.index')],
         ['name' => 'Empleados', 'url' => route('reportes.empleados')],
-        ['name' => 'Firmas preingreso SIPLAFT'],
+        ['name' => 'Firmas preingreso SARLAFT'],
     ]" />
 <br>
 @endsection
@@ -16,7 +16,7 @@
 <div class="container-fluid tableContainer p-0 border rounded sidebar-dark-primary" style="min-height:150px">
 
     <x-sectionHeader 
-        titulo="Resultado firma normas SIPLAFT empleados"
+        titulo="Resultado firma normas SARLAFT empleados"
         rutaVolver="{{ route('reportes.empleados') }}"
         excel="true"
         excelRoute="{{ route('firmaNormas.cargarData') }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}"
@@ -64,7 +64,8 @@
         initTablaBootstrapTable(
             '#reporteFirmasNormas', 
             { protegidas: ['NombreCompleto'] }, 
-            'detalleReporteFirmaNormas'
+            'detalleReporteFirmaNormas',
+            { 'acciones': comprobantePDF }
         );
     });
 

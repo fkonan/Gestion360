@@ -92,7 +92,7 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:'.Permisos::ADMIN
         Route::prefix("empleados")->group(function(){
             Route::get("/",[ReportesController::class,"reportesEmpleados"])->name("reportes.empleados");
 
-            //Firma normas SIPLAFT empleados
+            //Firma normas SARLAFT empleados
             Route::get("/firmaNormas",[EmpleadoController::class,"reporteFirmaNormas"])->name("empleados.firmaNormas");
             Route::post("/firmaNormas/filtrar",[EmpleadoController::class,"filtrarFirmaNormas"])->name("filtrar.firmaNormas");
             Route::get("/firmaNormas/listaFirmasNormas",[EmpleadoController::class,"listaFirmasNormas"])->name("lista.firmaNormas");

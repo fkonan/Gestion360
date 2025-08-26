@@ -42,5 +42,10 @@ Route::prefix("gestionRRHH")->middleware(['auth', 'permisos:'.Permisos::GESTION_
         Route::get("/solicitud-nuevo-ingreso",[EmpleadoController::class,"nuevoIngreso"])->name("empleado.nuevoIngreso");
         Route::post("/gestion-nuevo-ingreso",[EmpleadoController::class,"gestionNuevoIngreso"])->name("gestion.nuevoIngreso");
 
+        //Buscar persona por identificación (AJAX)
+        Route::get('/persona/buscar/{identificacion}', [EmpleadoController::class, 'buscar'])
+            ->name('persona.buscar');
+
+
     });
 });

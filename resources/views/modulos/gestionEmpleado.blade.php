@@ -62,20 +62,66 @@
 @pushOnce('script')
     @vite(['resources/js/cargarModal.js'])
     <script>
-        function habilitarOpciones() {   
-            const opciones = document.getElementById('opciones');
-            const opcionEvento = document.getElementById('opcionEvento');
-            const opcionEventoLabel = document.getElementById('opcionEventoLabel');
-            const evento = document.getElementById('evento');
-            
-            opciones.style.display = 'block';
-            opcionEvento.style.display = 'block';
 
-            if(evento.value == '50'){
-                opcionEventoLabel.innerHTML = 'Fecha de salida a descanso';
-            }else{
-                opcionEventoLabel.innerHTML = 'Fecha de reingreso de descanso';
-            }   
-        }
+    //Habilitar opciones en modal descanso conductor
+    function habilitarOpciones() {   
+        const opciones = document.getElementById('opciones');
+        const opcionEvento = document.getElementById('opcionEvento');
+        const opcionEventoLabel = document.getElementById('opcionEventoLabel');
+        const evento = document.getElementById('evento');
+        
+        opciones.style.display = 'block';
+        opcionEvento.style.display = 'block';
+
+        if(evento.value == '50'){
+            opcionEventoLabel.innerHTML = 'Fecha de salida a descanso';
+        }else{
+            opcionEventoLabel.innerHTML = 'Fecha de reingreso de descanso';
+        }   
+    }
+
+    //Buscar persona por identificación (AJAX) - Nuevo ingreso empleado
+    let debounceTimer;
+    function buscarPersona(input) {
+        clearTimeout(debounceTimer);
+
+        // Ocultar contenedores de información
+        document.getElementById('infoPersona').style.display = 'none';
+        document.getElementById('noDataMessage').style.display = 'none';
+
+        debounceTimer = setTimeout(() => {
+            let identificacion = input.value.trim();
+            if (identificacion === '') {
+                return;
+            }
+
+            let url = input.dataset.url.replace('ID_PLACEHOLDER', identificacion);
+
+            fetch(url)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.data) {
+                        // Mostrar información encontrada
+                        document.getElementById('nombresInfo').textContent = data.data.nombres || 'No disponible';
+                        document.getElementById('apellidosInfo').textContent = data.data.apellidos || 'No disponible';
+                        document.getElementById('emailInfo').textContent = data.data.email || 'No disponible';
+                        
+                        // Mostrar contenedor de información
+                        document.getElementById('infoPersona').style.display = 'block';
+                        document.getElementById('noDataMessage').style.display = 'none';
+                    } else {
+                        // Mostrar mensaje de no encontrado
+                        document.getElementById('infoPersona').style.display = 'none';
+                        document.getElementById('noDataMessage').style.display = 'block';
+                    }
+                })
+                .catch(err => {
+                    console.error('Error al buscar persona:', err);
+                    // Mostrar mensaje de error
+                    document.getElementById('infoPersona').style.display = 'none';
+                    document.getElementById('noDataMessage').style.display = 'block';
+                });
+        }, 500);
+    }
     </script>
 @endPushOnce
