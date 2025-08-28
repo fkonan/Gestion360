@@ -18,7 +18,8 @@ class PerConductoresEventos extends Model
         "pe_id","fechaevento","evento","anotacion",
         "fecmodifica","usrmodifica","rolmodifica",
         "empmodifica","estborrado","feccreacion",
-        "usrcreacion","empcreacion","tiporegistro"
+        "usrcreacion","empcreacion","tiporegistro",
+        "observacion"
     ];
 
     public function PerContratoPersona(){

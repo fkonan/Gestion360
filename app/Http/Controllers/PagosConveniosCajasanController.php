@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\LOGTRANS\ConComprobantes;
 use App\Models\LOGTRANS\ConDetPagosRecaudos;
 use App\Models\LOGTRANS\ConPagosRecaudos;
 use App\Models\LOGTRANS\ConReversoCajasan;
@@ -109,6 +110,10 @@ class PagosConveniosCajasanController extends Controller
             $pagoResponse = $this->procesarPago($apiAsopagos, $clienteData, $respuesta, $idPagoDetalle);
             
             $detallePago = ConDetPagosRecaudos::findOrFail($idPagoDetalle);
+
+
+            // Crear comprobante
+            $this->crearComprobante();
 
             // Manejar respuesta del pago
             if (!$this->esPagoExitoso($pagoResponse)) {
@@ -261,7 +266,7 @@ class PagosConveniosCajasanController extends Controller
 
     private function limpiarDatosSesion(): void
     {
-        session()->forget(['clienteData_temp', 'respuesta_temp']);
+        session()->forget(['clienteData_temp', 'respuesta_temp', 'idsucursal']);
     }
 
     private function obtenerIdCarguePagoRecaudos(): int
@@ -278,6 +283,28 @@ class PagosConveniosCajasanController extends Controller
 
         // Crear nuevo registro
         return $this->crearNuevoCarguePagoRecaudos($descripcion);
+    }
+
+    private function crearComprobante(): void
+    {
+        $nextId = ConComprobantes::max('id') + 1;
+        $comprobanteId = DB::connection('oracle')->select("SELECT SEC_DOC_COMPROBANTE.NEXTVAL as id FROM DUAL")[0]->id;
+
+        $idsucursal = $this->obtenerIdSucursal();
+        $sucursal = PerPersonas::findOrFail($idsucursal);
+
+        dd($sucursal);
+     
+        $comprobante = new ConComprobantes();
+        $comprobante->id = $nextId;
+        $comprobante->descripcion = 'MOVIMIENTOS GIROS';
+        $comprobante->comprobante = $comprobanteId;
+        $comprobante->estado = 0;
+        $comprobante->pe_id_ag = $idsucursal;
+        $comprobante->end_id = $entero;
+
+        
+        $comprobante->save();
     }
 
     private function crearNuevoCarguePagoRecaudos(string $descripcion): int
@@ -359,7 +386,6 @@ class PagosConveniosCajasanController extends Controller
         
         $detalle->save();
 
-        session()->forget('idsucursal');
         return $detalle->id;
     }
 

@@ -8,6 +8,8 @@ use App\Models\GESTIONADMIN\Reporteador;
 use App\Models\GESTIONPASAJES\Cargos;
 use App\Models\GESTIONPASAJES\FirmaPoliticas;
 use App\Models\GESTIONPASAJES\ParametrosPasajes;
+use App\Models\LOGTRANS\PerConductoresEventos;
+use App\Models\LOGTRANS\PerPersonas;
 use App\Services\ApiReportes;
 use App\Services\EventoConductorService;
 use App\Services\IngresoSalidaConducService;
@@ -346,5 +348,32 @@ class ConductorController extends Controller
             ->first();
 
         return $cargo->funciones()->get();
+    }
+
+    public function obtenerUltimoEventoDescanso(Request $request)
+    {
+        $identificacion = $request->identificacion;
+
+        $persona = PerPersonas::where('identificacion', $identificacion)->first();
+
+        $ultimoEvento = PerConductoresEventos::where('pe_id', $persona->id)
+            ->where('estborrado', 0)
+            ->whereIn('evento', [25, 49, 50]) // Eventos relacionados con descanso
+            /* ->orderBy('fechaevento', 'desc') */
+            ->orderBy('id', 'desc')
+            ->first();
+        
+        if ($ultimoEvento) {
+            return response()->json([
+                'nombre' => $persona->pnombre . ' ' . $persona->psnombre . ' ' . $persona->papellido . ' ' . $persona->sapellido,
+                'evento' => $ultimoEvento->anotacion,
+                'fecha' => date('d/m/Y H:i', strtotime($ultimoEvento->fechaevento))
+            ]);
+        }
+        
+        return response()->json([
+            'evento' => null,
+            'fecha' => null
+        ]);
     }
 }
