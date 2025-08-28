@@ -46,6 +46,10 @@ Route::prefix("gestionRRHH")->middleware(['auth', 'permisos:'.Permisos::GESTION_
         Route::get('/persona/buscar/{identificacion}', [EmpleadoController::class, 'buscar'])
             ->name('persona.buscar');
 
+        //Obtener ultimo evento descanso conductor (AJAX)
+        Route::post('/obtener-ultimo-evento', [ConductorController::class, 'obtenerUltimoEventoDescanso'])
+            ->name('obtener.ultimo.evento');
+
 
     });
 });

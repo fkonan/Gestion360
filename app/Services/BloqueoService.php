@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\FICS\Tripulantes;
 use App\Models\LOGTRANS\PerPersonaBloqueo;
 use App\Models\LOGTRANS\PerPersonas;
 use Carbon\Carbon;
@@ -125,6 +126,43 @@ class BloqueoService
             return false;
         }
         
+    }
+
+    public static function tieneBloqueoFICS($docConductor,$idBloqueo){
+
+        $estBloqueado = Tripulantes::where('Documento', $docConductor)
+            ->where('Estado',0)
+            ->whereHas('bloqueos', function ($query) use ($idBloqueo) {
+                $query->where('PersonalEstadoTipoID', $idBloqueo)
+                    ->where('FechaFinalizacion', '>', Carbon::now()->format('Y-d-m H:i:s'));
+            })->exists();
+
+        return $estBloqueado;
+    }
+
+
+    public static function levantarBloqueoFICS($docConductor,$idBloqueo): bool{
+
+        //Verifica si el conductor tiene un bloqueo activo
+        $tieneBloqueo = self::tieneBloqueoFICS($docConductor, $idBloqueo);
+        if(!$tieneBloqueo){
+            return false;
+        }
+
+        //Levanta el bloqueo
+        $tripulante = Tripulantes::with('bloqueos')
+            ->where('Documento', $docConductor)
+            ->where('Estado',0)
+            ->first();
+
+        $tripulanteBloqueo = $tripulante->bloqueos()
+            ->where('PersonalEstadoTipoID', $idBloqueo)
+            ->where('FechaFinalizacion', '>', Carbon::now()->format('Y-d-m H:i:s'))
+            ->first();
+
+        $tripulanteBloqueo->FechaFinalizacion = Carbon::now()->subDay()->format('Y-d-m H:i:s');
+        $tripulanteBloqueo->save();
+        return true;
     }
   
 }
