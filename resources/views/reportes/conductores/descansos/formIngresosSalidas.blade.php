@@ -11,12 +11,12 @@
         <div class="row mb-3 mx-1">
             <div class="col-12 col-md-6">
                 <label for="fechaInicial" class="form-label">Fecha Inicial *</label>
-                <input type="date" name="fechaInicial" id="fechaInicial" class="form-control" required>
+                <input type="date" name="fechaInicial" id="fechaInicial" class="form-control">
                 <span class="error text-danger fw-bold" id="error-fechaInicial"></span>
             </div>
             <div class="col-12 col-md-6">
                 <label for="fechaFinal" class="form-label">Fecha Final *</label>
-                <input type="date" name="fechaFinal" id="fechaFinal" class="form-control" required>
+                <input type="date" name="fechaFinal" id="fechaFinal" class="form-control">
                 <span class="error text-danger fw-bold" id="error-fechaFinal"></span>
             </div>
         </div>

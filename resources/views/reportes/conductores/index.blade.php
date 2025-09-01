@@ -29,49 +29,40 @@
 
             <thead class="table-primary m-0 p-0 border-bottom">
                 <tr>
+                    <th>Número</th>
                     <th>Reporte</th>
+                    <th>Área</th>
                     <th>Descripción</th>
+                    <th>Formato de salida</th>
                     <th>Acción</th> 
             </thead>
             <tbody id="lista-reportes">
                 <x-reporteItem
-                    titulo="Salidas a descanso"
+                    consecutivo="1"
+                    titulo="Descanso conductores"
+                    area="RRHH"
                     descripcion="Reporte de conductores que han registrado ingresos y salidas para periodos de descanso"
+                    formato="fas fa-file-excel fa-2x"
                     icono="fas fa-fingerprint"
                     onclick="cargarModal(`{{ route('conductor.ingresoSalidas') }}`, 'Reporte salidas a descanso','#ingSalConForm','modal-lg')"
                 />
 
-               <!--  <x-reporteItem 
-                    titulo="Actualización Estado Conductores en FICS"
-                    descripcion="Reporte"
-                    icono="fas fa-id-badge"
-                    onclick="cargarModal(`{{ route('conductor.estado') }}`, 'Activacion o Suspensión Conductores','#estadoConductorForm','modal-md')"
-                /> -->
-
-              <!--   <x-reporteItem
-                    titulo="Firma de políticas"
-                    descripcion="Reporte de conductores que han firmado las diferentes políticas"
-                    icono="fas fa-file-signature"
-                    onclick="cargarModal(`{{ route('conductor.firmaEquipaje') }}`, 'Reporte firma de políticas','#firmaEquipajeForm','modal-md')"
-                /> -->
-
-              <!--   <x-reporteItem
-                    titulo="Descanso Conductores"
-                    descripcion="Reportes"
-                    icono="fas fa-bed"
-                    onclick="cargarModal(`{{ route('conductor.descanso') }}`, 'Aqui puede registrar eventos no reportados de descanso de conductores','#descansoConductorForm','modal-md')"
-                /> -->
-
                 <x-reporteItem
-                    titulo="Documentos conductores pasajes por vencer"
+                    consecutivo="2"
+                    titulo="Vencimiento documentos pasajes"
+                    area="Unidad pasajes"
                     descripcion="Reporta conductores de pasajes activos con documentos próximos a vencer en un rango de fecha"
+                    formato="fas fa-file-excel fa-2x"
                     icono="fas fa-hourglass-half"
                     :onclick="'cargarModal(`' . route('reportes.formulario', ['id' => 5]) . '`, `Documentos conductores pasajes por vencer`, `#formReporte`, `modal-lg`)'"
                 />
 
                 <x-reporteItem
-                    titulo="Documentos conductores carga por vencer"
+                    consecutivo="3"
+                    titulo="Vencimiento documentos carga"
+                    area="Unidad carga"
                     descripcion="Reporta conductores de carga activos con documentos próximos a vencer en un rango de fecha"
+                    formato="fas fa-file-excel fa-2x"
                     icono="fas fa-hourglass-half"
                     :onclick="'cargarModal(`' . route('reportes.formulario', ['id' => 6]) . '`, `Documentos conductores carga por vencer`, `#formReporte`, `modal-lg`)'"
                 />

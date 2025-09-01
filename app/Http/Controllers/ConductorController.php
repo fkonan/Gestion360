@@ -60,7 +60,7 @@ class ConductorController extends Controller
     }
 
     public function reporteFirmaEquipaje(){
-        return view("reportes.conductores.firmaPolEquipaje");
+        return view("reportes.conductores.firmas.firmaPolEquipaje");
     }
 
 
@@ -116,7 +116,7 @@ class ConductorController extends Controller
 
 
     public function listaFirmasEquipaje(){
-        return view('reportes.conductores.politicaEquipaje');
+        return view('reportes.conductores.firmas.politicaEquipaje');
     }
 
     public function cargarDataFirmaEquipaje(Request $request){
@@ -167,11 +167,11 @@ class ConductorController extends Controller
     }
 
     public function formIngSalConductores(){
-        return view("reportes.conductores.formIngresosSalidas");
+        return view("reportes.conductores.descansos.formIngresosSalidas");
     }
 
     public function listaIngSalConductores(){
-        return view("reportes.conductores.ingresosSalidas");
+        return view("reportes.conductores.descansos.ingresosSalidas");
     }
 
 
@@ -272,14 +272,17 @@ class ConductorController extends Controller
 
     public function reporteIngSalConductores(Request $request, ApiReportes $apiReportes){
         $validator = Validator::make($request->all(), [
-            'fechaInicial' => 'date',
+            'fechaInicial' => 'date|required',
             'fechaFinal' => [
                 'date',
+                'required',
                 'after_or_equal:fechaInicial',
             ],
         ], [
-            'fechaFinal.after_or_equal' => 'La fecha de fin debe ser posterior o igual a la fecha de inicio.',  
-            'fechaInicial.date' => 'La fecha de fin debe ser una fecha válida.',
+            'fechaFinal.after_or_equal' => 'La fecha de fin debe ser posterior o igual a la fecha de inicio.',
+            'fechaInicial.date' => 'La fecha de inicio debe ser una fecha válida.',
+            'fechaInicial.required' => 'El campo fecha de inicio es obligatorio.',
+            'fechaFinal.required' => 'El campo fecha de fin es obligatorio.',
             'fechaFinal.date' => 'La fecha de fin debe ser una fecha válida.',  
         ]);
 

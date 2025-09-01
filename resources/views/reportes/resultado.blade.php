@@ -21,7 +21,7 @@
                     <!-- Contador de registros -->
                     <div class="d-flex align-items-center">
                         <span class="text-muted me-2">Registros encontrados:</span>
-                        <span class="badge fs-6 px-3 py-2">{{ number_format($registros) }}</span>
+                        <span class="badge text-dark fs-6 px-3 py-2">{{ number_format($registros) }}</span>
                     </div>
                     
                     <!-- Botón de exportar -->

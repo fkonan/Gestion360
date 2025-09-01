@@ -122,14 +122,6 @@ class ReportesController extends Controller
                 'permiso' => Permisos::ADMINISTRACION_REPORTES_CARGA,
                 'icono' => 'fa-solid fa-truck-loading'
             ],
-            [
-                'titulo' => 'Reportes de Empleados',
-                'descripcion' => 'Consultar',
-                'tooltip' => 'Incluye reportes relacionados con la firma de normas y otras actividades de los empleados',
-                'ruta' => 'reportes.empleados',
-                'permiso' => Permisos::ADMINISTRACION_REPORTES_EMPLEADOS,
-                'icono' => 'fas fa-user'
-            ],
         ];
 
         return view('reportes.index',compact('reportes'));

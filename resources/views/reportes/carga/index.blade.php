@@ -29,15 +29,21 @@
 
             <thead class="table-primary m-0 p-0 border-bottom">
                 <tr>
+                    <th>Número</th>
                     <th>Reporte</th>
+                    <th>Área</th>
                     <th>Descripción</th>
-                    <th>Acción</th>
+                    <th>Formato de salida</th>
+                    <th>Acción</th> 
                 </tr>
             </thead>
             <tbody id="lista-reportes">
                 <x-reporteItem
+                    consecutivo="1"
+                    area="Unidad carga"
                     titulo="Despachos por tipo de vehículo (Pais)" 
                     descripcion="Reporte de despachos  a nivel nacional agrupado por agencia para una fecha dada y por tipo de vehículo"
+                    formato="fas fa-file-excel fa-2x"
                     :onclick="'cargarModal(`' . route('reportes.formulario', ['id' => 8]) . '`, `Despachos por tipo de vehículo (Pais)`, `#formReporte`, `modal-lg`)'"
                 />
             </tbody>
