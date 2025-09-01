@@ -38,6 +38,7 @@
             data-url="{{ route('ingresoSalida.cargarData') }}">   
             <thead class="table-primary">
                 <tr class="bg-primary">
+                    <th data-formatter="numeroConsecutivo">Número</th>
                     <th data-field="IDENTIFICACION" data-sortable="true">Identificación</th>
                     <th data-field="CODIGO_CONDUCTOR" data-sortable="true">Código conductor</th>
                     <th class="text-nowrap" data-field="NOMBRE_COMPLETO" data-sortable="true">Nombre conductor</th>
@@ -57,11 +58,15 @@
     @vite(['resources/js/cargarModal.js'])
     <script>
         function formatearReintegro(value) {
-            return value ? value : 'No registrado';
+            return value ? value : 'En descanso';
         }
 
         function formatearDias(value) {
             return value ? value : 'No aplica';
+        }
+
+        function numeroConsecutivo(value, row, index) {
+            return index + 1;
         }
 
         document.addEventListener("DOMContentLoaded", () => {

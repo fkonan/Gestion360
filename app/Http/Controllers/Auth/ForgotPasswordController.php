@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Auth;
 
+use App\Http\Controllers\Controller;
 use App\Mail\CorreoRecuperacion;
 use App\Models\GESTIONADMIN\PersonaDatos;
 use Illuminate\Http\Request;

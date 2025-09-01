@@ -1,10 +1,20 @@
 @props([
+    'consecutivo' => '',
+    'area' => '',
     'titulo',
     'descripcion' => '',
+    'formato' => '',
     'onclick' => null,
 ])
 
 <tr class="align-middle reporte-item" data-titulo="{{ $titulo }}">
+    <td class="py-2 px-2">
+        <div class="d-flex align-items-center gap-2">
+            <span class="fw-medium">{{ $consecutivo }}</span>
+        </div>
+    </td>
+
+
     {{-- Columna 1: Título --}}
     <td class="py-2 px-2">
         <div class="d-flex align-items-center gap-2">
@@ -12,9 +22,21 @@
         </div>
     </td>
 
+    <td class="py-2 px-2">
+        <div class="d-flex align-items-center gap-2">
+            <span class="fw-medium">{{ $area }}</span>
+        </div>
+    </td>
+
     {{-- Columna 2: Descripción --}}
     <td class="text-muted small py-2 px-2">
         {{ $descripcion }}
+    </td>
+
+    <td class="py-2 px-2">
+        <div class="d-flex align-items-center gap-2">
+            <span class="fw-medium">EXCEL, PDF</span>
+        </div>
     </td>
 
     {{-- Columna 3: Acción (icono botón) --}}

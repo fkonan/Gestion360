@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\LOGTRANS\ConAuxComprobantes;
 use App\Models\LOGTRANS\ConComprobantes;
 use App\Models\LOGTRANS\ConDetPagosRecaudos;
 use App\Models\LOGTRANS\ConPagosRecaudos;
@@ -37,8 +38,7 @@ class PagosConveniosCajasanController extends Controller
     public function index(Request $request)
     {
         $cajaActiva = $request->attributes->get('caja_activa');
-        $idsucursal = $cajaActiva[0]->idsucursal;
-        session()->put('idsucursal', $idsucursal);
+        session()->put('cajaActiva', $cajaActiva[0]);
 
         return view('pagosRecaudos.index', compact('cajaActiva'));
     }
@@ -108,12 +108,13 @@ class PagosConveniosCajasanController extends Controller
 
             // Procesar pago
             $pagoResponse = $this->procesarPago($apiAsopagos, $clienteData, $respuesta, $idPagoDetalle);
-            
             $detallePago = ConDetPagosRecaudos::findOrFail($idPagoDetalle);
 
-
             // Crear comprobante
-            $this->crearComprobante();
+            $idComprobante = $this->crearComprobante();
+
+            // Crear comprobante auxiliar
+            $this->crearAuxComprobante($idComprobante);
 
             // Manejar respuesta del pago
             if (!$this->esPagoExitoso($pagoResponse)) {
@@ -266,7 +267,7 @@ class PagosConveniosCajasanController extends Controller
 
     private function limpiarDatosSesion(): void
     {
-        session()->forget(['clienteData_temp', 'respuesta_temp', 'idsucursal']);
+        session()->forget(['clienteData_temp', 'respuesta_temp', 'cajaActiva']);
     }
 
     private function obtenerIdCarguePagoRecaudos(): int
@@ -285,34 +286,125 @@ class PagosConveniosCajasanController extends Controller
         return $this->crearNuevoCarguePagoRecaudos($descripcion);
     }
 
-    private function crearComprobante(): void
+    private function crearComprobante(): int
     {
+        //Informacion del comprobante
         $nextId = ConComprobantes::max('id') + 1;
         $comprobanteId = DB::connection('oracle')->select("SELECT SEC_DOC_COMPROBANTE.NEXTVAL as id FROM DUAL")[0]->id;
 
-        $idsucursal = $this->obtenerIdSucursal();
-        $sucursal = PerPersonas::findOrFail($idsucursal);
+        //Datos de la caja activa
+        $cajaActiva = $this->obtenerCajaActiva();
 
-        dd($sucursal);
-     
+        //Valor del comprobante
+        $respuestaApi = $this->obtenerRespuestaApi();   
+        $valor = $respuestaApi['additionalData']['saldo'];
+
+        $tc_codigo = DB::connection('oracle')
+            ->table('CON_ASIENTOS as A')
+            ->join('CON_ASIENTOMOVIMIENTOS as AM', 'A.ID', '=', 'AM.AS_ID')
+            ->where('AM.TM_ID', 1132941243)
+            ->where('A.ESTBORRADO', 0)
+            ->where('AM.ESTBORRADO', 0)
+            ->value('TC_CODIGO'); 
+
+        //Crear el comprobante
         $comprobante = new ConComprobantes();
         $comprobante->id = $nextId;
         $comprobante->descripcion = 'MOVIMIENTOS GIROS';
         $comprobante->comprobante = $comprobanteId;
         $comprobante->estado = 0;
-        $comprobante->pe_id_ag = $idsucursal;
-        $comprobante->end_id = $entero;
+        $comprobante->pe_id_ag = $cajaActiva->idsucursal;
+        $comprobante->en_id = $cajaActiva->en_id;
+        $comprobante->cp_id = null;
+        $comprobante->fecautoriza = null;
+        $comprobante->fecaplica = now()->format('d/m/y H:i:s');
+        $comprobante->usrautoriza = null;
+        $comprobante->valtotcredito = $valor;
+        $comprobante->valtotdebito = $valor;
+        $comprobante->fecmodifica = now()->format('d/m/y H:i:s');
+        $comprobante->usrmodifica = $this->obtenerUserId();
+        $comprobante->rolmodifica = self::ROL_MODIFICA;
+        $comprobante->empmodifica = $cajaActiva->idsucursal;
+        $comprobante->estborrado = 0;
+        $comprobante->docnro = $comprobanteId;
+        $comprobante->docrep = 1;
+        $comprobante->docver = 1;
+        $comprobante->docestado = 'TEMPORAL';
+        $comprobante->tc_codigo = $tc_codigo;
+        $comprobante->ct_id = $cajaActiva->id;
+        $comprobante->as_id = 1139194189;
+        $comprobante->agrupado = 'TA';
+        $comprobante->generado = null;
+        $comprobante->automatico = 'T';
+        $comprobante->constipoagencia = 87838;
+        $comprobante->nrooriginal = null;
+        $comprobante->tipoperacion = 60;
+        $comprobante->indicador = null;
+        $comprobante->consap = 0;
+        $comprobante->reversado = null;
+        $comprobante->feccreacion = now()->format('d/m/y H:i:s');
+        $comprobante->usrcreacion = $this->obtenerUserId();
+        $comprobante->empcreacion = $cajaActiva->idsucursal;
+        $comprobante->feccontasap = null;
+        $comprobante->cp_idanula = null;
+        $comprobante->gr_ledger = null;
+        $comprobante->conniif = null;
 
-        
+        return $nextId;
+        dd($comprobante);
         $comprobante->save();
+    }
+
+    private function crearAuxComprobante($idComprobante): void
+    {
+        //Informacion para crear el comprobante auxiliar
+        $nextId = ConAuxComprobantes::max('id') + 1;
+        $numeroCuenta = $this->obtenerNumeroCuenta('D');
+        $respuestaApi = $this->obtenerRespuestaApi();
+
+        //Usuario caja
+        $user = Auth::user();
+        $centroCosto = $user->obtenerDescripcionCentroCosto();
+
+        //Informacion del usuario
+        $datosUsuario = $this->obtenerDatosUsuario();
+
+        //Formato especial para la descripcion
+        $fechaFormatoEspecial = now()->format('Y-n');
+        $descripcion = "CONSULTA CAJASAN " . $fechaFormatoEspecial;
+
+        //Crear el comprobante auxiliar
+        $auxComprobante = new ConAuxComprobantes();
+        $auxComprobante->id = $nextId;
+        $auxComprobante->cp_id = $idComprobante;
+        $auxComprobante->ct_codigo = $numeroCuenta;
+        $auxComprobante->libro = null;
+        $auxComprobante->referencia1 = $datosUsuario['identificacion'];
+        $auxComprobante->referencia2 = null;
+        $auxComprobante->referencia3 = null;
+        $auxComprobante->basaplicada = null;
+        $auxComprobante->descripcion = $descripcion;
+        $auxComprobante->digdocumento = null;
+        $auxComprobante->estado = 'A';
+        $auxComprobante->fecaplica = now()->format('d/m/y H:i:s');
+        $auxComprobante->fecelabora = null;
+        $auxComprobante->fecvence = null;
+        $auxComprobante->placa = null;
+        $auxComprobante->valcredito = 0;
+        $auxComprobante->valdebito = $respuestaApi['additionalData']['saldo'];
+        $auxComprobante->docnro = null;
+        $auxComprobante->docver = null;
+        $auxComprobante->docestado = null;
+        $auxComprobante->cc_codigo =
+
+        dd($auxComprobante);
     }
 
     private function crearNuevoCarguePagoRecaudos(string $descripcion): int
     {
         $fechaActual = now()->format('d/m/y H:i:s');
         $userId = $this->obtenerUserId();
-        $idsucursal = $this->obtenerIdSucursal();
-
+        $cajaActiva = $this->obtenerCajaActiva();
         $idGenerado = $this->obtenerSiguienteId('SEC_PAGOSYRECAUDOS');
 
         $cargue = new ConPagosRecaudos();
@@ -326,12 +418,12 @@ class PagosConveniosCajasanController extends Controller
         $cargue->usrcargue = self::USRCARGUE;
         $cargue->estborrado = 0;
         $cargue->fecmodifica = $fechaActual;
-        $cargue->empmodifica = $idsucursal;
+        $cargue->empmodifica = $cajaActiva->idsucursal;
         $cargue->usrmodifica = $userId;
         $cargue->rolmodifica = self::ROL_MODIFICA;
         $cargue->feccreacion = $fechaActual;
         $cargue->usrcreacion = $userId;
-        $cargue->empcreacion = $idsucursal;
+        $cargue->empcreacion = $cajaActiva->idsucursal;
 
         $cargue->save();
         
@@ -351,8 +443,9 @@ class PagosConveniosCajasanController extends Controller
         $saldoTotal = $respuestaApi['additionalData']['saldo'];
 
         $fechaActual = now()->format('d/m/y H:i:s');
-        $idsucursal = $this->obtenerIdSucursal();
-        $sucursal = PerPersonas::findOrFail($idsucursal);
+
+        $cajaActiva = $this->obtenerCajaActiva();
+        $sucursal = PerPersonas::findOrFail($cajaActiva->idsucursal);
         $userId = $this->obtenerUserId();
 
         $idGenerado = $this->obtenerSiguienteId('SEC_PAGOSYRECAUDOSDET');
@@ -377,12 +470,12 @@ class PagosConveniosCajasanController extends Controller
         $detalle->agencia = $sucursal->codigo . " - " . $sucursal->nomsucursal;
         $detalle->estborrado = 0;
         $detalle->fecmodifica = $fechaActual;
-        $detalle->empmodifica = $idsucursal;
+        $detalle->empmodifica = $cajaActiva->idsucursal;
         $detalle->usrmodifica = $userId;
         $detalle->rolmodifica = self::ROL_MODIFICA;
         $detalle->feccreacion = $fechaActual;
         $detalle->usrcreacion = $userId;
-        $detalle->empcreacion = $idsucursal;
+        $detalle->empcreacion = $cajaActiva->idsucursal;
         
         $detalle->save();
 
@@ -395,16 +488,46 @@ class PagosConveniosCajasanController extends Controller
     {
         return PerPersonas::where('identificacion', Auth::user()->persona->PerNumDoc)->value('id');
     }
-
-    private function obtenerIdSucursal(): int
+    
+    private function obtenerCajaActiva()
     {
-        if (!session()->has('idsucursal')) {
-            throw new Exception('ID de sucursal no encontrado en sesión');
+        if (!session()->has('cajaActiva')) {
+            throw new Exception('Caja activa no encontrada en sesión');
         }
 
-        $idsucursal = session('idsucursal');
-        
-        return $idsucursal;
+        return session('cajaActiva');
+    }
+
+    private function obtenerRespuestaApi()
+    {
+        if (!session()->has('respuesta_temp')) {
+            throw new Exception('Respuesta de API no encontrada en sesión');
+        }
+
+        return session('respuesta_temp');
+    }
+
+    private function obtenerDatosUsuario()
+    {
+        if (!session()->has('clienteData_temp')) {
+            throw new Exception('Datos del cliente no encontrados en sesión');
+        }
+
+        return session('clienteData_temp');
+    }
+
+    private function obtenerNumeroCuenta($tipo)
+    {
+        // Tipo: D = Débito, C = Crédito
+        return DB::connection('oracle')
+            ->table('CON_ENLACEDETALLES as D')
+            ->where('D.ENL_ID', 1139194416)
+            ->where('D.ESTBORRADO', 0)
+            ->where('D.AFECTACION', $tipo) 
+            ->orderBy('D.GRUPO')
+            ->orderByDesc('D.AFECTACION')
+            ->orderBy('D.CU_CUENTA')
+            ->value('CU_CUENTA'); 
     }
 
     private function obtenerSiguienteId(string $secuencia): int

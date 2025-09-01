@@ -101,7 +101,7 @@ class User extends Authenticatable
                 ->where('cc.estborrado', 0)
                 ->where('ct.estado', 1)
                 ->where('ct.estborrado', 0)
-                ->pluck('ct.descripcion')
+                ->pluck('ct.descripcion','ct.codigo')
                 ->first();
         });
     }
