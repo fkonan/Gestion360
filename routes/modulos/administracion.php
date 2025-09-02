@@ -43,6 +43,12 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:'.Permisos::ADMIN
         Route::post("/{id}/data", [ReportesController::class, 'obtenerReporte'])->name('reportes.get');
         Route::get("/{id}/formulario", [ReportesController::class, 'mostrarFormulario'])->name('reportes.formulario');
 
+        // Muestra la vista de la tabla
+        Route::get('/reportes', [ReportesController::class, 'show'])->name('reportes.show');
+
+        // Endpoint API que alimenta Bootstrap Table
+        Route::get('/api/reportes', [ReportesController::class, 'data'])->name('reportes.data');
+
         //Reportes Conductores
         Route::prefix("conductores")->middleware(['permisos:'.Permisos::ADMINISTRACION_REPORTES_CONDUCTORES])->group(function(){
             Route::get("/",[ReportesController::class,"reportesConductores"])->name("reportes.conductores");

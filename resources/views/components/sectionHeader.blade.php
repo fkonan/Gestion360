@@ -5,10 +5,11 @@
     'crear' => false,               // Mostrar botón crear, 1. true => crear en modal , 2 "newpage" => el crear es en una nueva pagina
     'crearRoute' => '',             // Ruta para el botón crear
     'crearLabel' => 'Crear',        // Texto del botón crear
-    'permisoCrear' => null,       // Permiso para mostrar el botón crear
+    'permisoCrear' => null,         // Permiso para mostrar el botón crear
     'crearModalTarget' => '',       // Selector del formulario/modal
     'modalSize' => 'modal-lg',      // Tamaño del modal
     'excel' => false,               // Mostrar boton de descargar en excel 
+    'excelReporte' => false,        // Test excel reportes
     'excelRoute' => '',             // Ruta de la data del excel
     'excelName' => '',              // Nombre del archivo excel
     'clasePosition' => true,        // Clase "botonBoostrapTable" la cual ayuda a que los botones se vean bien si estan antes de una tabla
@@ -37,9 +38,19 @@
 
 
     @if($excel)
-        <a id="exportar" class="btn fw-bold btn-primary" 
+        <button id="exportar" class="btn fw-bold btn-primary" 
             onclick="exportarExcel(`exportar`, '{{ $excelRoute }}', '{{ $excelName }}')"> 
             Descargar Excel 
-        </a>
+        </button>
+    @endif
+
+    @if($excelReporte)
+        <button id="exportar"
+            class="btn fw-bold btn-primary"
+            data-url="{!! $excelRoute !!}"
+            data-name="{{ $excelName }}"
+            onclick="exportarExcel(this.id, this.dataset.url, this.dataset.name)">
+            Descargar Excel
+        </button>
     @endif
 </div>

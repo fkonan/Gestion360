@@ -102,6 +102,13 @@ export function exportarExcel(button, origenDatos, nombreArchivo, esURL = true) 
     const btnExportar = document.getElementById(button);
 
     btnExportar.disabled = true
+    const oldText = btnExportar.innerHTML;
+    btnExportar.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Descargando...`;
+
+    const finalizar = () => {
+        btnExportar.disabled = false;
+        btnExportar.innerHTML = oldText;
+    };
 
     const procesarExportacion = (data) => {
         let ws = XLSX.utils.json_to_sheet(data);
@@ -109,7 +116,7 @@ export function exportarExcel(button, origenDatos, nombreArchivo, esURL = true) 
         XLSX.utils.book_append_sheet(wb, ws, "Datos");
         XLSX.writeFile(wb, nombreArchivo + ".xlsx");
 
-        btnExportar.disabled = false;
+        finalizar();
         mostrarToast('Excel descargado', 'success');
     };
 
@@ -118,11 +125,15 @@ export function exportarExcel(button, origenDatos, nombreArchivo, esURL = true) 
             url: origenDatos,
             method: 'GET',
             success: function (data) {
-                procesarExportacion(data);
+                if (data.rows) {
+                    procesarExportacion(data.rows);
+                } else {
+                    procesarExportacion(data);
+                }
             },
             error: function () {
                 mostrarToast('Error al exportar los datos. Por favor, intente nuevamente.', 'danger');
-                btnExportar.disabled = false;
+                finalizar();
             }
         });
     } else {
@@ -145,7 +156,7 @@ export function exportarExcel(button, origenDatos, nombreArchivo, esURL = true) 
             procesarExportacion(origenDatos);
         } catch (error) {
             mostrarToast('Error al procesar los datos.', 'danger');
-            btnExportar.disabled = false;
+            finalizar();
         }
     }
 }

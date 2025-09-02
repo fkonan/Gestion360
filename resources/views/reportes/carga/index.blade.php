@@ -44,7 +44,7 @@
                     titulo="Despachos por tipo de vehículo (Pais)" 
                     descripcion="Reporte de despachos  a nivel nacional agrupado por agencia para una fecha dada y por tipo de vehículo"
                     formato="fas fa-file-excel fa-2x"
-                    :onclick="'cargarModal(`' . route('reportes.formulario', ['id' => 8]) . '`, `Despachos por tipo de vehículo (Pais)`, `#formReporte`, `modal-lg`)'"
+                    :onclick="'cargarModal(`' . route('reportes.formulario', ['id' => 8]) . '`, `Despachos por tipo de vehículo (Pais)`, ``, `modal-lg`)'"
                 />
             </tbody>
         </table>

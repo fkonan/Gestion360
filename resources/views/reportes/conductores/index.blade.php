@@ -54,7 +54,7 @@
                     descripcion="Reporta conductores de pasajes activos con documentos próximos a vencer en un rango de fecha"
                     formato="fas fa-file-excel fa-2x"
                     icono="fas fa-hourglass-half"
-                    :onclick="'cargarModal(`' . route('reportes.formulario', ['id' => 5]) . '`, `Documentos conductores pasajes por vencer`, `#formReporte`, `modal-lg`)'"
+                    :onclick="'cargarModal(`' . route('reportes.formulario', ['id' => 5]) . '`, `Documentos conductores pasajes por vencer`, ``, `modal-lg`)'"
                 />
 
                 <x-reporteItem
@@ -64,7 +64,7 @@
                     descripcion="Reporta conductores de carga activos con documentos próximos a vencer en un rango de fecha"
                     formato="fas fa-file-excel fa-2x"
                     icono="fas fa-hourglass-half"
-                    :onclick="'cargarModal(`' . route('reportes.formulario', ['id' => 6]) . '`, `Documentos conductores carga por vencer`, `#formReporte`, `modal-lg`)'"
+                    :onclick="'cargarModal(`' . route('reportes.formulario', ['id' => 6]) . '`, `Documentos conductores carga por vencer`, ``, `modal-lg`)'"
                 />
             </tbody>
         </table>

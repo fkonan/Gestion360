@@ -60,7 +60,7 @@
                     titulo="Pasajes vendidos manuales" 
                     descripcion="Reporte con detalle de pasajes vendidos manuales en un rango de fecha"
                     formato="fas fa-file-excel fa-2x"
-                    :onclick="'cargarModal(`' . route('reportes.formulario', ['id' => 2]) . '`, `Pasajes vendidos manuales`, `#formReporte`, `modal-lg`)'"
+                    :onclick="'cargarModal(`' . route('reportes.formulario', ['id' => 2]) . '`, `Pasajes vendidos manuales`, ``, `modal-lg`)'"
                 />
                 <x-reporteItem
                     consecutivo="4"
@@ -68,7 +68,7 @@
                     titulo="Pasajes sin facturar" 
                     descripcion="Reporte de pasajes vendidos sin facturar en un rango de fecha"
                     formato="fas fa-file-excel fa-2x"
-                    :onclick="'cargarModal(`' . route('reportes.formulario', ['id' => 3]) . '`, `Pasajes sin facturar`, `#formReporte`, `modal-lg`)'"
+                    :onclick="'cargarModal(`' . route('reportes.formulario', ['id' => 3]) . '`, `Pasajes sin facturar`, ``, `modal-lg`)'"
                 />
                 <x-reporteItem
                     consecutivo="5"
@@ -76,7 +76,7 @@
                     titulo="Errores en documentos o nombres en tiquetes" 
                     descripcion="Tiquetes con errores en el número de documento o nombre/apellido del cliente, por fecha de operación"
                     formato="fas fa-file-excel fa-2x"
-                    :onclick="'cargarModal(`' . route('reportes.formulario', ['id' => 4]) . '`, `Errores en documentos`, `#formReporte`, `modal-lg`)'"
+                    :onclick="'cargarModal(`' . route('reportes.formulario', ['id' => 4]) . '`, `Errores en documentos`, ``, `modal-lg`)'"
                 />
             </tbody>
         </table>

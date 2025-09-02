@@ -1,12 +1,12 @@
 <!-- Modal formulario reporte -->
 <form
-    id="formReporte" 
-    action="{{ route('reportes.get', ['id' => $id]) }}" 
-    method="POST" 
-    enctype="multipart/form-data"
+    id="formReporte"
+    action="{{ route('reportes.show') }}"
+    method="GET"
     onsubmit="deshabilitarSubmit(this)">
-    
-    @csrf
+
+    <input type="hidden" name="id" value="{{ $id }}">
+
     <div class="p-4">
         <!-- Mensaje informativo sobre el rango de fechas -->
         <div class="alert alert-info mb-4" role="alert">
@@ -35,12 +35,10 @@
                 </div>
             @endif  
         </div>
+
         <div class="d-flex justify-content-end ms-3 pt-2 gap-2">
-            <button type="submit" class="btn btn-success">Generar Reporte</button>
+            <button type="submit" class="btn btn-success">Consultar</button>
             <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Cancelar</button>
         </div>
-
-        <!-- Resultado del reporte por peticion AJAX -->
-        <div id="innerHtml"></div>
     </div>
 </form>
