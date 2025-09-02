@@ -23,14 +23,16 @@ class ReportesController extends Controller
         return view('reportes.formulario', compact('id', 'parametros'));
     }
 
-
-    //metodo que recibe los parametros del formulario y obtiene el reporte
-    public function obtenerReporte($id, Request $request, ApiReportes $apiReportes)
+    // bootstrap table con los resultados del reporte
+    public function show(Request $request)
     {
         $validator = Validator::make($request->all(), [
+            'id' => 'required|exists:reporteador,id',
             'fechaInicio' => 'required|date',
             'fechaFin' => 'required|date|after_or_equal:fechaInicio',
-        ],[
+        ], [
+            'id.required' => 'El reporte es obligatorio.',
+            'id.exists' => 'El reporte no existe.',
             'fechaInicio.required' => 'La fecha de inicio es obligatoria.',
             'fechaInicio.date' => 'La fecha de inicio debe ser una fecha válida.',
             'fechaFin.required' => 'La fecha de fin es obligatoria.',
@@ -38,60 +40,70 @@ class ReportesController extends Controller
             'fechaFin.after_or_equal' => 'La fecha de fin debe ser igual o posterior a la fecha de inicio.',
         ]);
 
-        if (!$validator->fails()) {
-            $fechaInicio = Carbon::parse($request->fechaInicio);
-            $fechaFin = Carbon::parse($request->fechaFin);
-
-            // Validar que el rango entre las fechas no sea mayor a 1 mes
-            if ($fechaInicio->diffInMonths($fechaFin) > 1 || $fechaFin->gt($fechaInicio->addMonth())) {
-                $validator->errors()->add('fechaFin', 'El rango entre las fechas no puede ser mayor a 1 mes.');
-                 return response()->json([
-                    'errors' => $validator->errors()
-                ], 422);
-            }
-        } else{
-            return response()->json([
-                'errors' => $validator->errors()
-            ], 422);
+        if ($validator->fails()) {
+            return sweetAlert($validator->errors()->first(), 'error');
         }
 
-        try{
-            $fechaInicio = $request->fechaInicio;
-            $fechaFin = $request->fechaFin;
+        $fechaInicio = Carbon::parse($request->fechaInicio);
+        $fechaFin = Carbon::parse($request->fechaFin);
 
-            //se valida que el reporte exista
-            $reporte = Reporteador::findOrFail($id);
-            if (!$reporte) {
-                return toastModal("Reporte no encontrado","warning");
+        // Validar rango de máximo 1 mes
+        if ($fechaInicio->diffInMonths($fechaFin) > 1 || $fechaFin->gt($fechaInicio->copy()->addMonth())) {
+            return sweetAlert('El rango entre las fechas no puede ser mayor a 1 mes.', 'error');
+        }
+
+        $id = $request->input('id');
+        $reporte = Reporteador::findOrFail($id);
+
+        $nombreReporte = $reporte->nombre;
+        $nombreDocExcel = normalizarNombre($nombreReporte);
+
+        $params = $request->all();
+
+        return view('reportes.tabla', compact('id', 'nombreReporte', 'nombreDocExcel', 'params'));
+    }
+
+
+    // Cargar datos de los reportes con la API
+    public function data(Request $request, ApiReportes $apiReportes)
+    {
+        try {
+            // Obtener todos los parámetros dinámicos
+            $params = $request->all();
+
+            // Normalizamos el id para la API
+            if (isset($params['id'])) {
+                $params['idReporte'] = $params['id'];
+                unset($params['id']);
             }
 
-            //se obtiene el reporte a traves del servicio ApiReportes
-            $data = $apiReportes->obtenerReporte([
-                'idReporte'   => $id,
-                'fechaInicio' => $fechaInicio,
-                'fechaFin'    => $fechaFin,
-            ]);
+            $reporte = Reporteador::findOrFail($params['idReporte']);
 
-            if (!$data) {
-                return toastModal("No se encontraron resultados","warning");
+            // Consultar API
+            $data = $apiReportes->obtenerReporte($params);
+
+            if (!$data || empty($data)) {
+                return response()->json([
+                    'total' => 0,
+                    'rows' => []
+                ]);
             }
 
-            //Se aumenta el contador de consultas del reporte
+            // Incrementar contador de consultas
             $reporte->increment('total_consultas');
 
+            // Respuesta en formato Bootstrap Table
             return response()->json([
-                'success' => true,
-                'html' => view('reportes.resultado', [
-                    'dataJson' => json_encode($data),
-                    'registros' => count($data),
-                    'nombreReporte' => normalizarNombre($reporte->nombre),
-                ])->render(),
-                'registros' => count($data)
+                'total' => count($data),
+                'rows' => $data
             ]);
 
-        }catch(Exception $e){
-            Log::error('Error al obtener el reporte ' . $id . ': ' . $e->getMessage());
-            return toastModal("Error al obtener el reporte","danger");
+        } catch (Exception $e) {
+            Log::error('Error al obtener el reporte ' . ($request->id ?? '-') . ': ' . $e->getMessage());
+
+            return response()->json([
+                'errors' => ['general' => ['Error al obtener el reporte']]
+            ], 500);
         }
     }
 

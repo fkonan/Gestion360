@@ -56,13 +56,16 @@ class ApiReportes
             }
         }
 
-        $payload = array_filter([
-            'paramFechaInicio'  => $params['fechaInicio'] ?? null,
-            'paramFechaFin'     => $params['fechaFin'] ?? null,
-            'paramAgencia'      => $params['agencia'] ?? null,
-            'paramTipoFiltro'   => $params['tipoFiltro'] ?? null,
-            'paramValorFiltro'  => $params['valorFiltro'] ?? null,
-        ], fn($value) => !is_null($value));
+        // Convertir parámetros dinámicamente a formato "paramXxx"
+        $payload = [];
+
+        foreach ($params as $key => $value) {
+            if ($key === 'idReporte') {
+                continue; 
+            }
+
+            $payload['param' . ucfirst($key)] = $value;
+        }
 
         $response = Http::withToken($token)
             ->withHeaders(['Content-Type' => 'application/json'])
