@@ -4,10 +4,10 @@ namespace App\Models\LOGTRANS;
 
 use Illuminate\Database\Eloquent\Model;
 
-class TesCajaTurnos extends Model
+class TesCajaTurnoDoc extends Model
 {
     protected $connection = "oracle";
-    protected $table = "TES_CAJASTURNOS";
+    protected $table = "TES_CAJATURNODOCUMENTOS";
     protected $primaryKey = "id";
     
     public $incrementing = false;

@@ -14,7 +14,7 @@
 
     <x-sectionHeader 
         titulo="{{ $nombreReporte }}"
-        rutaVolver="{{ route('reportes.index') }}"
+        :rutaVolver="url()->previous()"
         excelReporte="true"
         excelRoute="{{ route('reportes.data', $params) }}"
         excelName="{{ $nombreDocExcel }}"
@@ -51,9 +51,8 @@
 @endsection
 
 @pushOnce('script')
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-    
+{{-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> --}}
+<script>    
 $(document).ready(function() {
     const params = @json($params);
     const queryString = new URLSearchParams(params).toString();
@@ -126,6 +125,14 @@ $(document).ready(function() {
                     customClass: {
                         popup: 'swalAlert'
                     }       
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const form = document.getElementById('formReporte');
+                        if (form) {
+                            habilitarSubmit(form); 
+                        }
+                        window.history.back();
+                    }
                 });
             }
         },

@@ -3,7 +3,7 @@
     id="formReporte"
     action="{{ route('reportes.show') }}"
     method="GET"
-    onsubmit="deshabilitarSubmit(this)">
+    {{-- onsubmit="deshabilitarSubmit(this)" --}}>
 
     <input type="hidden" name="id" value="{{ $id }}">
 
@@ -33,6 +33,46 @@
                     <input type="date" name="fechaFin" id="fechaFin" class="form-control" required>
                     <span class="error text-danger fw-bold" id="error-fechaFin"></span>
                 </div>
+            @endif  
+            @if(in_array('paramAgencia', $parametros)  &&  $origen_db == "FICS")
+                <div class="col-md-6 mt-3">
+                    <label for="agencia" class="form-label">Agencia *</label>
+                    <select class="form-select select2" id="agencia" name="agencia">
+                        <option value = "null">TODOS</option> 
+                        @foreach($agenciasFICS as $agencia)
+                            <option value="{{ $agencia->codigo }}" >
+                                {{ $agencia->nombre }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <span class="error text-danger fw-bold" id="error-agencia"></span>
+                </div>
+            @endif  
+            @if(in_array('paramTipoFiltro', $parametros))
+                <div class="col-12 col-md-6 mt-3">
+                    <label class="form-label d-block">Filtrar por</label>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="tipoFiltro" id="filtroCedula" value="identificacion" onchange="habilitarInputFiltro(this)">
+                        <label class="form-check-label" for="filtroCedula">Cédula</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="tipoFiltro" id="filtroCodigo" value="codigo" onchange="habilitarInputFiltro(this)">
+                        <label class="form-check-label" for="filtroCodigo">Código</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="tipoFiltro" id="filtroTodos" value="todos" checked onchange="habilitarInputFiltro(this)">
+                        <label class="form-check-label" for="filtroTodos">Todos</label>
+                    </div>
+                    <span class="error text-danger fw-bold" id="error-tipoFiltro"></span>
+                </div>
+            @endif 
+
+            @if(in_array('paramValorFiltro', $parametros))
+                <div class="col-12 col-md-6 mt-3" id="parametro" style="display: none">
+                    <label for="valorFiltro" class="form-label">Ingrese el parametro</label>
+                    <input type="text" name="valorFiltro" id="valorFiltro" class="form-control">
+                    <span class="error text-danger fw-bold" id="error-valorFiltro"></span>
+                </div>   
             @endif  
         </div>
 
