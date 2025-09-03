@@ -46,15 +46,6 @@
                     ruta="#"
             />
         </div>
-
-        <div class="col" onclick="cargarModal(`{{ route('empleado.nuevoIngreso') }}`, 'Solicitud nuevo ingreso empleado','#formNuevoIngreso','modal-md')">
-            <x-card color="bg-success" 
-                    titulo="Solicitud nuevo ingreso" 
-                    descripcion="Gestión" 
-                    icono="fa-user-plus" 
-                    ruta="#"
-            />
-        </div>
     </div>
 </div>
 @endsection

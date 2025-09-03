@@ -8,7 +8,9 @@ use App\Models\LOGTRANS\ConDetPagosRecaudos;
 use App\Models\LOGTRANS\ConPagosRecaudos;
 use App\Models\LOGTRANS\ConReversoCajasan;
 use App\Models\LOGTRANS\PerPersonas;
+use App\Models\LOGTRANS\TesCajaTurnoDoc;
 use App\Services\ApiAsopagos;
+use App\Services\EmpleadoService;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -93,6 +95,8 @@ class PagosConveniosCajasanController extends Controller
 
     public function pagar(Request $request, ApiAsopagos $apiAsopagos)
     {
+        DB::beginTransaction();
+
         try {
             // Validar datos de sesión
             if (!$this->validarDatosSesion()) {
@@ -110,12 +114,6 @@ class PagosConveniosCajasanController extends Controller
             $pagoResponse = $this->procesarPago($apiAsopagos, $clienteData, $respuesta, $idPagoDetalle);
             $detallePago = ConDetPagosRecaudos::findOrFail($idPagoDetalle);
 
-            // Crear comprobante
-            $idComprobante = $this->crearComprobante();
-
-            // Crear comprobante auxiliar
-            $this->crearAuxComprobante($idComprobante);
-
             // Manejar respuesta del pago
             if (!$this->esPagoExitoso($pagoResponse)) {
                 $this->manejarPagoFallido($pagoResponse, $detallePago);
@@ -126,12 +124,24 @@ class PagosConveniosCajasanController extends Controller
             // Actualizar estado a pagado
             $detallePago->update(['estado' => self::ESTADO_PAGADO]);
 
+            // Crear comprobante
+            $idComprobante = $this->crearComprobante();
+
+            // Crear comprobante auxiliar (para debito y credito)
+            $this->crearAuxComprobante($idComprobante,'D');  
+            $this->crearAuxComprobante($idComprobante,'C');
+
+            // Caja turno
+            $this->crearCajaTurnoDoc($idComprobante);
+
             // Limpiar sesión
             $this->limpiarDatosSesion();
 
+            DB::commit();
             return toast('Pago realizado con éxito', 'success',route('pagosConvenios.index'));
 
         } catch (Exception $e) {
+            DB::rollBack();
             Log::error('Error al realizar el pago cajasan: ' . $e->getMessage());
             return sweetAlert(
                     'Error al realizar el pago, verifique e intente nuevamente',
@@ -142,7 +152,6 @@ class PagosConveniosCajasanController extends Controller
 
 
     // Métodos privados
-
     private function validarCliente(string $identificacion): ?PerPersonas
     {
         return PerPersonas::where('identificacion', $identificacion)->first();
@@ -154,7 +163,7 @@ class PagosConveniosCajasanController extends Controller
         return [
             'responseCode' => true,
             'additionalData' => [
-                'saldo' => 130000
+                'saldo' => 65000
             ],
         ];
 
@@ -317,11 +326,11 @@ class PagosConveniosCajasanController extends Controller
         $comprobante->en_id = $cajaActiva->en_id;
         $comprobante->cp_id = null;
         $comprobante->fecautoriza = null;
-        $comprobante->fecaplica = now()->format('d/m/y H:i:s');
+        $comprobante->fecaplica = now();
         $comprobante->usrautoriza = null;
         $comprobante->valtotcredito = $valor;
         $comprobante->valtotdebito = $valor;
-        $comprobante->fecmodifica = now()->format('d/m/y H:i:s');
+        $comprobante->fecmodifica = now();
         $comprobante->usrmodifica = $this->obtenerUserId();
         $comprobante->rolmodifica = self::ROL_MODIFICA;
         $comprobante->empmodifica = $cajaActiva->idsucursal;
@@ -342,36 +351,45 @@ class PagosConveniosCajasanController extends Controller
         $comprobante->indicador = null;
         $comprobante->consap = 0;
         $comprobante->reversado = null;
-        $comprobante->feccreacion = now()->format('d/m/y H:i:s');
+        $comprobante->feccreacion = now();
         $comprobante->usrcreacion = $this->obtenerUserId();
         $comprobante->empcreacion = $cajaActiva->idsucursal;
         $comprobante->feccontasap = null;
         $comprobante->cp_idanula = null;
         $comprobante->gr_ledger = null;
         $comprobante->conniif = null;
+        $comprobante->save();
 
         return $nextId;
-        dd($comprobante);
-        $comprobante->save();
     }
 
-    private function crearAuxComprobante($idComprobante): void
+    private function crearAuxComprobante($idComprobante,$tipo): void
+        //Tipo -> Debido 'D'  y Credito 'C'
     {
         //Informacion para crear el comprobante auxiliar
         $nextId = ConAuxComprobantes::max('id') + 1;
-        $numeroCuenta = $this->obtenerNumeroCuenta('D');
+        $numeroCuenta = $this->obtenerNumeroCuenta($tipo);
         $respuestaApi = $this->obtenerRespuestaApi();
 
         //Usuario caja
         $user = Auth::user();
-        $centroCosto = $user->obtenerDescripcionCentroCosto();
+        $documento = $user->persona->PerNumDoc;
+        $centroCosto = EmpleadoService::codigoCentroCosto($documento);
+        $userId = $this->obtenerUserId();
 
-        //Informacion del usuario
+        //Datos de la caja activa
+        $cajaActiva = $this->obtenerCajaActiva();
+
+        //Informacion del usuario (quien recibe el pago)
         $datosUsuario = $this->obtenerDatosUsuario();
 
         //Formato especial para la descripcion
         $fechaFormatoEspecial = now()->format('Y-n');
         $descripcion = "CONSULTA CAJASAN " . $fechaFormatoEspecial;
+
+        //Formato numdocumento (fecha - DD.MM.AA)
+        $fechaNumDoc = now()->format('d.m.Y');
+
 
         //Crear el comprobante auxiliar
         $auxComprobante = new ConAuxComprobantes();
@@ -387,17 +405,66 @@ class PagosConveniosCajasanController extends Controller
         $auxComprobante->digdocumento = null;
         $auxComprobante->estado = 'A';
         $auxComprobante->fecaplica = now()->format('d/m/y H:i:s');
+        $auxComprobante->fecmodifica = now()->format('d/m/y H:i:s');
+        $auxComprobante->usrmodifica = $userId;
+        $auxComprobante->rolmodifica = self::ROL_MODIFICA;
+        $auxComprobante->empmodifica = $cajaActiva->idsucursal;
+        $auxComprobante->estborrado = 0;
         $auxComprobante->fecelabora = null;
         $auxComprobante->fecvence = null;
         $auxComprobante->placa = null;
-        $auxComprobante->valcredito = 0;
-        $auxComprobante->valdebito = $respuestaApi['additionalData']['saldo'];
+        $auxComprobante->valcredito = $tipo == 'C' ? $respuestaApi['additionalData']['saldo'] : 0;
+        $auxComprobante->valdebito = $tipo == 'D' ? $respuestaApi['additionalData']['saldo'] : 0;
         $auxComprobante->docnro = null;
         $auxComprobante->docver = null;
         $auxComprobante->docestado = null;
-        $auxComprobante->cc_codigo =
+        $auxComprobante->cc_codigo = $centroCosto;
+        $auxComprobante->grupo = 1;
+        $auxComprobante->numdocumento = $fechaNumDoc;
+        $auxComprobante->tercero_id = 10631;
+        $auxComprobante->fecdocumento = null;
+        $auxComprobante->tm_id = 1132941243;
+        $auxComprobante->bloque = 1;
+        $auxComprobante->id_detalleimptos = null;
+        $auxComprobante->docrep = null;
+        $auxComprobante->save();
+    }
 
-        dd($auxComprobante);
+    private function crearCajaTurnoDoc($idComprobante): void
+    {
+        //Informacion para crear el registro
+        $nextId = TesCajaTurnoDoc::max('id') + 1;
+        $respuestaApi = $this->obtenerRespuestaApi();
+        $userId = $this->obtenerUserId();
+
+        //Datos de la caja activa
+        $cajaActiva = $this->obtenerCajaActiva();
+
+        $cajaTurnoDoc = new TesCajaTurnoDoc();
+        $cajaTurnoDoc->id = $nextId;
+        $cajaTurnoDoc->ctu_ori_id = $cajaActiva->id;
+        $cajaTurnoDoc->ctu_res_id = $cajaActiva->id;
+        $cajaTurnoDoc->tm_id = 1132941243;
+        $cajaTurnoDoc->fp_id = 2;
+        $cajaTurnoDoc->bco_id = null;
+        $cajaTurnoDoc->ctb_id = null;
+        $cajaTurnoDoc->tipo = 'E';
+        $cajaTurnoDoc->valor = $respuestaApi['additionalData']['saldo'];
+        $cajaTurnoDoc->estdocumento = 'EC';
+        $cajaTurnoDoc->fecdocumento = now()->format('d/m/y H:i:s');
+        $cajaTurnoDoc->nrodocumento = now()->format('d/m/y H:i:s');
+        $cajaTurnoDoc->fecmodifica = now()->format('d/m/y H:i:s');
+        $cajaTurnoDoc->usrmodifica = $userId;
+        $cajaTurnoDoc->rolmodifica = self::ROL_MODIFICA;
+        $cajaTurnoDoc->empmodifica = $cajaActiva->idsucursal;
+        $cajaTurnoDoc->estborrado = 0;
+        $cajaTurnoDoc->cpd_id = null;
+        $cajaTurnoDoc->bco_nombre = null;
+        $cajaTurnoDoc->nrocheque = null;
+        $cajaTurnoDoc->feccheque = null;
+        $cajaTurnoDoc->cp_id = $idComprobante;
+        $cajaTurnoDoc->girador = null;
+        $cajaTurnoDoc->save();
     }
 
     private function crearNuevoCarguePagoRecaudos(string $descripcion): int

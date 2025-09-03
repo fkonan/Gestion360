@@ -40,13 +40,10 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:'.Permisos::ADMIN
 
     Route::prefix("reportes")->middleware(['permisos:'.Permisos::ADMINISTRACION_REPORTES_ACCEDER,'submodulo.activo:22'])->group(function(){
         Route::get("/",[ReportesController::class,"getReportes"])->name("reportes.index");
-        Route::post("/{id}/data", [ReportesController::class, 'obtenerReporte'])->name('reportes.get');
+       
+        //Reporteador
         Route::get("/{id}/formulario", [ReportesController::class, 'mostrarFormulario'])->name('reportes.formulario');
-
-        // Muestra la vista de la tabla
         Route::get('/reportes', [ReportesController::class, 'show'])->name('reportes.show');
-
-        // Endpoint API que alimenta Bootstrap Table
         Route::get('/api/reportes', [ReportesController::class, 'data'])->name('reportes.data');
 
         //Reportes Conductores
@@ -62,12 +59,6 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:'.Permisos::ADMIN
             Route::post("/reporteEquipajeModal",[ConductorController::class,"filtrarFirmaEquipaje"])->name("filtrar.firmaEquipaje");
             Route::get("/reporteEquipajeModal/cargarData",[ConductorController::class,"cargarDataFirmaEquipaje"])->middleware('soloAJAX')->name("firmaEquipaje.cargarData");
             Route::get("/reporteEquipajeModal/listaFirmasEquipaje",[ConductorController::class,"listaFirmasEquipaje"])->name("lista.firmaEquipaje");
-
-            //Ingreso y salidas conductores
-            Route::get("/formIngSalConductores",[ConductorController::class,"formIngSalConductores"])->name("conductor.ingresoSalidas");
-            Route::post("/formIngSalConductores/filtrar",[ConductorController::class,"reporteIngSalConductores"])->name("reporte.ingresoSalidas");
-            Route::get("/formIngSalConductores/listaDatos",[ConductorController::class,"listaIngSalConductores"])->name("lista.ingresoSalidas");
-            Route::get("/formIngSalConductores/cargarData",[ConductorController::class,"cargarDataIngSalConductores"])->name("ingresoSalida.cargarData");
         });
 
         //Reportes Pasajes

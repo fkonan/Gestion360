@@ -44,7 +44,7 @@
                     descripcion="Reporte de conductores que han registrado ingresos y salidas para periodos de descanso"
                     formato="fas fa-file-excel fa-2x"
                     icono="fas fa-fingerprint"
-                    onclick="cargarModal(`{{ route('conductor.ingresoSalidas') }}`, 'Reporte salidas a descanso','#ingSalConForm','modal-lg')"
+                    :onclick="'cargarModal(`' . route('reportes.formulario', ['id' => 9]) . '`, `Reporte salidas a descanso`, ``, `modal-lg`)'"
                 />
 
                 <x-reporteItem

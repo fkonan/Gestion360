@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Constants\Permisos;
+use App\Models\FICS\Boleterias;
 use App\Models\GESTIONADMIN\Reporteador;
 use App\Services\ApiReportes;
 use Carbon\Carbon;
@@ -16,16 +17,23 @@ class ReportesController extends Controller
     //vista general para el formulario de reportes, aca se ingresan los parametros
     public function mostrarFormulario($id)
     {
-        $query = Reporteador::where('id', $id)->value('parametros');
-        $parametrosArray = json_decode($query, true);
+        $reporte = Reporteador::select('parametros', 'origen_db')->findOrFail($id);
+        $origen_db = $reporte->origen_db;
+
+        // Decodificar parámetros
+        $parametrosArray = json_decode($reporte->parametros, true) ?? [];
         $parametros = array_column($parametrosArray, 'nombre');
 
-        return view('reportes.formulario', compact('id', 'parametros'));
+        // Agencias para consultas en FICS
+        $agenciasFICS = Boleterias::select('nombre', 'codigo')->get();
+
+        return view('reportes.formulario', compact('id', 'parametros', 'agenciasFICS', 'origen_db'));
     }
 
     // bootstrap table con los resultados del reporte
     public function show(Request $request)
     {
+        //Validacion campos obligatorios
         $validator = Validator::make($request->all(), [
             'id' => 'required|exists:reporteador,id',
             'fechaInicio' => 'required|date',
@@ -44,12 +52,14 @@ class ReportesController extends Controller
             return sweetAlert($validator->errors()->first(), 'error');
         }
 
+        // Validar rango de máximo 1 mes (el reporte 9 ignora esta condición)
         $fechaInicio = Carbon::parse($request->fechaInicio);
         $fechaFin = Carbon::parse($request->fechaFin);
 
-        // Validar rango de máximo 1 mes
-        if ($fechaInicio->diffInMonths($fechaFin) > 1 || $fechaFin->gt($fechaInicio->copy()->addMonth())) {
-            return sweetAlert('El rango entre las fechas no puede ser mayor a 1 mes.', 'error');
+        if ($request->id != 9) {
+            if ($fechaInicio->diffInMonths($fechaFin) > 1 || $fechaFin->gt($fechaInicio->copy()->addMonth())) {
+                return sweetAlert('El rango entre las fechas no puede ser mayor a 1 mes.', 'error');
+            }
         }
 
         $id = $request->input('id');
@@ -58,7 +68,15 @@ class ReportesController extends Controller
         $nombreReporte = $reporte->nombre;
         $nombreDocExcel = normalizarNombre($nombreReporte);
 
+        // Para el caso del reporte 9 el rango de fechas se amplia un mes 
+        if ($id == 9) {
+            $fechaInicio = $fechaInicio->copy()->subMonth();
+            $fechaFin = $fechaFin->copy()->addMonth();
+        }
+
         $params = $request->all();
+        $params['fechaInicio'] = $fechaInicio->toDateString();
+        $params['fechaFin'] = $fechaFin->toDateString();
 
         return view('reportes.tabla', compact('id', 'nombreReporte', 'nombreDocExcel', 'params'));
     }
@@ -68,8 +86,10 @@ class ReportesController extends Controller
     public function data(Request $request, ApiReportes $apiReportes)
     {
         try {
-            // Obtener todos los parámetros dinámicos
-            $params = $request->all();
+            // Obtener todos los parámetros dinámicos que no sean null
+            $params = collect($request->all())
+                ->reject(fn($value) => $value === null || $value === 'null')
+                ->toArray();
 
             // Normalizamos el id para la API
             if (isset($params['id'])) {
