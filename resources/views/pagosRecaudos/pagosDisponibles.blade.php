@@ -29,7 +29,7 @@
                         <td>{{ $clienteData['nombre'] }}</td>
                         <td>{{ $clienteData['identificacion'] }}</td>
                         <td>{{ $clienteData['nombre'] }}</td>
-                        <td>${{ number_format($data['additionalData']['saldo'], 0, ',', '.') }}</td>
+                        <td>${{ number_format($respuesta['additionalData']['saldo'], 0, ',', '.') }}</td>
                     </tr>
                 </tbody>
             </table>
@@ -38,7 +38,7 @@
         <div class="text-end mb-2">
             <button type="button" 
                     class="btn btn-success shadow-sm me-1"
-                    onclick="cargarModal(`{{ route('pagosConvenios.validarInformacion') }}`, 'Validar pago', '#formPago', 'modal-lg')">
+                    onclick="cargarModal(`{{ route('pagosConvenios.validarInformacion', ['uuid' => $uuid]) }}`, 'Validar pago', '', 'modal-lg')">
                 <i class="fas fa-check-circle me-1"></i> Validar
             </button>
         </div>

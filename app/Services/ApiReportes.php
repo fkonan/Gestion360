@@ -50,7 +50,7 @@ class ApiReportes
         }
 
         // Validar que los parámetros obligatorios existan
-        foreach (['idReporte', 'fechaInicio', 'fechaFin'] as $obligatorio) {
+        foreach (['idReporte'] as $obligatorio) {
             if (empty($params[$obligatorio])) {
                 return null;
             }

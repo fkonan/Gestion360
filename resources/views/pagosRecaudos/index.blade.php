@@ -43,6 +43,8 @@
         onsubmit="deshabilitarSubmit(this)">
         @csrf
 
+        <input type="hidden" name="caja_activa_id" value="{{ $cajaActiva[0]->id }}">
+
         <div class="row">
              <div class="col-12 col-md-5">
                 <label for="empresa" class="form-label">Seleccione empresa</label>
