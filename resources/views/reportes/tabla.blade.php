@@ -138,14 +138,24 @@ $(document).ready(function() {
         },
         error: function(xhr) {
             $('#loading').hide();
-            let errorMessage = 'Error al cargar el reporte.';
-            
-            if (xhr.responseJSON && xhr.responseJSON.errors) {
-                const errors = xhr.responseJSON.errors;
-                errorMessage = Object.values(errors).flat().join('<br>');
-            }
-            
-            $('#error-container').html(errorMessage).show();
+    
+            Swal.fire({
+                icon: 'error',
+                title: 'Error al cargar el reporte.',
+                confirmButtonColor: "#3366CC",
+                confirmButtonText: "Aceptar",
+                customClass: {
+                    popup: 'swalAlert'
+                }       
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.getElementById('formReporte');
+                    if (form) {
+                        habilitarSubmit(form); 
+                    }
+                    window.history.back();
+                }
+            });
         }
     });
 });

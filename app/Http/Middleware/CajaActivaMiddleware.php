@@ -15,7 +15,7 @@ class CajaActivaMiddleware
         $user = Auth::user();
         $nombreUsuario = $user->persona->nombreCompleto() ?? 'Usuario Desconocido';
         /* $identificacion = $user->persona->identificacion; */
-        $identificacion = '1143139437';
+        $identificacion = '1143139437'; 
 
         // Validacion de caja activa
         $datosCaja = DB::connection('oracle')

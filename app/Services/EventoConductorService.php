@@ -151,7 +151,7 @@ class EventoConductorService
                 if($bloqueo){
                     $bloqueo->activo = 2;
                     $bloqueo->pe_id_desbloqueo = $persona->id;
-                    $bloqueo->fecdesbloqueo = $fecha;
+                    $bloqueo->fecdesbloqueo = $fechaNow;
                     $bloqueo->fecmodifica = $fechaNow;
                     $bloqueo->empmodifica = 6831;
                     $bloqueo->usrmodifica = $persona->id;
@@ -163,10 +163,10 @@ class EventoConductorService
             //CASO 2 - CREAR NUEVO BLOQUEO
             }else{
                 $bloqueo = new PerPersonaBloqueo();
-                $bloqueo->id = PerPersonaBloqueo::max('id') + 1;
+                $bloqueo->id = DB::connection('oracle')->select("SELECT SEC_PER_PERSONASBLOQUEO.NEXTVAL as id FROM DUAL")[0]->id;
                 $bloqueo->cedula_conductor = $request->identificacion;
                 $bloqueo->tb_id = self::BLOQUEO_DESCANSO_LOGTRANS;
-                $bloqueo->descripcion = "SALIDA A DESCANSO";
+                $bloqueo->descripcion = "SALIDA A DESCANSO. NOVEDAD REGISTRADA AUTOGESTION.";
                 $bloqueo->pe_id_bloqueo = $persona->id;
                 $bloqueo->fecbloqueo = $fecha;
                 $bloqueo->activo = 1;

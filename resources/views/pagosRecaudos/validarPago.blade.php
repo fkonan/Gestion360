@@ -1,13 +1,14 @@
 <!-- Modal para validar pago -->
 <div class="container-fluid p-0">
     <form 
-        id="formPago" 
+        id="formValidar" 
         action="{{ route('pagosConvenios.pagar') }}" 
         method="POST" 
         enctype="multipart/form-data"
         onsubmit="deshabilitarSubmit(this)">
         
         @csrf
+        <input type="hidden" name="uuid" value="{{ $uuid }}">
 
         <div class="p-4">
             <!-- Sección: Datos del cliente -->
