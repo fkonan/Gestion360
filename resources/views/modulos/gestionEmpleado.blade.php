@@ -105,8 +105,8 @@
             if (data.nombre && data.evento && data.fecha) {
                 ultimoEventoContent.innerHTML = `
                     <div class="mb-2">
-                        <strong class="text-dark d-block mb-1">
-                            <i class="fas fa-user me-1 text-primary"></i>
+                        <strong class="d-block mb-1">
+                            <i class="fas fa-user me-1"></i>
                             ${data.nombre}
                         </strong>
                     </div>
@@ -148,6 +148,19 @@
                         No se encontraron eventos de descanso para esta identificación
                     </div>
                 `;
+
+                // === SOLO PERMITIR SALIDA A DESCANSO ===
+                const opcion49 = document.getElementById("opcion-49"); // REGRESO DE DESCANSO
+                const opcion50 = document.getElementById("opcion-50"); // SALIDA A DESCANSO
+                const opcion25 = document.getElementById("opcion-25"); // REGRESO ANTICIPADO
+                const selectEvento = document.getElementById("evento");
+
+                // Ocultar regreso y anticipado
+                opcion49.style.display = "none";
+                opcion25.style.display = "none";
+
+                // Mostrar salida a descanso
+                opcion50.style.display = "block";
             }
         })
         .catch(error => {

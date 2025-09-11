@@ -149,10 +149,12 @@ class ConductorController extends Controller
     public function registrarEvento(Request $request, EventoConductorService $eventoConductorService){
         $validator = Validator::make($request->all(), [
             'identificacion' => ['required', 'regex:/^\d{1,15}$/'],
+            'observacion' => 'required',
             'fecha' => ['required','date']
         ], [
             'identificacion.regex' => 'El campo identificación no tiene un formato valido',
             'identificacion.required' => 'El campo identificación es obligatorio.',
+            'observacion.required' => 'Debe ingresar una observación'
         ]);
 
         if ($validator->fails()) {
@@ -179,18 +181,34 @@ class ConductorController extends Controller
 
         $persona = PerPersonas::where('identificacion', $identificacion)->first();
 
+        if(!$persona){
+            return response()->json([
+                'evento' => null,
+                'fecha' => null
+            ]);
+        }
+
         $ultimoEvento = PerConductoresEventos::where('pe_id', $persona->id)
             ->where('estborrado', 0)
-            ->whereIn('evento', [25, 49, 50]) // Eventos relacionados con descanso
-            /* ->orderBy('fechaevento', 'desc') */
+            ->whereIn('evento', [49, 50]) // Eventos relacionados con descanso
             ->orderBy('id', 'desc')
             ->first();
-        
+
         if ($ultimoEvento) {
+            $fechaEvento = Carbon::parse($ultimoEvento->fechaevento);
+            $haceSeisMeses = now()->subMonths(6);
+
+            if ($fechaEvento->lte($haceSeisMeses)) {
             return response()->json([
-                'nombre' => $persona->pnombre . ' ' . $persona->psnombre . ' ' . $persona->papellido . ' ' . $persona->sapellido,
-                'evento' => $ultimoEvento->anotacion,
-                'fecha' => date('d/m/Y H:i', strtotime($ultimoEvento->fechaevento))
+                'evento' => null,
+                'fecha' => null
+            ]);
+            }
+
+            return response()->json([
+            'nombre' => trim($persona->pnombre . ' ' . $persona->psnombre . ' ' . $persona->papellido . ' ' . $persona->sapellido),
+            'evento' => $ultimoEvento->anotacion,
+            'fecha' => $fechaEvento->format('d/m/Y H:i')
             ]);
         }
         
@@ -199,4 +217,5 @@ class ConductorController extends Controller
             'fecha' => null
         ]);
     }
+
 }

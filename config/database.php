@@ -118,6 +118,9 @@ return [
             'charset' => 'AL32UTF8',
             'prefix' => '',
             'prefix_schema' => '',
+            'options' => [
+                PDO::ATTR_AUTOCOMMIT => false, 
+            ]
         ],
 
          //CONEXION SQLSERVER GESTION PASAJES PRUEBAS
