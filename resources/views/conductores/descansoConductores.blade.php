@@ -22,8 +22,8 @@
                     <div class="card-body p-3">
                         <div class="d-flex align-items-center">
                             <div class="flex-shrink-0">
-                                <div class="bg-primary rounded-circle p-2" style="width: 40px; height: 40px;">
-                                    <i class="fas fa-user-clock text-white"></i>
+                                <div class="rounded-circle p-2" style="width: 40px; height: 40px;">
+                                    <i class="fas fa-user-clock"></i>
                                 </div>
                             </div>
                             <h6 class=" fw-bold">Último evento registrado</h6>
@@ -72,12 +72,11 @@
             <span class="error text-danger fw-bold" id="error-fecha"></span>
         </div>
 
-
-        <!-- <div class="row mb-4 mx-1">
+        <div class="row mb-4 mx-1">
             <label for="observacion" class="form-label">Observaciones</label>
-            <textarea class="form-control" id="observacion" name="observacion" rows="3" placeholder="Observaciones"></textarea>
+            <textarea class="form-control" id="observacion" name="observacion" rows="3" placeholder="Observaciones" required></textarea>
             <span class="error text-danger fw-bold" id="error-observacion"></span>
-        </div> -->
+        </div>
 
         <div id="opciones" style="display: none">
             <hr class="p-2">

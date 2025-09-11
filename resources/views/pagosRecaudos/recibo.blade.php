@@ -6,12 +6,12 @@
     <style>
         @page {
             size: 80mm auto;
-            margin: 3mm;
+            margin: 0 3mm 0 0;
         }
 
         body {
             font-family: 'DejaVu Sans', Arial, sans-serif;
-            font-size: 8px;
+            font-size: 6px;
             line-height: 1.2;
             margin: 0;
             padding: 0;
@@ -20,14 +20,14 @@
 
         .header {
             text-align: right;
-            font-size: 8px;
+            font-size: 6px;
             margin-bottom: 5px;
         }
 
         .titulo-convenio {
             text-align: center;
             font-weight: bold;
-            font-size: 10px;
+            font-size: 8px;
             margin: 8px 0;
         }
 
@@ -38,7 +38,7 @@
         .info-basica table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 8px;
+            font-size: 6px;
         }
 
         .info-basica td {
@@ -57,7 +57,7 @@
         .datos-persona table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 8px;
+            font-size: 6px;
         }
 
         .datos-persona td {
@@ -68,7 +68,7 @@
             width: 100%;
             border-collapse: collapse;
             margin: 10px 0;
-            font-size: 9px;
+            font-size: 7px;
         }
 
         .tabla-concepto th,
@@ -86,7 +86,7 @@
             text-align: right;
             font-weight: bold;
             margin: 8px 0;
-            font-size: 9px;
+            font-size: 7px;
         }
 
         /* Bloque de firmas */
@@ -104,11 +104,11 @@
         .firmas .indice,
         .firmas .firma {
             text-align: center;
-            font-size: 7px;
+            font-size: 5px;
         }
 
         .firmas .box {
-            height: 20mm; /* altura del recuadro */
+            height: 13mm; /* altura del recuadro */
             position: relative;
         }
 
@@ -134,7 +134,7 @@
         }
 
         .footer {
-            font-size: 7px;
+            font-size: 5px;
             margin-top: 5px;
         }
 
@@ -149,6 +149,11 @@
 
         .derecho {
             text-align: right;
+        }
+
+        .mensaje{
+            font-size: 4px;
+            text-align: justify;
         }
     </style>
 </head>
@@ -254,6 +259,14 @@
     </table>
 
     <br>
+
+    <div class="mensaje">
+        <p>
+            Con mi firma que aparece dentro del presente documento, de manera previa, expresa e inequívoca autorizo a COPETRAN, 
+            el tratamiento de mis datos personales conforme a la Política de Tratamiento de la Información que se encuentra publicada 
+            en la página web www.copetran.com.co
+        </p>
+    </div>
 
     <!-- Footer -->
     <div class="footer">

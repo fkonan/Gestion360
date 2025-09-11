@@ -107,18 +107,21 @@ class EventoConductorService
 
     private function novedadDescansoConductor($conductor,$eventoDesc,$request){
 
-        DB::beginTransaction();
+        /* DB::beginTransaction(); */
         try{
             $fecha = Carbon::parse($request->fecha)->format('Y/m/d H:i:s');
             $fechaNow = Carbon::now()->format('Y/m/d H:i:s');
 
             $persona = PerPersonas::where('identificacion', Auth::user()->persona->PerNumDoc)->first();
 
-            //En caso de que el evento sea regreso anticipado, se cambia el evento a regreso de descanso y se agrega una observacion
+            //Observacion del evento
+            $observacion = $request->observacion;
+
+            //En caso de que el evento sea regreso anticipado, se cambia el evento a regreso de descanso y se agrega una observacion especial
             if($request->evento == self::REGRESO_ANTICIPADO){
                 $request->evento = self::REGRESO_DE_DESCANSO;
                 $eventoDesc = ParametrosPasajes::where("ParNom", $request->evento)->value('ParDes');
-                $observacion = "REINTEGRO COP";
+                $observacion = "REINTEGRO COP : " . $request->observacion;
             }
 
             //PASO 1 - REGISTRAR EL EVENTO
@@ -185,7 +188,7 @@ class EventoConductorService
                 $bloqueo->save();
             }
 
-            DB::commit();
+            /* DB::commit(); */
 
             if($request->evento == self::REGRESO_DE_DESCANSO){
                 //Levantar bloqueo en FICS
@@ -194,7 +197,7 @@ class EventoConductorService
 
             return true;
         }catch(Exception $e){
-            DB::rollBack();
+            /* DB::rollBack(); */
             Log::error('Error al registrar la novedad de descanso: ' . $e->getMessage());
 
             // Parsear mensaje de Oracle

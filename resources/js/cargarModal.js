@@ -47,6 +47,17 @@ function cargarModal(url, titulo = "", formularioId = null, size = null, type = 
 
     $.get(url)
         .done((response) => {
+            if(response.error){
+                $modalContent.html(`
+                <div class="alert alert-danger m-3">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Error:</strong> ${response.message}
+                </div>
+                `);
+
+                mostrarToast(response.message, "danger");
+            }
+
             // Agregar contenido y guardar URL cargada
             $modalContent.html(response);
             $modalContent.data("loaded", url);

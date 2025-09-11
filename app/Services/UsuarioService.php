@@ -4,9 +4,13 @@ namespace App\Services;
 
 use App\Mail\CorreoCredenciales;
 use App\Models\GESTIONADMIN\RolApp;
+use App\Models\LOGTRANS\PerPersonas;
 use App\Models\User;
+use Exception;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
@@ -98,4 +102,26 @@ class UsuarioService
             ->where('p.identificacion', $documento)
             ->pluck('ep.tp_id');
     }    
+
+
+    public static function obtenerUserId(): int
+    {
+        try {
+            $user = Auth::user();
+            if (!$user || !$user->persona) {
+                throw new Exception('Usuario no autenticado o sin persona asociada');
+            }
+
+            $userId = PerPersonas::where('identificacion', $user->persona->PerNumDoc)->value('id');
+            
+            if (!$userId) {
+                throw new Exception('Usuario no encontrado en la tabla PerPersonas');
+            }
+
+            return $userId;
+        } catch (Exception $e) {
+            Log::error('Error al obtener userId: ' . $e->getMessage());
+            throw $e;
+        }
+    }
 }

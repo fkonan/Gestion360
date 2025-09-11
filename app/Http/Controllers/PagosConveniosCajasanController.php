@@ -2,21 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\LOGTRANS\ConAuxComprobantes;
-use App\Models\LOGTRANS\ConComprobantes;
 use App\Models\LOGTRANS\ConDetPagosRecaudos;
 use App\Models\LOGTRANS\ConPagosRecaudos;
 use App\Models\LOGTRANS\ConReversoCajasan;
 use App\Models\LOGTRANS\PerPersonas;
 use App\Models\LOGTRANS\TesCajaTurnoDoc;
 use App\Services\ApiAsopagos;
-use App\Services\EmpleadoService;
+use App\Services\ComprobanteService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -42,9 +41,7 @@ class PagosConveniosCajasanController extends Controller
 
     // Configuraciones de comprobantes
     private const TM_ID = 1132941243;
-    private const AS_ID = 1139194189;
-    private const ENL_ID = 1139194416;
-    private const TERCERO_ID = 10631;
+
 
     public function index(Request $request)
     {
@@ -53,7 +50,11 @@ class PagosConveniosCajasanController extends Controller
             
             if (!$cajaActiva || !isset($cajaActiva[0])) {
                 Log::error('Caja activa no encontrada en el request');
-                return redirect()->route('home')->with('error', 'No se encontró una caja activa');
+                return sweetAlert(
+                    'No existe caja activa',
+                    'error', 
+                    null, 
+                    'No es posible acceder al módulo sin que el usuario tenga una caja activa asociada.');
             }
            
             return view('pagosRecaudos.index', compact('cajaActiva'));
@@ -82,6 +83,9 @@ class PagosConveniosCajasanController extends Controller
             $respuesta = $this->consultarSaldoApi($apiAsopagos, $identificacion);
             if ($this->tieneErrorRespuesta($respuesta)) {
                 Log::error('Error con API asopagos.', $respuesta);
+                if($respuesta['error']){
+                    return toastModal($respuesta['error'], 'danger');
+                }
                 return toastModal('Error en la consulta, verifique la información proporcionada', 'danger');
             }
 
@@ -93,6 +97,11 @@ class PagosConveniosCajasanController extends Controller
 
             // Preparar y guardar datos
             $clienteData = $this->prepararDatosCliente($cliente);
+          /*   $clienteData = [
+                'identificacion' => $identificacion,
+                'nombre' => "Usuario Prueba Cajasan",
+            ]; */
+
             $cajaActiva = DB::connection('oracle')
                 ->table('TES_CAJATURNOS as T')
                 ->join('tes_cajas as CJ', 'T.CJ_ID', '=', 'CJ.ID')
@@ -107,7 +116,13 @@ class PagosConveniosCajasanController extends Controller
 
             //Generar UUID y guardar en cache (10 min)
             $uuid = Str::uuid()->toString();
-            Cache::put("pago:{$uuid}", compact('clienteData', 'respuesta', 'cajaActiva'), now()->addMinutes(10));
+            $datosParaCifrar = compact('clienteData', 'respuesta', 'cajaActiva');
+
+            // Cifrar los datos sensibles
+            $datosCifrados = Crypt::encrypt($datosParaCifrar);
+
+            // Guardar datos cifrados en caché
+            Cache::put("pago:{$uuid}", $datosCifrados, now()->addMinutes(10));
 
             return response()->json([
                 'success' => true,
@@ -123,11 +138,17 @@ class PagosConveniosCajasanController extends Controller
 
     public function validarInformacion(string $uuid)
     {
-        $data = Cache::get("pago:{$uuid}");
+        $datosCifrados = Cache::get("pago:{$uuid}");
 
-        if (!$data) {
-            return redirect()->route('home')->with('error', 'Sesión expirada. Vuelva a consultar el cliente.');
+        if (!$datosCifrados) {
+            return response()->json([
+                'error' => true,
+                'message' => "Sesión expirada, consulte nuevamente"
+            ]);;
         }
+
+        // Descifrar los datos
+        $data = Crypt::decrypt($datosCifrados);
 
         $clienteData = $data['clienteData'];
         $respuesta   = $data['respuesta'];
@@ -138,57 +159,124 @@ class PagosConveniosCajasanController extends Controller
     public function pagar(Request $request, ApiAsopagos $apiAsopagos)
     {
         $uuid = $request->uuid;
-        $data = Cache::get("pago:{$uuid}");
+        $datosCifrados = Cache::get("pago:{$uuid}");
 
-        if (!$data) {
-            return $this->sweetAlertResponse('Sesión expirada, vuelva a consultar el cliente.', 'error', route('pagosConvenios.index'));
+        if (!$datosCifrados) {
+            return sweetAlert('Sesión expirada, consulte nuevamente', 'error');
         }
 
+        // Descifrar datos
+        $data        = Crypt::decrypt($datosCifrados);
         $clienteData = $data['clienteData'];
         $respuesta   = $data['respuesta'];
         $cajaActiva  = $data['cajaActiva'];
 
         try {
-            DB::transaction(function () use ($apiAsopagos, $clienteData, $respuesta, $cajaActiva, &$comprobante, &$idPagoDetalle) {
-                // Validar saldo
-                $saldo = $respuesta['additionalData']['saldo'] ?? 0;
-                if ($saldo <= 0) {
-                    throw new Exception('Saldo insuficiente para procesar el pago');
+            //1. Validar saldo
+            $saldo = $respuesta['additionalData']['saldo'] ?? 0;
+            if ($saldo <= 0) {
+                throw new Exception('Saldo insuficiente para procesar el pago');
+            }
+
+            //2. Crear cargue y detalle
+            $idCargue = $this->obtenerIdCarguePagoRecaudos($cajaActiva);
+            $idPagoDetalle = $this->crearDetallePagoRecaudos($idCargue, $clienteData, $respuesta, $cajaActiva);
+            $detallePago = ConDetPagosRecaudos::findOrFail($idPagoDetalle);
+
+
+            //3. Ejecutar pago en la API
+            $pagoResponse = $this->procesarPago($apiAsopagos, $clienteData, $respuesta, $idPagoDetalle);
+             
+            if (!$this->esPagoExitoso($pagoResponse)) { 
+                $this->manejarPagoFallido($pagoResponse, $detallePago); 
+                Log::error('Error al realizar el pago', [
+                    'identificacion' => $clienteData['identificacion'],
+                    'resp_api'       => $pagoResponse,
+                ]);
+
+                //Fallo el reverso -> accion manual requerida
+                if($pagoResponse['reverso']['responseCode'] == false){
+                    return sweetAlert(
+                        'Ocurrio un error en el pago', 
+                        'error',
+                        null, 
+                        'Por favor comuniquese con mesa de ayuda y guarde el siguiente identificador: '. $pagoResponse['reverso']['authorizationRspCode']);
                 }
 
-                // Crear registros de pago
-                $idCargue = $this->obtenerIdCarguePagoRecaudos($cajaActiva);
-                $idPagoDetalle = $this->crearDetallePagoRecaudos($idCargue, $clienteData, $respuesta, $cajaActiva);
+                return sweetAlert(
+                    'No fue posible procesar el pago.', 
+                    'error',
+                    null, 
+                    'El pago fue rechazado por el proveedor. Por favor, verifique la información e intente nuevamente.');
+            }
 
-                // Procesar pago en API
-                $pagoResponse = $this->procesarPago($apiAsopagos, $clienteData, $respuesta, $idPagoDetalle);
-                $detallePago = ConDetPagosRecaudos::findOrFail($idPagoDetalle);
 
-                // Manejar respuesta del pago
-                if (!$this->esPagoExitoso($pagoResponse)) {
-                    $this->manejarPagoFallido($pagoResponse, $detallePago);
-                    Log::error('Error al realizar el pago cajasan, pago no exitoso' . $pagoResponse);
-                    return sweetAlert('Error al realizar el pago, verifique e intente nuevamente','error');
-                }
+            //4. Crear comprobantes y caja turno documento
+            try {
+                $resultado = DB::connection('oracle')->transaction(function () use ($pagoResponse, $detallePago, $clienteData, $respuesta, $cajaActiva) {
+                   
+                    // Pago exitoso: actualizar estado y crear comprobantes
+                    $codigo = $pagoResponse['authorizationRspCode'];
+                    $detallePago->update([
+                        'estado'      => self::ESTADO_PAGADO,
+                        'nro_interno' => $codigo
+                    ]);
+                    
+                    $saldo = $respuesta['additionalData']['saldo'] ?? 0;
+                    $comprobanteService = new ComprobanteService();
+                    $comprobante = $comprobanteService->crearComprobante($saldo, $cajaActiva);
+                    $comprobanteService->crearAuxComprobante($comprobante->id, 'D', $saldo, $clienteData, $cajaActiva);
+                    $comprobanteService->crearAuxComprobante($comprobante->id, 'C', $saldo, $clienteData, $cajaActiva);
+                    $this->crearCajaTurnoDoc($comprobante->id, $saldo, $cajaActiva);
 
-                // Actualizar estado a pagado
-                $detallePago->update(['estado' => self::ESTADO_PAGADO]);
+                     return [
+                        'error'         => false,
+                        'comprobante'   => $comprobante,
+                        'idPagoDetalle' => $detallePago->id,
+                        'saldo'         => $saldo
+                    ];
+                });
+            } catch (Exception $e) {
+                //Actualizar estado
+                $codigo = $pagoResponse['authorizationRspCode'];
+                $detallePago->update([
+                    'estado'      => self::ESTADO_ANULADO,
+                    'nro_interno' => $codigo
+                ]);
 
-                // Crear comprobante y auxiliares
-                $comprobante = $this->crearComprobante($saldo, $cajaActiva);
-                $this->crearAuxComprobante($comprobante->id, 'D', $saldo, $clienteData, $cajaActiva);
-                $this->crearAuxComprobante($comprobante->id, 'C', $saldo, $clienteData, $cajaActiva);
-                $this->crearCajaTurnoDoc($comprobante->id, $saldo, $cajaActiva);
-            });
+                //Lanzar reverso en la API
+                return $apiAsopagos->reversoRetiro(
+                    "CC",
+                    $clienteData['identificacion'],
+                    $respuesta['additionalData']['saldo'],
+                    11,
+                    11001,
+                    $idPagoDetalle,
+                    $idPagoDetalle
+                );
 
-            //Limpiar cache del flujo
-            Cache::forget("pago:{$uuid}");
+                Log::error('Error al realizar el pago, error interno', [
+                    'identificacion' => $clienteData['identificacion'],
+                    'error'          => $e->getMessage()
+                ]);
 
-            return view('pagosRecaudos.confirmacionPago', compact('cajaActiva', 'comprobante', 'idPagoDetalle'));
+                return sweetAlert('No fue posible completar el pago en este momento.', 'error', null, 'Ocurrió un error interno. Por favor, intente nuevamente más tarde.');
+            }
+
+
+            // Confirmación
+            return view('pagosRecaudos.confirmacionPago', [
+                'cajaActiva'    => $cajaActiva,
+                'comprobante'   => $resultado['comprobante'],
+                'idPagoDetalle' => $resultado['idPagoDetalle']
+            ]);
 
         } catch (Exception $e) {
             Log::error('Error al realizar el pago cajasan: ' . $e->getMessage());
-            return sweetAlert('Error al realizar el pago, verifique e intente nuevamente','error');
+            return sweetAlert('Error al realizar el pago', 'error');
+        } finally {
+            // Limpiar cache del flujo
+            Cache::forget("pago:{$uuid}");
         }
     }
 
@@ -218,7 +306,7 @@ class PagosConveniosCajasanController extends Controller
                 return [
                 'responseCode' => true,
                 'additionalData' => [
-                    'saldo' => 10000
+                    'saldo' => 500000
                 ],
             ];
             }
@@ -260,21 +348,27 @@ class PagosConveniosCajasanController extends Controller
         try {
             if(config('apiAsopagos.test_mode')){
                 // success 
-                return ['responseCode' => true];
+               /*   return [
+                    'transactionId'        => random_int(1000000000000000, 9999999999999999),
+                    'transmissionDateTime' => now()->format('Y-m-d H:i:s'),
+                    'responseCode'         => true,
+                    'authorizationRspCode' => 555,
+                    'errorID'              => 'E1',
+                ];  */
 
                 // Caso de prueba con error y reverso (satisfactorio/fallido)
-                /* return [
+                return [
                     'error' => 'Error al procesar el pago',
                     'responseCode' => false, 
-                    'status' => 'fallo_timeout_con_reverso', 
+                    'status' => 'fallo_timeout_sin_reverso', 
                     'reverso' => [
                         'transactionId' => $idPagoDetalle, 
                         'transmissionDataTime' => now(), 
                         'responseCode' => true, 
-                        'authorizationRspCode' => 636771870,
+                        'authorizationRspCode' => 636771889,
                         'errorID' => '99'
                     ]
-                ];  */
+                ]; 
             }
            
             // Descomenta para usar la API real: 
@@ -309,12 +403,15 @@ class PagosConveniosCajasanController extends Controller
     {
         try {
             // Procesar reverso si aplica
-            /* if ($this->requiereReverso($pagoResponse)) {
+            if ($this->requiereReverso($pagoResponse)) {
                 $this->crearReverso($pagoResponse['reverso']);
             }
- */
+
             // Cambiar estado a anulado
-            $detallePago->update(['estado' => self::ESTADO_ANULADO]);
+            $detallePago->update([
+                'estado'      => self::ESTADO_ANULADO,
+                'nro_interno' => $pagoResponse['reverso']['authorizationRspCode']
+            ]);
         } catch (Exception $e) {
             Log::error('Error al manejar pago fallido: ' . $e->getMessage());
         }
@@ -389,130 +486,6 @@ class PagosConveniosCajasanController extends Controller
         }
     }
 
-    /**
-     * Crear comprobante contable
-     */
-    private function crearComprobante(float $valor, object $cajaActiva): ConComprobantes
-    {
-        try {
-            $nextId = ConComprobantes::max('id') + 1;
-            $comprobanteId = $this->obtenerSiguienteId('SEC_DOC_COMPROBANTE');
-            $userId = $this->obtenerUserId();
-
-            $tc_codigo = $this->obtenerTcCodigo();
-
-            $comprobante = new ConComprobantes();
-            $comprobante->id = $nextId;
-            $comprobante->descripcion = 'MOVIMIENTOS GIROS';
-            $comprobante->comprobante = $comprobanteId;
-            $comprobante->estado = 0;
-            $comprobante->pe_id_ag = $cajaActiva->idsucursal;
-            $comprobante->en_id = $cajaActiva->en_id;
-            $comprobante->cp_id = null;
-            $comprobante->fecautoriza = null;
-            $comprobante->fecaplica = now();
-            $comprobante->usrautoriza = null;
-            $comprobante->valtotcredito = $valor;
-            $comprobante->valtotdebito = $valor;
-            $comprobante->fecmodifica = now();
-            $comprobante->usrmodifica = $userId;
-            $comprobante->rolmodifica = self::ROL_MODIFICA;
-            $comprobante->empmodifica = $cajaActiva->idsucursal;
-            $comprobante->estborrado = 0;
-            $comprobante->docnro = $comprobanteId;
-            $comprobante->docrep = 1;
-            $comprobante->docver = 1;
-            $comprobante->docestado = 'TEMPORAL';
-            $comprobante->tc_codigo = $tc_codigo;
-            $comprobante->ct_id = $cajaActiva->id;
-            $comprobante->as_id = self::AS_ID;
-            $comprobante->agrupado = 'TA';
-            $comprobante->generado = null;
-            $comprobante->automatico = 'T';
-            $comprobante->constipoagencia = 87838;
-            $comprobante->nrooriginal = null;
-            $comprobante->tipoperacion = 60;
-            $comprobante->indicador = null;
-            $comprobante->consap = 0;
-            $comprobante->reversado = null;
-            $comprobante->feccreacion = now();
-            $comprobante->usrcreacion = $userId;
-            $comprobante->empcreacion = $cajaActiva->idsucursal;
-            $comprobante->feccontasap = null;
-            $comprobante->cp_idanula = null;
-            $comprobante->gr_ledger = null;
-            $comprobante->conniif = null;
-            $comprobante->save();
-
-            return $comprobante;
-        } catch (Exception $e) {
-            Log::error('Error al crear comprobante: ' . $e->getMessage());
-            throw $e;
-        }
-    }
-
-    /**
-     * Crear comprobante auxiliar
-     */
-    private function crearAuxComprobante(int $idComprobante, string $tipo, float $valor, array $clienteData, object $cajaActiva): void
-    {
-        try {
-            if (!in_array($tipo, ['D', 'C'])) {
-                throw new Exception('Tipo de comprobante auxiliar inválido: ' . $tipo);
-            }
-
-            $nextId = ConAuxComprobantes::max('id') + 1;
-            $numeroCuenta = $this->obtenerNumeroCuenta($tipo);
-            $user = Auth::user();
-            $documento = $user->persona->PerNumDoc;
-            $centroCosto = EmpleadoService::codigoCentroCosto($documento);
-            $userId = $this->obtenerUserId();
-
-            $fechaFormatoEspecial = now()->format('Y-n');
-            $descripcion = "CONSULTA CAJASAN " . $fechaFormatoEspecial;
-            $fechaNumDoc = now()->format('d.m.Y');
-
-            $auxComprobante = new ConAuxComprobantes();
-            $auxComprobante->id = $nextId;
-            $auxComprobante->cp_id = $idComprobante;
-            $auxComprobante->ct_codigo = $numeroCuenta;
-            $auxComprobante->libro = null;
-            $auxComprobante->referencia1 = $clienteData['identificacion'];
-            $auxComprobante->referencia2 = null;
-            $auxComprobante->referencia3 = null;
-            $auxComprobante->basaplicada = null;
-            $auxComprobante->descripcion = $descripcion;
-            $auxComprobante->digdocumento = null;
-            $auxComprobante->estado = 'A';
-            $auxComprobante->fecaplica = now();
-            $auxComprobante->fecmodifica = now();
-            $auxComprobante->usrmodifica = $userId;
-            $auxComprobante->rolmodifica = self::ROL_MODIFICA;
-            $auxComprobante->empmodifica = $cajaActiva->idsucursal;
-            $auxComprobante->estborrado = 0;
-            $auxComprobante->fecelabora = null;
-            $auxComprobante->fecvence = null;
-            $auxComprobante->placa = null;
-            $auxComprobante->valcredito = $tipo == 'C' ? $valor : 0;
-            $auxComprobante->valdebito = $tipo == 'D' ? $valor : 0;
-            $auxComprobante->docnro = null;
-            $auxComprobante->docver = null;
-            $auxComprobante->docestado = null;
-            $auxComprobante->cc_codigo = $centroCosto;
-            $auxComprobante->grupo = 1;
-            $auxComprobante->numdocumento = $fechaNumDoc;
-            $auxComprobante->tercero_id = self::TERCERO_ID;
-            $auxComprobante->fecdocumento = null;
-            $auxComprobante->tm_id = self::TM_ID;
-            $auxComprobante->bloque = 1;
-            $auxComprobante->id_detalleimptos = null;
-            $auxComprobante->docrep = null;
-            $auxComprobante->save();
-        } catch (Exception $e) {
-            Log::error('Error al crear comprobante auxiliar: ' . $e->getMessage());
-            throw $e;
-        }
-    }
 
     /**
      * Crear registro de caja turno documento
@@ -621,8 +594,8 @@ class PagosConveniosCajasanController extends Controller
             $detalle->estado = self::ESTADO_CREADO;
             $detalle->codciudad = $sucursal->codigo;
             $detalle->ciudad = self::CIUDAD_DEFAULT;
-            $detalle->fecha_desde = $fechaActual;
-            $detalle->fecha_hasta = null;
+            $detalle->fecha_desde = now()->startOfDay();
+            $detalle->fecha_hasta = now()->addDay()->startOfDay();
             $detalle->nro_interno = 0;
             $detalle->codagencia = $sucursal->codigo;
             $detalle->agencia = $sucursal->codigo . " - " . $sucursal->nomsucursal;
@@ -663,56 +636,6 @@ class PagosConveniosCajasanController extends Controller
         } catch (Exception $e) {
             Log::error('Error al obtener userId: ' . $e->getMessage());
             throw $e;
-        }
-    }
-
-    /**
-     * Obtener número de cuenta según tipo (Débito/Crédito)
-     */
-    private function obtenerNumeroCuenta(string $tipo): string
-    {
-        try {
-            if (!in_array($tipo, ['D', 'C'])) {
-                throw new Exception('Tipo de cuenta inválido: ' . $tipo);
-            }
-
-            $numeroCuenta = DB::connection('oracle')
-                ->table('CON_ENLACEDETALLES as D')
-                ->where('D.ENL_ID', self::ENL_ID)
-                ->where('D.ESTBORRADO', 0)
-                ->where('D.AFECTACION', $tipo) 
-                ->orderBy('D.GRUPO')
-                ->orderByDesc('D.AFECTACION')
-                ->orderBy('D.CU_CUENTA')
-                ->value('CU_CUENTA'); 
-
-            if (!$numeroCuenta) {
-                throw new Exception('No se encontró número de cuenta para tipo: ' . $tipo);
-            }
-
-            return $numeroCuenta;
-        } catch (Exception $e) {
-            Log::error('Error al obtener número de cuenta: ' . $e->getMessage());
-            throw $e;
-        }
-    }
-
-    /**
-     * Obtener TC_CODIGO para el comprobante
-     */
-    private function obtenerTcCodigo(): ?string
-    {
-        try {
-            return DB::connection('oracle')
-                ->table('CON_ASIENTOS as A')
-                ->join('CON_ASIENTOMOVIMIENTOS as AM', 'A.ID', '=', 'AM.AS_ID')
-                ->where('AM.TM_ID', self::TM_ID)
-                ->where('A.ESTBORRADO', 0)
-                ->where('AM.ESTBORRADO', 0)
-                ->value('TC_CODIGO'); 
-        } catch (Exception $e) {
-            Log::error('Error al obtener TC_CODIGO: ' . $e->getMessage());
-            return null;
         }
     }
 
@@ -764,7 +687,7 @@ class PagosConveniosCajasanController extends Controller
                 'hora' => $horaPago,
                 'agencia' => $agencia,
                 'ciudad' => strtoupper($detallePago->ciudad),
-                'codigo' => '24',
+                'codigo' => $detallePago->nro_interno,
                 'principal' => $detallePago->clienteprincipal,
                 'identificacion_principal' => $detallePago->iden_clienteprincipal,
                 'pagado_a' => $detallePago->clienteprincipal,
@@ -778,7 +701,7 @@ class PagosConveniosCajasanController extends Controller
             ];
 
             $pdf = PDF::loadView('pagosRecaudos.recibo', $data)
-                ->setPaper([0, 0, 154.41, 226.93], 'portrait') 
+                ->setPaper([0, 0, 80, 210], 'portrait') 
                 ->setOptions([
                     'dpi' => 203,
                     'defaultFont' => 'DejaVu Sans',

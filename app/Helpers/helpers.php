@@ -78,7 +78,7 @@ if (!function_exists('sweetAlert')) {
      * @param string $type Tipo de alerta: success, error, warning, info
      * @param string|null $redirectUrl URL de redirección después de aceptar (opcional)
      */
-    function sweetAlert($message, $type = 'success', $redirectUrl = null) {
+    function sweetAlert($message, $type = 'success', $redirectUrl = null, $description = null) {
         $alertData = [
             'type' => $type,
             'title' => $message,
@@ -86,6 +86,10 @@ if (!function_exists('sweetAlert')) {
 
         if ($redirectUrl) {
             $alertData['redirect_url'] = $redirectUrl;
+        }
+
+        if ($description){
+            $alertData['description'] = $description;
         }
 
         return redirect()->back()->with('alert', $alertData);

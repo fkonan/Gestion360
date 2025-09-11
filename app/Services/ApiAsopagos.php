@@ -20,7 +20,7 @@ class ApiAsopagos
         try{
             $response = Http::asForm()
                 ->retry(3, 300)
-                ->timeout(30)
+                ->timeout(28)
                 ->post(config('apiAsopagos.token_url'), [
                     'username'      => config('apiAsopagos.credentials.auth_username'),
                     'password'      => config('apiAsopagos.credentials.auth_password'),
@@ -85,7 +85,7 @@ class ApiAsopagos
         try {
             $response = Http::withToken($token)
                 ->withHeaders(['Content-Type' => 'application/json'])
-                ->timeout(30)
+                ->timeout(28)
                 ->post(config('apiAsopagos.base_url'), $payload);
 
             $data = $response->json();
@@ -110,7 +110,7 @@ class ApiAsopagos
                     return array_merge(['sequenceId' => $payload['sequenceId']], $data);
                 }
                 
-                //respuseta de ASOPAGOS es FALSE 
+                //respuesta de ASOPAGOS es FALSE 
                 Log::error('Error al ejecutar transacción con Asopagos', [
                     'status'   => $response->status(),
                     'payload' => collect($payload)->except(['user', 'password'])->all(),
@@ -146,6 +146,7 @@ class ApiAsopagos
     {
         return $this->ejecutarTransaccion([
             'transactionType'    => '10',
+            'currencyCode'       => null,
             'state'              => $departamento,
             'city'               => $ciudad,
             'identificationType' => $tipoDoc,
@@ -191,7 +192,7 @@ class ApiAsopagos
                 $resultado['sequenceId']);
 
             // Verifica si el reverso también falló
-            if (($reverso['reverso']['responseCode'])  == false || isset($reverso['error'])) {
+            if (empty($reverso) || (isset($reverso['responseCode']) && $reverso['responseCode'] == false) || isset($reverso['error'])) {
                 Log::critical('⚠️ Fallo reverso tras timeout en retiro. Acción manual requerida.', [
                     'retiro_error'   => $resultado['error'] ?? $resultado['errorID'] ?? 'Error desconocido',
                     'reverso_error'  => $reverso['error'] ?? $reverso['errorID'],
