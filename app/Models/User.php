@@ -27,6 +27,8 @@ class User extends Authenticatable
     protected $primaryKey = "IdUsuario";
     public $timestamps = false;
 
+    protected $with = ['persona'];
+
     protected $fillable = [
         'IdUsuario','idPersona','Password',
         'UsuFecReg','UsuHorReg','UsuReg',

@@ -1,10 +1,10 @@
 <!-- Swal alert componente -->
 @if(session('alert'))
-<div id="alert-data" 
-    data-type="{{ session('alert.type') }}" 
-    data-title="{{ session('alert.title') }}" 
+<div id="alert-data"
+    data-type="{{ session('alert.type') }}"
+    data-title="{{ session('alert.title') }}"
     data-description="{{ session('alert.description', '') }}"
-    data-redirect="{{ session('alert.redirect_url', '') }}" 
+    data-redirect="{{ session('alert.redirect_url', '') }}"
     style="display: none;"></div>
 
 <script>
@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", function() {
     Swal.fire({
        icon: alertData.dataset.type,
        title: alertData.dataset.title,
-       text: description ? description : undefined,
+       html: description ? description : undefined,
        confirmButtonColor: "#3366CC",
        confirmButtonText: "Aceptar",
        customClass: {

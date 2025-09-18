@@ -35,11 +35,11 @@ class LoginValidatorService
    public function validarLogtrans(string $identificacion, string $password)
    {
       $persona = EmpleadoService::esEmpleadoActivo($identificacion, true);
-      
+
       if (!$persona) {
          return ['message' => 'Solo los empleados activos pueden iniciar sesión.', 'type' => 'danger'];
       }
-      
+
       if ($this->checkSHA1Password($password, $persona->clave)) {
          //crear el registro en autogestion trayendo los campos de logtrans
          $rh = $persona->rh == '0' ? '+' : '-';
@@ -67,10 +67,10 @@ class LoginValidatorService
             $personas->PerTipoDoc = $persona->tipdocumento;
             $personas->PerNumDoc = $persona->identificacion;
             $personas->PerApellidos = $persona->papellido . ' ' . $persona->sapellido;
-            $personas->PerNombres = $persona->snombre;
+            $personas->PerNombres = $persona->pnombre . ' ' . $persona->snombre;
             $personas->PerGenero = $persona->sexo == 'M' ? 'MASCULINO' : 'FEMENINO';
             $personas->PerFecNac = $persona->fecnacimiento;
-            $personas->PerLugNac = $persona->mu_nacimiento;
+            $personas->PerLugNac = $persona->codigo;
             $personas->PerFecExp = now()->format('Y-m-d');
             $personas->PerLugExp = '0';
             $personas->PerGruRh = $tipo_sangre;
@@ -103,13 +103,8 @@ class LoginValidatorService
             $user->Verificado = "TRUE";
             $user->save();
 
-            // Asignar roles de logtrans en autogestion
-            EmpleadoService::asignarRolesLogtrans($identificacion, $user);
-
             // Asignar rol al usuario appmovil
             UsuarioService::crearRolApp($user);
-
-            dd($user->roles);
 
             DB::commit();
             return $user;
@@ -121,6 +116,7 @@ class LoginValidatorService
          }
          // return redirect()->intended('/dashboard');
       }
+
       throw new Exception('Identificación o contraseña incorrectos');
    }
 

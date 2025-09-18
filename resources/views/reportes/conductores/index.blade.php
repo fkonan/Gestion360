@@ -66,6 +66,16 @@
                     icono="fas fa-hourglass-half"
                     :onclick="'cargarModal(`' . route('reportes.formulario', ['id' => 6]) . '`, `Documentos conductores carga por vencer`, ``, `modal-lg`)'"
                 />
+
+                 <x-reporteItem
+                    consecutivo="4"
+                    titulo="Novedades preoperacionales COP"
+                    area="Unidad pasajes"
+                    descripcion="Reporte de conductores con bloqueos preoperacionales levantados por el COP"
+                    formato="fas fa-file-excel fa-2x"
+                    icono="fas fa-hourglass-half"
+                    onclick="cargarModal(`{{ route('conductor.preoperacional.reporte') }}`, 'Reporte preoperacionales reportados COP','#firmaPreOpeForm','modal-md')" 
+                />
             </tbody>
         </table>
     </div>

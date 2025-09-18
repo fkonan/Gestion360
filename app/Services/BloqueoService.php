@@ -15,6 +15,9 @@ class BloqueoService
     public const ID_BLOQUEO_LOGTRANS_INCAPACIDAD = 45;
     public const ID_BLOQUEO_LOGTRANS_SARLAFT = 77;
 
+    // Bloqueos de FICS
+    public const ID_BLOQUEO_FICS_PREOPERACIONAL = 33;
+
     //Cargos que reciben bloqueos
     public const CARGOS_BLOQUEO = [
         206, // CONDUCTOR CARGA

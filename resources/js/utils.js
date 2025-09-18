@@ -76,7 +76,7 @@ export function abrirArchivo(url) {
     `;
 
     let content = '';
-    if (url.match(/\.(jpeg|jpg|png|gif)$/i)) {
+    if (url.match(/\.(jpeg|jpg|png|gif)$/i) || url.startsWith("data:image")) {
         //Si es una imagen
         content = `<img src="${url}" style="max-width: 80%; max-height: 80%; border: none;" alt="Archivo">`;
     } else {

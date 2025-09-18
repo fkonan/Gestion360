@@ -15,10 +15,12 @@ class EmpleadoService
       $query = DB::connection('oracle')
          ->table('per_empresapersonas as ep')
          ->join('per_personas as p', 'ep.pe_id_pe', '=', 'p.id')
+         ->join('gen_municipios as m', 'm.id', '=', 'p.MU_NACIMIENTO')
          ->where('ep.activo', 1)
          ->where('ep.estborrado', 0)
          ->where('ep.tp_id', 1)
          ->where('p.identificacion', $identificacion);
+
 
       if ($retornarPersona) {
          return $query->first() ?? null; // Devuelve el primer registro encontrado
@@ -106,7 +108,12 @@ class EmpleadoService
       $rolesParaAsignar = Role::whereIn('idLogtrans', $rolesLogtrans)->get();
 
       if ($rolesParaAsignar->isNotEmpty()) {
-         $user->assignRole($rolesParaAsignar); 
+         //Inilicializar los roles relacionados a logtrans
+         $user->roles()
+             ->whereNotNull('idLogtrans')
+             ->detach();
+
+         $user->assignRole($rolesParaAsignar);
       }
    }
 }

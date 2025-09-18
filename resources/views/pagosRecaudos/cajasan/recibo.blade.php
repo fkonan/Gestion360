@@ -134,7 +134,7 @@
         }
 
         .footer {
-            font-size: 5px;
+            font-size: 4.5px;
             margin-top: 5px;
         }
 
@@ -173,20 +173,20 @@
     <div class="info-basica">
         <table>
             <tr>
-                <td class="label">Fecha:</td>
-                <td>{{ $fecha }}</td>
-                <td class="label">Hora:</td>
-                <td>{{ $hora }}</td>
+                <td>Fecha:</td>
+                <td class="label">{{ $fecha }}</td>
+                <td>Hora:</td>
+                <td class="label">{{ $hora }}</td>
             </tr>
             <tr>
-                <td class="label">Agencia:</td>
-                <td>{{ $agencia }}</td>
-                <td class="label">Ciudad:</td>
-                <td>{{ $ciudad }}</td>
+                <td>Agencia:</td>
+                <td class="label">{{ $agencia }}</td>
+                <td>Ciudad:</td>
+                <td class="label">{{ $ciudad }}</td>
             </tr>
             <tr>
-                <td class="label">Código:</td>
-                <td colspan="3">{{ $codigo }}</td>
+                <td>Código:</td>
+                <td class="label" colspan="3">{{ $codigo }}</td>
             </tr>
         </table>
     </div>
@@ -195,12 +195,12 @@
     <div class="datos-persona">
         <table>
             <tr>
-                <td class="label" style="width: 25%;">Principal:</td>
-                <td>{{ $principal }}</td>
+                <td style="width: 25%;">Principal:</td>
+                <td class="label">{{ $principal }}</td>
             </tr>
             <tr>
-                <td class="label">Identificación:</td>
-                <td>{{ $identificacion_principal }}</td>
+                <td>Identificación:</td>
+                <td class="label">{{ $identificacion_principal }}</td>
             </tr>
         </table>
     </div>
@@ -209,12 +209,16 @@
     <div class="datos-persona">
         <table>
             <tr>
-                <td class="label" style="width: 25%;">PAGADO A:</td>
-                <td>{{ $pagado_a }}</td>
+                <td style="width: 25%;">PAGADO A:</td>
+                <td class="label">{{ $pagado_a }}</td>
             </tr>
+        </table>
+        <table>
             <tr>
-                <td class="label">Identificación:</td>
-                <td>{{ $identificacion_pagado }}</td>
+                <td>Identificación:</td>
+                <td class="label">{{ $identificacion_pagado }}</td>
+                <td>Teléfono:</td>
+                <td class="label">{{ $telefono }}</td>
             </tr>
         </table>
     </div>
@@ -230,7 +234,7 @@
         <tbody>
             <tr>
                 <td>***{{ $concepto }}***</td>
-                <td>{{ $valor }}</td>
+                <td class="label">{{ $valor }}</td>
             </tr>
         </tbody>
     </table>
@@ -272,8 +276,8 @@
     <div class="footer">
         <table>
             <tr>
-                <td>Impresión: {{ $fecha_impresion }} {{ $hora_impresion }}</td>
-                <td class="derecho">Usuario: {{ $usuario_impresion }}</td>
+                <td>Impresión: <b>{{ $fecha_impresion }} {{ $hora_impresion }}</b></td>
+                <td class="derecho">Usuario: <b>{{ $usuario_impresion }}</b></td>
             </tr>
         </table>
     </div>

@@ -4,7 +4,7 @@ namespace App\Models\LOGTRANS;
 
 use Illuminate\Database\Eloquent\Model;
 
-class ConDetPagosRecaudos extends Model
+class ConDetCarguePagRec extends Model
 {
     protected $connection = "oracle";
     protected $table = "CON_DETCARGUEPAGOSYRECAUDOS";
