@@ -12,6 +12,6 @@
     color: white;
     font-size: 1.2rem;
 ">
-    <div class="spinner-border text-light" role="status" style="width: 4rem; height: 4rem;"></div>
-    <span class="mt-3">Cargando...</span>
+  <div class="spinner-border text-light" role="status" style="width: 4rem; height: 4rem;"></div>
+  <span class="mt-3">Cargando...</span>
 </div>

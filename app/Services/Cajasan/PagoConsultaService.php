@@ -49,29 +49,29 @@ class PagoConsultaService
       // 4. Tipo de indentificacion
       switch ($cliente->tipdocumento) {
         case 1:
-            $sigla = 'CC'; // Cédula de Ciudadanía
-            break;
+          $sigla = 'CC'; // Cédula de Ciudadanía
+          break;
         case 2:
-            $sigla = 'TI'; // Tarjeta de Identidad
-            break;
+          $sigla = 'TI'; // Tarjeta de Identidad
+          break;
         case 3:
-            $sigla = 'NT'; // NIT
-            break;
+          $sigla = 'NT'; // NIT
+          break;
         case 5:
-            $sigla = 'CE'; // Cédula de Extranjería
-            break;
+          $sigla = 'CE'; // Cédula de Extranjería
+          break;
         case 6:
-            $sigla = 'PA'; // Pasaporte
-            break;
+          $sigla = 'PA'; // Pasaporte
+          break;
         case 43:
-            $sigla = 'RC'; // Registro
-            break;
+          $sigla = 'RC'; // Registro
+          break;
         case 50:
-            $sigla = 'PE'; // Permiso especial permanencia
-            break;
+          $sigla = 'PE'; // Permiso especial permanencia
+          break;
         default:
-            $sigla = 'ND'; // No Definido
-            break;
+          $sigla = 'ND'; // No Definido
+          break;
       }
 
       if (config('apiAsopagos.test_mode')) {

@@ -9,24 +9,26 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 
 class PoliticasController extends Controller
-{   
-    //Politicas IDs
-    public const ID_POLITICA_EQUIPAJE = 1;
-    public const ID_POLITICA_CAMARAS  = 2;
-    public const ID_POLITICA_MENORES  = 3;
-    public const ID_POLITICA_MASCOTAS = 5;
+{
+  //Politicas IDs
+  public const ID_POLITICA_EQUIPAJE = 1;
+  public const ID_POLITICA_CAMARAS  = 2;
+  public const ID_POLITICA_MENORES  = 3;
+  public const ID_POLITICA_MASCOTAS = 5;
 
-    public function index(){
-        return view("politicas.index");
-    }
+  public function index()
+  {
+    return view("politicas.index");
+  }
 
-    public function politicasFirmadas(Request $request){
+  public function politicasFirmadas(Request $request)
+  {
 
-        $identificacion = $request->identificacion;
+    $identificacion = $request->identificacion;
 
-        //Obtener los ultimos registros de firma para cada politica
-        $firmas = DB::connection('mysql-gestion-pasajes')
-            ->select("
+    //Obtener los ultimos registros de firma para cada politica
+    $firmas = DB::connection('mysql-gestion-pasajes')
+      ->select("
                 SELECT f.*, cp.politica
                 FROM _FirConductores f
                 INNER JOIN (
@@ -41,44 +43,44 @@ class PoliticasController extends Controller
                 WHERE f.DocCon = ?
             ", [$identificacion, $identificacion]);
 
-        if(empty($firmas)){
-            return toastModal("No hay registros de firmas asociados al documento ingresado", "warning");
-        }
-
-        return response()->json([
-            'success' => true,
-            'html' => view('politicas.firmados', [
-                'firmas' => $firmas,
-            ])->render(),
-        ]);
-
+    if (empty($firmas)) {
+      return toastModal("No hay registros de firmas asociados al documento ingresado", "warning");
     }
 
-    public function generarPDFPolitica(Request $request){
-        $firma = FirmaPoliticas::findOrFail($request->firma_id);
+    return response()->json([
+      'success' => true,
+      'html' => view('politicas.firmados', [
+        'firmas' => $firmas,
+      ])->render(),
+    ]);
+  }
 
-        $politicaId = $firma->PoliticaId;
-        $politica = ConfigPoliticas::findOrFail($politicaId);
+  public function generarPDFPolitica(Request $request)
+  {
+    $firma = FirmaPoliticas::findOrFail($request->firma_id);
 
-        //Plantilla pdf camaras
-        if($politicaId == self::ID_POLITICA_CAMARAS){
-            $funcionesCargo = ConductorController::funcionesCargo($firma->Cargo);
+    $politicaId = $firma->PoliticaId;
+    $politica = ConfigPoliticas::findOrFail($politicaId);
 
-            $pdf = Pdf::loadView('politicas.plantillasPDF.camaras',compact('firma', 'funcionesCargo'));
-            $pdf->setPaper('A4', 'portrait');
-            return $pdf->stream($politica->politica . '-' . $firma->NomCon . '.pdf');
-        }
+    //Plantilla pdf camaras
+    if ($politicaId == self::ID_POLITICA_CAMARAS) {
+      $funcionesCargo = ConductorController::funcionesCargo($firma->Cargo);
 
-        //Plantilla defecto - otras politicas
-        $pdf = Pdf::loadView('politicas.plantillasPDF.default', [
-            'firma' => $firma,
-            'politicaId' => $politicaId,
-            'ID_POLITICA_EQUIPAJE' => self::ID_POLITICA_EQUIPAJE,
-            'ID_POLITICA_MENORES' => self::ID_POLITICA_MENORES,
-            'ID_POLITICA_MASCOTAS' => self::ID_POLITICA_MASCOTAS,
-        ]);
-
-        $pdf->setPaper('A4', 'portrait');
-        return $pdf->stream($politica->politica . '-' . $firma->NomCon . '.pdf');
+      $pdf = Pdf::loadView('politicas.plantillasPDF.camaras', compact('firma', 'funcionesCargo'));
+      $pdf->setPaper('A4', 'portrait');
+      return $pdf->stream($politica->politica . '-' . $firma->NomCon . '.pdf');
     }
+
+    //Plantilla defecto - otras politicas
+    $pdf = Pdf::loadView('politicas.plantillasPDF.default', [
+      'firma' => $firma,
+      'politicaId' => $politicaId,
+      'ID_POLITICA_EQUIPAJE' => self::ID_POLITICA_EQUIPAJE,
+      'ID_POLITICA_MENORES' => self::ID_POLITICA_MENORES,
+      'ID_POLITICA_MASCOTAS' => self::ID_POLITICA_MASCOTAS,
+    ]);
+
+    $pdf->setPaper('A4', 'portrait');
+    return $pdf->stream($politica->politica . '-' . $firma->NomCon . '.pdf');
+  }
 }

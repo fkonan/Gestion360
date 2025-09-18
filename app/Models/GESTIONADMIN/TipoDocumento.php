@@ -8,19 +8,21 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TipoDocumento extends Model
 {
-    use HasFactory;
+  use HasFactory;
 
-    protected $connection = 'mysql-gestion-admin';
-    protected $table = "_tipo_documento";
-    protected $primaryKey = "id";
-        
-    public $timestamps = false;
+  protected $connection = 'mysql-gestion-admin';
+  protected $table = "_tipo_documento";
+  protected $primaryKey = "id";
 
-    protected $fillable = [
-        "nomenclatura","nombre"
-    ];
+  public $timestamps = false;
 
-    public function personas(): HasMany{
-        return $this->hasMany(Persona::class,"PerTipDoc","id");
-    }
+  protected $fillable = [
+    "nomenclatura",
+    "nombre"
+  ];
+
+  public function personas(): HasMany
+  {
+    return $this->hasMany(Persona::class, "PerTipDoc", "id");
+  }
 }

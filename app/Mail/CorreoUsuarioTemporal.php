@@ -8,33 +8,33 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class CorreoUsuarioTemporal extends Mailable 
+class CorreoUsuarioTemporal extends Mailable
 {
-    use Queueable, SerializesModels;
+  use Queueable, SerializesModels;
 
-    public $datos;
+  public $datos;
 
-    public function __construct($datos)
-    {
-        $this->datos = $datos;
-    }
+  public function __construct($datos)
+  {
+    $this->datos = $datos;
+  }
 
-    public function envelope(): Envelope
-    {
-        return new Envelope(
-            subject: 'Proceso de contratación - Acceso Temporal',
-        );
-    }
+  public function envelope(): Envelope
+  {
+    return new Envelope(
+      subject: 'Proceso de contratación - Acceso Temporal',
+    );
+  }
 
-    public function content(): Content
-    {
-        return new Content(
-            view: 'emails.usuarioTemporal',
-        );
-    }
+  public function content(): Content
+  {
+    return new Content(
+      view: 'emails.usuarioTemporal',
+    );
+  }
 
-    public function attachments(): array
-    {
-        return [];
-    }
+  public function attachments(): array
+  {
+    return [];
+  }
 }

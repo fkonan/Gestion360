@@ -12,86 +12,90 @@ use Illuminate\Support\Facades\Validator;
 
 class SeguimientoIncapacidadController extends Controller
 {
-    public function incapacidadesSeguimiento(){
-        $incapacidadesSeguimiento = Incapacidad::with(['causa', 'diagnostico', 'eps', 'arl']);
+  public function incapacidadesSeguimiento()
+  {
+    $incapacidadesSeguimiento = Incapacidad::with(['causa', 'diagnostico', 'eps', 'arl']);
 
-        if($incapacidadesSeguimiento == null){
-            session()->flash('alert', ['type' => 'success','title' => 'No hay incapacidades para hacer seguimiento']);  
-            return back();
-        }
-        return view("incapacidades.listaSeguimiento",compact("incapacidadesSeguimiento"));
+    if ($incapacidadesSeguimiento == null) {
+      session()->flash('alert', ['type' => 'success', 'title' => 'No hay incapacidades para hacer seguimiento']);
+      return back();
     }
+    return view("incapacidades.listaSeguimiento", compact("incapacidadesSeguimiento"));
+  }
 
-    public function cargarDatosSeguimiento() {
-        $incapacidades = Incapacidad::with(['causa', 'eps','diagnostico','arl'])
-            ->where('IncapacidadEstado', '=', 'APROBADO')
-            ->get()
-            ->map(function ($item) {
-                return [
-                    'IncPerNom' => $item->IncPerNom,
-                    'PerNumDoc' => $item->PerNumDoc,                    
-                    'causaDes'  => $item->causa->ParDes ?? '',
-                    'epsNombre' => $item->eps->EPSNombre ?? '',
-                    'arlNombre' => $item->arl->ARLNombre ?? '',
-                    'IncFecIni' => $item->IncFecIni,
-                    'IncFecFin' => $item->IncFecFin,
-                    'DiagnosticoDes' => $item->diagnostico->DescCie ?? '',
-                    'IncapacidadEstado' => $item->IncapacidadEstado,
-                    'IncFecReg' => $item->IncFecReg,
-                    'IncHorReg' => $item->IncHorReg,
-                    'IdIncapacidad' => $item->IdIncapacidad,
-                ];
-            });
+  public function cargarDatosSeguimiento()
+  {
+    $incapacidades = Incapacidad::with(['causa', 'eps', 'diagnostico', 'arl'])
+      ->where('IncapacidadEstado', '=', 'APROBADO')
+      ->get()
+      ->map(function ($item) {
+        return [
+          'IncPerNom' => $item->IncPerNom,
+          'PerNumDoc' => $item->PerNumDoc,
+          'causaDes'  => $item->causa->ParDes ?? '',
+          'epsNombre' => $item->eps->EPSNombre ?? '',
+          'arlNombre' => $item->arl->ARLNombre ?? '',
+          'IncFecIni' => $item->IncFecIni,
+          'IncFecFin' => $item->IncFecFin,
+          'DiagnosticoDes' => $item->diagnostico->DescCie ?? '',
+          'IncapacidadEstado' => $item->IncapacidadEstado,
+          'IncFecReg' => $item->IncFecReg,
+          'IncHorReg' => $item->IncHorReg,
+          'IdIncapacidad' => $item->IdIncapacidad,
+        ];
+      });
 
-        return $incapacidades;
+    return $incapacidades;
+  }
+
+  public function seguimientoDetalle($id)
+  {
+    $incapacidad = Incapacidad::findOrFail($id);
+    $listaSeguimiento = $incapacidad->seguimiento()
+      ->orderBy('SegFecReg', 'desc')
+      ->orderBy('SegHorReg', 'desc')
+      ->get();
+    return view("incapacidades.registroSeguimiento", compact("incapacidad", "listaSeguimiento"));
+  }
+
+  public function nuevoSeguimiento($id)
+  {
+    $incapacidad = Incapacidad::findOrFail($id);
+    return view("incapacidades.nuevoSeguimiento", compact("incapacidad"));
+  }
+
+  public function guardarSeguimiento(Request $request, $id)
+  {
+
+    try {
+      $validator = Validator::make($request->all(), [
+        'Observacion' => 'required|max:255',
+      ], [
+        'Observacion.required' => 'El campo observación es obligatorio.',
+        'Observacion.max' => 'La observación no puede exceder los 255 caracteres.',
+      ]);
+
+      if ($validator->fails()) {
+        return response()->json([
+          'errors' => $validator->errors()
+        ], 422);
+      }
+
+      $user = Auth::user();
+
+      $incapacidadSeguimiento = new incapacidadesSeguimiento();
+      $incapacidadSeguimiento->IncapacidadId = $id;
+      $incapacidadSeguimiento->Observacion = strtoupper($request->Observacion);
+      $incapacidadSeguimiento->SegFecReg = now();
+      $incapacidadSeguimiento->SegHorReg = now();
+      $incapacidadSeguimiento->UserRegistra = $user->persona->nombreCompleto();
+      $incapacidadSeguimiento->Estado = "ACTIVO";
+      $incapacidadSeguimiento->save();
+
+      return toastModal("Seguimiento radicado N° '. $id .' registrado exitosamente", "success", route('gestion-empleado.seguimiento.detalle', ['id' => $incapacidadSeguimiento->IncapacidadId]));
+    } catch (Exception $e) {
+      Log::error('Error al registrar el seguimiento: ' . $e->getMessage());
+      return toastModal("Error al registrar el seguimiento", "error", route('gestion-empleado.seguimiento.detalle', ['id' => $incapacidadSeguimiento->IncapacidadId]));
     }
-
-    public function seguimientoDetalle($id){
-        $incapacidad = Incapacidad::findOrFail($id);
-        $listaSeguimiento = $incapacidad->seguimiento()
-            ->orderBy('SegFecReg', 'desc')
-            ->orderBy('SegHorReg', 'desc')
-            ->get();  
-        return view("incapacidades.registroSeguimiento",compact("incapacidad","listaSeguimiento"));
-    }
-
-    public function nuevoSeguimiento($id){
-        $incapacidad = Incapacidad::findOrFail($id);
-        return view("incapacidades.nuevoSeguimiento",compact("incapacidad"));
-    }
-
-    public function guardarSeguimiento(Request $request, $id){
-
-        try{
-            $validator = Validator::make($request->all(), [
-                'Observacion' =>'required|max:255',
-            ],[
-                'Observacion.required' => 'El campo observación es obligatorio.',
-                'Observacion.max' => 'La observación no puede exceder los 255 caracteres.',
-            ]);
-    
-            if ($validator->fails()) {
-                return response()->json([
-                    'errors' => $validator->errors()
-                ], 422);
-            }
-
-            $user = Auth::user();
-    
-            $incapacidadSeguimiento = new incapacidadesSeguimiento();
-            $incapacidadSeguimiento->IncapacidadId = $id;
-            $incapacidadSeguimiento->Observacion = strtoupper($request->Observacion);
-            $incapacidadSeguimiento->SegFecReg = now();
-            $incapacidadSeguimiento->SegHorReg = now();
-            $incapacidadSeguimiento->UserRegistra = $user->persona->nombreCompleto();
-            $incapacidadSeguimiento->Estado = "ACTIVO";
-            $incapacidadSeguimiento->save();
-
-            return toastModal("Seguimiento radicado N° '. $id .' registrado exitosamente", "success",route('gestion-empleado.seguimiento.detalle', ['id' => $incapacidadSeguimiento->IncapacidadId]));
-    
-        }catch(Exception $e){
-            Log::error('Error al registrar el seguimiento: ' . $e->getMessage());
-            return toastModal("Error al registrar el seguimiento", "error",route('gestion-empleado.seguimiento.detalle', ['id' => $incapacidadSeguimiento->IncapacidadId]));
-        }
-    }
+  }
 }

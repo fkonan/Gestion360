@@ -8,19 +8,22 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DepartamentoPasajes extends Model
 {
-    use HasFactory;
-    
-    protected $connection = 'mysql-gestion-pasajes';
-    protected $table = "_departamentos";
-    protected $primaryKey = "IdDepartamento";
-    public $incrementing = false;
-    public $timestamps = false;
+  use HasFactory;
 
-    protected $fillable = [
-        "IdDepartamento","DepNom","Abreviacion"
-    ];
+  protected $connection = 'mysql-gestion-pasajes';
+  protected $table = "_departamentos";
+  protected $primaryKey = "IdDepartamento";
+  public $incrementing = false;
+  public $timestamps = false;
 
-    public function municipios(): HasMany{
-        return $this->hasMany(MunicipioPasajes::class,'DepartamentoId','IdDepartamento');
-    }
+  protected $fillable = [
+    "IdDepartamento",
+    "DepNom",
+    "Abreviacion"
+  ];
+
+  public function municipios(): HasMany
+  {
+    return $this->hasMany(MunicipioPasajes::class, 'DepartamentoId', 'IdDepartamento');
+  }
 }

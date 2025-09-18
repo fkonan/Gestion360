@@ -108,7 +108,7 @@
         }
 
         .firmas .box {
-            height: 13mm; /* altura del recuadro */
+            height: 11mm; /* altura del recuadro */
             position: relative;
         }
 
@@ -266,8 +266,8 @@
 
     <div class="mensaje">
         <p>
-            Con mi firma que aparece dentro del presente documento, de manera previa, expresa e inequívoca autorizo a COPETRAN, 
-            el tratamiento de mis datos personales conforme a la Política de Tratamiento de la Información que se encuentra publicada 
+            Con mi firma que aparece dentro del presente documento, de manera previa, expresa e inequívoca autorizo a COPETRAN,
+            el tratamiento de mis datos personales conforme a la Política de Tratamiento de la Información que se encuentra publicada
             en la página web www.copetran.com.co
         </p>
     </div>
