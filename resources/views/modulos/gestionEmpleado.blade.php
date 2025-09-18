@@ -38,8 +38,17 @@
             />
         </div>
 
-        <div class="col" onclick="cargarModal(`{{ route('politicas.index') }}`, 'Politicas firmadas por el conductor','#formPoliticas','modal-lg')">
+        <div class="col" onclick="cargarModal(`{{ route('conductor.preoperacional.index') }}`, 'Aqui puede levantar bloqueos por revisión de preoperacionales','#preoperacionalForm','modal-md')">
             <x-card color="bg-danger" 
+                    titulo="Revisión preoperacional"
+                    descripcion="Novedad"
+                    icono="fas fa-clipboard-check"
+                    ruta="#"
+            />
+        </div>
+
+        <div class="col" onclick="cargarModal(`{{ route('politicas.index') }}`, 'Politicas firmadas por el conductor','#formPoliticas','modal-lg')">
+            <x-card color="bg-success" 
                     titulo="Firmas conductores" 
                     descripcion="Politicas" 
                     icono="fa-signature" 
@@ -197,7 +206,6 @@
                         // Mostrar información encontrada
                         document.getElementById('nombresInfo').textContent = data.data.nombres || 'No disponible';
                         document.getElementById('apellidosInfo').textContent = data.data.apellidos || 'No disponible';
-                        document.getElementById('emailInfo').textContent = data.data.email || 'No disponible';
                         
                         // Mostrar contenedor de información
                         document.getElementById('infoPersona').style.display = 'block';
