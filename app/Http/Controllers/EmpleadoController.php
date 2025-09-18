@@ -17,208 +17,212 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 
 class EmpleadoController extends Controller
-{   
-    //Modal solicitud nuevo ingreso - gestion empleado
-    public function nuevoIngreso(){
-        return view('empleados.nuevoIngreso');
+{
+  //Modal solicitud nuevo ingreso - gestion empleado
+  public function nuevoIngreso()
+  {
+    return view('empleados.nuevoIngreso');
+  }
+
+  public function buscar($identificacion)
+  {
+    $persona = PerPersonas::where('identificacion', $identificacion)->first();
+
+    if (!$persona) {
+      return response()->json(['success' => false]);
     }
 
-    public function buscar($identificacion)
-    {
-        $persona = PerPersonas::where('identificacion', $identificacion)->first();
+    return response()->json([
+      'success' => true,
+      'data' => [
+        'nombres' => $persona->pnombre . ' ' . $persona->snombre,
+        'apellidos' => $persona->papellido . ' ' . $persona->sapellido,
+        'email' => $persona->dirweb,
+      ]
+    ]);
+  }
 
-        if (!$persona) {
-            return response()->json(['success' => false]);
-        }
+  public function gestionNuevoIngreso(Request $request)
+  {
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'nombres' => $persona->pnombre . ' ' . $persona->snombre,
-                'apellidos' => $persona->papellido . ' ' . $persona->sapellido,
-                'email' => $persona->dirweb,
-            ]
-        ]);
+    $validator = Validator::make($request->all(), [
+      'identificacion' => 'required|numeric|digits_between:5,20',
+    ], [
+      'identificacion.required' => 'La identificación es obligatoria.',
+      'identificacion.numeric'  => 'La identificación debe ser un número.',
+      'identificacion.digits_between' => 'La identificación debe tener entre 5 y 20 dígitos.',
+    ]);
+
+    if ($validator->fails()) {
+      return response()->json([
+        'errors' => $validator->errors()
+      ], 422);
     }
 
-    public function gestionNuevoIngreso(Request $request){
+    try {
+      //Datos persona
+      $persona = PerPersonas::where('identificacion', $request->identificacion)->first();
 
-        $validator = Validator::make($request->all(), [
-            'identificacion' => 'required|numeric|digits_between:5,20',
-        ], [
-            'identificacion.required' => 'La identificación es obligatoria.',
-            'identificacion.numeric'  => 'La identificación debe ser un número.',
-            'identificacion.digits_between' => 'La identificación debe tener entre 5 y 20 dígitos.',
-        ]);
+      if (!$persona) {
+        return toastModal("No se encontró una persona con la identificación ingresada", "warning", route('gestion-incapacidades.index'));
+      }
+      $correo = $persona->dirweb;
+      $nombreCompleto = $persona->pnombre . ' ' . $persona->snombre . ' ' . $persona->papellido . ' ' . $persona->sapellido;
 
-        if ($validator->fails()) {
-            return response()->json([
-                'errors' => $validator->errors()
-            ], 422);
-        }
+      //Crear bloqueo SARLAFT
+      $descripcionBloqueo = "REQUIERE FIRMA NORMAS SARLAFT";
 
-        try{
-            //Datos persona
-            $persona = PerPersonas::where('identificacion', $request->identificacion)->first();
+      $bloqueo = BloqueoService::crearNovedadEmpleado(
+        $request->identificacion,
+        $descripcionBloqueo,
+        BloqueoService::ID_BLOQUEO_LOGTRANS_SARLAFT
+      );
 
-            if(!$persona){
-                return toastModal("No se encontró una persona con la identificación ingresada", "warning",route('gestion-incapacidades.index'));
-            }
-            $correo = $persona->dirweb;
-            $nombreCompleto = $persona->pnombre . ' ' . $persona->snombre . ' ' . $persona->papellido . ' ' . $persona->sapellido;
+      if (!$bloqueo) {
+        return toastModal("Error al registrar la solicitud, intente nuevamente", "error", route('gestion-incapacidades.index'));
+      }
 
-            //Crear bloqueo SARLAFT
-            $descripcionBloqueo = "REQUIERE FIRMA NORMAS SARLAFT";
+      DB::beginTransaction();
 
-            $bloqueo = BloqueoService::crearNovedadEmpleado(
-                $request->identificacion, 
-                $descripcionBloqueo, 
-                BloqueoService::ID_BLOQUEO_LOGTRANS_SARLAFT
-            );
+      //Crear usuario temporal
+      $token = Str::random(40);
 
-            if(!$bloqueo){
-                return toastModal("Error al registrar la solicitud, intente nuevamente", "error",route('gestion-incapacidades.index'));
-            }
+      //Crear o actualizar un nuevo registro de usuario temporal
+      UsuarioTemporal::updateOrCreate(
+        ['identificacion' => $request->identificacion],
+        [
+          'correo' => $correo,
+          'token' => $token,
+          'nombreCompleto' => $nombreCompleto,
+          'estado' => true,
+        ]
+      );
 
-            DB::beginTransaction();
+      //URL validacion de token
+      $baseUrl = config('app.validar_temporal_url');
+      $url = $baseUrl . $token;
 
-            //Crear usuario temporal
-            $token = Str::random(40);
+      //Enviar correo
+      Mail::to($correo)->send(new CorreoUsuarioTemporal([
+        'nombre' => $nombreCompleto,
+        'token' => $token,
+        'url' => $url
+      ]));
 
-            //Crear o actualizar un nuevo registro de usuario temporal
-            UsuarioTemporal::updateOrCreate(
-                ['identificacion' => $request->identificacion], 
-                [
-                    'correo' => $correo,
-                    'token' => $token,
-                    'nombreCompleto' => $nombreCompleto,
-                    'estado' => true,
-                ]
-            );
+      DB::commit();
+      return toastModal("Solicitud creada exitosamente", "success", route('gestion-incapacidades.index'));
+    } catch (Exception $e) {
+      DB::rollBack();
+      Log::error("Error al registrar la solicitud: " . $e->getMessage());
+      return toastModal("Error al registrar la solicitud", "error", route('gestion-incapacidades.index'));
+    }
+  }
 
-            //URL validacion de token 
-            $baseUrl = config('app.validar_temporal_url');
-            $url = $baseUrl . $token;
+  public function reporteFirmaNormas()
+  {
+    return view('reportes.empleados.firmaNormas');
+  }
 
-            //Enviar correo
-            Mail::to($correo)->send(new CorreoUsuarioTemporal([
-                'nombre' => $nombreCompleto,
-                'token' => $token,
-                'url' => $url
-            ]));
+  public function filtrarFirmaNormas(Request $request)
+  {
 
-            DB::commit();
-            return toastModal("Solicitud creada exitosamente","success",route('gestion-incapacidades.index'));
+    $validator = Validator::make($request->all(), [
+      'identificacion' => ['nullable', 'numeric'],
+    ]);
 
-        }catch(Exception $e){
-            DB::rollBack();
-            Log::error("Error al registrar la solicitud: " . $e->getMessage());
-            return toastModal("Error al registrar la solicitud", "error",route('gestion-incapacidades.index'));
-        }
+    if ($validator->fails()) {
+      return response()->json([
+        'errors' => $validator->errors()
+      ], 422);
     }
 
-    public function reporteFirmaNormas(){
-        return view('reportes.empleados.firmaNormas');
+    try {
+      $columns = [
+        DB::raw('Id'),
+        DB::raw('Identificacion as identificacion'),
+        DB::raw('NombreCompleto as nombre_completo'),
+        DB::raw('FirmaIp as firma_ip'),
+        DB::raw('Correo as correo'),
+        DB::raw('FirFecReg as fecha_registro'),
+        DB::raw('FirHorReg as hora_registro')
+      ];
+
+      $query = FirmaPreingreso::select($columns);
+
+      if ($request->filled('identificacion')) {
+        $query->where("Identificacion", $request->identificacion);
+      }
+
+      $listaFirmas = $query->get();
+
+      if ($listaFirmas->isEmpty()) {
+        return toastModal("No se encontraron resultados para los parametros ingresados.", "warning", "#");
+      } else {
+        $params = http_build_query($request->only(['identificacion']));
+        return toastModal(
+          'Se han encontrado ' . $listaFirmas->count() . ' registros para los parámetros seleccionados',
+          "success",
+          route("lista.firmaNormas") . "?" . $params
+        );
+      }
+    } catch (Exception $e) {
+      Log::error('Error al obtener la lista de firmas preingreso empleados: ' . $e->getMessage());
+      return toastModal("Error al obtener los resultados", "error");
+    }
+  }
+
+  public function listaFirmasNormas()
+  {
+    return view('reportes.empleados.listaFirmasNormas');
+  }
+
+  public function cargarDataFirmaNormas(Request $request)
+  {
+
+    $columns = [
+      DB::raw('Id'),
+      DB::raw('Identificacion as identificacion'),
+      DB::raw('NombreCompleto as nombre_completo'),
+      DB::raw('Correo as correo'),
+      DB::raw('FirmaIp as firma_ip'),
+      DB::raw('FirFecReg as fecha_registro'),
+      DB::raw('FirHorReg as hora_registro')
+    ];
+
+    $query = FirmaPreingreso::select($columns);
+
+    if ($request->filled('identificacion')) {
+      $query->where("Identificacion", $request->identificacion);
     }
 
-    public function filtrarFirmaNormas(Request $request){
+    return $query->get();
+  }
 
-        $validator = Validator::make($request->all(), [
-            'identificacion' => ['nullable', 'numeric'],
-        ]);
+  public function generarComprobantePDF($id)
+  {
+    try {
+      $firmaData = FirmaPreingreso::where('Id', $id)->first();
 
-        if ($validator->fails()) {
-            return response()->json([
-                'errors' => $validator->errors()
-            ], 422);
-        }
+      if (!$firmaData) {
+        return toastModal("No se encontró la firma para la identificación proporcionada.", "error", route('reportes.empleados'));
+      }
 
-        try {
-            $columns = [      
-                DB::raw('Id'),
-                DB::raw('Identificacion as identificacion'),
-                DB::raw('NombreCompleto as nombre_completo'),
-                DB::raw('FirmaIp as firma_ip'),
-                DB::raw('Correo as correo'),
-                DB::raw('FirFecReg as fecha_registro'),
-                DB::raw('FirHorReg as hora_registro')
-            ];
+      $firma = (object) [
+        'NomCon'    => $firmaData->NombreCompleto,
+        'DocCon'    => $firmaData->Identificacion,
+        'FirFecReg' => $firmaData->FirFecReg,
+        'FirHorReg' => $firmaData->FirHorReg,
+        'Correo'    => $firmaData->Correo,
+        'FirmaIp'   => $firmaData->FirmaIp,
+        'DepFir'    => $firmaData->DepFir,
+        'MunFir'    => $firmaData->MunFir
+      ];
 
-            $query = FirmaPreingreso::select($columns);
-
-            if ($request->filled('identificacion')) {
-                $query->where("Identificacion", $request->identificacion);
-            }
-
-            $listaFirmas = $query->get();
-
-            if ($listaFirmas->isEmpty()) {
-                return toastModal("No se encontraron resultados para los parametros ingresados.", "warning", "#");
-            } else {
-                $params = http_build_query($request->only(['identificacion']));
-                return toastModal(
-                    'Se han encontrado ' . $listaFirmas->count() . ' registros para los parámetros seleccionados',
-                    "success",
-                    route("lista.firmaNormas") . "?" . $params
-                );
-            }
-
-        } catch (Exception $e) {
-            Log::error('Error al obtener la lista de firmas preingreso empleados: ' . $e->getMessage());
-            return toastModal("Error al obtener los resultados", "error");
-        }
+      $pdf = PDF::loadView('politicas.plantillasPDF.comprobanteFirmaNormas', compact('firma'));
+      return $pdf->stream('comprobante_firma_normas_' . $firmaData->Identificacion . '.pdf');
+    } catch (Exception $e) {
+      Log::error('Error al generar el comprobante PDF: ' . $e->getMessage());
+      return sweetAlert('Error al generar el comprobante PDF', 'error');
     }
-
-    public function listaFirmasNormas(){
-        return view('reportes.empleados.listaFirmasNormas');
-    }
-
-    public function cargarDataFirmaNormas(Request $request){
-       
-        $columns = [      
-            DB::raw('Id'),
-            DB::raw('Identificacion as identificacion'),
-            DB::raw('NombreCompleto as nombre_completo'),
-            DB::raw('Correo as correo'),
-            DB::raw('FirmaIp as firma_ip'),
-            DB::raw('FirFecReg as fecha_registro'),
-            DB::raw('FirHorReg as hora_registro')
-        ];
-
-        $query = FirmaPreingreso::select($columns);
-
-        if ($request->filled('identificacion')) {
-            $query->where("Identificacion", $request->identificacion);
-        }
-
-        return $query->get();
-    }
-
-    public function generarComprobantePDF($id){
-        try {
-            $firmaData = FirmaPreingreso::where('Id', $id)->first();
-
-            if (!$firmaData) {
-                return toastModal("No se encontró la firma para la identificación proporcionada.", "error", route('reportes.empleados'));
-            }
-
-            $firma = (object) [
-                'NomCon'    => $firmaData->NombreCompleto,
-                'DocCon'    => $firmaData->Identificacion,
-                'FirFecReg' => $firmaData->FirFecReg,
-                'FirHorReg' => $firmaData->FirHorReg,
-                'Correo'    => $firmaData->Correo,
-                'FirmaIp'   => $firmaData->FirmaIp,
-                'DepFir'    => $firmaData->DepFir,
-                'MunFir'    => $firmaData->MunFir
-            ];
-
-            $pdf = PDF::loadView('politicas.plantillasPDF.comprobanteFirmaNormas', compact('firma'));
-            return $pdf->stream('comprobante_firma_normas_' . $firmaData->Identificacion . '.pdf');
-
-        } catch (Exception $e) {
-            Log::error('Error al generar el comprobante PDF: ' . $e->getMessage());
-            return sweetAlert('Error al generar el comprobante PDF','error');
-        }
-    }
+  }
 }

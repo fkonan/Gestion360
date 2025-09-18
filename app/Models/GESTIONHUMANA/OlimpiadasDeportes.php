@@ -6,13 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class OlimpiadasDeportes extends Model
 {
-    protected $connection = 'mysql-gestion-humana';
-    protected $table = "oli_deporte";
-    protected $primaryKey = "idDeporte";
+  protected $connection = 'mysql-gestion-humana';
+  protected $table = "oli_deporte";
+  protected $primaryKey = "idDeporte";
 
-    public $timestamps = false;
+  public $timestamps = false;
 
-    public function modalidades(){
-        return $this->hasMany(OlimpiadasDepMod::class, 'DeporteId', 'idDeporte');
-    }
+  public function modalidades()
+  {
+    return $this->hasMany(OlimpiadasDepMod::class, 'DeporteId', 'idDeporte');
+  }
 }

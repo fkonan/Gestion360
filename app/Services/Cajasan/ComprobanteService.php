@@ -48,6 +48,11 @@ class ComprobanteService
       $comprobanteId = $this->obtenerSiguienteId('SEC_DOC_COMPROBANTE');
       $tc_codigo = $this->obtenerTcCodigo();
 
+      //Maximo valor actual del consecutivo
+      $consTipoAgencia = ConComprobantes::where('pe_id_ag', $cajaActiva->idsucursal)
+        ->where('descripcion', 'PAGOS CONVENIOS EMPRESARIALES')
+        ->max('constipoagencia');
+
       $comprobante = new ConComprobantes();
       $comprobante->id = $nextId;
       $comprobante->descripcion = 'PAGOS CONVENIOS EMPRESARIALES';
@@ -72,8 +77,8 @@ class ComprobanteService
       $comprobante->as_id = self::AS_ID;
       $comprobante->agrupado = 'TA';
       $comprobante->automatico = 'T';
-      $comprobante->constipoagencia = 87838;
-      $comprobante->tipoperacion = 60;
+      $comprobante->constipoagencia = $consTipoAgencia + 1;
+      $comprobante->tipoperacion = null;
       $comprobante->consap = 0;
       $comprobante->feccreacion = now();
       $comprobante->usrcreacion = $usuarioCaja;

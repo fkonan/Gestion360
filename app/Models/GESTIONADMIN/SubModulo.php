@@ -8,150 +8,170 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SubModulo extends Model
 {
-    /**
-     * @property string $ModNom
-     * @property string $ModDesc
-     * @property string $ModEstado
-     * @property string $ModRuta
-     * @property string $ModPermiso
-     * @property string $ModIcono
-     * @property string $ModFechReg
-     * @property string $ModHorReg
-     */
+  /**
+   * @property string $ModNom
+   * @property string $ModDesc
+   * @property string $ModEstado
+   * @property string $ModRuta
+   * @property string $ModPermiso
+   * @property string $ModIcono
+   * @property string $ModFechReg
+   * @property string $ModHorReg
+   */
 
-    protected $connection = 'mysql-gestion-admin';
-    protected $table = "_submodulos";
-    protected $primaryKey = "IdSubModulo";
-    protected $fillable = [
-        'SubModNom', 'SubModDes', 'SubModuloEstado', 'SubModRuta', 
-        'SubModPermiso','SubModIcono', 'SubModFecReg', 'SubModHoReg',
-    ];
+  protected $connection = 'mysql-gestion-admin';
+  protected $table = "_submodulos";
+  protected $primaryKey = "IdSubModulo";
+  protected $fillable = [
+    'SubModNom',
+    'SubModDes',
+    'SubModuloEstado',
+    'SubModRuta',
+    'SubModPermiso',
+    'SubModIcono',
+    'SubModFecReg',
+    'SubModHoReg',
+  ];
 
-    public $timestamps = false;
+  public $timestamps = false;
 
-    public function padre(): belongsTo{
-        return $this->belongsTo(Modulo::class, 'ModuloId','IdModulo');
-    }
+  public function padre(): belongsTo
+  {
+    return $this->belongsTo(Modulo::class, 'ModuloId', 'IdModulo');
+  }
 
-    public function permisos(): HasMany{
-        return $this->hasMany(Permisos::class, 'ModuloId', 'IdModulo');
-    }
+  public function permisos(): HasMany
+  {
+    return $this->hasMany(Permisos::class, 'ModuloId', 'IdModulo');
+  }
 
-    public function getNombreFormateadoAttribute() {
-        $nombreFormateado = mb_convert_case(mb_strtolower($this->SubModNom, 'UTF-8'), MB_CASE_TITLE, "UTF-8");
-        $nombreFormateado = str_replace('Rr-Hh', 'RR-HH', $nombreFormateado);
-        return $nombreFormateado;
-    }
-
-
-    // Accessors y Mutators para SubModNom => ModNom
-    public function getModNomAttribute()
-    {
-        return $this->attributes['SubModNom'];
-    }
-
-    public function setModNomAttribute($value)
-    {
-        $this->attributes['SubModNom'] = $value;
-    }
-
-    // IdSubModulo => IdModulo
-    public function getIdModuloAttribute()
-    {
-        return $this->attributes['IdSubModulo'];
-    }
-
-    public function setIdModuloAttribute($value)
-    {
-        $this->attributes['IdSubModulo'] = $value;
-    }
+  public function getNombreFormateadoAttribute()
+  {
+    $nombreFormateado = mb_convert_case(mb_strtolower($this->SubModNom, 'UTF-8'), MB_CASE_TITLE, "UTF-8");
+    $nombreFormateado = str_replace('Rr-Hh', 'RR-HH', $nombreFormateado);
+    return $nombreFormateado;
+  }
 
 
-    // SubModDesc => ModDesc
-    public function getModDescAttribute()
-    {
-        return $this->attributes['SubModDes'];
-    }
+  // Accessors y Mutators para SubModNom => ModNom
+  public function getModNomAttribute()
+  {
+    return $this->attributes['SubModNom'];
+  }
 
-    public function setModDescAttribute($value)
-    {
-        $this->attributes['SubModDes'] = $value;
-    }
+  public function setModNomAttribute($value)
+  {
+    $this->attributes['SubModNom'] = $value;
+  }
 
-    // SubModEstado => ModEstado
-    public function getModEstadoAttribute()
-    {
-        return $this->attributes['SubModuloEstado'];
-    }
+  // IdSubModulo => IdModulo
+  public function getIdModuloAttribute()
+  {
+    return $this->attributes['IdSubModulo'];
+  }
 
-    public function setModEstadoAttribute($value)
-    {
-        $this->attributes['SubModuloEstado'] = $value;
-    }
+  public function setIdModuloAttribute($value)
+  {
+    $this->attributes['IdSubModulo'] = $value;
+  }
 
-    // SubModRuta => ModRuta
-    public function getModRutaAttribute()
-    {
-        return $this->attributes['SubModRuta'];
-    }
 
-    public function setModRutaAttribute($value)
-    {
-        $this->attributes['SubModRuta'] = $value;
-    }
+  // SubModDesc => ModDesc
+  public function getModDescAttribute()
+  {
+    return $this->attributes['SubModDes'];
+  }
 
-    // SubModPermiso => ModPermiso
-    public function getModPermisoAttribute()
-    {
-        return $this->attributes['SubModPermiso'];
-    }
+  public function setModDescAttribute($value)
+  {
+    $this->attributes['SubModDes'] = $value;
+  }
 
-    public function setModPermisoAttribute($value)
-    {
-        $this->attributes['SubModPermiso'] = $value;
-    }
+  // SubModEstado => ModEstado
+  public function getModEstadoAttribute()
+  {
+    return $this->attributes['SubModuloEstado'];
+  }
 
-    // SubModIcono => ModIcono
-    public function getModIconoAttribute()
-    {
-        return $this->attributes['SubModIcono'];
-    }
+  public function setModEstadoAttribute($value)
+  {
+    $this->attributes['SubModuloEstado'] = $value;
+  }
 
-    public function setModIconoAttribute($value)
-    {
-        $this->attributes['SubModIcono'] = $value;
-    }
+  // SubModRuta => ModRuta
+  public function getModRutaAttribute()
+  {
+    return $this->attributes['SubModRuta'];
+  }
 
-    // SubModFechReg => ModFechReg
-    public function getModFechRegAttribute()
-    {
-        return $this->attributes['SubModFecReg'];
-    }
+  public function setModRutaAttribute($value)
+  {
+    $this->attributes['SubModRuta'] = $value;
+  }
 
-    public function setModFechRegAttribute($value)
-    {
-        $this->attributes['SubModFecReg'] = $value;
-    }
+  // SubModPermiso => ModPermiso
+  public function getModPermisoAttribute()
+  {
+    return $this->attributes['SubModPermiso'];
+  }
 
-    // SubModHorReg => ModHorReg
-    public function getModHorRegAttribute()
-    {
-        return $this->attributes['SubModHoReg'];
-    }
+  public function setModPermisoAttribute($value)
+  {
+    $this->attributes['SubModPermiso'] = $value;
+  }
 
-    public function setModHorRegAttribute($value)
-    {
-        $this->attributes['SubModHoReg'] = $value;
-    }
+  // SubModIcono => ModIcono
+  public function getModIconoAttribute()
+  {
+    return $this->attributes['SubModIcono'];
+  }
 
-    protected $appends = [
-        'ModNom', 'ModDesc', 'ModEstado', 'ModRuta',
-        'ModPermiso', 'ModIcono', 'ModFechReg', 'ModHorReg',
-    ];
-    
-    protected $hidden = [
-        'SubModNom', 'SubModDesc', 'SubModEstado', 'SubModRuta',
-        'SubModPermiso', 'SubModIcono', 'SubModFechReg', 'SubModHorReg',
-    ];
+  public function setModIconoAttribute($value)
+  {
+    $this->attributes['SubModIcono'] = $value;
+  }
 
+  // SubModFechReg => ModFechReg
+  public function getModFechRegAttribute()
+  {
+    return $this->attributes['SubModFecReg'];
+  }
+
+  public function setModFechRegAttribute($value)
+  {
+    $this->attributes['SubModFecReg'] = $value;
+  }
+
+  // SubModHorReg => ModHorReg
+  public function getModHorRegAttribute()
+  {
+    return $this->attributes['SubModHoReg'];
+  }
+
+  public function setModHorRegAttribute($value)
+  {
+    $this->attributes['SubModHoReg'] = $value;
+  }
+
+  protected $appends = [
+    'ModNom',
+    'ModDesc',
+    'ModEstado',
+    'ModRuta',
+    'ModPermiso',
+    'ModIcono',
+    'ModFechReg',
+    'ModHorReg',
+  ];
+
+  protected $hidden = [
+    'SubModNom',
+    'SubModDesc',
+    'SubModEstado',
+    'SubModRuta',
+    'SubModPermiso',
+    'SubModIcono',
+    'SubModFechReg',
+    'SubModHorReg',
+  ];
 }

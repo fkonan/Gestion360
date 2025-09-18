@@ -347,7 +347,7 @@
     border: none !important;
 }
 
-[data-bs-theme="dark"] .bootstrap-duallistbox-container .box1, 
+[data-bs-theme="dark"] .bootstrap-duallistbox-container .box1,
 [data-bs-theme="dark"] .bootstrap-duallistbox-container .box2,
 [data-bs-theme="dark"] .bootstrap-duallistbox-container select{
     background-color: var(--bs-gray-800) !important;
@@ -357,7 +357,7 @@
 [data-bs-theme="dark"] #formNotificacion .form-control,
 [data-bs-theme="dark"] #formNotificacion .select-control,
 [data-bs-theme="dark"] #formNotificacion .select2-selection,
-[data-bs-theme="dark"] #formNotificacion .select2-selection__choice{   
+[data-bs-theme="dark"] #formNotificacion .select2-selection__choice{
     background-color: var(--bs-dark-bg-subtle) !important;
     color: var(--bs-light) !important;
 }
@@ -369,7 +369,7 @@
 [data-bs-theme="dark"] .header-info{
     color: var(--bs-gray-800);
 }
- 
+
 .content-wrapper{
    background-color:var(--bs-light-rgb)
 }
@@ -739,5 +739,5 @@ body:not(.sidebar-collapse) .nav-item .nav-treeview .nav-link {
     filter: grayscale(1);
 }
 
-    
+
 

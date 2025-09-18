@@ -43,7 +43,7 @@ class RolController extends Controller
         if ($validator->fails()) {
             return toast($validator->errors()->first(), 'danger');
         }
-       
+
         try{
             $rol = new Role();
             $rol->name = strtoupper($request->name);
@@ -56,7 +56,7 @@ class RolController extends Controller
             $rol->syncPermissions($request->permissions ?? []);
 
             return toast('Rol '. $rol->name . ' creado correctamente', 'success', redirect()->route('roles.index'));
-         
+
         }catch(Exception $e){
             Log::error('Error al crear el rol: ' . $e->getMessage());
             return toast('Error al crear el rol', 'danger');
@@ -71,12 +71,12 @@ class RolController extends Controller
 
         foreach ($modulos as $modulo) {
             // Normalizar el nombre del módulo para evitar problemas con caracteres especiales
-            $nombreModulo = normalizarNombre($modulo->ModNom); 
+            $nombreModulo = normalizarNombre($modulo->ModNom);
 
             foreach ($modulo->submodulos as $submodulo) {
                 // Normalizar el nombre del submódulo
                 $nombreSubmodulo = normalizarNombre($submodulo->SubModNom);
-        
+
                 // Crear el prefijo para los permisos
                 $prefix = "$nombreModulo.$nombreSubmodulo";
 
@@ -91,7 +91,7 @@ class RolController extends Controller
         $role = Role::findOrFail($id);
         $modulos = $this->modulosConPermisos($moduloService);
         $permisosAsignados = $role->permissions->pluck('id')->toArray();
-        
+
         return view('roles.permisosRol', compact('modulos', 'role', 'permisosAsignados'));
     }
 
@@ -122,25 +122,25 @@ class RolController extends Controller
             //Actualzar nombre
             if($request->name){
                 $rol->name = $request->name;
-                $rol->save();    
+                $rol->save();
             }
-           
+
             //Sincronizar los permisos
             $rol->syncPermissions($request->permissions ?? []);
 
             return toast('Permisos actualizados correctamente', 'success',redirect()->route('roles.index'));
-           
+
         }catch(Exception $e){
             Log::error('Error al actualizar los permisos: ' . $e->getMessage());
             return toast('Error al actualizar los permisos', 'danger',redirect()->route('roles.index'));
         }
     }
-    
+
     public function editRolUsuario($id){
         $usuario = User::findOrFail($id);
         /* $rolesDisponibles = Role::where('name', '!=', User::SUPER_ADMIN_ROLE)->get(); */
         $rolesDisponibles = Role::all();
-        $rolesUsuario = $usuario->getRoleNames();  
+        $rolesUsuario = $usuario->getRoleNames();
         return view("usuarios.rolesUsuario",compact("usuario","rolesUsuario","rolesDisponibles"));
     }
 
@@ -156,7 +156,7 @@ class RolController extends Controller
             $usuario->syncRoles($request->roles);
 
             return toastModal("Roles actualizados correctamente para el usuario " . $usuario->persona->nombreCompleto(), "success",route('usuarios.index'));
-           
+
         }catch(Exception $e){
             Log::error('Error al actualizar los roles: ' . $e->getMessage());
             return toastModal("Error al actualizar los roles", "error",route('usuarios.index'));

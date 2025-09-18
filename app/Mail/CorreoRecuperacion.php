@@ -10,31 +10,31 @@ use Illuminate\Queue\SerializesModels;
 
 class CorreoRecuperacion extends Mailable
 {
-    use Queueable, SerializesModels;
+  use Queueable, SerializesModels;
 
-    public $datos;
+  public $datos;
 
-    public function __construct($datos)
-    {
-        $this->datos = $datos;
-    }
+  public function __construct($datos)
+  {
+    $this->datos = $datos;
+  }
 
-    public function envelope(): Envelope
-    {
-        return new Envelope(
-            subject: 'Enlace de Recuperación de Contraseña',
-        );
-    }
+  public function envelope(): Envelope
+  {
+    return new Envelope(
+      subject: 'Enlace de Recuperación de Contraseña',
+    );
+  }
 
-    public function content(): Content
-    {
-        return new Content(
-            view: 'emails.recuperacion',
-        );
-    }
+  public function content(): Content
+  {
+    return new Content(
+      view: 'emails.recuperacion',
+    );
+  }
 
-    public function attachments(): array
-    {
-        return [];
-    }
+  public function attachments(): array
+  {
+    return [];
+  }
 }

@@ -9,27 +9,33 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Municipio extends Model
 {
-    use HasFactory;
+  use HasFactory;
 
-    protected $connection = 'mysql-gestion-admin';
-    protected $table = "_municipios";
-    protected $primaryKey = "IdMunicipio";
-    public $incrementing = false;
-    public $timestamps = false;
+  protected $connection = 'mysql-gestion-admin';
+  protected $table = "_municipios";
+  protected $primaryKey = "IdMunicipio";
+  public $incrementing = false;
+  public $timestamps = false;
 
-    protected $fillable = [
-        "IdMunicipio","MunNon","MunNomMin","IdDepartamento"
-    ];
+  protected $fillable = [
+    "IdMunicipio",
+    "MunNon",
+    "MunNomMin",
+    "IdDepartamento"
+  ];
 
-    public function departamento(): BelongsTo{
-        return $this->belongsTo(Departamento::class,'IdDepartamento','IdDepartamento');
-    }
+  public function departamento(): BelongsTo
+  {
+    return $this->belongsTo(Departamento::class, 'IdDepartamento', 'IdDepartamento');
+  }
 
-    public function personasNac(): HasMany{
-        return $this->hasMany(Persona::class,'PerLugNac','IdMunicipio');
-    }
+  public function personasNac(): HasMany
+  {
+    return $this->hasMany(Persona::class, 'PerLugNac', 'IdMunicipio');
+  }
 
-    public function personasExp(): HasMany{
-        return $this->hasMany(Persona::class,'PerLugarExp','IdMunicipio');
-    }
+  public function personasExp(): HasMany
+  {
+    return $this->hasMany(Persona::class, 'PerLugarExp', 'IdMunicipio');
+  }
 }
