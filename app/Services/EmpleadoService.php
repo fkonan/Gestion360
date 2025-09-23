@@ -86,6 +86,23 @@ class EmpleadoService
       ->value('ct.codigo');
   }
 
+  public static function obtenerAgencia($identificacion)
+  {
+    return DB::connection('oracle')
+      ->table('per_personas as p')
+      ->join('per_empresapersonas as ep', 'p.id', '=', 'ep.pe_id_pe')
+      ->join('per_cargoccostos as cc', 'ep.cc_id', '=', 'cc.id')
+      ->join('per_centrocostos as ct', 'cc.ct_codigo', '=', 'ct.codigo')
+      ->where('p.identificacion', $identificacion)
+      ->where('ep.activo', 1)
+      ->where('ep.estborrado', 0)
+      ->where('cc.activo', 1)
+      ->where('cc.estborrado', 0)
+      ->where('ct.estado', 1)
+      ->where('ct.estborrado', 0)
+      ->value('ct.pe_id');
+  }
+
   // Verifica si un empleado tiene un rol específico
   public static function rolesLogtrans($identificacion)
   {

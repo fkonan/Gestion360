@@ -27,6 +27,8 @@ class CajaActivaMiddleware
         $query->select('ID')
           ->from('PER_PERSONAS')
           ->where('IDENTIFICACION', $identificacion)
+          ->where('ESTADO', 'ACTIVO')
+          ->where('estborrado',0)
           ->limit(1);
       })
       ->where('T.ESTADO', 'T')

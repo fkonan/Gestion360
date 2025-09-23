@@ -62,7 +62,8 @@ class CargueService
       return $cargue->id;
     } catch (Exception $e) {
       Log::error('Error al crear cargue: ' . $e->getMessage());
-      throw $e;
+      throw new Exception("Error al crear cargue.");
+      /* throw $e; */
     }
   }
 

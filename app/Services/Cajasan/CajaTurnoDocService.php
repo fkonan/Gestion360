@@ -47,7 +47,7 @@ class CajaTurnoDocService
       $cajaTurnoDoc->save();
     } catch (Exception $e) {
       Log::error('Error al crear caja turno doc: ' . $e->getMessage());
-      throw $e;
+      throw new Exception("Error al crear caja turno doc.");
     }
   }
 
@@ -68,7 +68,7 @@ class CajaTurnoDocService
       return $userId;
     } catch (Exception $e) {
       Log::error('Error al obtener userId: ' . $e->getMessage());
-      throw $e;
+      throw new Exception("Error al obtener userId.");
     }
   }
 }

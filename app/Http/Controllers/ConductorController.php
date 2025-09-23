@@ -229,7 +229,11 @@ class ConductorController extends Controller
   {
     $identificacion = $request->identificacion;
 
-    $persona = PerPersonas::where('identificacion', $identificacion)->first();
+    $persona = PerPersonas::where('identificacion', $identificacion)
+      ->where('estado','ACTIVO')
+      ->where('estborrado',0)
+      ->whereIn('tipdocumento', [1])
+      ->first();
 
     if (!$persona) {
       return response()->json([

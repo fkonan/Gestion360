@@ -105,7 +105,6 @@ class UsuarioService
       ->pluck('ep.tp_id');
   }
 
-
   public static function obtenerUserId(): int
   {
     try {
@@ -114,7 +113,10 @@ class UsuarioService
         throw new Exception('Usuario no autenticado o sin persona asociada');
       }
 
-      $userId = PerPersonas::where('identificacion', $user->persona->PerNumDoc)->value('id');
+      $userId = PerPersonas::where('identificacion', $user->persona->PerNumDoc)
+        ->where('estado','ACTIVO')
+        ->where('estborrado', 0)
+        ->value('id');
 
       if (!$userId) {
         throw new Exception('Usuario no encontrado en la tabla PerPersonas');
