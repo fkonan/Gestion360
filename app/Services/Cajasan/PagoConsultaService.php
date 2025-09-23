@@ -21,11 +21,12 @@ class PagoConsultaService
   {
     try {
       // 1. Validar cliente
-      if (config('apiAsopagos.test_mode')) {
-        $cliente = PerPersonas::where('identificacion', $identificacion)->first();
-        if (!$cliente) {
-          return ['error' => true, 'message' => 'El documento no es válido.'];
-        }
+      $cliente = PerPersonas::where('identificacion', $identificacion)
+        ->where('estado', 'ACTIVO')
+        ->where('estborrado', 0)
+        ->first();
+      if (!$cliente) {
+        return ['error' => true, 'message' => 'El documento no es válido.'];
       }
 
       // 2. Obtener caja activa
@@ -42,47 +43,34 @@ class PagoConsultaService
       }
 
       // 3. Preparar datos cliente
-      $sucursal = PerPersonas::findOrFail($cajaActiva->idsucursal);
+      $sucursal = PerPersonas::where('id', $cajaActiva->idsucursal)
+        ->where('estado', 'ACTIVO')
+        ->where('estborrado', 0)
+        ->firstOrFail();
+
       $municipio = GenMunicipios::findOrFail($sucursal->mu_id);
 
+      // 4. Tipo de identificación
+      $tiposDocumento = [
+        1  => 'CC', // Cédula de Ciudadanía
+        2  => 'TI', // Tarjeta de Identidad
+        3  => 'NT', // NIT
+        5  => 'CE', // Cédula de Extranjería
+        6  => 'PA', // Pasaporte
+        43 => 'RC', // Registro
+        50 => 'PE', // Permiso especial permanencia
+      ];
 
-      // 4. Tipo de indentificacion
-      switch ($cliente->tipdocumento) {
-        case 1:
-          $sigla = 'CC'; // Cédula de Ciudadanía
-          break;
-        case 2:
-          $sigla = 'TI'; // Tarjeta de Identidad
-          break;
-        case 3:
-          $sigla = 'NT'; // NIT
-          break;
-        case 5:
-          $sigla = 'CE'; // Cédula de Extranjería
-          break;
-        case 6:
-          $sigla = 'PA'; // Pasaporte
-          break;
-        case 43:
-          $sigla = 'RC'; // Registro
-          break;
-        case 50:
-          $sigla = 'PE'; // Permiso especial permanencia
-          break;
-        default:
-          $sigla = 'ND'; // No Definido
-          break;
+      $sigla = $tiposDocumento[$cliente->tipdocumento] ?? null;
+
+      if (!$sigla) {
+        return [
+          'error'   => true,
+          'message' => 'Tipo de identificación no válido.'
+        ];
       }
 
       if (config('apiAsopagos.test_mode')) {
-        $clienteData = [
-          'tipoIdentificacion'  => $sigla,
-          'identificacion'      => $cliente->identificacion,
-          'nombre'              => $cliente->nombreCompleto(),
-          'departamento'        => $municipio->do_codigo,
-          'municipio'           => $municipio->codigo
-        ];
-      } else {
         $clienteData = [
           'tipoIdentificacion' => 'CC',
           'identificacion' => $identificacion,
@@ -90,8 +78,15 @@ class PagoConsultaService
           'departamento'   => 11,
           'municipio'      => 11001
         ];
+      } else {
+        $clienteData = [
+          'tipoIdentificacion' => $sigla,
+          'identificacion'     => $cliente->identificacion,
+          'nombre'             => $cliente->nombreCompleto(),
+          'departamento'       => $municipio->do_codigo,
+          'municipio'          => $municipio->codigo
+        ];
       }
-
 
       // 4. Consultar API
       $respuesta = $this->consultarSaldoApi($apiAsopagos, $clienteData);
@@ -134,7 +129,7 @@ class PagoConsultaService
       if (config('apiAsopagos.test_mode')) {
         return [
           'responseCode' => true,
-          'additionalData' => ['saldo' => 50000],
+          'additionalData' => ['saldo' => 85000],
         ];
       }
 

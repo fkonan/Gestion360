@@ -28,7 +28,6 @@ class EventoConductorService
 
   public function registrarEventoDescanso($request)
   {
-
     $validator = Validator::make($request->all(), [
       'fecha' => 'required|date|before_or_equal:now',
     ], [
@@ -150,6 +149,7 @@ class EventoConductorService
         $bloqueo = PerPersonaBloqueo::where('cedula_conductor', $request->identificacion)
           ->where('tb_id', self::BLOQUEO_DESCANSO_LOGTRANS)
           ->where('activo', 1)
+          ->where('estborrado', 0)
           ->orderByDesc('feccreacion')
           ->first();
         if ($bloqueo) {

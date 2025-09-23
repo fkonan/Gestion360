@@ -17,19 +17,27 @@ class ApiAsopagos
       return ['token' => Cache::get($tokenCacheKey)];
     }
 
-    try {
-      $response = Http::asForm()
-        ->retry(3, 300)
-        ->timeout(28)
-        ->post(config('apiAsopagos.token_url'), [
-          'username'      => config('apiAsopagos.credentials.auth_username'),
-          'password'      => config('apiAsopagos.credentials.auth_password'),
-          'grant_type'    => 'password',
-          'client_id'     => config('apiAsopagos.credentials.client_id'),
-          'client_secret' => config('apiAsopagos.credentials.client_secret'),
-          'scope'         => config('apiAsopagos.credentials.scope'),
+    $response = Http::asForm()
+      ->timeout(28)
+      ->retry(3, 200, function ($exception, $request) {
+        Log::warning('🔄 REINTENTO - Token Asopagos falló', [
+          'exception_type' => get_class($exception),
+          'timestamp' => now()
         ]);
 
+        return $exception instanceof \Illuminate\Http\Client\ConnectionException
+          || $exception instanceof \Illuminate\Http\Client\RequestException;
+      })
+      ->post(config('apiAsopagos.token_url'), [
+        'username'      => config('apiAsopagos.credentials.auth_username'),
+        'password'      => config('apiAsopagos.credentials.auth_password'),
+        'grant_type'    => 'password',
+        'client_id'     => config('apiAsopagos.credentials.client_id'),
+        'client_secret' => config('apiAsopagos.credentials.client_secret'),
+        'scope'         => config('apiAsopagos.credentials.scope'),
+      ]);
+
+    try {
       if ($response->successful()) {
         $data = $response->json();
         $token = $data['access_token'] ?? null;
@@ -81,12 +89,12 @@ class ApiAsopagos
       'password'             => config('apiAsopagos.credentials.password'),
     ], $datos);
 
-    try {
-      $response = Http::withToken($token)
-        ->withHeaders(['Content-Type' => 'application/json'])
-        ->timeout(28)
-        ->post(config('apiAsopagos.base_url'), $payload);
+    $response = Http::withToken($token)
+      ->withHeaders(['Content-Type' => 'application/json'])
+      ->timeout(28)
+      ->post(config('apiAsopagos.base_url'), $payload);
 
+    try {
       $data = $response->json();
 
       //verificar que si existan datos en la respuesta de ASOPAGOS

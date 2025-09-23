@@ -62,7 +62,8 @@ class DetallePagoService
       return $detalle->id;
     } catch (Exception $e) {
       Log::error('Error al crear detalle pago: ' . $e->getMessage());
-      throw $e;
+      throw new Exception("Error al crear detalle pago.");
+      /* throw $e; */
     }
   }
 
@@ -79,7 +80,8 @@ class DetallePagoService
       return $result[0]->id;
     } catch (Exception $e) {
       Log::error('Error al obtener siguiente ID: ' . $e->getMessage());
-      throw $e;
+      throw new Exception("Error al obtener siguiente ID.");
+      /* throw $e; */
     }
   }
 }

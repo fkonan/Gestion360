@@ -37,6 +37,7 @@ class ComprobanteService
       $comprobante = ConComprobantes::where('pe_id_ag', $agenciaCaja)
         ->whereDate('fecaplica', $hoy)
         ->where('usrcreacion', $usuarioCaja)
+        ->where('estborrado', 0)
         ->first();
 
       if ($comprobante) {
@@ -88,7 +89,8 @@ class ComprobanteService
       return $comprobante;
     } catch (Exception $e) {
       Log::error('Error al crear/obtener comprobante: ' . $e->getMessage());
-      throw $e;
+      throw new Exception("Error al crear/obtener comprobante.");
+      /* throw $e; */
     }
   }
 
@@ -128,7 +130,8 @@ class ComprobanteService
       $detalle->save();
     } catch (Exception $e) {
       Log::error('Error al crear el detalle del comprobante: ' . $e->getMessage());
-      throw $e;
+      throw new Exception("Error al crear el detalle del comprobante.");
+      /* throw $e; */
     }
   }
 
@@ -207,7 +210,8 @@ class ComprobanteService
       $auxComprobante->save();
     } catch (Exception $e) {
       Log::error('Error al crear comprobante auxiliar: ' . $e->getMessage());
-      throw $e;
+      throw new Exception("Error al crear comprobante auxiliar.");
+      /* throw $e; */
     }
   }
 
@@ -244,7 +248,8 @@ class ComprobanteService
       return $numeroCuenta;
     } catch (Exception $e) {
       Log::error('Error al obtener número de cuenta: ' . $e->getMessage());
-      throw $e;
+      throw new Exception("Error al obtener número de cuenta.");
+      /* throw $e; */
     }
   }
 
@@ -272,7 +277,8 @@ class ComprobanteService
       return $result[0]->id;
     } catch (Exception $e) {
       Log::error('Error al obtener siguiente ID: ' . $e->getMessage());
-      throw $e;
+      throw new Exception("Error al obtener siguiente ID.");
+      /* throw $e; */
     }
   }
 
