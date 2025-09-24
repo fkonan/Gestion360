@@ -38,7 +38,7 @@
     <div class="text-end mb-2">
       <button type="button"
         class="btn btn-success shadow-sm me-1"
-        onclick="cargarModal(`{{ route('pagosConvenios.validarInformacion', ['uuid' => $uuid]) }}`, 'Validar pago', '', 'modal-lg')">
+        onclick="cargarModal(`{{ route('pagosConvenios.validarInformacion', ['uuid' => $uuid]) }}`, 'Valida la información de pago', '', 'modal-lg')">
         <i class="fas fa-check-circle me-1"></i> Validar
       </button>
     </div>

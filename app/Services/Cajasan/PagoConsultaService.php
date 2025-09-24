@@ -26,6 +26,7 @@ class PagoConsultaService
         ->where('estborrado', 0)
         ->first();
       if (!$cliente) {
+        /* $cliente = null; */
         return ['error' => true, 'message' => 'El documento no es válido.'];
       }
 
@@ -61,13 +62,15 @@ class PagoConsultaService
         50 => 'PE', // Permiso especial permanencia
       ];
 
-      $sigla = $tiposDocumento[$cliente->tipdocumento] ?? null;
+      if ($cliente) {
+        $sigla = $tiposDocumento[$cliente->tipdocumento] ?? null;
 
-      if (!$sigla) {
-        return [
-          'error'   => true,
-          'message' => 'Tipo de identificación no válido.'
-        ];
+        if (!$sigla) {
+          return [
+            'error'   => true,
+            'message' => 'Tipo de identificación no válido.'
+          ];
+        }
       }
 
       if (config('apiAsopagos.test_mode')) {
@@ -79,6 +82,13 @@ class PagoConsultaService
           'municipio'      => 11001
         ];
       } else {
+       /*  $clienteData = [
+          'tipoIdentificacion' => 'CC',
+          'identificacion' => $identificacion,
+          'nombre'         => 'Usuario Prueba Cajasan',
+          'departamento'   => 11,
+          'municipio'      => 11001
+        ]; */
         $clienteData = [
           'tipoIdentificacion' => $sigla,
           'identificacion'     => $cliente->identificacion,
@@ -129,7 +139,7 @@ class PagoConsultaService
       if (config('apiAsopagos.test_mode')) {
         return [
           'responseCode' => true,
-          'additionalData' => ['saldo' => 85000],
+          'additionalData' => ['saldo' => 42500],
         ];
       }
 

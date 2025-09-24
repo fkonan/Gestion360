@@ -99,7 +99,7 @@ class CajasanController extends Controller
             'error',
             null,
             'Ha ocurrido un error crítico en el pago.
-                        Por favor guarde este código y contacte a la mesa de ayuda: <b>' . ($resultado['extra'] ?? 'N/A') . '</b>'
+                        Por favor guarde este código y contacte con mesa de ayuda: <b>' . ($resultado['extra'] ?? 'N/A') . '</b>'
           );
 
         case 'rollback-ok':
