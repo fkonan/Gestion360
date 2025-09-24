@@ -140,6 +140,7 @@ class PagoService
         Log::error('Error en PagoService, se ejecutara un reverso: ' . $e->getMessage());
         $codigo = $pagoResponse['authorizationRspCode'];
 
+        //Respuesta de prueba
         if (config('apiAsopagos.test_mode')) {
           return [
             'error' => true,
@@ -228,7 +229,7 @@ class PagoService
 
       // Procesar reverso si aplica
       if ($reverso::requiere($pagoResponse)) {
-        $reverso::crear($pagoResponse['reverso'], $pagoResponse['authorizationRspCode']);
+        $reverso::crear($pagoResponse['reverso'], $pagoResponse['authorizationRspCode'] ?? $pagoResponse['reverso']['authorizationRspCode']);
       }
 
       // Cambiar estado a anulado
@@ -250,27 +251,27 @@ class PagoService
     try {
       if (config('apiAsopagos.test_mode')) {
         // success
-        return [
+        /*  return [
           'transactionId'        => random_int(1000000000000000, 9999999999999999),
           'transmissionDateTime' => now()->format('Y-m-d H:i:s'),
           'responseCode'         => true,
           'authorizationRspCode' => 654321,
           'errorID'              => 'E1',
-        ];
+        ]; */
 
         // Caso de prueba con error y reverso (satisfactorio/fallido)
-        /* return [
-                    'error' => 'Error al procesar el pago',
-                    'responseCode' => true,
-                    'status' => 'fallo_timeout_con_reverso',
-                    'reverso' => [
-                        'transactionId' => $idPagoDetalle,
-                        'transmissionDataTime' => now(),
-                        'responseCode' => true,
-                        'authorizationRspCode' => 444444,
-                        'errorID' => '99'
-                    ]
-                ];  */
+        return [
+          'error' => 'Error al procesar el pago',
+          'responseCode' => true,
+          'status' => 'fallo_timeout_sin_reverso',
+          'reverso' => [
+            'transactionId' => $idPagoDetalle,
+            'transmissionDataTime' => now(),
+            'responseCode' => false,
+            'authorizationRspCode' => 444444,
+            'errorID' => '99'
+          ]
+        ];
       }
 
       // Descomenta para usar la API real:
