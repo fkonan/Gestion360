@@ -41,34 +41,16 @@
           titulo="Descanso conductores"
           area="RRHH"
           descripcion="Reporte de conductores que han registrado ingresos y salidas para periodos de descanso"
-          formato="fas fa-file-excel fa-2x"
+          formato="EXCEL"
           icono="fas fa-fingerprint"
           :onclick="'cargarModal(`' . route('reportes.formulario', ['id' => 9]) . '`, `Reporte salidas a descanso`, ``, `modal-lg`)'" />
 
         <x-reporteItem
           consecutivo="2"
-          titulo="Vencimiento documentos pasajes"
-          area="Unidad pasajes"
-          descripcion="Reporta conductores de pasajes activos con documentos próximos a vencer en un rango de fecha"
-          formato="fas fa-file-excel fa-2x"
-          icono="fas fa-hourglass-half"
-          :onclick="'cargarModal(`' . route('reportes.formulario', ['id' => 5]) . '`, `Documentos conductores pasajes por vencer`, ``, `modal-lg`)'" />
-
-        <x-reporteItem
-          consecutivo="3"
-          titulo="Vencimiento documentos carga"
-          area="Unidad carga"
-          descripcion="Reporta conductores de carga activos con documentos próximos a vencer en un rango de fecha"
-          formato="fas fa-file-excel fa-2x"
-          icono="fas fa-hourglass-half"
-          :onclick="'cargarModal(`' . route('reportes.formulario', ['id' => 6]) . '`, `Documentos conductores carga por vencer`, ``, `modal-lg`)'" />
-
-        <x-reporteItem
-          consecutivo="4"
           titulo="Novedades preoperacionales COP"
           area="Unidad pasajes"
           descripcion="Reporte de conductores con bloqueos preoperacionales levantados por el COP"
-          formato="fas fa-file-excel fa-2x"
+          formato="EXCEL"
           icono="fas fa-hourglass-half"
           onclick="cargarModal(`{{ route('conductor.preoperacional.reporte') }}`, 'Reporte preoperacionales reportados COP','#firmaPreOpeForm','modal-md')" />
       </tbody>

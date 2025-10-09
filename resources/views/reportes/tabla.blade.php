@@ -16,7 +16,7 @@
     titulo="{{ $nombreReporte }}"
     :rutaVolver="url()->previous()"
     excelReporte="true"
-    excelRoute="{{ route('reportes.data', $params) }}"
+    excelRoute=""
     excelName="{{ $nombreDocExcel }}" />
 
   <!-- Contenedor para mensajes de error -->
@@ -50,9 +50,11 @@
 @endsection
 
 @pushOnce('script')
-{{-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> --}}
 <script>
-  $(document).ready(function() {
+  // Variable global para almacenar los datos del reporte
+  let reportData = [];
+
+  $(document).ready(function () {
     const params = @json($params);
     const queryString = new URLSearchParams(params).toString();
     const url = "{{ route('reportes.data') }}" + "?" + queryString;
@@ -62,32 +64,34 @@
     $.ajax({
       url: url,
       method: 'GET',
-      success: function(response) {
+      success: function (response) {
         $('#loading').hide();
 
         if (response.rows && response.rows.length > 0) {
+          reportData = response.rows;
+
           const columns = [{
-              field: 'numero',
-              title: 'Número',
-              formatter: function(value, row, index) {
-                return index + 1;
-              },
-              align: 'left',
-              width: 80
+            field: 'numero',
+            title: 'Número',
+            formatter: function (value, row, index) {
+              return index + 1;
             },
-            ...Object.keys(response.rows[0]).map(key => ({
-              field: key,
-              title: key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' '),
-              sortable: true,
-              cellStyle: {
-                css: {
-                  'white-space': 'nowrap',
-                  'text-overflow': 'ellipsis',
-                  'overflow': 'hidden',
-                  'max-width': '250px'
-                }
+            align: 'left',
+            width: 80
+          },
+          ...Object.keys(response.rows[0]).map(key => ({
+            field: key,
+            title: key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' '),
+            sortable: true,
+            cellStyle: {
+              css: {
+                'white-space': 'nowrap',
+                'text-overflow': 'ellipsis',
+                'overflow': 'hidden',
+                'max-width': '250px'
               }
-            }))
+            }
+          }))
           ];
 
           //Inicializar Bootstrap Table
@@ -108,7 +112,7 @@
             detailView: true,
             detailFormatter: detailFormatter,
             theadClasses: 'table-primary',
-            rowStyle: function(row, index) {
+            rowStyle: function (row, index) {
               return {
                 classes: 'bg-primary text-white'
               }
@@ -116,10 +120,15 @@
           });
 
           $('#table').show();
+
+          // Habilitar la exportación con datos locales
+          setupLocalExcelExport();
+
         } else {
           Swal.fire({
             icon: 'info',
-            title: 'No se encontraron registros para el rango seleccionado',
+            title: 'No se encontraron registros para los criterios seleccionados.',
+            text: 'Intenta ajustar los filtros o parámetros de búsqueda para obtener resultados.',
             confirmButtonColor: "#3366CC",
             confirmButtonText: "Aceptar",
             customClass: {
@@ -136,7 +145,7 @@
           });
         }
       },
-      error: function(xhr) {
+      error: function (xhr) {
         $('#loading').hide();
 
         Swal.fire({
@@ -160,11 +169,19 @@
     });
   });
 
+  function setupLocalExcelExport() {
+    const exportBtn = document.getElementById('exportar');
+    if (exportBtn && reportData.length > 0) {
+      exportBtn.setAttribute('data-url', JSON.stringify(reportData));
+      exportBtn.setAttribute('onclick', `exportarExcel(this.id, this.dataset.url, this.dataset.name, false)`);
+    }
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
     initTablaBootstrapTable(
       '#table', {
-        protegidas: ['']
-      },
+      protegidas: ['']
+    },
       'detailFormatter');
   });
 </script>

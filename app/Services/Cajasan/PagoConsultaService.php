@@ -27,7 +27,7 @@ class PagoConsultaService
         ->first();
       if (!$cliente) {
         /* $cliente = null; */
-        return ['error' => true, 'message' => 'El documento no es válido.'];
+        return ['error' => true, 'message' => 'Verifique el documento. Si es primer pago, registre la persona.'];
       }
 
       // 2. Obtener caja activa
@@ -82,7 +82,7 @@ class PagoConsultaService
           'municipio'      => 11001
         ];
       } else {
-       /*  $clienteData = [
+        /* $clienteData = [
           'tipoIdentificacion' => 'CC',
           'identificacion' => $identificacion,
           'nombre'         => 'Usuario Prueba Cajasan',
