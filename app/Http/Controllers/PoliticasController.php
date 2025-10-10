@@ -14,6 +14,7 @@ class PoliticasController extends Controller
   public const ID_POLITICA_EQUIPAJE = 1;
   public const ID_POLITICA_CAMARAS  = 2;
   public const ID_POLITICA_MENORES  = 3;
+  public const ID_POLITICA_SARLAFT  = 4;
   public const ID_POLITICA_MASCOTAS = 5;
 
   public function index()
@@ -71,8 +72,15 @@ class PoliticasController extends Controller
       return $pdf->stream($politica->politica . '-' . $firma->NomCon . '.pdf');
     }
 
-    //Plantilla defecto - otras politicas
-    $pdf = Pdf::loadView('politicas.plantillasPDF.default', [
+    //Plantilla pdf SARLAFT
+    if ($politicaId == self::ID_POLITICA_SARLAFT) {
+      $pdf = Pdf::loadView('politicas.plantillasPDF.sarlaft', compact('firma'));
+      $pdf->setPaper('A4', 'portrait');
+      return $pdf->stream($politica->politica . '-' . $firma->NomCon . '.pdf');
+    }
+
+    //Plantilla otras politicas
+    $pdf = Pdf::loadView('politicas.plantillasPDF.clausulaCumplimiento', [
       'firma' => $firma,
       'politicaId' => $politicaId,
       'ID_POLITICA_EQUIPAJE' => self::ID_POLITICA_EQUIPAJE,

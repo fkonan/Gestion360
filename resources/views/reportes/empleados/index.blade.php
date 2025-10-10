@@ -28,16 +28,22 @@
 
       <thead class="table-primary m-0 p-0 border-bottom">
         <tr>
+          <th>Número</th>
           <th>Reporte</th>
+          <th>Área</th>
           <th>Descripción</th>
+          <th>Formato de salida</th>
           <th>Acción</th>
         </tr>
       </thead>
       <tbody id="lista-reportes">
         <x-reporteItem
-          titulo="Firma empleados preingreso SARLAFT"
-          descripcion="Reporte de los empleados que firmaron las normas correspondiente preingreso a la empresa"
-          onclick="cargarModal(`{{ route('empleados.firmaNormas') }}`, 'Reporte firma normas SARLAFT','#firmaNormasForm','modal-md')" />
+          consecutivo="1"
+          area="RRHH"
+          titulo="Firma politicas"
+          descripcion="Reporte de los empleados que han firmado las politicas de la empresa"
+          formato="EXCEL"
+          onclick="cargarModal(`{{ route('empleados.firmaPoliticas') }}`, 'Reporte firma politicas','#firmaPoliticasForm','modal-lg')" />
       </tbody>
     </table>
   </div>
@@ -47,4 +53,23 @@
 
 @pushOnce('script')
 @vite(['resources/js/cargarModal.js'])
+<script>
+  function habilitarInputFiltro(checkElement) {
+    const parametro = document.getElementById('parametro');
+    const parametroLabel = parametro ? parametro.querySelector('label') : null;
+
+    if (checkElement.id === 'filtroCedula') {
+      parametro.style.display = '';
+      parametroLabel.innerHTML = 'Ingrese la cédula';
+
+    } else if (checkElement.id === 'filtroCodigo') {
+      parametro.style.display = '';
+      parametroLabel.innerHTML = 'Ingrese el código';
+
+    } else if (checkElement.id === 'filtroTodos') {
+      parametro.style.display = 'none';
+    }
+  }
+</script>
+
 @endpushOnce

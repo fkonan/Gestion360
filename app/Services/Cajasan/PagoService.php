@@ -170,6 +170,7 @@ class PagoService
         'message' => 'Error interno al realizar el pago.'
       ];
     } finally {
+      DB::disconnect('oracle');
       Cache::forget("pago:{$uuid}");
     }
   }

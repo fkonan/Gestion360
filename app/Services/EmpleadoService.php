@@ -21,7 +21,6 @@ class EmpleadoService
       ->where('ep.tp_id', 1)
       ->where('p.identificacion', $identificacion);
 
-
     if ($retornarPersona) {
       return $query->first() ?? null; // Devuelve el primer registro encontrado
     }
@@ -112,6 +111,13 @@ class EmpleadoService
       ->join('arq_personaroles as pr', 'pr.ep_id', '=', 'ep.id')
       ->join('arq_roles as r', 'r.id', '=', 'pr.ro_id')
       ->where('p.identificacion', $identificacion)
+      ->where('r.estborrado', 0)
+      ->where('p.estado', 'ACTIVO')
+      ->where('p.estborrado', 0)
+      ->where('ep.activo', 1)
+      ->where('ep.estborrado', 0)
+      ->where('pr.activo', 1)
+      ->where('pr.estborrado', 0)
       ->orderBy('r.descripcion')
       ->pluck('pr.ro_id');
 
@@ -123,16 +129,23 @@ class EmpleadoService
   {
     $rolesLogtrans = EmpleadoService::rolesLogtrans($identificacion);
 
-    //Roles que se asignan en autogestion según los roles de Logtrans
-    $rolesParaAsignar = Role::whereIn('idLogtrans', $rolesLogtrans)->get();
+    // Siempre quitar los roles existentes de Logtrans
+    $rolesConLogtrans = $user->roles()
+      ->whereNotNull('idLogtrans')
+      ->pluck('id')
+      ->toArray();
 
-    if ($rolesParaAsignar->isNotEmpty()) {
-      //Inilicializar los roles relacionados a logtrans
-      $user->roles()
-        ->whereNotNull('idLogtrans')
-        ->detach();
+    if (!empty($rolesConLogtrans)) {
+      $user->roles()->detach($rolesConLogtrans);
+    }
 
-      $user->assignRole($rolesParaAsignar);
+    // Solo asignar nuevos roles si rolesLogtrans no está vacío
+    if (!empty($rolesLogtrans)) {
+      $rolesParaAsignar = Role::whereIn('idLogtrans', $rolesLogtrans)->get();
+
+      if ($rolesParaAsignar->isNotEmpty()) {
+        $user->assignRole($rolesParaAsignar);
+      }
     }
   }
 }

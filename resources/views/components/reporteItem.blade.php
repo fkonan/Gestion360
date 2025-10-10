@@ -26,8 +26,8 @@
 
   {{-- Columna 3: Area --}}
   <td class="py-2 px-2">
-    <div class="d-flex align-items-center gap-2">
-      <span class="fw-medium">{{ $area }}</span>
+    <div class="d-flex align-items-center gap-2 flex-nowrap">
+      <span class="fw-medium text-nowrap">{{ $area }}</span>
     </div>
   </td>
 
@@ -39,7 +39,7 @@
   {{-- Columna 5: Formato salida --}}
   <td class="py-2 px-2">
     <div class="d-flex align-items-center gap-2">
-      <span class="fw-medium">EXCEL, PDF</span>
+      <span class="fw-medium">{{ $formato ?? 'EXCEL, PDF' }}</span>
     </div>
   </td>
 

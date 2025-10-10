@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Mail\CorreoUsuarioTemporal;
 use App\Models\GESTIONADMIN\FirmaPreingreso;
 use App\Models\GESTIONADMIN\UsuarioTemporal;
+use App\Models\GESTIONPASAJES\FirmaPoliticas;
 use App\Models\LOGTRANS\PerPersonas;
 use App\Services\BloqueoService;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -118,16 +120,20 @@ class EmpleadoController extends Controller
     }
   }
 
-  public function reporteFirmaNormas()
+  public function reporteFirmaPoliticas()
   {
-    return view('reportes.empleados.firmaNormas');
+    return view('reportes.empleados.firmaPoliticas');
   }
 
-  public function filtrarFirmaNormas(Request $request)
+  public function filtrarfirmaPoliticas(Request $request)
   {
-
     $validator = Validator::make($request->all(), [
-      'identificacion' => ['nullable', 'numeric'],
+      'fechaInicio' => 'date',
+      'fechaFin' => 'date|after_or_equal:fechaInicio',
+    ], [
+      'fechaInicio.date' => 'La fecha de inicio debe ser una fecha válida.',
+      'fechaFin.date' => 'La fecha de fin debe ser una fecha válida.',
+      'fechaFin.after_or_equal' => 'La fecha de fin debe ser igual o posterior a la fecha de inicio.',
     ]);
 
     if ($validator->fails()) {
@@ -137,65 +143,43 @@ class EmpleadoController extends Controller
     }
 
     try {
-      $columns = [
-        DB::raw('Id'),
-        DB::raw('Identificacion as identificacion'),
-        DB::raw('NombreCompleto as nombre_completo'),
-        DB::raw('FirmaIp as firma_ip'),
-        DB::raw('Correo as correo'),
-        DB::raw('FirFecReg as fecha_registro'),
-        DB::raw('FirHorReg as hora_registro')
-      ];
-
-      $query = FirmaPreingreso::select($columns);
-
-      if ($request->filled('identificacion')) {
-        $query->where("Identificacion", $request->identificacion);
-      }
-
-      $listaFirmas = $query->get();
-
-      if ($listaFirmas->isEmpty()) {
-        return toastModal("No se encontraron resultados para los parametros ingresados.", "warning", "#");
+      if ($request->tipoFiltro == 'todos') {
+        $data = FirmaPoliticas::whereBetween('FirFecReg', [$request->fechaInicio, $request->fechaFin])->get();
+      } elseif ($request->tipoFiltro == 'identificacion') {
+        $data = FirmaPoliticas::whereBetween('FirFecReg', [$request->fechaInicio, $request->fechaFin])
+          ->where('DocCon', $request->valorFiltro)
+          ->get();
+      } elseif ($request->tipoFiltro == 'codigo'){
+        $data = FirmaPoliticas::whereBetween('FirFecReg', [$request->fechaInicio, $request->fechaFin])
+          ->where('CodCon', $request->valorFiltro)
+          ->get();
       } else {
-        $params = http_build_query($request->only(['identificacion']));
-        return toastModal(
-          'Se han encontrado ' . $listaFirmas->count() . ' registros para los parámetros seleccionados',
-          "success",
-          route("lista.firmaNormas") . "?" . $params
-        );
+        return toastModal("Tipo de filtro no válido", "error");
       }
+
+      $registros = $data->count();
+
+      if ($data->isEmpty()) {
+        return toastModal("No se han encontrado registros para las fechas seleccionadas", "warning");
+      }
+
+      session(['firmas' => $data]);
+      return toastModal("Se han encontrado " . $registros . " registros para las fechas seleccionadas", "success", route('lista.firmaPoliticas'));
     } catch (Exception $e) {
-      Log::error('Error al obtener la lista de firmas preingreso empleados: ' . $e->getMessage());
+      Log::error('Error al obtener la lista de firmas de empleados: ' . $e->getMessage());
       return toastModal("Error al obtener los resultados", "error");
     }
   }
 
-  public function listaFirmasNormas()
+  public function listaFirmasPoliticas()
   {
-    return view('reportes.empleados.listaFirmasNormas');
+    return view('reportes.empleados.listaFirmasPoliticas');
   }
 
-  public function cargarDataFirmaNormas(Request $request)
+  public function cargarDataFirmaPoliticas()
   {
-
-    $columns = [
-      DB::raw('Id'),
-      DB::raw('Identificacion as identificacion'),
-      DB::raw('NombreCompleto as nombre_completo'),
-      DB::raw('Correo as correo'),
-      DB::raw('FirmaIp as firma_ip'),
-      DB::raw('FirFecReg as fecha_registro'),
-      DB::raw('FirHorReg as hora_registro')
-    ];
-
-    $query = FirmaPreingreso::select($columns);
-
-    if ($request->filled('identificacion')) {
-      $query->where("Identificacion", $request->identificacion);
-    }
-
-    return $query->get();
+    $firmas = session('firmas') ?? [];
+    return $firmas;
   }
 
   public function generarComprobantePDF($id)

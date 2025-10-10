@@ -36,14 +36,12 @@ class ReportesController extends Controller
     //Validacion campos obligatorios
     $validator = Validator::make($request->all(), [
       'id' => 'required|exists:reporteador,id',
-      'fechaInicio' => 'required|date',
-      'fechaFin' => 'required|date|after_or_equal:fechaInicio',
+      'fechaInicio' => 'date',
+      'fechaFin' => 'date|after_or_equal:fechaInicio',
     ], [
       'id.required' => 'El reporte es obligatorio.',
       'id.exists' => 'El reporte no existe.',
-      'fechaInicio.required' => 'La fecha de inicio es obligatoria.',
       'fechaInicio.date' => 'La fecha de inicio debe ser una fecha válida.',
-      'fechaFin.required' => 'La fecha de fin es obligatoria.',
       'fechaFin.date' => 'La fecha de fin debe ser una fecha válida.',
       'fechaFin.after_or_equal' => 'La fecha de fin debe ser igual o posterior a la fecha de inicio.',
     ]);
@@ -110,7 +108,7 @@ class ReportesController extends Controller
       }
 
       // Incrementar contador de consultas
-      $reporte->increment('total_consultas');
+      /* $reporte->increment('total_consultas'); */
 
       // Respuesta en formato Bootstrap Table
       return response()->json([
@@ -137,6 +135,14 @@ class ReportesController extends Controller
         'ruta' => 'reportes.conductores',
         'permiso' => Permisos::ADMINISTRACION_REPORTES_CONDUCTORES,
         'icono' => 'fa-solid fa-users'
+      ],
+      [
+        'titulo' => 'Reportes de Empleados',
+        'descripcion' => 'Consultar',
+        'tooltip' => 'Incluye reportes relacionados con la gestión y análisis de empleados.',
+        'ruta' => 'reportes.empleados',
+        'permiso' => Permisos::ADMINISTRACION_REPORTES_EMPLEADOS,
+        'icono' => 'fa-solid fa-user'
       ],
       [
         'titulo' => 'Reportes de Pasajes',
@@ -166,12 +172,18 @@ class ReportesController extends Controller
 
   public function reportesPasajes()
   {
-    return view("reportes.pasajes.index");
+    $reportesPasajes = Reporteador::where('area', 'Unidad pasajes')
+      ->where('estado', 'ACTIVO')
+      ->get();
+    return view("reportes.pasajes.index", compact('reportesPasajes'));
   }
 
   public function reportesCarga()
   {
-    return view("reportes.carga.index");
+    $reportesCarga = Reporteador::where('area', 'Unidad carga')
+      ->where('estado', 'ACTIVO')
+      ->get();
+    return view("reportes.carga.index", compact('reportesCarga'));
   }
 
   public function reportesEmpleados()

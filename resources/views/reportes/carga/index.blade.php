@@ -37,13 +37,15 @@
         </tr>
       </thead>
       <tbody id="lista-reportes">
-        <x-reporteItem
-          consecutivo="1"
-          area="Unidad carga"
-          titulo="Despachos por tipo de vehículo (Pais)"
-          descripcion="Reporte de despachos  a nivel nacional agrupado por agencia para una fecha dada y por tipo de vehículo"
-          formato="fas fa-file-excel fa-2x"
-          :onclick="'cargarModal(`' . route('reportes.formulario', ['id' => 8]) . '`, `Despachos por tipo de vehículo (Pais)`, ``, `modal-lg`)'" />
+        @foreach ($reportesCarga as $reporte)
+          <x-reporteItem
+            consecutivo="{{ $loop->iteration }}"
+            area="{{ $reporte->area }}"
+            titulo="{{ $reporte->nombre }}"
+            descripcion="{{ $reporte->descripcion }}"
+            formato="{{ $reporte->formato_salida }}"
+            :onclick="'cargarModal(`' . route('reportes.formulario', ['id' => $reporte->id]) . '`, `' . $reporte->nombre . '`, ``, `modal-lg`)'" />
+        @endforeach
       </tbody>
     </table>
   </div>
