@@ -34,6 +34,7 @@
           <th data-field="FirFecReg" data-sortable="true">Fecha de firma</th>
           <th data-field="FirHorReg" data-sortable="true">Hora de firma</th>
           <th data-field="Correo" data-sortable="true" class="text-nowrap">Correo</th>
+          <th data-field="acciones" data-formatter="comprobantePDF" class="text-center">Acciones</th>
         </tr>
       </thead>
     </table>
@@ -47,7 +48,7 @@
   document.addEventListener("DOMContentLoaded", () => {
     initTablaBootstrapTable(
       '#reporteFirmasPoliticas', {
-      protegidas: ['NombreCompleto']
+      protegidas: ['DocCon']
     },
       'detalleReporteFirmas', {
       'acciones': comprobantePDF
@@ -55,15 +56,17 @@
     );
   });
 
+  const rutaDescargar = "{{ route('firmas.descargar') }}";
+
   function comprobantePDF(value, row) {
-    const url = `{{ route('firmaNormas.comprobantePDF', ':id') }}`.replace(':id', row.Id);
     return `
-            <a href="${url}" target="_blank" title="Descargar comprobante">
-                <img src="{{ asset('img/descargarPDF.png') }}"
-                     alt="Descargar PDF"
-                     style="width:35px;height:35px;">
-            </a>
-        `;
+      <a href="${rutaDescargar}?firma_id=${row.IdFirma}"
+         class="btn btn-sm btn-danger"
+         target="_blank">
+         Ver PDF
+      </a>
+    `;
   }
+
 </script>
 @endpushOnce
