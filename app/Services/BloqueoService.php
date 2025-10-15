@@ -143,29 +143,50 @@ class BloqueoService
     return $estBloqueado;
   }
 
-
-  public static function levantarBloqueoFICS($docConductor, $idBloqueo): bool
+  public static function levantarBloqueoFICS($identificacion, $idBloqueo): bool
   {
+    //Verifica si el conductor tiene el bloqueo
+    $estBloqueado = self::tieneBloqueoFICS($identificacion, $idBloqueo);
 
-    //Verifica si el conductor tiene un bloqueo activo
-    $tieneBloqueo = self::tieneBloqueoFICS($docConductor, $idBloqueo);
-    if (!$tieneBloqueo) {
+    if (!$estBloqueado) {
       return false;
     }
 
     //Levanta el bloqueo
-    $tripulante = Tripulantes::with('bloqueos')
-      ->where('Documento', $docConductor)
+    $tripulantes = Tripulantes::with('bloqueos')
+      ->where('Documento', $identificacion)
       ->where('Estado', 0)
-      ->first();
+      ->get();
 
-    $tripulanteBloqueo = $tripulante->bloqueos()
-      ->where('PersonalEstadoTipoID', $idBloqueo)
-      ->where('FechaFinalizacion', '>', Carbon::now()->format('Y-d-m H:i:s'))
-      ->first();
+    if ($tripulantes->isEmpty()) {
+      return false;
+    }
 
-    $tripulanteBloqueo->FechaFinalizacion = Carbon::now()->subDay()->format('Y-d-m H:i:s');
-    $tripulanteBloqueo->save();
+    foreach ($tripulantes as $tripulante) {
+      $bloqueosActivos = $tripulante->bloqueos()
+        ->where('PersonalEstadoTipoID', $idBloqueo)
+        ->where('FechaFinalizacion', '>', Carbon::now()->format('Y-d-m H:i:s'))
+        ->get();
+
+      foreach ($bloqueosActivos as $bloqueo) {
+        $bloqueo->FechaFinalizacion = Carbon::now()->subDay()->format('Y-d-m H:i:s');
+        $bloqueo->save();
+      }
+    }
+
     return true;
+    /* $tripulante = Tripulantes::with('bloqueos')
+            ->where('Documento', $identificacion)
+            ->where('Estado',0)
+            ->first();
+
+        $tripulanteBloqueo = $tripulante->bloqueos()
+            ->where('PersonalEstadoTipoID', $idBloqueo)
+            ->where('FechaFinalizacion', '>', Carbon::now()->format('Y-d-m H:i:s'))
+            ->first();
+
+        $tripulanteBloqueo->FechaFinalizacion = Carbon::now()->subDay()->format('Y-d-m H:i:s');
+        $tripulanteBloqueo->save();
+        return true; */
   }
 }
