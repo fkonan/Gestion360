@@ -137,39 +137,81 @@ class EmpleadoController extends Controller
     ]);
 
     if ($validator->fails()) {
-      return response()->json([
-        'errors' => $validator->errors()
-      ], 422);
+      return response()->json(['errors' => $validator->errors()], 422);
     }
 
     try {
-      if ($request->tipoFiltro == 'todos') {
-        $data = FirmaPoliticas::whereBetween('FirFecReg', [$request->fechaInicio, $request->fechaFin])->get();
-      } elseif ($request->tipoFiltro == 'identificacion') {
-        $data = FirmaPoliticas::whereBetween('FirFecReg', [$request->fechaInicio, $request->fechaFin])
-          ->where('DocCon', $request->valorFiltro)
-          ->get();
-      } elseif ($request->tipoFiltro == 'codigo'){
-        $data = FirmaPoliticas::whereBetween('FirFecReg', [$request->fechaInicio, $request->fechaFin])
-          ->where('CodCon', $request->valorFiltro)
-          ->get();
-      } else {
+      $fechaInicio = $request->fechaInicio;
+      $fechaFin = $request->fechaFin;
+
+      // Consulta base
+      $query = FirmaPoliticas::whereBetween('FirFecReg', [$fechaInicio, $fechaFin])
+        ->where('PoliticaId', '!=', 2)
+        ->orderBy('FirFecReg', 'desc')
+        ->orderBy('FirHorReg', 'desc');
+
+      // Filtros
+      if ($request->tipoFiltro === 'identificacion') {
+        $query->where('DocCon', $request->valorFiltro);
+      } elseif ($request->tipoFiltro === 'codigo') {
+        $query->where('CodCon', $request->valorFiltro);
+      } elseif ($request->tipoFiltro !== 'todos') {
         return toastModal("Tipo de filtro no válido", "error");
       }
 
-      $registros = $data->count();
+      $data = $query->get();
 
       if ($data->isEmpty()) {
         return toastModal("No se han encontrado registros para las fechas seleccionadas", "warning");
       }
 
-      session(['firmas' => $data]);
-      return toastModal("Se han encontrado " . $registros . " registros para las fechas seleccionadas", "success", route('lista.firmaPoliticas'));
+      // Agrupación y mapeo
+      $agrupado = $data
+        ->groupBy(fn($item) => $item->DocCon . '|' . $item->CodCon)
+        ->flatMap(function ($grupo) {
+          $politicasEspeciales = $grupo->whereIn('PoliticaId', [1, 3, 5]);
+          $otrasPoliticas = $grupo->whereNotIn('PoliticaId', [1, 3, 5]);
+
+          $resultado = collect();
+
+          // Función para estructurar el formato de salida
+          $formatear = fn($item, $nombrePolitica) => [
+            'IdFirma' => $item->IdFirma,
+            'Código' => $item->CodCon,
+            'Documento' => $item->DocCon,
+            'Nombre del Empleado' => $item->NomCon,
+            'Fecha de Firma' => $item->FirFecReg . ' ' . $item->FirHorReg,
+            'Cargo' => $item->Cargo,
+            'Correo Electrónico' => $item->Correo,
+            'Nombre Política' => $nombrePolitica,
+          ];
+
+          if ($politicasEspeciales->isNotEmpty()) {
+            $primero = $politicasEspeciales->sortByDesc('FirFecReg')->first();
+            $nombreAgrupado = $politicasEspeciales->pluck('nombre_politica')->unique()->join(', ');
+            $resultado->push($formatear($primero, $nombreAgrupado));
+          }
+
+          foreach ($otrasPoliticas as $item) {
+            $resultado->push($formatear($item, $item->nombre_politica));
+          }
+
+          return $resultado;
+        });
+
+      session(['firmas' => $agrupado]);
+
+      return toastModal(
+        "Se han encontrado {$agrupado->count()} registros para las fechas seleccionadas",
+        "success",
+        route('lista.firmaPoliticas')
+      );
     } catch (Exception $e) {
       Log::error('Error al obtener la lista de firmas de empleados: ' . $e->getMessage());
       return toastModal("Error al obtener los resultados", "error");
     }
   }
+
 
   public function listaFirmasPoliticas()
   {

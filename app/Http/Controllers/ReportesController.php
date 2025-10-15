@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Constants\Permisos;
 use App\Models\FICS\Boleterias;
 use App\Models\GESTIONADMIN\Reporteador;
+use App\Models\GESTIONPASAJES\FirmaPoliticas;
 use App\Services\ApiReportes;
 use Carbon\Carbon;
 use Exception;
@@ -109,6 +110,25 @@ class ReportesController extends Controller
 
       // Incrementar contador de consultas
       /* $reporte->increment('total_consultas'); */
+
+
+      // Reporte 19: Conductores y empleados sin firma políticas
+      /*
+        Este reporte muestra los conductores y empleados que no tienen firma en las políticas.
+        Por lo que se requiere cargar desde la base de datos de gestión de pasajes cuales son los empleados que tienen firma.
+        */
+      if ($params['idReporte'] == 19) {
+        $empleadosConFirma = FirmaPoliticas::select('DocCon')
+          ->where('FirFecReg', '>=', '2025-10-01') // Fecha desde la cual se consideran las firmas
+          ->distinct()
+          ->pluck('DocCon')
+          ->toArray();
+
+        // Filtrar los datos para excluir los empleados que tienen firma
+        $data = array_values(array_filter($data, function ($item) use ($empleadosConFirma) {
+          return !in_array($item['IDENTIFICACION'], $empleadosConFirma);
+        }));
+      }
 
       // Respuesta en formato Bootstrap Table
       return response()->json([

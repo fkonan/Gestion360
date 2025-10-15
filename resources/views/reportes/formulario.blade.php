@@ -4,7 +4,7 @@
   <input type="hidden" name="id" value="{{ $id }}">
 
   <div class="p-4">
-    @if($parametros)
+    @if($parametros && !in_array('paramFirmaPoliticas', $parametros))
     <!-- Mensaje informativo sobre el rango de fechas -->
     <div class="alert alert-info mb-4" role="alert">
       <div class="d-flex align-items-center">

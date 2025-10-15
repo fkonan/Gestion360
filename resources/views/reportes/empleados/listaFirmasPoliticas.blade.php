@@ -17,7 +17,7 @@
 
   <x-sectionHeader titulo="Resultado firmas polticas empleados" rutaVolver="{{ route('reportes.empleados') }}"
     excel="true" excelRoute="{{ route('firmaPoliticas.cargarData') }}"
-    excelName="Firmas_Empleados_Politica_Preingreso" />
+    excelName="Firmas_Empleados_Politicas" />
 
   <div style="padding:1.5em">
     <table id="reporteFirmasPoliticas" class="table table-sm table-striped" data-page-size="25" data-toggle="table"
@@ -26,15 +26,14 @@
       data-url="{{ route('firmaPoliticas.cargarData') }}">
       <thead class="table-primary">
         <tr class="bg-primary">
-          <th data-field="NomCon" data-sortable="true" class="text-nowrap">Nombre completo</th>
-          <th data-field="DocCon" data-sortable="true">Identificación</th>
-          <th data-field="CodCon" data-sortable="true">Codigo</th>
-          <th data-field="Cargo" data-sortable="true" class="text-nowrap">Cargo</th>
-          <th data-field="nombre_politica" data-sortable="true" class="text-nowrap">Politica firmada</th>
-          <th data-field="FirFecReg" data-sortable="true">Fecha de firma</th>
-          <th data-field="FirHorReg" data-sortable="true">Hora de firma</th>
-          <th data-field="Correo" data-sortable="true" class="text-nowrap">Correo</th>
-          <th data-field="acciones" data-formatter="comprobantePDF" class="text-center">Acciones</th>
+          <th class="text-nowrap" data-field="Nombre del Empleado" data-sortable="true">Nombre completo</th>
+          <th class="text-nowrap" data-field="Documento" data-sortable="true">Identificación</th>
+          <th class="text-nowrap" data-field="Código" data-sortable="true">Código</th>
+          <th class="text-nowrap" data-field="Cargo" data-sortable="true">Cargo</th>
+          <th class="text-nowrap" data-field="Nombre Política" data-sortable="true">Política firmada</th>
+          <th class="text-nowrap" data-field="Fecha de Firma" data-sortable="true">Fecha de firma</th>
+          <th class="text-nowrap" data-field="Correo Electrónico" data-sortable="true">Correo</th>
+          <th class="text-nowrap" data-field="acciones" data-formatter="comprobantePDF" class="text-center">Acciones</th>
         </tr>
       </thead>
     </table>
