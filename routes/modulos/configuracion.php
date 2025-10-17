@@ -1,8 +1,8 @@
 <?php
 
 use App\Constants\Permisos;
+use App\Http\Controllers\Admin\RolController;
 use App\Http\Controllers\ModuloController;
-use App\Http\Controllers\RolController;
 use App\Http\Controllers\SubModuloController;
 use Illuminate\Support\Facades\Route;
 

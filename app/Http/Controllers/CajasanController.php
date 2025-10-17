@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\LOGTRANS\ConDetCarguePagRec;
 use App\Models\LOGTRANS\ConDetPagoRecaudo;
 use App\Models\LOGTRANS\PerPersonas;
-use App\Services\ApiAsopagos;
+use App\Services\Cajasan\ApiAsopagos;
 use App\Services\Cajasan\PagoConsultaService;
 use App\Services\Cajasan\PagoService;
 use Barryvdh\DomPDF\Facade\Pdf;

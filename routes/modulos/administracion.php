@@ -1,16 +1,15 @@
 <?php
 
 use App\Constants\Permisos;
-use App\Http\Controllers\PersonaController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\PermisosController;
-use App\Http\Controllers\RolController;
+use App\Http\Controllers\Admin\PermisosController;
+use App\Http\Controllers\Admin\RolController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\ReportesController;
 use App\Http\Controllers\TiquetesImpresosController;
 use App\Http\Controllers\ConductorController;
 use App\Http\Controllers\EmpleadoController;
 use App\Http\Controllers\GestionPasajesController;
-
+use App\Http\Controllers\Admin\PersonaController;
 use Illuminate\Support\Facades\Route;
 
 //Ruta Modulo administración
@@ -46,6 +45,18 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:' . Permisos::ADM
     Route::get('/reportes', [ReportesController::class, 'show'])->name('reportes.show');
     Route::get('/api/reportes', [ReportesController::class, 'data'])->name('reportes.data');
 
+    //Reportes Personas
+    Route::prefix("personas")->middleware(['permisos:' . Permisos::ADMINISTRACION_REPORTES_EMPLEADOS])->group(function () {
+      Route::get("/", [ReportesController::class, "reportesPersonas"])->name("reportes.personas");
+
+      //Firma politicas empleados
+      Route::get("/firmas-politicas", [ReportesController::class, "reporteFirmaPoliticas"])->name("empleados.firmaPoliticas");
+      Route::post("/firmas-politicas/filtrar", [ReportesController::class, "filtrarfirmaPoliticas"])->name("filtrar.firmaPoliticas");
+      Route::get("/firmas-politicas/listaFirmaPoliticas", [ReportesController::class, "listaFirmasPoliticas"])->name("lista.firmaPoliticas");
+      Route::get("/firmas-politicas/cargarData", [ReportesController::class, "cargarDataFirmaPoliticas"])->middleware('soloAJAX')->name("firmaPoliticas.cargarData");
+      Route::get("/firmas-politicas/{identificacion}/comprobante", [ReportesController::class, "generarComprobantePDF"])->name("firmaNormas.comprobantePDF");
+    });
+
     //Reportes Conductores
     Route::prefix("conductores")->middleware(['permisos:' . Permisos::ADMINISTRACION_REPORTES_CONDUCTORES])->group(function () {
       Route::get("/", [ReportesController::class, "reportesConductores"])->name("reportes.conductores");
@@ -53,12 +64,6 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:' . Permisos::ADM
       //Actualizacion estado conductor FICS
       Route::get("/actualizarEstadoModal", [ConductorController::class, "formActualizarEstado"])->middleware('soloAJAX')->name("conductor.estado");
       Route::put("/actualizarEstado", [ConductorController::class, "actualizarEstadoConductor"])->name("conductor.actualizarEstado");
-
-      //Firma politica equipaje
-      Route::get("/reporteEquipajeModal", [ConductorController::class, "reporteFirmaEquipaje"])->name("conductor.firmaEquipaje");
-      Route::post("/reporteEquipajeModal", [ConductorController::class, "filtrarFirmaEquipaje"])->name("filtrar.firmaEquipaje");
-      Route::get("/reporteEquipajeModal/cargarData", [ConductorController::class, "cargarDataFirmaEquipaje"])->middleware('soloAJAX')->name("firmaEquipaje.cargarData");
-      Route::get("/reporteEquipajeModal/listaFirmasEquipaje", [ConductorController::class, "listaFirmasEquipaje"])->name("lista.firmaEquipaje");
 
       //Novedades preoperacionales COP
       Route::get("/reporte-preoperacionales", [ConductorController::class, "reportePreoperacionales"])->name("conductor.preoperacional.reporte");
@@ -89,17 +94,5 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:' . Permisos::ADM
       Route::get("/", [ReportesController::class, "reportesCarga"])->name("reportes.carga");
     });
 
-
-    //Reportes Empleados
-    Route::prefix("empleados")->group(function () {
-      Route::get("/", [ReportesController::class, "reportesEmpleados"])->name("reportes.empleados");
-
-      //Firma politicas empleados
-      Route::get("/firmas-politicas", [EmpleadoController::class, "reporteFirmaPoliticas"])->name("empleados.firmaPoliticas");
-      Route::post("/firmas-politicas/filtrar", [EmpleadoController::class, "filtrarfirmaPoliticas"])->name("filtrar.firmaPoliticas");
-      Route::get("/firmas-politicas/listaFirmaPoliticas", [EmpleadoController::class, "listaFirmasPoliticas"])->name("lista.firmaPoliticas");
-      Route::get("/firmas-politicas/cargarData", [EmpleadoController::class, "cargarDataFirmaPoliticas"])->middleware('soloAJAX')->name("firmaPoliticas.cargarData");
-      Route::get("/firmas-politicas/{identificacion}/comprobante", [EmpleadoController::class, "generarComprobantePDF"])->name("firmaNormas.comprobantePDF");
-    });
   });
 });

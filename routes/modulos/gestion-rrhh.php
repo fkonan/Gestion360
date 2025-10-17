@@ -3,10 +3,10 @@
 use App\Constants\Permisos;
 use App\Http\Controllers\ConductorController;
 use App\Http\Controllers\EmpleadoController;
-use App\Http\Controllers\IncapacidadController;
+use App\Http\Controllers\Incapacidades\IncapacidadController;
+use App\Http\Controllers\Incapacidades\SeguimientoIncapacidadController;
 use App\Http\Controllers\ModuloController;
 use App\Http\Controllers\PoliticasController;
-use App\Http\Controllers\SeguimientoIncapacidadController;
 use Illuminate\Support\Facades\Route;
 
 

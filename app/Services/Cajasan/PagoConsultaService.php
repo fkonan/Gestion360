@@ -4,7 +4,7 @@ namespace App\Services\Cajasan;
 
 use App\Models\LOGTRANS\GenMunicipios;
 use App\Models\LOGTRANS\PerPersonas;
-use App\Services\ApiAsopagos;
+use App\Services\Cajasan\ApiAsopagos;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Str;

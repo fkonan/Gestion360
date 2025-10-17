@@ -149,23 +149,15 @@ class ReportesController extends Controller
   {
     $reportes = [
       [
-        'titulo' => 'Reportes de Conductores',
+        'titulo' => 'Reportes Personas',
         'descripcion' => 'Consultar',
-        'tooltip' => 'Incluye diversos reportes relacionados con la gestión y actividad de los conductores.',
-        'ruta' => 'reportes.conductores',
-        'permiso' => Permisos::ADMINISTRACION_REPORTES_CONDUCTORES,
+        'tooltip' => 'Incluye diversos reportes relacionados con la gestión y actividad de los empleados y conductores.',
+        'ruta' => 'reportes.personas',
+        'permiso' => Permisos::ADMINISTRACION_REPORTES_EMPLEADOS,
         'icono' => 'fa-solid fa-users'
       ],
       [
-        'titulo' => 'Reportes de Empleados',
-        'descripcion' => 'Consultar',
-        'tooltip' => 'Incluye reportes relacionados con la gestión y análisis de empleados.',
-        'ruta' => 'reportes.empleados',
-        'permiso' => Permisos::ADMINISTRACION_REPORTES_EMPLEADOS,
-        'icono' => 'fa-solid fa-user'
-      ],
-      [
-        'titulo' => 'Reportes de Pasajes',
+        'titulo' => 'Reportes Pasajes',
         'descripcion' => 'Consultar',
         'tooltip' => 'Incluye reportes relacionados con la gestión y análisis de pasajes, tiquetes y esquemas tarifarios.',
         'ruta' => 'reportes.pasajes',
@@ -173,7 +165,7 @@ class ReportesController extends Controller
         'icono' => 'fa-solid fa-ticket-alt'
       ],
       [
-        'titulo' => 'Reportes de Carga',
+        'titulo' => 'Reportes Carga',
         'descripcion' => 'Consultar',
         'tooltip' => 'Incluye reportes relacionados con la gestión y análisis de carga.',
         'ruta' => 'reportes.carga',
@@ -206,8 +198,124 @@ class ReportesController extends Controller
     return view("reportes.carga.index", compact('reportesCarga'));
   }
 
+  public function reportesPersonas()
+  {
+    $reportesPersonas = Reporteador::where('area', 'RRHH')
+      ->where('estado', 'ACTIVO')
+      ->get();
+    return view("reportes.personas.index", compact('reportesPersonas'));
+  }
+
   public function reportesEmpleados()
   {
     return view("reportes.empleados.index");
+  }
+
+  /*
+   Reportes que no estan en el reporteador
+  */
+
+  public function reporteFirmaPoliticas()
+  {
+    return view('reportes.empleados.firmaPoliticas');
+  }
+
+  public function filtrarfirmaPoliticas(Request $request)
+  {
+    $validator = Validator::make($request->all(), [
+      'fechaInicio' => 'date',
+      'fechaFin' => 'date|after_or_equal:fechaInicio',
+    ], [
+      'fechaInicio.date' => 'La fecha de inicio debe ser una fecha válida.',
+      'fechaFin.date' => 'La fecha de fin debe ser una fecha válida.',
+      'fechaFin.after_or_equal' => 'La fecha de fin debe ser igual o posterior a la fecha de inicio.',
+    ]);
+
+    if ($validator->fails()) {
+      return response()->json(['errors' => $validator->errors()], 422);
+    }
+
+    try {
+      $fechaInicio = $request->fechaInicio;
+      $fechaFin = $request->fechaFin;
+
+      // Consulta base
+      $query = FirmaPoliticas::whereBetween('FirFecReg', [$fechaInicio, $fechaFin])
+        ->where('PoliticaId', '!=', 2)
+        ->orderBy('FirFecReg', 'desc')
+        ->orderBy('FirHorReg', 'desc');
+
+      // Filtros
+      if ($request->tipoFiltro === 'identificacion') {
+        $query->where('DocCon', $request->valorFiltro);
+      } elseif ($request->tipoFiltro === 'codigo') {
+        $query->where('CodCon', $request->valorFiltro);
+      } elseif ($request->tipoFiltro !== 'todos') {
+        return toastModal("Tipo de filtro no válido", "error");
+      }
+
+      $data = $query->get();
+
+      if ($data->isEmpty()) {
+        return toastModal("No se han encontrado registros para las fechas seleccionadas", "warning");
+      }
+
+      // Agrupación y mapeo
+      $agrupado = $data
+        ->groupBy(fn($item) => $item->DocCon . '|' . $item->CodCon)
+        ->flatMap(function ($grupo) {
+          $politicasEspeciales = $grupo->whereIn('PoliticaId', [1, 3, 5]);
+          $otrasPoliticas = $grupo->whereNotIn('PoliticaId', [1, 3, 5]);
+
+          $resultado = collect();
+
+          // Función para estructurar el formato de salida
+          $formatear = fn($item, $nombrePolitica) => [
+            'IdFirma' => $item->IdFirma,
+            'Código' => $item->CodCon,
+            'Documento' => $item->DocCon,
+            'Nombre del Empleado' => $item->NomCon,
+            'Fecha de Firma' => $item->FirFecReg . ' ' . $item->FirHorReg,
+            'Cargo' => $item->Cargo,
+            'Correo Electrónico' => $item->Correo,
+            'Nombre Política' => $nombrePolitica,
+          ];
+
+          if ($politicasEspeciales->isNotEmpty()) {
+            $primero = $politicasEspeciales->sortByDesc('FirFecReg')->first();
+            $nombreAgrupado = $politicasEspeciales->pluck('nombre_politica')->unique()->join(', ');
+            $resultado->push($formatear($primero, $nombreAgrupado));
+          }
+
+          foreach ($otrasPoliticas as $item) {
+            $resultado->push($formatear($item, $item->nombre_politica));
+          }
+
+          return $resultado;
+        });
+
+      session(['firmas' => $agrupado]);
+
+      return toastModal(
+        "Se han encontrado {$agrupado->count()} registros para las fechas seleccionadas",
+        "success",
+        route('lista.firmaPoliticas')
+      );
+    } catch (Exception $e) {
+      Log::error('Error al obtener la lista de firmas de empleados: ' . $e->getMessage());
+      return toastModal("Error al obtener los resultados", "error");
+    }
+  }
+
+
+  public function listaFirmasPoliticas()
+  {
+    return view('reportes.empleados.listaFirmasPoliticas');
+  }
+
+  public function cargarDataFirmaPoliticas()
+  {
+    $firmas = session('firmas') ?? [];
+    return $firmas;
   }
 }

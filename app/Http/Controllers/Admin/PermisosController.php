@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
 use App\Models\User;
+use App\Http\Controllers\Controller;
 use Exception;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
