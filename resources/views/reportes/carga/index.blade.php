@@ -23,6 +23,8 @@
       id="reportesCarga"
       class="table table-sm table-striped table-hover align-middle mb-0"
       data-toggle="table"
+      data-detail-view="true"
+      data-detail-formatter="detalleReporte"
       data-locale="es-ES"
       data-search="true">
 
@@ -55,4 +57,14 @@
 
 @pushOnce('script')
 @vite(['resources/js/cargarModal.js'])
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    initTablaBootstrapTable(
+      '#reportesCarga', {
+        protegidas: ['']
+      },
+      'detalleReporte'
+    );
+  });
+</script>
 @endpushOnce

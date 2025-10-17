@@ -21,7 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'permisos' => PermissionMiddleware::class,
             'role' => RoleMiddleware::class,
             'caja.activa' => CajaActivaMiddleware::class,
-            'soloAJAX' => SoloAjaxMiddleware::class, 
+            'soloAJAX' => SoloAjaxMiddleware::class,
             'modulo.activo' => ModuloActivoMiddleware::class,
             'submodulo.activo' => SubModuloActivoMiddleware::class
         ]);

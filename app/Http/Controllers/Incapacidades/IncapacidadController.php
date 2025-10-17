@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Incapacidades;
 
 use App\Models\GESTIONADMIN\Parametros;
 use App\Models\GESTIONHUMANA\Arl;
@@ -9,6 +9,7 @@ use App\Models\GESTIONHUMANA\Eps;
 use App\Models\GESTIONHUMANA\Incapacidad;
 use App\Rules\IncapacidadMaxima;
 use App\Services\BloqueoService;
+use App\Http\Controllers\Controller;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;

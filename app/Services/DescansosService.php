@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
-class EventoConductorService
+class DescansosService
 {
   //EVENTOS DESCANSO
   public const REGRESO_DE_DESCANSO = 49;
@@ -25,6 +25,7 @@ class EventoConductorService
 
   //Bloqueo salidas a descanso
   public const BLOQUEO_DESCANSO_LOGTRANS = 70;
+
 
   public function registrarEventoDescanso($request)
   {
@@ -211,5 +212,51 @@ class EventoConductorService
 
       return $mensajeConcreto;
     }
+  }
+
+  public static function obtenerUltimoEventoDescanso($identificacion)
+  {
+    $persona = PerPersonas::where('identificacion', $identificacion)
+      ->where('estado','ACTIVO')
+      ->where('estborrado',0)
+      ->whereIn('tipdocumento', [1])
+      ->first();
+
+    if (!$persona) {
+      return response()->json([
+        'evento' => null,
+        'fecha' => null
+      ]);
+    }
+
+    $ultimoEvento = PerConductoresEventos::where('pe_id', $persona->id)
+      ->where('estborrado', 0)
+      ->whereIn('evento', [49, 50]) // Eventos relacionados con descanso
+      ->orderBy('id', 'desc')
+      ->first();
+
+    if ($ultimoEvento) {
+      $fechaEvento = Carbon::parse($ultimoEvento->fechaevento);
+      $haceSeisMeses = now()->subMonths(6);
+
+      /* solo se tendran en cuenta los eventos en los ultimos 6 meses*/
+      if ($fechaEvento->lte($haceSeisMeses)) {
+        return response()->json([
+          'evento' => null,
+          'fecha' => null
+        ]);
+      }
+
+      return response()->json([
+        'nombre' => trim($persona->pnombre . ' ' . $persona->psnombre . ' ' . $persona->papellido . ' ' . $persona->sapellido),
+        'evento' => $ultimoEvento->anotacion,
+        'fecha' => $fechaEvento->format('d/m/Y H:i')
+      ]);
+    }
+
+    return response()->json([
+      'evento' => null,
+      'fecha' => null
+    ]);
   }
 }

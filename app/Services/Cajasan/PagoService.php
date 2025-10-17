@@ -4,7 +4,7 @@ namespace App\Services\Cajasan;
 
 use App\Models\LOGTRANS\ConDetCarguePagRec;
 use App\Models\LOGTRANS\ConPagosRecaudos;
-use App\Services\ApiAsopagos;
+use App\Services\Cajasan\ApiAsopagos;
 use App\Services\UsuarioService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;

@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Incapacidades;
 
 use App\Models\GESTIONHUMANA\Incapacidad;
 use App\Models\GESTIONHUMANA\incapacidadesSeguimiento;
+use App\Http\Controllers\Controller;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;

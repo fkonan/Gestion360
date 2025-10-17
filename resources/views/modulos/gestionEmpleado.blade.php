@@ -13,28 +13,50 @@
 <div class="container optionsMenu mt-4 p-0" style="max-width: 1500px;">
   <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-2">
     <div class="col">
-      <x-card color="bg-success" titulo="Incapacidades" descripcion="Gestión" icono="fa-procedures"
+      <x-card
+        color="bg-success"
+        titulo="Incapacidades"
+        descripcion="Gestión"
+        icono="fa-procedures"
         ruta="{{ route('gestion-empleado.incapacidades') }}" />
     </div>
     <div class="col">
-      <x-card color="bg-warning" titulo="Incapacidades" descripcion="Seguimiento" icono="fa-phone"
+      <x-card
+        color="bg-warning"
+        titulo="Incapacidades"
+        descripcion="Seguimiento"
+        icono="fa-phone"
         ruta="{{ route('gestion-empleado.seguimiento') }}" />
     </div>
 
     <div class="col"
       onclick="cargarModal(`{{ route('conductor.descanso') }}`, 'Aqui puede registrar eventos no reportados de descanso de conductores','#descansoConductorForm','modal-md')">
-      <x-card color="bg-secondary" titulo="Descanso Conductores" descripcion="Gestión" icono="fas fa-bed" ruta="#" />
-    </div>
-
-    <div class="col"
-      onclick="cargarModal(`{{ route('conductor.preoperacional.index') }}`, 'Aqui puede levantar bloqueos por revisión de preoperacionales','#preoperacionalForm','modal-md')">
-      <x-card color="bg-danger" titulo="Revisión preoperacional" descripcion="Novedad" icono="fas fa-clipboard-check"
+      <x-card
+        color="bg-secondary"
+        titulo="Descanso Conductores"
+        descripcion="Gestión"
+        icono="fas fa-bed"
         ruta="#" />
     </div>
 
     <div class="col"
-      onclick="cargarModal(`{{ route('politicas.index') }}`, 'Politicas firmadas por el conductor','#formPoliticas','modal-lg')">
-      <x-card color="bg-success" titulo="Firmas empleados" descripcion="Politicas" icono="fa-signature" ruta="#" />
+      onclick="cargarModal(`{{ route('conductor.preoperacional.index') }}`, 'Aqui puede levantar bloqueos por revisión de preoperacionales','#preoperacionalForm','modal-md')">
+      <x-card
+        color="bg-danger"
+        titulo="Revisión preoperacional"
+        descripcion="Novedad"
+        icono="fas fa-clipboard-check"
+        ruta="#" />
+    </div>
+
+    <div class="col"
+      onclick="cargarModal(`{{ route('politicas.index') }}`, 'Politicas firmadas por el empleado','#formPoliticas','modal-lg')">
+      <x-card
+        color="bg-success"
+        titulo="Firmas empleados"
+        descripcion="Politicas"
+        icono="fa-signature"
+        ruta="#" />
     </div>
 
   </div>

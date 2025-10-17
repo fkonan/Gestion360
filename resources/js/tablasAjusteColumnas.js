@@ -20,7 +20,6 @@ function initColumnaAjuste(selector, opciones = {}) {
         return columnas.filter(col => col.field && !columnasProtegidas.includes(col.field));
     };
 
-    // ¿Hay contenido en el detalle?
     const hayDetalleVisible = () => {
         const filas = tabla.bootstrapTable('getData') || [];
         return filas.some(row => {
