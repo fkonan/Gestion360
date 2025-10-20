@@ -7,13 +7,14 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\ReportesController;
 use App\Http\Controllers\TiquetesImpresosController;
 use App\Http\Controllers\ConductorController;
-use App\Http\Controllers\EmpleadoController;
 use App\Http\Controllers\GestionPasajesController;
 use App\Http\Controllers\Admin\PersonaController;
 use Illuminate\Support\Facades\Route;
 
 //Ruta Modulo administración
 Route::prefix("administracion")->middleware(['auth', 'permisos:' . Permisos::ADMINISTRACION_ACCEDER, 'modulo.activo:12'])->group(function () {
+
+  //Submodulo Personas
   Route::prefix("personas")->middleware(['permisos:administracion.personas.acceder', 'submodulo.activo:21'])->group(function () {
     Route::get("/", [PersonaController::class, "index"])->name("personas.index");
     Route::get("/crear", [PersonaController::class, "create"])->name("personas.create");
@@ -23,6 +24,8 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:' . Permisos::ADM
     Route::get("cargarDatos", [PersonaController::class, "cargarDatos"])->middleware('soloAJAX')->name("personas.cargarDatos");
     Route::post("/{id}/cambiar-estado", [PersonaController::class, "cambiarEstado"])->middleware('soloAJAX')->name("personas.cambiarEstado");
   });
+
+  //Submodulo Usuarios
   Route::prefix("usuarios")->middleware(['permisos:' . Permisos::ADMINISTRACION_USUARIOS_ACCEDER, 'submodulo.activo:20'])->group(function () {
     Route::get("/", [UserController::class, "index"])->name("usuarios.index");
     Route::get("/create", [UserController::class, "create"])->middleware('soloAJAX')->name("usuarios.create");
@@ -37,12 +40,13 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:' . Permisos::ADM
     Route::post("/{id}/cambiar-estado", [UserController::class, "cambiarEstado"])->middleware('soloAJAX')->name("usuarios.cambiarEstado");
   });
 
-  Route::prefix("reportes")->middleware(['permisos:' . Permisos::ADMINISTRACION_REPORTES_ACCEDER, 'submodulo.activo:22'])->group(function () {
+  //Submodulo Reportes
+  Route::prefix("reporteador")->middleware(['permisos:' . Permisos::ADMINISTRACION_REPORTES_ACCEDER, 'submodulo.activo:22'])->group(function () {
     Route::get("/", [ReportesController::class, "getReportes"])->name("reportes.index");
 
-    //Reporteador
-    Route::get("/{id}/formulario", [ReportesController::class, 'mostrarFormulario'])->name('reportes.formulario');
     Route::get('/reportes', [ReportesController::class, 'show'])->name('reportes.show');
+    Route::get('/reportes/{area}', [ReportesController::class, 'reportesPorArea'])->name('reportes.area');
+    Route::get("/{id}/formulario", [ReportesController::class, 'mostrarFormulario'])->name('reportes.formulario');
     Route::get('/api/reportes', [ReportesController::class, 'data'])->name('reportes.data');
 
     //Reportes Personas

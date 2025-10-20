@@ -14,7 +14,7 @@
 
   <x-sectionHeader
     titulo="{{ $nombreReporte }}"
-    :rutaVolver="url()->previous()"
+    rutaVolver="{{ $ruta }}"
     excelReporte="true"
     excelRoute=""
     excelName="{{ $nombreDocExcel }}" />

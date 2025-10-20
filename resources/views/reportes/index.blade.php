@@ -33,7 +33,7 @@
           descripcion="{{ $reporte['descripcion'] }}"
           tooltip="{{ $reporte['tooltip'] }}"
           icono="{{ $reporte['icono'] }}"
-          ruta="{{ route($reporte['ruta']) }}" />
+          ruta="{{ route($reporte['ruta'][0], $reporte['ruta'][1]) }}" />
       </div>
       @else
       @permite($reporte['permiso'])
@@ -43,7 +43,7 @@
           descripcion="{{ $reporte['descripcion'] }}"
           tooltip="{{ $reporte['tooltip'] }}"
           icono="{{ $reporte['icono'] }}"
-          ruta="{{ route($reporte['ruta']) }}" />
+          ruta="{{ route($reporte['ruta'][0], $reporte['ruta'][1]) }}" />
       </div>
       @endpermite
       @endif

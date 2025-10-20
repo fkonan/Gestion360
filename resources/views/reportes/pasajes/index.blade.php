@@ -59,7 +59,7 @@
           formato="EXCEL"
           :onclick="'cargarModal(`' . route('esquemaTarifario.index') . '`, `Esquema tarifario pasajes`, `#esquemaTarifarioForm`, `modal-lg`)'" />
 
-        @foreach ($reportesPasajes as $reporte)
+        @foreach ($reportes as $reporte)
         <x-reporteItem
           consecutivo="{{ $loop->iteration + 2 }}"
           area="{{ $reporte->area }}"

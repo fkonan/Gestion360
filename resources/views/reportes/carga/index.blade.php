@@ -39,7 +39,7 @@
         </tr>
       </thead>
       <tbody id="lista-reportes">
-        @foreach ($reportesCarga as $reporte)
+        @foreach ($reportes as $reporte)
           <x-reporteItem
             consecutivo="{{ $loop->iteration }}"
             area="{{ $reporte->area }}"

@@ -6,7 +6,7 @@
 <x-breadcrumb :items="[
         ['name' => 'Inicio', 'url' => route('home')],
         ['name' => 'Reportes', 'url' => route('reportes.index')],
-        ['name' => 'Empleados', 'url' => route('reportes.personas')],
+        ['name' => 'Empleados', 'url' => route('reportes.area', ['area' => 'personas'])],
         ['name' => 'Firmas politicas'],
     ]" />
 <br>
@@ -15,8 +15,11 @@
 @section('content')
 <div class="container-fluid tableContainer p-0 border rounded sidebar-dark-primary" style="min-height:150px">
 
-  <x-sectionHeader titulo="Resultado firmas polticas empleados" rutaVolver="{{ route('reportes.personas') }}"
-    excel="true" excelRoute="{{ route('firmaPoliticas.cargarData') }}"
+  <x-sectionHeader
+    titulo="Resultado firmas polticas empleados"
+    rutaVolver="{{ route('reportes.area', ['area' => 'personas']) }}"
+    excel="true"
+    excelRoute="{{ route('firmaPoliticas.cargarData') }}"
     excelName="Firmas_Empleados_Politicas" />
 
   <div style="padding:1.5em">
