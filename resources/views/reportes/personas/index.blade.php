@@ -55,7 +55,7 @@
           formato="EXCEL"
           onclick="cargarModal(`{{ route('empleados.firmaPoliticas') }}`, 'Reporte firma politicas','#firmaPoliticasForm','modal-lg')" />
 
-        @foreach ($reportesPersonas as $reporte)
+        @foreach ($reportes as $reporte)
           <x-reporteItem
             consecutivo="{{ $loop->iteration + 1 }}"
             area="{{ $reporte->area }}"

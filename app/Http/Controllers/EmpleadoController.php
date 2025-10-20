@@ -44,7 +44,7 @@ class EmpleadoController extends Controller
     ]);
   }
 
-  public function gestionNuevoIngreso(Request $request)
+  /* public function gestionNuevoIngreso(Request $request)
   {
 
     $validator = Validator::make($request->all(), [
@@ -146,5 +146,5 @@ class EmpleadoController extends Controller
       Log::error('Error al generar el comprobante PDF: ' . $e->getMessage());
       return sweetAlert('Error al generar el comprobante PDF', 'error');
     }
-  }
+  } */
 }
