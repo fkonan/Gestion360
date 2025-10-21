@@ -7,6 +7,7 @@ use App\Models\LOGTRANS\PerPersonaBloqueo;
 use App\Models\LOGTRANS\PerPersonas;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class BloqueoService
@@ -102,7 +103,7 @@ class BloqueoService
       $usuarioId = EmpleadoService::idPersonaLogtrans($identificacion);
 
       $bloqueo = new PerPersonaBloqueo();
-      $bloqueo->id = $ultimoId;
+      $bloqueo->id = DB::connection('oracle')->select("SELECT SEC_PER_PERSONASBLOQUEO.NEXTVAL as id FROM DUAL")[0]->id;
       $bloqueo->cedula_conductor = $identificacion;
       $bloqueo->tb_id = $idBloqueo;
       $bloqueo->descripcion = $descripcion;

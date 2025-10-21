@@ -9,6 +9,7 @@ use App\Http\Controllers\TiquetesImpresosController;
 use App\Http\Controllers\ConductorController;
 use App\Http\Controllers\GestionPasajesController;
 use App\Http\Controllers\Admin\PersonaController;
+use App\Http\Controllers\PoliticasController;
 use Illuminate\Support\Facades\Route;
 
 //Ruta Modulo administración
@@ -52,6 +53,13 @@ Route::prefix("administracion")->middleware(['auth', 'permisos:' . Permisos::ADM
     //Reportes Personas
     Route::prefix("personas")->middleware(['permisos:' . Permisos::ADMINISTRACION_REPORTES_EMPLEADOS])->group(function () {
       Route::get("/", [ReportesController::class, "reportesPersonas"])->name("reportes.personas");
+
+      //Actualizacion datos empleados y conductores
+      Route::get("/actualizacion-datos", [ReportesController::class, "reporteActualizacionDatos"])->name("empleados.actDatos");
+      Route::post("/actualizacion-datos/filtrar", [ReportesController::class, "filtrarActualizacionDatos"])->name("filtrar.actDatos");
+      Route::get("/actualizacion-datos/listaActualizacionDatos", [ReportesController::class, "listaActualizacionDatos"])->name("lista.actDatos");
+      Route::get("/actualizacion-datos/cargarData", [ReportesController::class, "cargarDataActualizacionDatos"])->middleware('soloAJAX')->name("actDatos.cargarData");
+      Route::get("/actualizacion-datos/firmas/descargar", [PoliticasController::class, 'generarPDFDatosActualizacion'])->name('decargar.pdf.actualizacionDatos');
 
       //Firma politicas empleados
       Route::get("/firmas-politicas", [ReportesController::class, "reporteFirmaPoliticas"])->name("empleados.firmaPoliticas");
