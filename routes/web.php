@@ -2,8 +2,8 @@
 
 use App\Constants\Permisos;
 use App\Constants\Roles;
-use App\Http\Controllers\GestionPasajesController;
-use App\Http\Controllers\TrackingRemesas;
+use App\Modules\Administration\Http\Controllers\GestionPasajesController;
+use App\Modules\GestionWeb\Http\Controllers\TrackingRemesasController;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
@@ -38,7 +38,7 @@ Route::get('/tracking-remesas', function () {
   return view('remesas.trackingRemesas');
 })->name('trackingRemesas.index');
 
-Route::post('/tracking-remesas/consultar', [TrackingRemesas::class, 'consultar'])->name('trackingRemesas.consultar');
+Route::post('/tracking-remesas/consultar', [TrackingRemesasController::class, 'consultar'])->name('trackingRemesas.consultar');
 
 
 // Rutas publicas

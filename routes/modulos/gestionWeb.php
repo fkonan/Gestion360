@@ -1,8 +1,8 @@
 <?php
 
 use App\Constants\Permisos;
-use App\Http\Controllers\AppmovilController;
-use App\Http\Controllers\GestionWebController;
+use App\Modules\GestionWeb\Http\Controllers\AppmovilController;
+use App\Modules\GestionWeb\Http\Controllers\GestionWebController;
 use Illuminate\Support\Facades\Route;
 
 //Rutas Modulo Gestion Web

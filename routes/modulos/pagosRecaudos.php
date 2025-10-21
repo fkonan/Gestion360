@@ -1,7 +1,7 @@
 <?php
 
 use App\Constants\Permisos;
-use App\Http\Controllers\CajasanController;
+use App\Modules\PagosRecaudos\Http\Controllers\CajasanController;
 use Illuminate\Support\Facades\Route;
 
 //Rutas modulo pagos y recaudos

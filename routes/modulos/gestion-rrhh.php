@@ -1,12 +1,12 @@
 <?php
 
 use App\Constants\Permisos;
-use App\Http\Controllers\ConductorController;
-use App\Http\Controllers\EmpleadoController;
-use App\Http\Controllers\Incapacidades\IncapacidadController;
-use App\Http\Controllers\Incapacidades\SeguimientoIncapacidadController;
-use App\Http\Controllers\ModuloController;
-use App\Http\Controllers\PoliticasController;
+use App\Modules\Configuracion\Http\Controllers\ModuloController;
+use App\Modules\GestionRRHH\Http\Controllers\ConductorController;
+use App\Modules\GestionRRHH\Http\Controllers\EmpleadoController;
+use App\Modules\GestionRRHH\Http\Controllers\Incapacidades\IncapacidadController;
+use App\Modules\GestionRRHH\Http\Controllers\Incapacidades\SeguimientoIncapacidadController;
+use App\Modules\GestionRRHH\Http\Controllers\PoliticasController;
 use Illuminate\Support\Facades\Route;
 
 

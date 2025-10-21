@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\GESTIONADMIN\Persona;
 use App\Services\Auth\LoginValidatorService;
 use App\Services\Auth\RegistroSesionService;
-use App\Services\EmpleadoService;
+use App\Modules\GestionRRHH\Services\EmpleadoService;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
