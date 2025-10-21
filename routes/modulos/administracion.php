@@ -1,15 +1,15 @@
 <?php
 
 use App\Constants\Permisos;
-use App\Http\Controllers\Admin\PermisosController;
-use App\Http\Controllers\Admin\RolController;
-use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\ReportesController;
-use App\Http\Controllers\TiquetesImpresosController;
-use App\Http\Controllers\ConductorController;
-use App\Http\Controllers\GestionPasajesController;
-use App\Http\Controllers\Admin\PersonaController;
-use App\Http\Controllers\PoliticasController;
+use App\Modules\Administration\Http\Controllers\GestionPasajesController;
+use App\Modules\Administration\Http\Controllers\PermisosController;
+use App\Modules\Administration\Http\Controllers\PersonaController;
+use App\Modules\Administration\Http\Controllers\ReportesController;
+use App\Modules\Administration\Http\Controllers\RolController;
+use App\Modules\Administration\Http\Controllers\TiquetesImpresosController;
+use App\Modules\Administration\Http\Controllers\UserController;
+use App\Modules\GestionRRHH\Http\Controllers\ConductorController;
+use App\Modules\GestionRRHH\Http\Controllers\PoliticasController;
 use Illuminate\Support\Facades\Route;
 
 //Ruta Modulo administración

@@ -1,9 +1,9 @@
 <?php
 
 use App\Constants\Permisos;
-use App\Http\Controllers\Admin\RolController;
-use App\Http\Controllers\ModuloController;
-use App\Http\Controllers\SubModuloController;
+use App\Modules\Administration\Http\Controllers\RolController;
+use App\Modules\Configuracion\Http\Controllers\ModuloController;
+use App\Modules\Configuracion\Http\Controllers\SubModuloController;
 use Illuminate\Support\Facades\Route;
 
 //Rutas Modulo Configuracion
