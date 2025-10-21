@@ -44,7 +44,13 @@ class LoginController extends Controller
 
       //CASO 1 - No existe usuario en autogestion -> se crea uno si existe en logtrans
       if (!$user) {
-        $user = $validador->validarLogtrans($request->identificacion, $request->password);
+        $resultadoLogtrans = $validador->validarLogtrans($request->identificacion, $request->password);
+
+        if (is_array($resultadoLogtrans)) {
+          return toast($resultadoLogtrans['message'], $resultadoLogtrans['type']);
+        }
+
+        $user = $resultadoLogtrans;
       } else {
 
         //CASO 2 - Si existe usuario en autogestion -> se valida
