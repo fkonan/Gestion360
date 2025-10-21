@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\GESTIONPASAJES\ActualizacionDatos;
 use App\Models\GESTIONPASAJES\ConfigPoliticas;
 use App\Models\GESTIONPASAJES\FirmaPoliticas;
 use Illuminate\Http\Request;
@@ -56,6 +57,16 @@ class PoliticasController extends Controller
     ]);
   }
 
+  //otro_si - Actualizacion datos
+  public function generarPDFDatosActualizacion(Request $request)
+  {
+    $firma = ActualizacionDatos::findOrFail($request->firma_id);
+    $pdf = Pdf::loadView('politicas.plantillasPDF.actualizacionDatos', compact('firma'));
+    $pdf->setPaper('A4', 'portrait');
+    return $pdf->stream('ActualizacionDatos-' . $firma->NomCon . '.pdf');
+  }
+
+  //Generar PDF politica firmada
   public function generarPDFPolitica(Request $request)
   {
     $firma = FirmaPoliticas::findOrFail($request->firma_id);

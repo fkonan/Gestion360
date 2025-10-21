@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\FICS\Boleterias;
 use App\Models\GESTIONADMIN\Reporteador;
+use App\Services\ReporteActDatosService;
+use App\Services\Reportes\ReporteActDatosService as ReportesReporteActDatosService;
 use App\Services\Reportes\ReportePoliticasService;
 use App\Services\Reportes\ReportesService;
 use Illuminate\Http\Request;
@@ -146,6 +148,52 @@ class ReportesController extends Controller
   /*
    Reportes que no estan en el reporteador
   */
+  //1. Actualizacion de datos personales RRHH
+  public function reporteActualizacionDatos()
+  {
+    return view('reportes.personas.actualizacionDatos');
+  }
+
+  public function filtrarActualizacionDatos(Request $request, ReportesReporteActDatosService $reporteActDatosService)
+  {
+    $validator = Validator::make($request->all(), [
+      'filtro' => 'required',
+    ], [
+      'filtro.required' => 'El filtro es obligatorio.',
+    ]);
+
+    if ($validator->fails()) {
+      return response()->json(['errors' => $validator->errors()], 422);
+    }
+
+    try {
+      $filtro = $request->input('filtro');
+      $actDatos = $reporteActDatosService->obtenerData($filtro);
+
+      session(['actDatos' => $actDatos]);
+
+      return toastModal(
+        "Se han encontrado {$actDatos->count()} registros",
+        "success",
+        route('lista.actDatos')
+      );
+    } catch (Exception $e) {
+      return toastModal($e->getMessage(), "error");
+    }
+  }
+
+
+  public function listaActualizacionDatos()
+  {
+    return view('reportes.personas.listaActualizacionDatos');
+  }
+
+  public function cargarDataActualizacionDatos()
+  {
+    return session('actDatos') ?? [];
+  }
+
+  //2. Firma politicas de la empresa RRHH
   public function reporteFirmaPoliticas()
   {
     return view('reportes.empleados.firmaPoliticas');
