@@ -29,6 +29,9 @@ class ReportesService
 
     // Consultar API
     $data = $this->apiReportes->obtenerReporte($params);
+    if(!$data){
+      return [];
+    }
 
     // Incrementar contador de consultas
     //$reporte->increment('total_consultas');

@@ -45,8 +45,8 @@
         <span class="error text-danger fw-bold" id="error-fechaFin"></span>
       </div>
       @endif
-
-      @if(in_array('paramAgencia', $parametros) && $origen_db == "FICS")
+      <!-- && $origen_db == "FICS" -->
+      @if(in_array('paramAgencia', $parametros))
       <div class="col-md-6 mt-3">
         <label for="agencia" class="form-label">Agencia *</label>
         <select class="form-select select2" id="agencia" name="agencia">
@@ -63,8 +63,8 @@
 
       @if(in_array('paramIdentificacion', $parametros))
       <div class="col-12 col-md-6 mt-3">
-        <label for="identificacion" class="form-label">Ingrese el número de documento</label>
-        <input type="number" name="identificacion" id="identificacion" class="form-control" required>
+        <label for="identificacion" class="form-label">Número de documento</label>
+        <input type="number" name="identificacion" id="identificacion" class="form-control">
         <span class="error text-danger fw-bold" id="error-identificacion"></span>
       </div>
       @endif
@@ -96,6 +96,18 @@
         <label for="valorFiltro" class="form-label">Ingrese el parametro</label>
         <input type="text" name="valorFiltro" id="valorFiltro" class="form-control">
         <span class="error text-danger fw-bold" id="error-valorFiltro"></span>
+      </div>
+      @endif
+
+      @if(in_array('paramPlacaVehiculo', $parametros))
+      <div class="col-12 col-md-6 mt-3" id="parametro">
+        <label for="placaVehiculo" class="form-label">
+          Número de la placa de vehículo
+        </label>
+        <input type="text" name="placaVehiculo" id="placaVehiculo" class="form-control" pattern="[A-Za-z]{3}[0-9]{3}"
+          title="Ingrese la placa en formato ABC123, sin espacios ni rayas">
+        <span class="error text-danger fw-bold" id="error-placaVehiculo"></span>
+        <small class="text-muted">Formato: <strong>ABC123</strong> (sin espacios, rayas ni puntos)</small>
       </div>
       @endif
 
