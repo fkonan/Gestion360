@@ -29,7 +29,8 @@ class ReportesService
 
     // Consultar API
     $data = $this->apiReportes->obtenerReporte($params);
-    if(!$data){
+
+    if (!$data) {
       return [];
     }
 
@@ -93,6 +94,30 @@ class ReportesService
         'permiso' => Permisos::ADMINISTRACION_REPORTES_CARGA,
         'icono' => 'fa-solid fa-truck-loading'
       ],
+      [
+        'titulo' => 'Reportes Cartera',
+        'descripcion' => 'Consultar',
+        'tooltip' => 'Incluye reportes relacionados con la gestión y análisis de cartera, cobranzas y cuentas por cobrar.',
+        'ruta' => ['reportes.area', 'cartera'],
+        'permiso' => Permisos::ADMINISTRACION_REPORTES_CARTERA,
+        'icono' => 'fa-solid fa-wallet'
+      ],
+      [
+        'titulo' => 'Reportes Auditoria',
+        'descripcion' => 'Consultar',
+        'tooltip' => 'Incluye reportes relacionados con la gestión y análisis de auditoría.',
+        'ruta' => ['reportes.area', 'auditoria'],
+        'permiso' => Permisos::ADMINISTRACION_REPORTES_AUDITORIA,
+        'icono' => 'fa-solid fa-file-alt'
+      ],
+      [
+        'titulo' => 'Reportes Crudo',
+        'descripcion' => 'Consultar',
+        'tooltip' => 'Incluye reportes relacionados con la operación de crudo.',
+        'ruta' => ['reportes.area', 'crudo'],
+        'permiso' => Permisos::ADMINISTRACION_REPORTES_CRUDO,
+        'icono' => 'fa-solid fa-file-alt'
+      ]
     ];
 
     return $reportes;
@@ -115,6 +140,21 @@ class ReportesService
         'nombre' => 'Unidad carga',
         'vista' => 'reportes.carga.index',
         'permiso' => Permisos::ADMINISTRACION_REPORTES_CARGA,
+      ],
+      'cartera' => [
+        'nombre' => 'Cartera',
+        'vista' => 'reportes.cartera.index',
+        'permiso' => Permisos::ADMINISTRACION_REPORTES_CARTERA,
+      ],
+      'auditoria' => [
+        'nombre' => 'Auditoría',
+        'vista' => 'reportes.auditoria.index',
+        'permiso' => Permisos::ADMINISTRACION_REPORTES_AUDITORIA,
+      ],
+      'crudo' => [
+        'nombre' => 'Crudo',
+        'vista' => 'reportes.crudo.index',
+        'permiso' => Permisos::ADMINISTRACION_REPORTES_CRUDO,
       ],
     ];
 

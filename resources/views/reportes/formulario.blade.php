@@ -123,6 +123,31 @@
         <span class="error text-danger fw-bold" id="error-conceptoCarga"></span>
       </div>
       @endif
+
+      @if(in_array('paramCargo', $parametros))
+      <div class="col-12 col-md-6 mt-3" id="parametro">
+        <label for="cargo" class="form-label">Seleccione un filtro de busqueda</label>
+        <select name="cargo" id="cargo" class="form-select">
+          <option value="todos">Todos los empleados</option>
+          <option value="carga">Conductores carga</option>
+          <option value="pasajes">Conductores pasajes</option>
+        </select>
+        <span class="error text-danger fw-bold" id="error-cargo"></span>
+      </div>
+      @endif
+
+      <!-- Parametros estado (ACTIVO,INACTIVO) -->
+      @if(in_array('paramEstado', $parametros))
+      <div class="col-12 col-md-6 mt-3" id="parametro">
+        <label for="estado" class="form-label">Seleccione el estado</label>
+        <select name="estado" id="estado" class="form-select">
+          <option value="todos">TODOS</option>
+          <option value="ACTIVO">ACTIVOS</option>
+          <option value="INACTIVO">INACTIVOS</option>
+        </select>
+        <span class="error text-danger fw-bold" id="error-estado"></span>
+      </div>
+      @endif
     </div>
 
     <div class="d-flex justify-content-end ms-3 pt-2 gap-2">

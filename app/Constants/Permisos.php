@@ -34,6 +34,9 @@ class Permisos
     const ADMINISTRACION_REPORTES_PASAJES = 'administracion.reportes.reportes_pasajes';
     const ADMINISTRACION_REPORTES_EMPLEADOS = 'administracion.reportes.reportes_empleados';
     const ADMINISTRACION_REPORTES_PERSONAS = 'administracion.reportes.reportes_personas';
+    const ADMINISTRACION_REPORTES_CARTERA = 'administracion.reportes.reportes_cartera';
+    const ADMINISTRACION_REPORTES_AUDITORIA = 'administracion.reportes.reportes_auditoria';
+    const ADMINISTRACION_REPORTES_CRUDO = 'administracion.reportes.reportes_crudo';
 
     const ADMINISTRACION_EMPLEADOS_ACCEDER = 'administracion.empleados.acceder';
 
@@ -60,3 +63,6 @@ class Permisos
     const PAGOS_Y_RECAUDOS_ACCEDER = 'pagos_y_recaudos.acceder';
     const PAGOS_Y_RECAUDOS_PAGOS_CONVENIOS_ACCEDER = 'pagos_y_recaudos.pagos_convenios.acceder';
 }
+
+
+
