@@ -1,12 +1,16 @@
 <?php
 
+
 namespace App\Modules\Administration\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 
 use App\Models\GESTIONPASAJES\MunicipioPasajes;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Exception;
+use Endroid\QrCode\QrCode;
+use Endroid\QrCode\Writer\PngWriter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -161,5 +165,199 @@ class GestionPasajesController extends Controller
   {
     $esquemas = session('esquemaTarifario') ?? [];
     return $esquemas;
+  }
+
+  public function imprimirTiquetes($id)
+  {
+    try {
+      $tiquete = DB::connection('sqlsrv')->selectOne("
+      SELECT
+          /*Información del Cliente*/
+          COALESCE(ec.Nombre, CONCAT(p.Nombres, ' ', p.Apellido)) AS clienteEmpresa,
+          COALESCE(pdpemp.Codigo, pdpas.Codigo) AS tipoDocumentoCliente,
+          COALESCE(ec.CUIT, p.Documento) AS numeroDocumentoCliente,
+          COALESCE(ec.Telefono, p.Telefonos) AS telefonoCliente,
+          LOWER(COALESCE(ec.Email, p.Email)) AS correoCliente,
+
+          /*Información del Pasajero*/
+          CONCAT(p.Nombres, ' ', p.Apellido) AS pasajero,
+          pdpas.Codigo AS tipoDocumentoPasajero,
+          p.Documento AS numeroDocumentoPasajero,
+          p.Telefonos AS telefonoPasajero,
+          LOWER(p.Email) AS correoPasajero,
+
+          /*Información del Pasaje*/
+          tpjo.Nombre AS origenTiquete,
+          tpjd.Nombre AS destinoTiquete,
+          CASE
+              WHEN vb.Butaca is null THEN 'sin puesto asignado'
+              ELSE vb.Butaca
+          END AS puestoTiquete,
+          CASE
+              WHEN v.FechaPartida is null THEN 'Sin Viaje Asignado'
+              ELSE FORMAT(v.FechaPartida, 'dd/MM/yyyy')
+          END AS fechaViaje,
+          CASE
+              WHEN v.FechaPartida is null THEN  'Sin Viaje Asignado'
+              ELSE FORMAT(v.FechaPartida, 'hh:mm tt')
+          END AS horaViaje2,
+          CASE
+              WHEN (SELECT FORMAT(vr.FechaPartida, 'HH:mm') AS horaViaje FROM ViajesRecorridos as vr WHERE vr.Viaje=pj.Viaje and vr.Terminal =tpjo.Id) IS NULL THEN 'Sin Viaje Asignado'
+              ELSE (SELECT FORMAT(vr.FechaPartida, 'HH:mm') AS horaViaje FROM ViajesRecorridos as vr WHERE vr.Viaje=pj.Viaje and vr.Terminal =tpjo.Id)
+          END AS horaViaje,
+          CASE
+              WHEN vto.Nombre IS NULL THEN 'Sin Viaje Asignado'
+              ELSE vto.Nombre
+          END AS 'ORIGENVIAJE',
+          CASE
+              WHEN vtd.Nombre IS NULL THEN 'Sin Viaje Asignado'
+              ELSE vtd.Nombre
+          END AS 'DESTINOVIAJE',
+          FORMAT(po.FechaOperacion, 'dd/MM/yyyy') AS fechaExpedicionTiquete,
+          FORMAT(po.FechaOperacion, 'hh:mm tt') AS horaExpedicionTiquete,
+          pj.Numero AS numeroTiquete,
+          pj.ImporteBase AS valorTiquete,
+          pj.ImporteDescuentos AS descuentoTiquete,
+          pj.ImporteFinal AS valorTotal,
+          b.Nombre AS nombreBoleteria,
+          /*Bus*/
+          CASE
+              WHEN co.Nombre IS NULL THEN 'Sin Viaje Asignado'
+              ELSE REPLACE(co.Nombre, 'Int ', '')
+          END AS internoBus,
+          CASE
+              WHEN co.Matricula IS NULL THEN 'Sin Viaje Asignado'
+              ELSE UPPER(co.Matricula)
+          END AS placaBus,
+          CASE
+              WHEN cs.NombreCorto IN ('PR', 'PRL') THEN 'Preferencial de Lujo'
+              WHEN cs.NombreCorto = 'SPR' THEN 'Basico Sprinter'
+              WHEN cs.NombreCorto = 'BUS' THEN 'Lujo Busetón'
+              WHEN cs.NombreCorto = 'VAN' THEN 'Van'
+              WHEN cs.NombreCorto IN ('DP') THEN 'Lujo Doble Piso'
+              WHEN cs.NombreCorto IN ('DP+') THEN 'Lujo Doble Piso +'
+              WHEN cs.NombreCorto = 'PR+' THEN 'Lujo Preferencial Pantallas'
+              WHEN cs.NombreCorto = 'EXP' THEN 'EXPRESO'
+              ELSE 'Otro'
+          END AS servicioBus,
+
+          /*Pagos*/
+          CASE
+              WHEN po.MedioPago = 4 THEN 'Crédito'
+              WHEN po.MedioPago IN (6, 8, 9, 10, 22, 26, 32) THEN 'Tarjeta de crédito'
+              WHEN po.MedioPago IN (7, 11) THEN 'Tarjeta débito'
+              ELSE m.Nombre
+          END AS formaPagoTiquete,
+          CASE
+              WHEN po.MedioPago = 4 THEN '30 días'
+              WHEN po.MedioPago IN (1, 6, 7, 8, 9, 10, 11, 21, 22, 23, 25, 26, 28, 36) THEN 'No aplica'
+              ELSE m.Nombre
+          END AS plazoTiquete,
+          m.Nombre AS medioPago,
+
+          /*Identificadores adicionales*/
+          pj.id AS idPasaje,
+          pj.Viaje AS idViaje,
+          pj.Persona AS persona
+      FROM
+          Pasajes AS pj WITH(NOLOCK)
+          INNER JOIN PasajesOperaciones AS po WITH(NOLOCK) ON po.pasajenumero = pj.Numero
+          INNER JOIN MediosPago m WITH(NOLOCK) ON m.Id = po.MedioPago
+          INNER JOIN Boleterias AS b WITH(NOLOCK) ON b.Id = po.Boleteria
+          INNER JOIN Terminales AS tpjo WITH(NOLOCK) ON tpjo.Id = pj.TerminalOrigen
+          INNER JOIN Terminales AS tpjd WITH(NOLOCK) ON tpjd.Id = pj.TerminalDestino
+          INNER JOIN Personas AS p WITH(NOLOCK) ON p.Id = pj.Persona
+          INNER JOIN G_PaisesDocumentos AS pdpas WITH(NOLOCK) ON pdpas.PaisDocumentoID = p.DocumentoTipo
+          LEFT JOIN EmpresasClientesPasajesOperaciones AS ecp WITH(NOLOCK) ON ecp.PasajeID = pj.Id
+          LEFT JOIN EmpresasClientes AS ec WITH(NOLOCK) ON ec.EmpresaID = ecp.EmpresaClienteID
+          LEFT JOIN G_PaisesDocumentos AS pdpemp WITH(NOLOCK) ON pdpemp.PaisDocumentoID = ec.PaisDocumentoId
+          LEFT JOIN ViajesButacas AS vb WITH(NOLOCK) ON vb.PasajeNumero = pj.Numero
+          LEFT JOIN Viajes AS v WITH(NOLOCK) ON v.id = pj.Viaje
+          LEFT JOIN Terminales AS vto WITH(NOLOCK) ON vto.Id=v.TerminalOrigen
+          LEFT JOIN Terminales AS vtd WITH(NOLOCK) ON vtd.Id=v.TerminalDestino
+          LEFT JOIN CategoriasServicios cs  WITH(NOLOCK)  ON cs.Id = v.Categoria
+          LEFT JOIN Coches co  WITH(NOLOCK)  ON co.Id = v.Coche
+      WHERE
+          po.Operacion = 0
+          AND pj.Numero = '{$id}';
+        ");
+
+      if (empty($tiquete)) {
+        return response("No se encontraron tiquetes para el ID proporcionado: {$id}", 404);
+      }
+
+      $seguroTiquete = DB::connection('sqlsrv')->selectOne("
+        SELECT
+            SUM(CASE
+                WHEN pjoseg.ETConceptoOp = 4 THEN convert(int,pjoseg.ImporteOperacion)
+                ELSE 0.0
+            END) 'seguroviaje',
+            SUM(CASE
+                WHEN pjoseg.ETConceptoOp = 6 THEN pjoseg.ImporteOperacion
+                ELSE 0.0
+            END) 'estampilla'
+        FROM
+            PasajesOperaciones AS pjoseg WITH (NOLOCK)
+      WHERE pjoseg.PasajeNumero = '{$id}';
+      ");
+
+      $cufe = DB::connection('sqlsrv')->selectOne("
+       SELECT TOP 1
+          PS.Id,
+          PS.Numero,
+          ps.Viaje,
+          TDR.NumeroResolucion AS 'CUFE',
+          td.Numero as 'NumeroFactura',
+          tdp.DocumentoID,
+          tdp.PasajeID
+      FROM
+          TAX_DocumentosResoluciones as TDR WITH (NOLOCK)
+          LEFT JOIN TAX_DOCUMENTOS as TD WITH (NOLOCK) on td.DocumentoID=TDR.DocumentoID
+          LEFT JOIN TAX_DocumentosPasajes as TDP WITH (NOLOCK) on TDP.DocumentoID=TDR.DocumentoID
+          LEFT JOIN Pasajes as PS WITH (NOLOCK) on PS.Id=TDP.PasajeID
+          LEFT JOIN Personas AS PE WITH (NOLOCK) on PE.Id=PS.Persona
+      WHERE
+          TD.DocumentoTipoID = 3 and
+          PS.Numero = '{$id}'
+          ORDER BY TD.Fecha DESC;
+      ");
+
+      // Generar contenido de QR
+      $urlDian = "https://catalogo-vpfe.dian.gov.co/User/SearchDocument?DocumentKey=";
+      $contenidoQr = $urlDian . ($cufe->CUFE ?? '');
+
+      // Generar QR con Endroid
+      $qrCode = QrCode::create($contenidoQr)
+        ->setSize(150)
+        ->setMargin(10);
+
+      $writer = new PngWriter();
+      $result = $writer->write($qrCode);
+
+      // Convertir a base64 para usar en PDF
+      $qrDataUri = $result->getDataUri();
+
+      // Hora y fecha actual
+      $fechaHoy = Carbon::now()->format('d/m/Y');
+      $horaHoy  = Carbon::now()->format('H:i');
+
+      // Generar PDF
+      $pdf = Pdf::loadView('gestionpasajes.tiquetePDF', compact(
+        'tiquete',
+        'seguroTiquete',
+        'cufe',
+        'qrDataUri',
+        'fechaHoy',
+        'horaHoy'
+      ));
+
+      $pdf->setPaper('A4', 'portrait')
+        ->setOption('isRemoteEnabled', true);
+
+      return $pdf->stream('Tiquete-' . $id . '.pdf');
+    } catch (Exception $e) {
+      Log::error('Error al imprimir tiquetes para el viaje ID ' . $id . ': ' . $e->getMessage());
+      return response("Error al imprimir tiquetes para el ID proporcionado: {$id}", 500);
+    }
   }
 }

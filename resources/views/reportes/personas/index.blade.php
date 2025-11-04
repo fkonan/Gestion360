@@ -55,18 +55,10 @@
           formato="EXCEL"
           onclick="cargarModal(`{{ route('empleados.firmaPoliticas') }}`, 'Reporte firma politicas','#firmaPoliticasForm','modal-lg')" />
 
-        <x-reporteItem
-          consecutivo="2"
-          titulo="Actualización de datos"
-          area="RRHH"
-          descripcion="Reporte de los empleados y conductores que han realizado actualización de sus datos."
-          formato="EXCEL"
-          onclick="cargarModal(`{{ route('empleados.actDatos') }}`, 'Reporte actualización de datos','#actDatosForm','modal-lg')" />
-
 
         @foreach ($reportes as $reporte)
           <x-reporteItem
-            consecutivo="{{ $loop->iteration + 2 }}"
+            consecutivo="{{ $loop->iteration + 1 }}"
             area="{{ $reporte->area }}"
             titulo="{{ $reporte->nombre }}"
             descripcion="{{ $reporte->descripcion }}"

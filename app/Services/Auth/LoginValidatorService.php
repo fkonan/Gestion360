@@ -112,7 +112,7 @@ class LoginValidatorService
       } catch (Exception $e) {
         DB::rollBack();
         Log::error('Error al crear la persona: ' . $e->getMessage());
-        return ['message' => 'Error al crear la persona.' . $e->getMessage(), 'type' => 'danger'];
+        return ['message' => 'Error al crear la persona' , 'type' => 'danger'];
       }
       // return redirect()->intended('/dashboard');
     }

@@ -135,8 +135,16 @@ class ReportesController extends Controller
     try {
       $resultado = $reportesService->obtenerReportesPorArea($area);
 
-      return view($resultado['vista'], [
+      if($area == 'personas'){
+        return view('reportes.personas.index', [
         'reportes' => $resultado['reportes'],
+        'area' => $area
+      ]);
+      }
+
+      return view('reportes.reportesArea', [
+        'reportes' => $resultado['reportes'],
+        'area' => $area
       ]);
     } catch (AuthorizationException $e) {
       abort(403, $e->getMessage());

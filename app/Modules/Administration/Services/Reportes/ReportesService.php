@@ -128,32 +128,26 @@ class ReportesService
     $areas = [
       'personas' => [
         'nombre' => 'RRHH',
-        'vista' => 'reportes.personas.index',
         'permiso' => Permisos::ADMINISTRACION_REPORTES_EMPLEADOS,
       ],
       'pasajes' => [
         'nombre' => 'Unidad pasajes',
-        'vista' => 'reportes.pasajes.index',
         'permiso' => Permisos::ADMINISTRACION_REPORTES_PASAJES,
       ],
       'carga' => [
         'nombre' => 'Unidad carga',
-        'vista' => 'reportes.carga.index',
         'permiso' => Permisos::ADMINISTRACION_REPORTES_CARGA,
       ],
       'cartera' => [
         'nombre' => 'Cartera',
-        'vista' => 'reportes.cartera.index',
         'permiso' => Permisos::ADMINISTRACION_REPORTES_CARTERA,
       ],
       'auditoria' => [
         'nombre' => 'Auditoría',
-        'vista' => 'reportes.auditoria.index',
         'permiso' => Permisos::ADMINISTRACION_REPORTES_AUDITORIA,
       ],
       'crudo' => [
         'nombre' => 'Crudo',
-        'vista' => 'reportes.crudo.index',
         'permiso' => Permisos::ADMINISTRACION_REPORTES_CRUDO,
       ],
     ];
@@ -176,8 +170,7 @@ class ReportesService
       ->get();
 
     return [
-      'vista' => $config['vista'],
-      'reportes' => $reportes,
+      'reportes' => $reportes
     ];
   }
 }

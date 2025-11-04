@@ -18,16 +18,16 @@
     rutaVolver="{{ route('home') }}" />
 
   <div style="padding:1.5em" class="mt-md-5">
-    <!-- <div class="alert alert-info" role="alert">
-            Bienvenido al módulo de reportes. Aquí encontrarás diferentes tipos de reportes organizados por categorías como conductores, pasajes, carga, entre otros.
-            Selecciona el menú correspondiente para consultar el reporte específico que necesites.
-            Este espacio está diseñado para facilitarte el acceso y la consulta de información relevante de manera sencilla y amigable.
-        </div> -->
+    <div class="alert alert-info mt-3" role="alert">
+      Bienvenido al Panel de Reportes. En este módulo puedes acceder a diversos informes agrupados por categorías como conductores, pasajes y carga.
+      Utiliza los menús para seleccionar y consultar el reporte que necesitas.
+      Este espacio está diseñado para brindarte acceso rápido y sencillo a información relevante para tu gestión.
+    </div>
 
-    <div class="row row-cols-1 row-cols-md-3 g-3 mt-2">
+    <div class="row row-cols-1 row-cols-md-4 g-2 mt-2">
       @foreach ($reportes as $reporte)
       @if(!isset($reporte['permiso']) || $reporte['permiso'] === null)
-      <div class="col" style="max-width:400px">
+      <div class="col" style="max-width:500px">
         <x-card color="bg-teriary"
           titulo="{{ $reporte['titulo'] }}"
           descripcion="{{ $reporte['descripcion'] }}"
@@ -37,7 +37,7 @@
       </div>
       @else
       @permite($reporte['permiso'])
-      <div class="col" style="max-width:400px">
+      <div class="col" style="max-width:500px">
         <x-card color="bg-teriary"
           titulo="{{ $reporte['titulo'] }}"
           descripcion="{{ $reporte['descripcion'] }}"

@@ -6,7 +6,7 @@
 <x-breadcrumb :items="[
         ['name' => 'Inicio', 'url' => route('home')],
         ['name' => 'Reportes', 'url' => route('reportes.index')],
-        ['name' => 'Carga']
+        ['name' => $area ]
     ]" />
 @endsection
 
@@ -15,12 +15,12 @@
 <div class="container-fluid p-0 border rounded sidebar-dark-primary tableContainer" style="min-height:150px">
 
   <x-sectionHeader
-    titulo="Reportes de carga"
+    titulo="Reportes de {{ $area }}"
     rutaVolver="{{ route('reportes.index') }}" />
 
   <div id="no-more-tables" class="table-responsive" style="padding:1.5em">
     <table
-      id="reportesCarga"
+      id="reportesArea"
       class="table table-sm table-striped table-hover align-middle mb-0"
       data-toggle="table"
       data-detail-view="true"
@@ -60,7 +60,7 @@
 <script>
   document.addEventListener("DOMContentLoaded", () => {
     initTablaBootstrapTable(
-      '#reportesCarga', {
+      '#reportesArea', {
         protegidas: ['']
       },
       'detalleReporte'

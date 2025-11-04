@@ -41,6 +41,10 @@ Route::get('/tracking-remesas', function () {
 Route::post('/tracking-remesas/consultar', [TrackingRemesasController::class, 'consultar'])->name('trackingRemesas.consultar');
 
 
+//Impresion tiquietes gestion pasajes
+Route::get('/imprimir-tiquete/{id}', [GestionPasajesController::class, 'imprimirTiquetes'])->name('imprimir-tiquetes');
+
+
 // Rutas publicas
 require __DIR__ . '/auth.php';
 
