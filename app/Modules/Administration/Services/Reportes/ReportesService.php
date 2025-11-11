@@ -142,6 +142,22 @@ class ReportesService
         'permiso' => Permisos::ADMINISTRACION_REPORTES_CONTABILIDAD,
         'icono' => 'fa-solid fa-calculator'
       ],
+      [
+        'titulo' => 'Reportes Ficha Técnica',
+        'descripcion' => 'Consultar',
+        'tooltip' => 'Consulta de documentos, relación vehículos asociados, total parque automotor.',
+        'ruta' => ['reportes.area', 'ficha_tecnica'],
+        'permiso' => Permisos::ADMINISTRACION_REPORTES_FICHA_TECNICA,
+        'icono' => 'fa-solid fa-id-card'
+      ],
+      [
+        'titulo' => 'Reportes Giros y Convenios',
+        'descripcion' => 'Consultar',
+        'tooltip' => 'Consulta de información relacionada con los procesos de Giros, Convenios y Canales.',
+        'ruta' => ['reportes.area', 'giros_y_convenios_empresariales'],
+        'permiso' => Permisos::ADMINISTRACION_REPORTES_GIROS_Y_CONVENIOS_EMPRESARIALES,
+        'icono' => 'fa-solid fa-handshake'
+      ],
     ];
 
     return $reportes;
@@ -186,6 +202,15 @@ class ReportesService
         'nombre' => 'Contabilidad',
         'permiso' => Permisos::ADMINISTRACION_REPORTES_CONTABILIDAD,
       ],
+      'ficha_tecnica' => [
+        'nombre' => 'Ficha Técnica',
+        'permiso' => Permisos::ADMINISTRACION_REPORTES_FICHA_TECNICA,
+      ],
+      'giros_y_convenios_empresariales' => [
+        'nombre' => 'Giros y Convenios Empresariales',
+        'permiso' => Permisos::ADMINISTRACION_REPORTES_GIROS_Y_CONVENIOS_EMPRESARIALES,
+      ],
+
     ];
 
     if (!isset($areas[$area])) {

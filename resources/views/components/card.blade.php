@@ -1,8 +1,17 @@
-
 <style>
+  .cardComponent {
+    position: relative;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 0.9rem 1.1rem;
+    background: #ffffff;
+    gap: 0.85rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  }
+
   .cardComponent:hover {
     transform: translateY(-4px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15) !important;
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.18);
     border-color: #0d6efd;
   }
 
@@ -10,11 +19,13 @@
     content: '';
     position: absolute;
     top: 0;
-    left: 0;
-    right: 0;
+    left: 7px;
+    right: 7px;
     height: 3px;
+    border-radius: 40px 40px 0 0;
     background: linear-gradient(90deg, #0d6efd, #0dcaf0);
     transform: scaleX(0);
+    transform-origin: left;
     transition: transform 0.3s ease;
   }
 
@@ -23,16 +34,16 @@
   }
 
   .card-icon-wrapper {
-    min-width: 70px;
-    width: 70px;
-    height: 70px;
-    border-radius: 12px;
+    min-width: 56px;
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
     overflow: hidden;
-    transition: transform 0.3s ease;
+    transition: transform 0.25s ease;
   }
 
   .cardComponent:hover .card-icon-wrapper {
@@ -42,13 +53,10 @@
   .card-icon-wrapper::after {
     content: '';
     position: absolute;
-    top: -50%;
-    right: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+    inset: -40%;
+    background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.45), transparent 60%);
     opacity: 0;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.25s ease;
   }
 
   .cardComponent:hover .card-icon-wrapper::after {
@@ -56,89 +64,106 @@
   }
 
   .card-icon-wrapper i {
-    color: white;
+    color: #ffffff;
     position: relative;
     z-index: 1;
   }
 
   .card-content {
     flex: 1;
-    padding: 0.5rem;
+    min-width: 0;
   }
 
   .card-description {
-    font-size: 0.75rem;
+    font-size: 0.68rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    font-weight: 500;
-    margin-bottom: 0.25rem;
+    font-weight: 600;
+    margin-bottom: 0.15rem;
+    color: #64748b;
   }
 
   .card-title {
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 600;
     margin: 0;
+    color: #0f172a;
     transition: color 0.3s ease;
+  }
+
+  .cardComponent:hover .card-title {
+    color: #0b5ed7;
   }
 
   .card-link {
     text-decoration: none;
+    display: block;
   }
 
   .card-arrow {
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    color: #94a3b8;
+    font-size: 1.05rem;
     opacity: 0;
-    transform: translateX(-10px);
-    transition: all 0.3s ease;
-    color: #ffffff;
-    font-size: 1.2rem;
+    transform: translateX(-8px);
+    transition: transform 0.3s ease, opacity 0.3s ease, color 0.3s ease;
   }
 
   .cardComponent:hover .card-arrow {
     opacity: 1;
     transform: translateX(0);
+    color: #0b5ed7;
   }
 
   /* Variaciones de color para los iconos */
   .bg-teriary {
-    background: linear-gradient(135deg, #287bf7e0 0%, #0a57ca 100%);
+    background: linear-gradient(135deg, #287bf7 0%, #0a57ca 100%);
   }
 
-</style>
+  [data-bs-theme="dark"] .cardComponent {
+    background: rgba(15, 23, 42, 0.7);
+    border-color: rgba(148, 163, 184, 0.4);
+    box-shadow: 0 10px 24px rgba(2, 6, 23, 0.4);
+  }
 
-<a href="{{ $ruta }}" class="card-link" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ $tooltip ?? '' }}">
-  <div class="card cardComponent d-flex flex-row align-items-center p-2 shadow-sm">
-    <div class="card-icon-wrapper {{ $color }}">
-      <i class="fas {{ $icono }} fa-2x"></i>
-    </div>
+  [data-bs-theme="dark"] .cardComponent:hover {
+    box-shadow: 0 16px 32px rgba(8, 16, 44, 0.6);
+    border-color: #38bdf8;
+  }
 
-    <div class="card-content ms-3 flex-grow-1">
-      <p class="card-description mb-0">{{ $descripcion }}</p>
-      <h6 class="card-title">{{ $titulo }}</h6>
-    </div>
+  [data-bs-theme="dark"] .cardComponent::before {
+    background: linear-gradient(90deg, #38bdf8, #6366f1);
+  }
 
-    <div class="card-arrow">
-      <i class="fas fa-arrow-right"></i>
-    </div>
-  </div>
-</a>
+  [data-bs-theme="dark"] .card-description {
+    color: #cbd5f5;
+  }
 
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function(tooltipTriggerEl) {
-      return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-  });
-</script>
+  [data-bs-theme="dark"] .card-title {
+    color: #f8fafc;
+  }
 
-<style>
+  [data-bs-theme="dark"] .cardComponent:hover .card-title {
+    color: #38bdf8;
+  }
+
+  [data-bs-theme="dark"] .card-arrow {
+    color: #cbd5f5;
+  }
+
+  [data-bs-theme="dark"] .cardComponent:hover .card-arrow {
+    color: #38bdf8;
+  }
+
   .tooltip-inner {
     background-color: #1e293b;
     color: white;
     font-size: 0.875rem;
     padding: 0.5rem 0.75rem;
     border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   }
 
   .tooltip.bs-tooltip-auto[data-popper-placement^=top] .tooltip-arrow::before,
@@ -161,3 +186,29 @@
     border-right-color: #1e293b;
   }
 </style>
+
+<a href="{{ $ruta }}" class="card-link" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ $tooltip ?? '' }}">
+  <div class="card cardComponent d-flex flex-row align-items-center shadow-sm">
+    <div class="card-icon-wrapper {{ $color }}">
+      <i class="fas {{ $icono }} fa-lg"></i>
+    </div>
+
+    <div class="card-content">
+      <p class="card-description mb-1">{{ $descripcion }}</p>
+      <h6 class="card-title mb-0">{{ $titulo }}</h6>
+    </div>
+
+    <div class="card-arrow ms-2">
+      <i class="fas fa-arrow-right"></i>
+    </div>
+  </div>
+</a>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+  });
+</script>

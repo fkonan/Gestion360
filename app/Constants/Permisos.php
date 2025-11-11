@@ -41,6 +41,8 @@ class Permisos
     const ADMINISTRACION_REPORTES_FINANCIERA = 'administracion.reportes.reportes_financiera';
     const ADMINISTRACION_REPORTES_FUNDACION_DE_LA_MUJER = 'administracion.reportes.reportes_fundacion_de_la_mujer';
     const ADMINISTRACION_REPORTES_CONTABILIDAD = 'administracion.reportes.reportes_contabilidad';
+    const ADMINISTRACION_REPORTES_FICHA_TECNICA = 'administracion.reportes.reportes_ficha_tecnica';
+    const ADMINISTRACION_REPORTES_GIROS_Y_CONVENIOS_EMPRESARIALES = 'administracion.reportes.reportes_giros_y_convenios_empresariales';
 
     const ADMINISTRACION_EMPLEADOS_ACCEDER = 'administracion.empleados.acceder';
 

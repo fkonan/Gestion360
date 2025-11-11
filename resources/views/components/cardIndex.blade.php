@@ -1,4 +1,4 @@
-<!-- Componente tarjeta para las opciones disponibles en el index -->
+<!-- Componente tarjeta para las opciones disponibles en el index del proyecto-->
 <div class="card h-100 shadow border hover-shadow transition px-2">
   <div class="card-body text-center py-4">
     <div class="mb-3">
