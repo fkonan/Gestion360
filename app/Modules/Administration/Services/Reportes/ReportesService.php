@@ -113,11 +113,35 @@ class ReportesService
       [
         'titulo' => 'Reportes Crudo',
         'descripcion' => 'Consultar',
-        'tooltip' => 'Incluye reportes relacionados con la operación de crudo.',
+        'tooltip' => 'Conceptos por anticipo, flota dedicada, manifiestos, plantilla flota dedicada entre otros.',
         'ruta' => ['reportes.area', 'crudo'],
         'permiso' => Permisos::ADMINISTRACION_REPORTES_CRUDO,
-        'icono' => 'fa-solid fa-file-alt'
-      ]
+        'icono' => 'fa-solid fa-gas-pump'
+      ],
+      [
+        'titulo' => 'Reportes Financiera',
+        'descripcion' => 'Consultar',
+        'tooltip' => 'Gastos, ingresos, ventas por agencia y tipo de vehiculo.',
+        'ruta' => ['reportes.area', 'financiera'],
+        'permiso' => Permisos::ADMINISTRACION_REPORTES_FINANCIERA,
+        'icono' => 'fa-solid fa-file-invoice-dollar'
+      ],
+      [
+        'titulo' => 'Fundación de la Mujer',
+        'descripcion' => 'Consultar',
+        'tooltip' => 'Consultas generales sobre la Fundación de la Mujer.',
+        'ruta' => ['reportes.area', 'fundacion_de_la_mujer'],
+        'permiso' => Permisos::ADMINISTRACION_REPORTES_FUNDACION_DE_LA_MUJER,
+        'icono' => 'fa-solid fa-university'
+      ],
+      [
+        'titulo' => 'Reportes Contabilidad',
+        'descripcion' => 'Consultar',
+        'tooltip' => 'Consultas generales sobre la Contabilidad.',
+        'ruta' => ['reportes.area', 'contabilidad'],
+        'permiso' => Permisos::ADMINISTRACION_REPORTES_CONTABILIDAD,
+        'icono' => 'fa-solid fa-calculator'
+      ],
     ];
 
     return $reportes;
@@ -149,6 +173,18 @@ class ReportesService
       'crudo' => [
         'nombre' => 'Crudo',
         'permiso' => Permisos::ADMINISTRACION_REPORTES_CRUDO,
+      ],
+      'financiera' => [
+        'nombre' => 'Financiera',
+        'permiso' => Permisos::ADMINISTRACION_REPORTES_FINANCIERA,
+      ],
+      'fundacion_de_la_mujer' => [
+        'nombre' => 'Fundación de la Mujer',
+        'permiso' => Permisos::ADMINISTRACION_REPORTES_FUNDACION_DE_LA_MUJER,
+      ],
+      'contabilidad' => [
+        'nombre' => 'Contabilidad',
+        'permiso' => Permisos::ADMINISTRACION_REPORTES_CONTABILIDAD,
       ],
     ];
 

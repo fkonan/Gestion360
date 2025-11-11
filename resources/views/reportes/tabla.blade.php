@@ -72,7 +72,7 @@
 
           const columns = [{
             field: 'numero',
-            title: 'Número',
+            title: 'NUMERO',
             formatter: function (value, row, index) {
               return index + 1;
             },

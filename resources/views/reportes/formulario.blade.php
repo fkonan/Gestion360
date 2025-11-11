@@ -45,15 +45,24 @@
         <span class="error text-danger fw-bold" id="error-fechaFin"></span>
       </div>
       @endif
-      <!-- && $origen_db == "FICS" -->
+
+      @if(in_array('paramCuenta', $parametros))
+      <div class="col-12 col-md-6 mt-3">
+        <label for="cuenta" class="form-label">Numero de cuenta *</label>
+        <input type="number" name="cuenta" id="cuenta" class="form-control" required>
+        <span class="error text-danger fw-bold" id="error-cuenta"></span>
+        <small class="text-muted">Digite el número largo de la cuenta LOGTRANS</small>
+      </div>
+      @endif
+
       @if(in_array('paramAgencia', $parametros))
       <div class="col-md-6 mt-3">
         <label for="agencia" class="form-label">Agencia *</label>
         <select class="form-select select2" id="agencia" name="agencia">
-          <option value="null">TODOS</option>
-          @foreach($agenciasFICS as $agencia)
+          <option value="null">TODAS</option>
+          @foreach($agencias as $agencia)
           <option value="{{ $agencia->codigo }}">
-            {{ $agencia->nombre }}
+            {{ $agencia->agencia }}
           </option>
           @endforeach
         </select>
@@ -133,6 +142,23 @@
           <option value="pasajes">Conductores pasajes</option>
         </select>
         <span class="error text-danger fw-bold" id="error-cargo"></span>
+      </div>
+      @endif
+
+      @if(in_array('paramPersonaId', $parametros))
+      <div class="col-12 col-md-6 mt-3">
+        <label for="personaId" class="form-label">Ingrese el NIT</label>
+        <input type="string" name="personaId" id="personaId" class="form-control">
+        <span class="error text-danger fw-bold" id="error-personaId"></span>
+      </div>
+      @endif
+
+      @if(in_array('paramTerceroId', $parametros))
+      <div class="col-12 col-md-6 mt-3">
+        <label for="terceroId" class="form-label">Ingrese el tercero</label>
+        <input type="string" name="terceroId" id="terceroId" class="form-control">
+        <span class="error text-danger fw-bold" id="error-terceroId"></span>
+        <small class="text-muted">Este parametro es opcional</small>
       </div>
       @endif
 

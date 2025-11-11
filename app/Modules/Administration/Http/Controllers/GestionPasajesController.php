@@ -167,10 +167,14 @@ class GestionPasajesController extends Controller
     return $esquemas;
   }
 
-  public function imprimirTiquetes($id)
+  public function imprimirTiquetes($token)
   {
     try {
-      $tiquete = DB::connection('sqlsrv')->selectOne("
+      /* $id = $this->decryptFromNode($token); */
+      $id = $token;
+
+      $conn = DB::connection('sqlsrv');
+      $tiquete = $conn->selectOne("
       SELECT
           /*Información del Cliente*/
           COALESCE(ec.Nombre, CONCAT(p.Nombres, ' ', p.Apellido)) AS clienteEmpresa,
@@ -283,10 +287,10 @@ class GestionPasajesController extends Controller
         ");
 
       if (empty($tiquete)) {
-        return response("No se encontraron tiquetes para el ID proporcionado: {$id}", 404);
+        return response("No se encontraron tiquetes para el ID proporcionado", 404);
       }
 
-      $seguroTiquete = DB::connection('sqlsrv')->selectOne("
+      $seguroTiquete = $conn->selectOne("
         SELECT
             SUM(CASE
                 WHEN pjoseg.ETConceptoOp = 4 THEN convert(int,pjoseg.ImporteOperacion)
@@ -301,7 +305,7 @@ class GestionPasajesController extends Controller
       WHERE pjoseg.PasajeNumero = '{$id}';
       ");
 
-      $cufe = DB::connection('sqlsrv')->selectOne("
+      $cufe = $conn->selectOne("
        SELECT TOP 1
           PS.Id,
           PS.Numero,
@@ -328,8 +332,8 @@ class GestionPasajesController extends Controller
 
       // Generar QR con Endroid
       $qrCode = QrCode::create($contenidoQr)
-        ->setSize(150)
-        ->setMargin(10);
+        ->setSize(100)
+        ->setMargin(5);
 
       $writer = new PngWriter();
       $result = $writer->write($qrCode);
@@ -338,26 +342,86 @@ class GestionPasajesController extends Controller
       $qrDataUri = $result->getDataUri();
 
       // Hora y fecha actual
-      $fechaHoy = Carbon::now()->format('d/m/Y');
-      $horaHoy  = Carbon::now()->format('H:i');
+      $ahora = Carbon::now();
+      $fechaHoy = $ahora->format('d/m/Y');
+      $horaHoy = $ahora->format('H:i');
 
-      // Generar PDF
-      $pdf = Pdf::loadView('gestionpasajes.tiquetePDF', compact(
+
+      // Renderizar el HTML del Blade manualmente
+      $html = view('gestionpasajes.tiquetePDF', compact(
         'tiquete',
         'seguroTiquete',
         'cufe',
         'qrDataUri',
         'fechaHoy',
         'horaHoy'
-      ));
+      ))->render();
 
-      $pdf->setPaper('A4', 'portrait')
-        ->setOption('isRemoteEnabled', true);
+      // Generar PDF desde el HTML ya procesado
+      $pdf = Pdf::loadHTML($html)
+        ->setPaper('A4', 'portrait')
+        ->setOption('isRemoteEnabled', false)
+        ->setOption('isHtml5ParserEnabled', false)
+        ->setOption('isPhpEnabled', false);
+
+      // Log
+      $userAgent = request()->userAgent();
+      if (!str_contains(strtolower($userAgent), 'facebookexternalhit')) {
+        $mensajeLog = "🕒 " . now()->format('Y-m-d H:i:s') . " | Tiquete: {$id}";
+
+        Log::build([
+          'driver' => 'single',
+          'path' => storage_path('logs/descargas_tiquetes.log'),
+        ])->info($mensajeLog);
+      }
 
       return $pdf->stream('Tiquete-' . $id . '.pdf');
     } catch (Exception $e) {
-      Log::error('Error al imprimir tiquetes para el viaje ID ' . $id . ': ' . $e->getMessage());
-      return response("Error al imprimir tiquetes para el ID proporcionado: {$id}", 500);
+      $mensajeError = "⚠️ " . now()->format('Y-m-d H:i:s') .
+        " | Error al generar tiquete" .
+        " | Mensaje: " . $e->getMessage() .
+        " | Token: {$token}";
+
+      Log::build([
+        'driver' => 'single',
+        'path' => storage_path('logs/descargas_tiquetes.log'),
+      ])->error($mensajeError);
+
+      return response("Error al generar el tiquete", 500);
     }
+  }
+
+  private function decryptFromNode(string $token): string
+  {
+    $secret = env('NODE_ENCRYPTION_SECRET');
+
+    // separar IV y datos
+    [$ivB64, $dataB64] = explode('.', $token);
+
+    // revertir formato URL-safe → Base64 estándar
+    $ivB64 = strtr($ivB64, '-_', '+/');
+    $dataB64 = strtr($dataB64, '-_', '+/');
+
+    // añadir padding si hace falta
+    $ivB64 .= str_repeat('=', (4 - strlen($ivB64) % 4) % 4);
+    $dataB64 .= str_repeat('=', (4 - strlen($dataB64) % 4) % 4);
+
+    // decodificar y desencriptar
+    $iv = base64_decode($ivB64);
+    $data = base64_decode($dataB64);
+
+    $decrypted = openssl_decrypt(
+      $data,
+      'AES-256-CBC',
+      $secret,
+      OPENSSL_RAW_DATA,
+      $iv
+    );
+
+    if ($decrypted === false) {
+      throw new \RuntimeException('Token inválido o corrupto.');
+    }
+
+    return $decrypted;
   }
 }

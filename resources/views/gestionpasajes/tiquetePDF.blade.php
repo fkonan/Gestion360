@@ -12,89 +12,7 @@
       margin: 0;
     }
 
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-    }
-
-    .medio-carta {
-      width: 95%;
-      height: 100vh;
-      border: 1px solid rgba(0, 0, 0, 0.349);
-      padding: 20px 10px 20px 10px;
-      box-sizing: border-box;
-    }
-
-    .fila {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .logos {
-      /*        width: 75%; */
-      text-align: center;
-    }
-
-    .logos img {
-      height: 45px;
-    }
-
-    .nombre-cooperativa {
-      margin-top: 5px;
-      font-size: 13px;
-    }
-
-    .qr {
-      width: 25%;
-      text-align: right;
-
-    }
-
-    .qr img {
-      width: 100%;
-      height: auto;
-    }
-
-    .factura-electronica {
-      text-align: center;
-      font-size: 13px;
-      font-weight: bold;
-      padding-top: 5px;
-    }
-
-    .planillado {
-      text-align: center;
-      font-size: 13px;
-    }
-
-    .tabla-informacion {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-      margin-bottom: 10px;
-    }
-
-    .tabla-informacion td {
-      padding: 1.2px;
-      vertical-align: top;
-    }
-
-    .clave {
-      text-align: left;
-      width: 50%;
-      font-size: 12px;
-    }
-
-    .valor {
-      font-weight: bold;
-      text-align: left;
-      width: 50%;
-      font-size: 12px;
-    }
+    .fila,body{display:flex}body{font-family:Arial,sans-serif;margin:0;padding:0;justify-content:center}.medio-carta{width:95%;border:1px solid rgba(0,0,0,.349);padding:20px 10px;box-sizing:border-box}.fila{justify-content:center;align-items:center}.logos{text-align:center}.logos img{height:45px}.nombre-cooperativa{margin-top:5px;font-size:13px}.qr{width:25%;text-align:right}.factura-electronica,.planillado{text-align:center;font-size:13px}.qr img{width:100%;height:auto}.factura-electronica{font-weight:700;padding-top:5px}.tabla-informacion{width:100%;border-collapse:collapse;margin-top:10px;margin-bottom:10px}.clave,.valor{text-align:left;width:50%;font-size:12px}.tabla-informacion td{padding:1.2px;vertical-align:top}.valor{font-weight:700}
   </style>
 </head>
 
@@ -265,48 +183,52 @@
 
       <tr>
         <td class="clave">VALOR TOTAL</td>
-        <td class="valor">${{ number_format(($tiquete->valorTotal ?? 0) + ($tiquete->estampilla ?? 0) +
-          ($tiquete->seguroViaje ?? 0), 0, ',', '.') }}</td>
+        <td class="valor">${{ number_format(($tiquete->valorTotal ?? 0) + ($seguroTiquete->estampilla ?? 0) +
+          ($seguroTiquete->seguroviaje ?? 0), 0, ',', '.') }}</td>
       </tr>
 
     </table>
 
     <div class="planillado">
+      @if($tiquete->idViaje == null)
+      <strong>ESTE DOCUMENTO NO ES VALIDO PARA VIAJAR</strong>
+      @else
       <strong>ESTE TIQUETE YA FUE PLANILLADO</strong>
+      @endif
     </div>
 
-    <hr>
+  <hr>
 
-    <div class="planillado">
-      <strong>Descripción: </strong>Venta de un Tiquete - Transporte Terrestre de Pasajeros Vehículo Afiliado a Copetran
-    </div>
+  <div class="planillado">
+    <strong>Descripción: </strong>Venta de un Tiquete - Transporte Terrestre de Pasajeros Vehículo Afiliado a Copetran
+  </div>
 
-    <hr>
+  <hr>
 
-    <div style="text-align:center;">
-      <img src="{{ $qrDataUri }}" alt="QR Code" style="width: 35%; height: auto;">
-    </div>
+  <div style="text-align:center;">
+    <img src="{{ $qrDataUri }}" alt="QR Code" style="width: 35%; height: auto;">
+  </div>
 
 
-    <div style="font-size: 11.5px; color: black; word-wrap: break-word; overflow-wrap: break-word;">
-      <p>
-        <strong>Resolución de factura </strong>{{ $tiquete->resolucionFactura ?? '' }}<br>
-        Régimen Común, Régimen Tributario Especial exentos de retención en la fuente.<br>
-        <strong>CUFE </strong>{{ $cufe->CUFE ?? '' }}<br>
-        Agencia <strong>{{ $tiquete->nombreBoleteria ?? '' }}</strong><br>
-        Prefijo <strong>{{ substr($cufe->NumeroFactura ?? '', 0, 4) }}</strong><br>
-        Dirección <strong>{{ $tiquete->direccionAgencia ?? '' }}</strong><br>
-        Elaborado por <strong>agilis - FICS Nit: 901.217.466-1 Sisorg SRL</strong><br>
-        Fecha de generación: <strong>{{ $fechaHoy ?? '' }}</strong> Hora: <strong>{{ $horaHoy ?? ''
-          }}</strong><br>
-        Fecha de expedición: <strong>{{ $tiquete->fechaExpedicionTiquete ?? '' }}</strong> Hora: <strong>{{
-          $tiquete->horaExpedicionTiquete ?? '' }}</strong><br>
-        Póliza RCE y RC Número 1000078<br>
-        Póliza Respaldada por SBS Seguros Colombia Consultar Póliza y Clausulado en:
-        <strong><a href="https://www.copetran.com/transporte-de-pasajeros/"
-            target="_blank">www.copetran.com/transporte-de-pasajeros/</a></strong>
-      </p>
-    </div>
+  <div style="font-size: 11.5px; color: black; word-wrap: break-word; overflow-wrap: break-word;">
+    <p>
+      <strong>Resolución de factura </strong>{{ $tiquete->resolucionFactura ?? '' }}<br>
+      Régimen Común, Régimen Tributario Especial exentos de retención en la fuente.<br>
+      <strong>CUFE </strong>{{ $cufe->CUFE ?? '' }}<br>
+      Agencia <strong>{{ $tiquete->nombreBoleteria ?? '' }}</strong><br>
+      Prefijo <strong>{{ substr($cufe->NumeroFactura ?? '', 0, 4) }}</strong><br>
+      Dirección <strong>--------------</strong><br>
+      Elaborado por <strong>agilis - FICS Nit: 901.217.466-1 Sisorg SRL</strong><br>
+      Fecha de generación: <strong>{{ $fechaHoy ?? '' }}</strong> Hora: <strong>{{ $horaHoy ?? ''
+        }}</strong><br>
+      Fecha de expedición: <strong>{{ $tiquete->fechaExpedicionTiquete ?? '' }}</strong> Hora: <strong>{{
+        $tiquete->horaExpedicionTiquete ?? '' }}</strong><br>
+      Póliza RCE y RC Número 1000078<br>
+      Póliza Respaldada por SBS Seguros Colombia Consultar Póliza y Clausulado en:
+      <strong><a href="https://www.copetran.com/transporte-de-pasajeros/"
+          target="_blank">www.copetran.com/transporte-de-pasajeros/</a></strong>
+    </p>
+  </div>
 </body>
 
 </html>

@@ -70,7 +70,7 @@ class UserController extends Controller
 
         return [
           'PerNumDoc' => $doc,
-          'nombreCompleto' => $item->persona->PerNombres . ' ' . $item->persona->PerApellidos,
+          'nombreCompleto' => ucfirst(strtolower($item->persona->PerNombres . ' ' . $item->persona->PerApellidos)),
           'fechaHoraRegistro' => $item->UsuFecReg . ' ' . $item->UsuHorReg,
           'estado' => $item->UsuarioEstado,
           'IdUsuario' => $item->IdUsuario,

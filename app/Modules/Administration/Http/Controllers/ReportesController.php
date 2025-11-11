@@ -10,6 +10,7 @@ use App\Modules\Administration\Services\Reportes\ReporteActDatosService as Repor
 use App\Modules\Administration\Services\Reportes\ReportePoliticasService;
 use App\Modules\Administration\Services\Reportes\ReportesService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
@@ -29,9 +30,46 @@ class ReportesController extends Controller
     $parametros = array_column($parametrosArray, 'nombre');
 
     // Agencias para consultas en FICS
-    $agenciasFICS = Boleterias::select('nombre', 'codigo')->get();
+    if ($parametros && in_array('paramAgencia', $parametros)) {
+      $agencias = DB::connection('oracle')->select("
+        SELECT
+            n.codigo AS codigo,
+            n.nomsucursal AS agencia
+        FROM per_personas n
+        LEFT JOIN (
+            SELECT
+                ep.pe_id_emp,
+                ep.codigo,
+                ep.pe_id_pe,
+                ROW_NUMBER() OVER (PARTITION BY ep.pe_id_emp ORDER BY ep.fecini DESC) AS rn
+            FROM per_empresapersonas ep
+            WHERE ep.tp_id = '14'
+              AND ep.activo = '1'
+              AND ep.estborrado = '0'
+        ) agente_actual
+            ON agente_actual.pe_id_emp = n.id
+            AND agente_actual.rn = 1
+        LEFT JOIN per_personas persona_agente
+            ON persona_agente.id = agente_actual.pe_id_pe
+            AND persona_agente.estborrado = '0'
+            AND persona_agente.estado = 'ACTIVO'
+        LEFT JOIN per_personas empresa_rel
+            ON empresa_rel.id = agente_actual.pe_id_emp
+        LEFT JOIN per_personas admon
+            ON admon.id = empresa_rel.pe_id_admon
+        WHERE n.identificacion = '890200928'
+          AND n.estborrado = '0'
+          AND n.nomsucursal != ' '
+          AND n.codigo != ' '
+          AND n.estado = 'ACTIVO'
+        ORDER BY n.codigo
+    ");
+    }
 
-    return view('reportes.formulario', compact('id', 'parametros', 'agenciasFICS', 'origen_db'));
+    // Asegurar que $agencias esté definido incluso si no se carga
+    $agencias = $agencias ?? [];
+
+    return view('reportes.formulario', compact('id', 'parametros', 'agencias', 'origen_db'));
   }
 
   // bootstrap table con los resultados del reporte
@@ -135,16 +173,18 @@ class ReportesController extends Controller
     try {
       $resultado = $reportesService->obtenerReportesPorArea($area);
 
-      if($area == 'personas'){
+      if ($area == 'personas') {
         return view('reportes.personas.index', [
-        'reportes' => $resultado['reportes'],
-        'area' => $area
-      ]);
+          'reportes' => $resultado['reportes'],
+          'area' => $area
+        ]);
       }
+
+      $areaFormateada = ucfirst(str_replace('_', ' ', $area));
 
       return view('reportes.reportesArea', [
         'reportes' => $resultado['reportes'],
-        'area' => $area
+        'area' => $areaFormateada
       ]);
     } catch (AuthorizationException $e) {
       abort(403, $e->getMessage());

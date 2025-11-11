@@ -28,6 +28,7 @@ class Permisos
     const ADMINISTRACION_PERSONAS_CREAR = 'administracion.personas.crear';
     const ADMINISTRACION_PERSONAS_ACTUALIZAR = 'administracion.personas.actualizar';
 
+    // ROLES REPORTES
     const ADMINISTRACION_REPORTES_ACCEDER = 'administracion.reportes.acceder';
     const ADMINISTRACION_REPORTES_CONDUCTORES = 'administracion.reportes.reportes_conductores';
     const ADMINISTRACION_REPORTES_CARGA = 'administracion.reportes.reportes_carga';
@@ -37,6 +38,9 @@ class Permisos
     const ADMINISTRACION_REPORTES_CARTERA = 'administracion.reportes.reportes_cartera';
     const ADMINISTRACION_REPORTES_AUDITORIA = 'administracion.reportes.reportes_auditoria';
     const ADMINISTRACION_REPORTES_CRUDO = 'administracion.reportes.reportes_crudo';
+    const ADMINISTRACION_REPORTES_FINANCIERA = 'administracion.reportes.reportes_financiera';
+    const ADMINISTRACION_REPORTES_FUNDACION_DE_LA_MUJER = 'administracion.reportes.reportes_fundacion_de_la_mujer';
+    const ADMINISTRACION_REPORTES_CONTABILIDAD = 'administracion.reportes.reportes_contabilidad';
 
     const ADMINISTRACION_EMPLEADOS_ACCEDER = 'administracion.empleados.acceder';
 

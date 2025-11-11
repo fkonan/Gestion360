@@ -103,7 +103,7 @@ class PersonaController extends Controller
           return [
             'PerNumDoc' => $item->PerNumDoc,
             'PerEmail' => $item->datos->PerEmail ?? '',
-            'nombreCompleto' => $item->PerNombres . ' ' . $item->PerApellidos,
+            'nombreCompleto' => ucfirst(strtolower($item->PerNombres . ' ' . $item->PerApellidos)),
             'PerTelefono' => $item->datos->PerTelefono ?? '',
             'PerEstado' => $item->PerEstado,
             'PerFechaHoraReg' => $item->PerFechReg . ' ' . $item->PerHorReg,
