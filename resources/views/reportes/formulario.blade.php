@@ -113,8 +113,8 @@
         <label for="placaVehiculo" class="form-label">
           Número de la placa de vehículo
         </label>
-        <input type="text" name="placaVehiculo" id="placaVehiculo" class="form-control" pattern="[A-Za-z]{3}[0-9]{3}"
-          title="Ingrese la placa en formato ABC123, sin espacios ni rayas">
+        <input type="text" name="placaVehiculo" id="placaVehiculo" class="form-control" pattern="[A-Za-z]{3}[0-9]{2}[A-Za-z0-9]{1}"
+          title="Ingrese la placa en formato ABC123 o ABC12A, sin espacios ni rayas">
         <span class="error text-danger fw-bold" id="error-placaVehiculo"></span>
         <small class="text-muted">Formato: <strong>ABC123</strong> (sin espacios, rayas ni puntos)</small>
       </div>
