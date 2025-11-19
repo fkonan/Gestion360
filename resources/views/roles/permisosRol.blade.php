@@ -60,10 +60,13 @@
             @foreach ($submodulo->permisos as $permiso)
             <div class="col-md-2">
               <div class="form-check form-switch">
+                @php
+                $permisoLabel = Str::title(str_replace('_', ' ', Str::afterLast($permiso->name, '.')));
+                @endphp
                 <input class="form-check-input" type="checkbox" role="switch"
                   name="permissions[]" value="{{ $permiso->name }}"
                   {{ in_array($permiso->id, $permisosAsignados) ? 'checked' : '' }}>
-                <label class="form-check-label">{{ Str::title(str_replace('_', ' ', Str::afterLast($permiso->name, '.'))) }}
+                <label class="form-check-label" title="{{ $permisoLabel }}">{{ Str::limit($permisoLabel, 20) }}
                 </label>
               </div>
             </div>

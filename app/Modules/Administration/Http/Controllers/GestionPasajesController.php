@@ -283,8 +283,8 @@ class GestionPasajesController extends Controller
           LEFT JOIN Coches co  WITH(NOLOCK)  ON co.Id = v.Coche
       WHERE
           po.Operacion = 0
-          AND pj.Numero = '{$id}';
-        ");
+          AND pj.Numero = ?;
+        ", [$id]);
 
       if (empty($tiquete)) {
         return response("No se encontraron tiquetes para el ID proporcionado", 404);
@@ -302,8 +302,8 @@ class GestionPasajesController extends Controller
             END) 'estampilla'
         FROM
             PasajesOperaciones AS pjoseg WITH (NOLOCK)
-      WHERE pjoseg.PasajeNumero = '{$id}';
-      ");
+      WHERE pjoseg.PasajeNumero = ?;
+      ", [$id]);
 
       $cufe = $conn->selectOne("
        SELECT TOP 1
@@ -322,9 +322,9 @@ class GestionPasajesController extends Controller
           LEFT JOIN Personas AS PE WITH (NOLOCK) on PE.Id=PS.Persona
       WHERE
           TD.DocumentoTipoID = 3 and
-          PS.Numero = '{$id}'
+          PS.Numero = ?
           ORDER BY TD.Fecha DESC;
-      ");
+      ", [$id]);
 
       // Generar contenido de QR
       $urlDian = "https://catalogo-vpfe.dian.gov.co/User/SearchDocument?DocumentKey=";
@@ -393,7 +393,7 @@ class GestionPasajesController extends Controller
 
   private function decryptFromNode(string $token): string
   {
-    $secret = env('NODE_ENCRYPTION_SECRET');
+    $secret = config('encryption.secret');
 
     // separar IV y datos
     [$ivB64, $dataB64] = explode('.', $token);

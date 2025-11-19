@@ -27,8 +27,11 @@ class AppmovilController extends Controller
 
     $usuarios = User::with('persona')
       ->whereHas('persona', function ($q) use ($query) {
-        $q->where(DB::raw("CONCAT(PerNombres, ' ', PerApellidos)"), 'like', "%$query%")
-          ->orWhere('PerNumDoc', 'like', "%$query%");
+        $sanitizedQuery = addcslashes((string) $query, "\\%_");
+        $pattern = "%{$sanitizedQuery}%";
+
+        $q->whereRaw("CONCAT(PerNombres, ' ', PerApellidos) LIKE ? ESCAPE '\\\\'", [$pattern])
+          ->orWhereRaw("PerNumDoc LIKE ? ESCAPE '\\\\'", [$pattern]);
       })
       ->limit(10)
       ->get()

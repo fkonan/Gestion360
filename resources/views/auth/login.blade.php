@@ -9,7 +9,7 @@
       <div class="col-xs-12 col-sm-2 col-md-3 col-lg-4 col-xl-4 col-xxl-4"></div>
       <div class="col-xs-12 col-sm-8 col-md-6 col-lg-4 col-xl-4 col-xxl-4">
          <h3>
-            Sistema: <b>{{ env('APP_NAME') }}</b>
+            Sistema: <b>Autogestión</b>
          </h3>
 
          <!-- Mensaje informativo sobre credenciales -->
@@ -100,7 +100,7 @@
 
 <!-- Sweet alert -->
 <x-alert />
-@endsection 
+@endsection
 
 @pushOnce('script')
    {!! NoCaptcha::renderJs() !!}

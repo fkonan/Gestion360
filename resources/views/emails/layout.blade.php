@@ -17,7 +17,7 @@
             <!-- HEADER -->
             <tr>
               <td bgcolor="#005CA3" align="center" style="padding: 20px;">
-                <img src="https://autogestion.copetran.com.co/cdn/img/logos/logo-blango.png"
+                <img src="{{ asset('img/LogoCopeBlancoFull.png') }}"
                   alt="Logo Copetran" style="height: 45px; display: block;" />
               </td>
             </tr>

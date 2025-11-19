@@ -91,15 +91,21 @@ class UserController extends Controller
   private function buildUsuariosQuery(array $documentosEmpleados, ?string $search, ?string $sort, string $order)
   {
     $query = User::with(['persona', 'roles'])
-      ->whereHas('persona', fn($q) => $q->whereIn('PerNumDoc', $documentosEmpleados));
+      ->whereHas(
+        'persona',
+        fn($q) =>
+        $q->whereIn('PerNumDoc', $documentosEmpleados)
+      );
 
     if (!empty($search)) {
-      $query->where(function ($q) use ($search) {
-        $q->where('UsuFecReg', 'like', "%$search%")
-          ->orWhere('UsuHorReg', 'like', "%$search%")
-          ->orWhereHas('persona', function ($q2) use ($search) {
-            $q2->where('PerNumDoc', 'like', "%$search%")
-              ->orWhere(DB::raw("CONCAT(PerNombres, ' ', PerApellidos)"), 'like', "%$search%");
+      $likeSearch = "%{$search}%";
+
+      $query->where(function ($q) use ($likeSearch) {
+        $q->where('UsuFecReg', 'like', $likeSearch)
+          ->orWhere('UsuHorReg', 'like', $likeSearch)
+          ->orWhereHas('persona', function ($q2) use ($likeSearch) {
+            $q2->where('PerNumDoc', 'like', $likeSearch)
+              ->orWhereRaw("CONCAT(PerNombres, ' ', PerApellidos) LIKE ?", [$likeSearch]);
           });
       });
     }

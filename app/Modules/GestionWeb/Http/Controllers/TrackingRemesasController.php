@@ -46,7 +46,7 @@ class TrackingRemesasController extends Controller
                 INNER JOIN gen_tipoestadodctos td ON r.te_id = td.id
                 LEFT JOIN cum_notacumplidos obs ON obs.re_id = r.id
                 LEFT JOIN cum_tiponotacumplidos tn ON obs.tnv_id = tn.id
-                WHERE r.numremesa = :numero OR r.numremesafac = :numero AND r.tipremesa IN (1, 7)
+                WHERE (r.numremesa = :numero OR r.numremesafac = :numero) AND r.tipremesa IN (1, 7)
             ";
 
       $datos = DB::connection('oracle')->select($query, ['numero' => $numeroRemision]);

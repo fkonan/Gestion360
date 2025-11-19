@@ -79,16 +79,18 @@ class PersonaController extends Controller
 
       // 5. Buscador
       if (!empty($search)) {
-        $personas->where(function ($q) use ($search) {
-          $q->where('PerFechReg', 'like', "%$search%")
-            ->orWhere(DB::raw("CONCAT(PerNombres, ' ', PerApellidos)"), 'like', "%$search%")
-            ->orWhere('PerNumDoc', 'like', "%$search%")
-            ->orWhereHas('municipioNac.departamento', function ($q2) use ($search) {
-              $q2->where('DepNom', 'like', "%$search%");
+        $likeSearch = "%{$search}%";
+
+        $personas->where(function ($q) use ($likeSearch) {
+          $q->where('PerFechReg', 'like', $likeSearch)
+            ->orWhereRaw("CONCAT(PerNombres, ' ', PerApellidos) like ?", [$likeSearch])
+            ->orWhere('PerNumDoc', 'like', $likeSearch)
+            ->orWhereHas('municipioNac.departamento', function ($q2) use ($likeSearch) {
+              $q2->where('DepNom', 'like', $likeSearch);
             })
-            ->orWhereHas('datos', function ($q3) use ($search) {
-              $q3->where('PerTelefono', 'like', "%$search%")
-                ->orWhere('PerEmail', 'like', "%$search%");
+            ->orWhereHas('datos', function ($q3) use ($likeSearch) {
+              $q3->where('PerTelefono', 'like', $likeSearch)
+                ->orWhere('PerEmail', 'like', $likeSearch);
             });
         });
       }
