@@ -25,7 +25,8 @@
   </script>
 
   <link rel="icon" href="{{ asset('favicon.png') }}" type="image/png">
-  <link rel="preload" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" as="style"
+    onload="this.onload=null;this.rel='stylesheet'">
   <noscript>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
   </noscript>
@@ -91,10 +92,19 @@
             </span>
             <br>
 
-            <span class="fw-bold"> Rol:</span>
+            <span class="fw-bold">Rol:</span>
             <span class="fw-medium">
-              {{ $user->rol }}
+              {{ $user->rol[0] ?? 'SIN ROL' }}
             </span>
+
+            @if (count($user->rol) > 1)
+            <span class="fw-medium d-block">
+              @foreach (array_slice($user->rol, 1) as $rol)
+              {{ $rol }}<br>
+              @endforeach
+            </span>
+            @endif
+
             <br>
 
             <span class="fw-bold"> Centro costo:</span>
@@ -126,11 +136,8 @@
       <section class="content-header mb-4 p-2 py-1 d-flex justify-content-between align-items-center bg-primary"
         style="position: sticky; top: 0; z-index: 1030;">
         <div class="container-fluid my-2">
-          <a class="pushmenu btn btn-sm text-light navbar-toggler"
-            data-widget="pushmenu"
-            data-enable-remember="true"
-            href="#"
-            role="button">
+          <a class="pushmenu btn btn-sm text-light navbar-toggler" data-widget="pushmenu" data-enable-remember="true"
+            href="#" role="button">
             <i class="fas fa-bars"></i>
           </a>
           <!-- <img src="{{ asset('img/LogoCopeBlanco.png') }}" style="width:70px; height: 15px;" alt="Logo Cope" class="d-md-none"> -->
@@ -156,20 +163,21 @@
   <x-loader />
 
   <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap-duallistbox/dist/jquery.bootstrap-duallistbox.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap-duallistbox/dist/jquery.bootstrap-duallistbox.min.js"
+    defer></script>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 
   <script>
     //Modal (evita errores de focus)
-    document.addEventListener('hidden.bs.modal', function(event) {
+    document.addEventListener('hidden.bs.modal', function (event) {
       if (document.activeElement) {
         document.activeElement.blur();
       }
     });
 
     // Función para mostrar el toast
-    window.addEventListener('DOMContentLoaded', function() {
+    window.addEventListener('DOMContentLoaded', function () {
       const title = sessionStorage.getItem('toastTitle');
       const type = sessionStorage.getItem('toastType');
 
@@ -181,7 +189,7 @@
     });
 
     // Mostrar el cuerpo del documento después de cargar todo
-    window.addEventListener('load', function() {
+    window.addEventListener('load', function () {
       document.body.classList.add('show');
     });
   </script>

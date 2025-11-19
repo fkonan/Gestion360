@@ -69,99 +69,86 @@ class ReportesService
 
   public function tiposReporte()
   {
-    $reportes = [
-      [
-        'titulo' => 'Reportes Personas',
-        'descripcion' => 'Consultar',
-        'tooltip' => 'Incluye diversos reportes relacionados con la gestión y actividad de los empleados y conductores.',
-        'ruta' => ['reportes.area', 'personas'],
-        'permiso' => Permisos::ADMINISTRACION_REPORTES_EMPLEADOS,
-        'icono' => 'fa-solid fa-users'
-      ],
-      [
-        'titulo' => 'Reportes Pasajes',
-        'descripcion' => 'Consultar',
-        'tooltip' => 'Incluye reportes relacionados con la gestión y análisis de pasajes, tiquetes y esquemas tarifarios.',
-        'ruta' => ['reportes.area', 'pasajes'],
-        'permiso' => Permisos::ADMINISTRACION_REPORTES_PASAJES,
-        'icono' => 'fa-solid fa-ticket-alt'
-      ],
-      [
-        'titulo' => 'Reportes Carga',
-        'descripcion' => 'Consultar',
-        'tooltip' => 'Incluye reportes relacionados con la gestión y análisis de carga.',
-        'ruta' => ['reportes.area', 'carga'],
-        'permiso' => Permisos::ADMINISTRACION_REPORTES_CARGA,
-        'icono' => 'fa-solid fa-truck-loading'
-      ],
-      [
-        'titulo' => 'Reportes Cartera',
-        'descripcion' => 'Consultar',
-        'tooltip' => 'Incluye reportes relacionados con la gestión y análisis de cartera, cobranzas y cuentas por cobrar.',
-        'ruta' => ['reportes.area', 'cartera'],
-        'permiso' => Permisos::ADMINISTRACION_REPORTES_CARTERA,
-        'icono' => 'fa-solid fa-wallet'
-      ],
-      [
-        'titulo' => 'Reportes Auditoria',
-        'descripcion' => 'Consultar',
-        'tooltip' => 'Incluye reportes relacionados con la gestión y análisis de auditoría.',
-        'ruta' => ['reportes.area', 'auditoria'],
-        'permiso' => Permisos::ADMINISTRACION_REPORTES_AUDITORIA,
-        'icono' => 'fa-solid fa-file-alt'
-      ],
-      [
-        'titulo' => 'Reportes Crudo',
-        'descripcion' => 'Consultar',
-        'tooltip' => 'Conceptos por anticipo, flota dedicada, manifiestos, plantilla flota dedicada entre otros.',
-        'ruta' => ['reportes.area', 'crudo'],
-        'permiso' => Permisos::ADMINISTRACION_REPORTES_CRUDO,
-        'icono' => 'fa-solid fa-gas-pump'
-      ],
-      [
-        'titulo' => 'Reportes Financiera',
-        'descripcion' => 'Consultar',
-        'tooltip' => 'Gastos, ingresos, ventas por agencia y tipo de vehiculo.',
-        'ruta' => ['reportes.area', 'financiera'],
-        'permiso' => Permisos::ADMINISTRACION_REPORTES_FINANCIERA,
-        'icono' => 'fa-solid fa-file-invoice-dollar'
-      ],
-      [
-        'titulo' => 'Fundación de la Mujer',
-        'descripcion' => 'Consultar',
-        'tooltip' => 'Consultas generales sobre la Fundación de la Mujer.',
-        'ruta' => ['reportes.area', 'fundacion_de_la_mujer'],
-        'permiso' => Permisos::ADMINISTRACION_REPORTES_FUNDACION_DE_LA_MUJER,
-        'icono' => 'fa-solid fa-university'
-      ],
-      [
-        'titulo' => 'Reportes Contabilidad',
-        'descripcion' => 'Consultar',
-        'tooltip' => 'Consultas generales sobre la Contabilidad.',
-        'ruta' => ['reportes.area', 'contabilidad'],
-        'permiso' => Permisos::ADMINISTRACION_REPORTES_CONTABILIDAD,
-        'icono' => 'fa-solid fa-calculator'
-      ],
-      [
-        'titulo' => 'Reportes Ficha Técnica',
-        'descripcion' => 'Consultar',
-        'tooltip' => 'Consulta de documentos, relación vehículos asociados, total parque automotor.',
-        'ruta' => ['reportes.area', 'ficha_tecnica'],
-        'permiso' => Permisos::ADMINISTRACION_REPORTES_FICHA_TECNICA,
-        'icono' => 'fa-solid fa-id-card'
-      ],
-      [
-        'titulo' => 'Reportes Giros y Convenios',
-        'descripcion' => 'Consultar',
-        'tooltip' => 'Consulta de información relacionada con los procesos de Giros, Convenios y Canales.',
-        'ruta' => ['reportes.area', 'giros_y_convenios_empresariales'],
-        'permiso' => Permisos::ADMINISTRACION_REPORTES_GIROS_Y_CONVENIOS_EMPRESARIALES,
-        'icono' => 'fa-solid fa-handshake'
-      ],
+    /** @var \App\Models\User $user */
+    $user = Auth::user();
+
+    $areas = [
+      'personas' => ['nombre' => 'RRHH', 'permiso' => Permisos::ADMINISTRACION_REPORTES_EMPLEADOS],
+      'pasajes' => ['nombre' => 'Unidad pasajes', 'permiso' => Permisos::ADMINISTRACION_REPORTES_PASAJES],
+      'carga' => ['nombre' => 'Unidad carga', 'permiso' => Permisos::ADMINISTRACION_REPORTES_CARGA],
+      'cartera' => ['nombre' => 'Cartera', 'permiso' => Permisos::ADMINISTRACION_REPORTES_CARTERA],
+      'auditoria' => ['nombre' => 'Auditoría', 'permiso' => Permisos::ADMINISTRACION_REPORTES_AUDITORIA],
+      'crudo' => ['nombre' => 'Crudo', 'permiso' => Permisos::ADMINISTRACION_REPORTES_CRUDO],
+      'financiera' => ['nombre' => 'Financiera', 'permiso' => Permisos::ADMINISTRACION_REPORTES_FINANCIERA],
+      'fundacion_de_la_mujer' => ['nombre' => 'Fundación de la Mujer', 'permiso' => Permisos::ADMINISTRACION_REPORTES_FUNDACION_DE_LA_MUJER],
+      'contabilidad' => ['nombre' => 'Contabilidad', 'permiso' => Permisos::ADMINISTRACION_REPORTES_CONTABILIDAD],
+      'ficha_tecnica' => ['nombre' => 'Ficha Técnica', 'permiso' => Permisos::ADMINISTRACION_REPORTES_FICHA_TECNICA],
+      'giros_y_convenios_empresariales' => ['nombre' => 'Giros y Convenios Empresariales', 'permiso' => Permisos::ADMINISTRACION_REPORTES_GIROS_Y_CONVENIOS_EMPRESARIALES],
     ];
 
-    return $reportes;
+    $result = [];
+
+    foreach ($areas as $slug => $conf) {
+
+      $areaNombre = $conf['nombre'];
+      $permisoArea = $conf['permiso'];
+
+      // Verificación por área
+      $accesoPorArea = $user->can($permisoArea);
+
+      // Verificación por reporte individual
+      $reportesArea = Reporteador::where('area', $areaNombre)
+        ->where('estado', 'ACTIVO')
+        ->get();
+
+      $accesoIndividual = $reportesArea->contains(function ($r) use ($user) {
+        return $user->can("administracion.reportes.id_{$r->id}");
+      });
+
+      // Si no tiene acceso por área ni individual → no mostrar
+      if (!$accesoPorArea && !$accesoIndividual) {
+        continue;
+      }
+
+      // Si llega aquí → sí debe aparecer en el panel
+      $result[] = [
+        'titulo' => "Reportes " . ucfirst($slug),
+        'descripcion' => 'Consultar',
+        'tooltip' => '',
+        'ruta' => ['reportes.area', $slug],
+        'icono' => 'fa-solid fa-folder',
+      ];
+    }
+
+    return $result;
   }
+
+
+  public function usuarioPuedeVerArea($slugArea, $permisoArea)
+  {
+    /** @var \App\Models\User $user */
+    $user = Auth::user();
+
+    // Permiso de área → acceso completo
+    if ($user->can($permisoArea)) {
+      return true;
+    }
+
+    // Buscar reportes de esta área
+    $reportes = Reporteador::where('area', $slugArea)
+      ->where('estado', 'ACTIVO')
+      ->get();
+
+    // Ver si el usuario tiene permiso individual a alguno
+    foreach ($reportes as $r) {
+      if ($user->can("administracion.reportes.id_{$r->id}")) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
 
   public function obtenerReportesPorArea(string $area): array
   {
@@ -210,7 +197,6 @@ class ReportesService
         'nombre' => 'Giros y Convenios Empresariales',
         'permiso' => Permisos::ADMINISTRACION_REPORTES_GIROS_Y_CONVENIOS_EMPRESARIALES,
       ],
-
     ];
 
     if (!isset($areas[$area])) {
@@ -218,20 +204,40 @@ class ReportesService
     }
 
     $config = $areas[$area];
-
     /** @var \App\Models\User $user */
     $user = Auth::user();
 
-    if (!$user->can($config['permiso'])) {
-      throw new AuthorizationException('No tienes permiso para acceder a este reporte');
-    }
-
-    $reportes = Reporteador::where('area', $config['nombre'])
+    /** ------------------------------
+     * 1. OBTENER TODOS LOS REPORTES DEL ÁREA
+     * ------------------------------*/
+    $reportesArea = Reporteador::where('area', $config['nombre'])
       ->where('estado', 'ACTIVO')
       ->get();
 
-    return [
-      'reportes' => $reportes
-    ];
+    /** ------------------------------------------------------
+     * 2. FILTRAR QUÉ REPORTES INDIVIDUALES EL USUARIO PUEDE VER
+     * ------------------------------------------------------*/
+    $reportesConPermisoIndividual = $reportesArea->filter(function ($reporte) use ($user) {
+      return $user->can("administracion.reportes.id_{$reporte->id}");
+    });
+
+    /** ------------------------------------------------------
+     * 3. SI EL USUARIO TIENE PERMISO DE ÁREA → MOSTRAR TODOS
+     * ------------------------------------------------------*/
+    if ($user->can($config['permiso'])) {
+      return ['reportes' => $reportesArea];
+    }
+
+    /** ------------------------------------------------------
+     * 4. SIN PERMISO DE ÁREA, PERO CON ALGÚN PERMISO INDIVIDUAL → MOSTRAR SOLO ESOS
+     * ------------------------------------------------------*/
+    if ($reportesConPermisoIndividual->isNotEmpty()) {
+      return ['reportes' => $reportesConPermisoIndividual->values()];
+    }
+
+    /** ------------------------------------------------------
+     * 5. SIN PERMISO DE ÁREA NI INDIVIDUAL → BLOQUEAR
+     * ------------------------------------------------------*/
+    throw new AuthorizationException('No tienes permiso para acceder a estos reportes.');
   }
 }

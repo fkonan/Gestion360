@@ -96,8 +96,8 @@ class User extends Authenticatable
 
   public function getRolAttribute()
   {
-    $roles = $this->getRoleNames();
-    return $roles->isNotEmpty() ? $roles->first() : 'SIN ROL';
+      $roles = $this->getRoleNames();
+      return $roles->isNotEmpty() ? $roles->toArray() : ['SIN ROL'];
   }
 
   public function obtenerDescripcionCentroCosto()
@@ -122,9 +122,6 @@ class User extends Authenticatable
         ->first();
     });
   }
-
-
-
 
   // Verificar contraseña con SHA-1
   public function validateCredentials($password)
