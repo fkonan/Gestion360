@@ -72,6 +72,7 @@ class ReportesService
     /** @var \App\Models\User $user */
     $user = Auth::user();
 
+    // 1. Áreas con permisos
     $areas = [
       'personas' => ['nombre' => 'RRHH', 'permiso' => Permisos::ADMINISTRACION_REPORTES_EMPLEADOS],
       'pasajes' => ['nombre' => 'Unidad pasajes', 'permiso' => Permisos::ADMINISTRACION_REPORTES_PASAJES],
@@ -86,6 +87,76 @@ class ReportesService
       'giros_y_convenios_empresariales' => ['nombre' => 'Giros y Convenios Empresariales', 'permiso' => Permisos::ADMINISTRACION_REPORTES_GIROS_Y_CONVENIOS_EMPRESARIALES],
     ];
 
+    // 2. Propiedades visuales por área
+    $visual = [
+      'personas' => [
+        'titulo' => 'Reportes Personas',
+        'descripcion' => 'Consultar',
+        'tooltip' => 'Incluye diversos reportes relacionados con empleados y conductores.',
+        'icono' => 'fa-solid fa-users',
+      ],
+      'pasajes' => [
+        'titulo' => 'Reportes Pasajes',
+        'descripcion' => 'Consultar',
+        'tooltip' => 'Reportes de pasajes, tiquetes y esquemas tarifarios.',
+        'icono' => 'fa-solid fa-ticket-alt',
+      ],
+      'carga' => [
+        'titulo' => 'Reportes Carga',
+        'descripcion' => 'Consultar',
+        'tooltip' => 'Reportes de análisis y gestión de carga.',
+        'icono' => 'fa-solid fa-truck-loading',
+      ],
+      'cartera' => [
+        'titulo' => 'Reportes Cartera',
+        'descripcion' => 'Consultar',
+        'tooltip' => 'Reportes de cartera, cobranzas y cuentas por cobrar.',
+        'icono' => 'fa-solid fa-wallet',
+      ],
+      'auditoria' => [
+        'titulo' => 'Reportes Auditoría',
+        'descripcion' => 'Consultar',
+        'tooltip' => 'Reportes relacionados con auditoría interna y controles.',
+        'icono' => 'fa-solid fa-file-alt',
+      ],
+      'crudo' => [
+        'titulo' => 'Reportes Crudo',
+        'descripcion' => 'Consultar',
+        'tooltip' => 'Flota dedicada, manifiestos, anticipos...',
+        'icono' => 'fa-solid fa-gas-pump',
+      ],
+      'financiera' => [
+        'titulo' => 'Reportes Financiera',
+        'descripcion' => 'Consultar',
+        'tooltip' => 'Gastos, ingresos, ventas por agencia y tipo de vehículo.',
+        'icono' => 'fa-solid fa-file-invoice-dollar',
+      ],
+      'fundacion_de_la_mujer' => [
+        'titulo' => 'Fundación de la Mujer',
+        'descripcion' => 'Consultar',
+        'tooltip' => 'Consultas generales de la Fundación de la Mujer.',
+        'icono' => 'fa-solid fa-university',
+      ],
+      'contabilidad' => [
+        'titulo' => 'Reportes Contabilidad',
+        'descripcion' => 'Consultar',
+        'tooltip' => 'Reportes contables y financieros.',
+        'icono' => 'fa-solid fa-calculator',
+      ],
+      'ficha_tecnica' => [
+        'titulo' => 'Reportes Ficha Técnica',
+        'descripcion' => 'Consultar',
+        'tooltip' => 'Documentos y relación de vehículos.',
+        'icono' => 'fa-solid fa-id-card',
+      ],
+      'giros_y_convenios_empresariales' => [
+        'titulo' => 'Reportes Giros y Convenios',
+        'descripcion' => 'Consultar',
+        'tooltip' => 'Consultas de Giros, Canales y Convenios.',
+        'icono' => 'fa-solid fa-handshake',
+      ],
+    ];
+
     $result = [];
 
     foreach ($areas as $slug => $conf) {
@@ -93,33 +164,29 @@ class ReportesService
       $areaNombre = $conf['nombre'];
       $permisoArea = $conf['permiso'];
 
-      // Verificación por área
       $accesoPorArea = $user->can($permisoArea);
 
-      // Verificación por reporte individual
       $reportesArea = Reporteador::where('area', $areaNombre)
         ->where('estado', 'ACTIVO')
         ->get();
 
-      $accesoIndividual = $reportesArea->contains(function ($r) use ($user) {
-        return $user->can("administracion.reportes.id_{$r->id}");
-      });
+      $accesoIndividual = $reportesArea->contains(
+        fn($rep) =>
+        $user->can("administracion.reportes.id_{$rep->id}")
+      );
 
-      // Si no tiene acceso por área ni individual → no mostrar
       if (!$accesoPorArea && !$accesoIndividual) {
         continue;
       }
 
-      // Si llega aquí → sí debe aparecer en el panel
       $result[] = [
-        'titulo' => "Reportes " . ucfirst($slug),
-        'descripcion' => 'Consultar',
-        'tooltip' => '',
+        'titulo' => $visual[$slug]['titulo'],
+        'descripcion' => $visual[$slug]['descripcion'],
+        'tooltip' => $visual[$slug]['tooltip'],
         'ruta' => ['reportes.area', $slug],
-        'icono' => 'fa-solid fa-folder',
+        'icono' => $visual[$slug]['icono'],
       ];
     }
-
     return $result;
   }
 

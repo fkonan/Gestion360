@@ -55,6 +55,22 @@
       </div>
       @endif
 
+      @if(in_array('paramCategoriaVehiculo', $parametros))
+      <div class="col-md-6 mt-3">
+        <label for="categoriaVehiculo" class="form-label">Categoria Vehiculo</label>
+        <select class="form-select select2" id="categoriaVehiculo" name="categoriaVehiculo">
+          <option value="null">TODAS</option>
+          <option value="TURNADOR">TURNADOR</option>
+          @foreach($categorias as $categoria)
+          <option value="{{ $categoria->servicio }}">
+            {{ $categoria->servicio }}
+          </option>
+          @endforeach
+        </select>
+        <span class="error text-danger fw-bold" id="error-agencia"></span>
+      </div>
+      @endif
+
       @if(in_array('paramAgencia', $parametros))
       <div class="col-md-6 mt-3">
         <label for="agencia" class="form-label">Agencia *</label>

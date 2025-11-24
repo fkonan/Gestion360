@@ -35,47 +35,66 @@
       @enderror
       <br>
 
-      @foreach ($modulos as $modulo)
+      @foreach ($modulos as $index => $modulo)
+      @php
+      // ID único para cada collapse
+      $idCollapse = 'modulo_edit_' . $index;
+
+      $nombreModulo = normalizarNombre($modulo->ModNom);
+      $permisoModulo = \Spatie\Permission\Models\Permission::where('name', "$nombreModulo.acceder")->first();
+      @endphp
+
       <div class="border border-primary rounded m-0 p-0 pb-3 mb-4">
-        <h5 class="p-2 bg-primary-subtle text-light">{{ ucfirst($modulo->ModNom) }}</h5>
 
-        @php
-        $nombreModulo = normalizarNombre($modulo->ModNom);
-        $permisoModulo = \Spatie\Permission\Models\Permission::where('name', "$nombreModulo.acceder")->first();
-        @endphp
+        {{-- TÍTULO CLICABLE --}}
+        <h5 class="p-2 bg-primary-subtle text-light d-flex justify-content-between align-items-center"
+          data-bs-toggle="collapse" data-bs-target="#{{ $idCollapse }}" aria-expanded="false"
+          aria-controls="{{ $idCollapse }}" style="cursor: pointer;">
+          {{ ucfirst($modulo->ModNom) }}
+          <i class="fa fa-chevron-down ms-2"></i>
+        </h5>
 
-        @if ($permisoModulo)
-        <div class="m-3 form-check form-switch">
-          <input class="form-check-input" type="checkbox" role="switch"
-            name="permissions[]" value="{{ $permisoModulo->name }}"
-            {{ in_array($permisoModulo->id, $permisosAsignados) ? 'checked' : '' }}>
-          <label class="form-check-label">Acceso al módulo</label>
-        </div>
-        @endif
+        {{-- CONTENIDO DESPLEGABLE --}}
+        <div class="collapse" id="{{ $idCollapse }}">
 
-        @foreach ($modulo->submodulos as $submodulo)
-        <div class="mx-4 rolCreate rounded">
-          <p class="text-secondary fs-6 fw-medium m-0 p-0">{{ ucfirst($submodulo->SubModNom) }}</p>
-          <div class="row mb-2">
-            @foreach ($submodulo->permisos as $permiso)
-            <div class="col-md-2">
-              <div class="form-check form-switch">
-                @php
-                $permisoLabel = Str::title(str_replace('_', ' ', Str::afterLast($permiso->name, '.')));
-                @endphp
-                <input class="form-check-input" type="checkbox" role="switch"
-                  name="permissions[]" value="{{ $permiso->name }}"
-                  {{ in_array($permiso->id, $permisosAsignados) ? 'checked' : '' }}>
-                <label class="form-check-label" title="{{ $permisoLabel }}">{{ Str::limit($permisoLabel, 20) }}
-                </label>
-              </div>
-            </div>
-            @endforeach
+          @if ($permisoModulo)
+          <div class="m-3 form-check form-switch">
+            <input class="form-check-input" type="checkbox" role="switch" name="permissions[]"
+              value="{{ $permisoModulo->name }}" {{ in_array($permisoModulo->id, $permisosAsignados) ? 'checked' : ''
+            }}>
+            <label class="form-check-label">Acceso al módulo</label>
           </div>
+          @endif
+
+          @foreach ($modulo->submodulos as $submodulo)
+          <div class="mx-4 rolCreate rounded">
+            <p class="text-secondary fs-6 fw-medium m-0 p-0">{{ ucfirst($submodulo->SubModNom) }}</p>
+
+            <div class="row mb-2">
+              @foreach ($submodulo->permisos as $permiso)
+              <div class="col-md-2">
+                <div class="form-check form-switch">
+                  @php
+                  $permisoLabel = Str::title(str_replace('_', ' ', Str::afterLast($permiso->name, '.')));
+                  @endphp
+
+                  <input class="form-check-input" type="checkbox" role="switch" name="permissions[]"
+                    value="{{ $permiso->name }}" {{ in_array($permiso->id, $permisosAsignados) ? 'checked' : '' }}>
+
+                  <label class="form-check-label" title="{{ $permisoLabel }}">
+                    {{ Str::limit($permisoLabel, 20) }}
+                  </label>
+                </div>
+              </div>
+              @endforeach
+            </div>
+          </div>
+          @endforeach
+
         </div>
-        @endforeach
       </div>
       @endforeach
+
 
       <button type="submit" class="btn btn-success my-3">Guardar</button>
       <a type="button" class="btn btn-dark" href="{{ route('roles.index') }}">Cancelar</a>

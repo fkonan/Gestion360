@@ -4,8 +4,8 @@ namespace App\Modules\Administration\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 
-use App\Models\FICS\Boleterias;
 use App\Models\GESTIONADMIN\Reporteador;
+use App\Models\LOGTRANS\FitTipoVehiculos;
 use App\Modules\Administration\Services\Reportes\ReporteActDatosService as ReportesReporteActDatosService;
 use App\Modules\Administration\Services\Reportes\ReportePoliticasService;
 use App\Modules\Administration\Services\Reportes\ReportesService;
@@ -28,6 +28,13 @@ class ReportesController extends Controller
     // Decodificar parámetros
     $parametrosArray = json_decode($reporte->parametros, true) ?? [];
     $parametros = array_column($parametrosArray, 'nombre');
+
+    //Categoria vehiculos para consultas en LOGTRANS
+    if ($parametros && in_array('paramCategoriaVehiculo', $parametros)) {
+      $categorias = FitTipoVehiculos::select('servicio')
+        ->whereIn('descripcion', ['BUS','BUSETA','MICROBUS'])
+        ->get();
+    }
 
     // Agencias para consultas en FICS
     if ($parametros && in_array('paramAgencia', $parametros)) {
@@ -66,10 +73,11 @@ class ReportesController extends Controller
     ");
     }
 
-    // Asegurar que $agencias esté definido incluso si no se carga
+    // Asegurar que las variables estén definidas
     $agencias = $agencias ?? [];
+    $categorias = $categorias ?? [];
 
-    return view('reportes.formulario', compact('id', 'parametros', 'agencias', 'origen_db'));
+    return view('reportes.formulario', compact('id', 'parametros', 'agencias', 'origen_db', 'categorias'));
   }
 
   // bootstrap table con los resultados del reporte
@@ -109,10 +117,10 @@ class ReportesController extends Controller
     $nombreDocExcel = normalizarNombre($nombreReporte);
 
     // Para el caso del reporte 9 el rango de fechas se amplia un mes
-    if ($id == 9) {
+    /* if ($id == 9) {
       $fechaInicio = $fechaInicio->copy()->subMonth();
       $fechaFin = $fechaFin->copy()->addMonth();
-    }
+    } */
 
     $params = $request->all();
     $params['fechaInicio'] = $fechaInicio->toDateString();

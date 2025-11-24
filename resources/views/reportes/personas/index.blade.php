@@ -83,5 +83,24 @@
       'detalleReporte'
     );
   });
+
+
+//para el reporte ingreso y salidas conductores
+  function habilitarInputFiltro(checkElement) {
+    const parametro = document.getElementById('parametro');
+    const parametroLabel = parametro ? parametro.querySelector('label') : null;
+
+    if (checkElement.id === 'filtroCedula') {
+      parametro.style.display = '';
+      parametroLabel.innerHTML = 'Ingrese la cédula';
+
+    } else if (checkElement.id === 'filtroCodigo') {
+      parametro.style.display = '';
+      parametroLabel.innerHTML = 'Ingrese el código';
+
+    } else if (checkElement.id === 'filtroTodos') {
+      parametro.style.display = 'none';
+    }
+  }
 </script>
 @endpushOnce

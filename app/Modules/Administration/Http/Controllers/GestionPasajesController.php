@@ -174,6 +174,17 @@ class GestionPasajesController extends Controller
       $id = $token;
 
       $conn = DB::connection('sqlsrv');
+
+      $abordo = $conn->selectOne("
+      select vd.Abordo from PasajesOperaciones as po
+        left join TFC_ViajesDespachos_Pasajes as vd with (NOLOCK) on vd.PasajeID = po.Pasaje
+        where po.PasajeNumero = ?;"
+      , [$id]);
+
+      if ($abordo && $abordo->Abordo == 1) {
+        return response("No se puede generar el tiquete porque el pasajero ya ha abordado el viaje.", 403);
+      }
+
       $tiquete = $conn->selectOne("
       SELECT
           /*Información del Cliente*/
