@@ -26,6 +26,13 @@ class ReporteActDatosService
           'CONDUCTOR CACIQUE DE ORO',
           'CONDUCTOR TURNADOR CACIQUE DE ORO'
         ]);
+      } elseif ($filtro === 'conductores') {
+        $query->whereIn('CargoPer', [
+          'CONDUCTOR CARGA',
+          'CONDUCTOR PASAJES',
+          'CONDUCTOR CACIQUE DE ORO',
+          'CONDUCTOR TURNADOR CACIQUE DE ORO'
+        ]);
       }
 
       // JOIN con última fecha de firma

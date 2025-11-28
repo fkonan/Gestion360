@@ -15,8 +15,9 @@
 @section('content')
 <div class="container-fluid p-0 border rounded shadow sidebar-dark-primary">
 
+  {{-- Encabezado --}}
   <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-primary-subtle">
-    <span class="text-left text-light fs-5 fw-medium py-1">Editar Rol</span>
+    <span class="text-left text-light fs-5 fw-medium py-2">Editar Rol</span>
   </div>
 
   <div class="row p-4 m-0">
@@ -24,80 +25,89 @@
       @csrf
       @method('PUT')
 
-      <div class="input-group">
-        <input type="name" class="form-control" id="name" name="name" value="{{ $role->name }}" disabled required>
-        <div class="input-group-text" onclick="editarNombreRol()">
-          <span class="fas fa-edit"></span>
-        </div>
+      {{-- Nombre del rol --}}
+      <div class="input-group mb-2">
+        <input type="text" class="form-control" id="name" name="name" value="{{ $role->name }}" disabled required>
+        <button class="input-group-text" type="button" onclick="editarNombreRol()">
+          <i class="fas fa-edit"></i>
+        </button>
       </div>
+
       @error('name')
       <small class="text-danger fw-bold">{{ $message }}</small>
       @enderror
+
       <br>
 
+      {{-- Módulos --}}
       @foreach ($modulos as $index => $modulo)
       @php
-      // ID único para cada collapse
       $idCollapse = 'modulo_edit_' . $index;
-
       $nombreModulo = normalizarNombre($modulo->ModNom);
       $permisoModulo = \Spatie\Permission\Models\Permission::where('name', "$nombreModulo.acceder")->first();
       @endphp
 
-      <div class="border border-primary rounded m-0 p-0 pb-3 mb-4">
+      <div class="border border-primary rounded mb-4">
 
-        {{-- TÍTULO CLICABLE --}}
-        <h5 class="p-2 bg-primary-subtle text-light d-flex justify-content-between align-items-center"
-          data-bs-toggle="collapse" data-bs-target="#{{ $idCollapse }}" aria-expanded="false"
-          aria-controls="{{ $idCollapse }}" style="cursor: pointer;">
+        {{-- Título clicable --}}
+        <h5 class="p-2 px-3 bg-primary-subtle text-light d-flex justify-content-between align-items-center"
+          data-bs-toggle="collapse" data-bs-target="#{{ $idCollapse }}" aria-expanded="false" style="cursor:pointer;">
           {{ ucfirst($modulo->ModNom) }}
-          <i class="fa fa-chevron-down ms-2"></i>
+          <i class="fa fa-chevron-down"></i>
         </h5>
 
-        {{-- CONTENIDO DESPLEGABLE --}}
+        {{-- Contenido --}}
         <div class="collapse" id="{{ $idCollapse }}">
+          <div class="px-3 pt-3 pb-2">
 
-          @if ($permisoModulo)
-          <div class="m-3 form-check form-switch">
-            <input class="form-check-input" type="checkbox" role="switch" name="permissions[]"
-              value="{{ $permisoModulo->name }}" {{ in_array($permisoModulo->id, $permisosAsignados) ? 'checked' : ''
-            }}>
-            <label class="form-check-label">Acceso al módulo</label>
-          </div>
-          @endif
+            {{-- Acceso al módulo --}}
+            @if ($permisoModulo)
+            <div class="form-check form-switch mb-3">
+              <input class="form-check-input" type="checkbox" name="permissions[]" value="{{ $permisoModulo->name }}" {{
+                in_array($permisoModulo->id, $permisosAsignados) ? 'checked' : '' }}>
 
-          @foreach ($modulo->submodulos as $submodulo)
-          <div class="mx-4 rolCreate rounded">
-            <p class="text-secondary fs-6 fw-medium m-0 p-0">{{ ucfirst($submodulo->SubModNom) }}</p>
-
-            <div class="row mb-2">
-              @foreach ($submodulo->permisos as $permiso)
-              <div class="col-md-2">
-                <div class="form-check form-switch">
-                  @php
-                  $permisoLabel = Str::title(str_replace('_', ' ', Str::afterLast($permiso->name, '.')));
-                  @endphp
-
-                  <input class="form-check-input" type="checkbox" role="switch" name="permissions[]"
-                    value="{{ $permiso->name }}" {{ in_array($permiso->id, $permisosAsignados) ? 'checked' : '' }}>
-
-                  <label class="form-check-label" title="{{ $permisoLabel }}">
-                    {{ Str::limit($permisoLabel, 20) }}
-                  </label>
-                </div>
-              </div>
-              @endforeach
+              <label class="form-check-label fw-medium">Acceso al módulo</label>
             </div>
-          </div>
-          @endforeach
+            @endif
 
+            {{-- Submódulos --}}
+            @foreach ($modulo->submodulos as $submodulo)
+            <div class="pb-3 mb-3 border-bottom">
+
+              <p class="text-secondary fw-semibold mb-2">
+                {{ ucfirst($submodulo->SubModNom) }}
+              </p>
+
+              <div class="row g-2">
+                @foreach ($submodulo->permisos as $permiso)
+
+                <div class="col-md-3">
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" name="permissions[]" value="{{ $permiso->name }}" {{
+                      in_array($permiso->id, $permisosAsignados) ? 'checked' : '' }}>
+
+                    <label class="form-check-label" title="{{ $permiso->display_name }}">
+                        {{ Str::limit($permiso->name, 25) }}
+                    </label>
+
+                  </div>
+                </div>
+
+                @endforeach
+              </div>
+
+            </div>
+            @endforeach
+
+          </div>
         </div>
       </div>
       @endforeach
 
-
+      {{-- Botones --}}
       <button type="submit" class="btn btn-success my-3">Guardar</button>
-      <a type="button" class="btn btn-dark" href="{{ route('roles.index') }}">Cancelar</a>
+      <a href="{{ route('roles.index') }}" class="btn btn-dark">Cancelar</a>
+
     </form>
   </div>
 </div>
@@ -106,12 +116,8 @@
 @pushOnce('script')
 <script>
   function editarNombreRol() {
-    let rolField = document.getElementById("name");
-    if (rolField.disabled) {
-      rolField.disabled = false;
-    } else {
-      rolField.disabled = true;
-    }
+    const rolField = document.getElementById("name");
+    rolField.disabled = !rolField.disabled;
   }
 </script>
 @endpushOnce

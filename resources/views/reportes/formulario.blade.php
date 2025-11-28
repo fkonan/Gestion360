@@ -129,7 +129,8 @@
         <label for="placaVehiculo" class="form-label">
           Número de la placa de vehículo
         </label>
-        <input type="text" name="placaVehiculo" id="placaVehiculo" class="form-control" pattern="[A-Za-z]{3}[0-9]{2}[A-Za-z0-9]{1}"
+        <input type="text" name="placaVehiculo" id="placaVehiculo" class="form-control"
+          pattern="[A-Za-z]{3}[0-9]{2}[A-Za-z0-9]{1}"
           title="Ingrese la placa en formato ABC123 o ABC12A, sin espacios ni rayas">
         <span class="error text-danger fw-bold" id="error-placaVehiculo"></span>
         <small class="text-muted">Formato: <strong>ABC123</strong> (sin espacios, rayas ni puntos)</small>
@@ -154,6 +155,7 @@
         <label for="cargo" class="form-label">Seleccione un filtro de busqueda</label>
         <select name="cargo" id="cargo" class="form-select">
           <option value="todos">Todos los empleados</option>
+          <option value="conductores">Todos los conductores</option>
           <option value="carga">Conductores carga</option>
           <option value="pasajes">Conductores pasajes</option>
         </select>
@@ -190,6 +192,15 @@
         <span class="error text-danger fw-bold" id="error-estado"></span>
       </div>
       @endif
+
+      @if(in_array('paramNombre', $parametros))
+      <div class="col-12 col-md-6 mt-3">
+        <label for="nombre" class="form-label">Nombre persona</label>
+        <input type="string" name="nombre" id="nombre" class="form-control">
+        <span class="error text-danger fw-bold" id="error-nombre"></span>
+      </div>
+      @endif
+
     </div>
 
     <div class="d-flex justify-content-end ms-3 pt-2 gap-2">

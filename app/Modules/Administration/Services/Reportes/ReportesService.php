@@ -274,37 +274,28 @@ class ReportesService
     /** @var \App\Models\User $user */
     $user = Auth::user();
 
-    /** ------------------------------
-     * 1. OBTENER TODOS LOS REPORTES DEL ÁREA
-     * ------------------------------*/
+
+    //1. OBTENER TODOS LOS REPORTES DEL ÁREA
     $reportesArea = Reporteador::where('area', $config['nombre'])
       ->where('estado', 'ACTIVO')
       ->get();
 
-    /** ------------------------------------------------------
-     * 2. FILTRAR QUÉ REPORTES INDIVIDUALES EL USUARIO PUEDE VER
-     * ------------------------------------------------------*/
+    //2. FILTRAR QUÉ REPORTES INDIVIDUALES EL USUARIO PUEDE VER
     $reportesConPermisoIndividual = $reportesArea->filter(function ($reporte) use ($user) {
       return $user->can("administracion.reportes.id_{$reporte->id}");
     });
 
-    /** ------------------------------------------------------
-     * 3. SI EL USUARIO TIENE PERMISO DE ÁREA → MOSTRAR TODOS
-     * ------------------------------------------------------*/
+    //3. SI EL USUARIO TIENE PERMISO DE ÁREA → MOSTRAR TODOS
     if ($user->can($config['permiso'])) {
       return ['reportes' => $reportesArea];
     }
 
-    /** ------------------------------------------------------
-     * 4. SIN PERMISO DE ÁREA, PERO CON ALGÚN PERMISO INDIVIDUAL → MOSTRAR SOLO ESOS
-     * ------------------------------------------------------*/
+    //4. SIN PERMISO DE ÁREA, PERO CON ALGÚN PERMISO INDIVIDUAL → MOSTRAR SOLO ESOS
     if ($reportesConPermisoIndividual->isNotEmpty()) {
       return ['reportes' => $reportesConPermisoIndividual->values()];
     }
 
-    /** ------------------------------------------------------
-     * 5. SIN PERMISO DE ÁREA NI INDIVIDUAL → BLOQUEAR
-     * ------------------------------------------------------*/
+    //5. SIN PERMISO DE ÁREA NI INDIVIDUAL → BLOQUEAR
     throw new AuthorizationException('No tienes permiso para acceder a estos reportes.');
   }
 }

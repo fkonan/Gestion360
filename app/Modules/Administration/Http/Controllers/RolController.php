@@ -2,7 +2,6 @@
 
 namespace App\Modules\Administration\Http\Controllers;
 
-use App\Models\GESTIONADMIN\Modulo;
 use App\Models\User;
 use App\Http\Controllers\Controller;
 use App\Modules\Administration\Services\ModuloService;
@@ -11,7 +10,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -33,7 +31,6 @@ class RolController extends Controller
     }
 
     public function store(Request $request){
-
         $validator = Validator::make($request->all(), [
             'name' => 'required|unique:roles,name|max:50|regex:/^[\pL\s]+$/u',
         ], [

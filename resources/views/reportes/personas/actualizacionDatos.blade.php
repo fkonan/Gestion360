@@ -10,6 +10,7 @@
         <label for="filtro" class="form-label">Seleccione un filtro de busqueda</label>
         <select name="filtro" id="filtro" class="form-select">
           <option value="todos">Todos los empleados</option>
+          <option value="conductores">Todos los conductores</option>
           <option value="carga">Conductores carga</option>
           <option value="pasajes">Conductores pasajes</option>
 

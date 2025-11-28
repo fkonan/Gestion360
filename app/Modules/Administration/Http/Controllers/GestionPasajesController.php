@@ -175,15 +175,16 @@ class GestionPasajesController extends Controller
 
       $conn = DB::connection('sqlsrv');
 
-      $abordo = $conn->selectOne("
+     /*  $abordo = $conn->selectOne("
       select vd.Abordo from PasajesOperaciones as po
         left join TFC_ViajesDespachos_Pasajes as vd with (NOLOCK) on vd.PasajeID = po.Pasaje
         where po.PasajeNumero = ?;"
       , [$id]);
 
       if ($abordo && $abordo->Abordo == 1) {
+        DB::disconnect('sqlsrv');
         return response("No se puede generar el tiquete porque el pasajero ya ha abordado el viaje.", 403);
-      }
+      } */
 
       $tiquete = $conn->selectOne("
       SELECT
@@ -298,6 +299,19 @@ class GestionPasajesController extends Controller
         ", [$id]);
 
       if (empty($tiquete)) {
+        // Cerrar conexión
+        DB::disconnect('sqlsrv');
+
+        $mensajeError = "⚠️ " . now()->format('Y-m-d H:i:s') .
+          " | Tiquete: {$id} | No se encontraron tiquetes para el ID proporcionado" .
+          " | Token: {$token}";
+
+        Log::build([
+          'driver' => 'daily',
+          'path' => storage_path('logs/descargas/descargas_tiquetes.log'),
+          'days' => 7,
+        ])->error($mensajeError);
+
         return response("No se encontraron tiquetes para el ID proporcionado", 404);
       }
 
@@ -336,6 +350,9 @@ class GestionPasajesController extends Controller
           PS.Numero = ?
           ORDER BY TD.Fecha DESC;
       ", [$id]);
+
+      // Cerrar conexión
+      DB::disconnect('sqlsrv');
 
       // Generar contenido de QR
       $urlDian = "https://catalogo-vpfe.dian.gov.co/User/SearchDocument?DocumentKey=";
@@ -378,12 +395,14 @@ class GestionPasajesController extends Controller
       // Log
       $userAgent = request()->userAgent();
       if (!str_contains(strtolower($userAgent), 'facebookexternalhit')) {
-        $mensajeLog = "🕒 " . now()->format('Y-m-d H:i:s') . " | Tiquete: {$id}";
+        $mensajeLog = "🕒 " . now()->format('Y-m-d H:i:s') . " | Tiquete: {$id} | Generado correctamente";
 
         Log::build([
-          'driver' => 'single',
-          'path' => storage_path('logs/descargas_tiquetes.log'),
+          'driver' => 'daily',
+          'path' => storage_path('logs/descargas/descargas_tiquetes.log'),
+          'days' => 7,
         ])->info($mensajeLog);
+
       }
 
       return $pdf->stream('Tiquete-' . $id . '.pdf');
@@ -394,9 +413,11 @@ class GestionPasajesController extends Controller
         " | Token: {$token}";
 
       Log::build([
-        'driver' => 'single',
-        'path' => storage_path('logs/descargas_tiquetes.log'),
+          'driver' => 'daily',
+          'path' => storage_path('logs/descargas/descargas_tiquetes.log'),
+          'days' => 7,
       ])->error($mensajeError);
+
 
       return response("Error al generar el tiquete", 500);
     }
