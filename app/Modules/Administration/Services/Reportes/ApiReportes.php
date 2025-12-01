@@ -72,6 +72,7 @@ class ApiReportes
       ->timeout(120)
       ->post(config('apiReportes.base_url') . "/reporte/{$params['idReporte']}", $payload);
 
+
     return $response->successful()
       ? $response->json()['data']
       : null;

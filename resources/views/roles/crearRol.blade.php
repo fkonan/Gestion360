@@ -59,27 +59,30 @@
             </div>
             @endif
 
+            {{-- Buscador de permisos --}}
+            <div class="mb-3">
+              <input type="text" class="form-control permiso-buscador" data-collapse="{{ $idCollapse }}"
+                placeholder="Buscar permiso...">
+            </div>
+
             {{-- Submódulos --}}
             @foreach ($modulo->submodulos as $submodulo)
-            <div class="pb-3 mb-3 border-bottom">
-
+            <div class="pb-3 mb-3 border-bottom submodulo-permisos" data-modulo="{{ $idCollapse }}">
               <p class="text-secondary fw-semibold mb-2">
                 {{ ucfirst($submodulo->SubModNom) }}
               </p>
-
               <div class="row g-2">
                 @foreach ($submodulo->permisos as $permiso)
-                <div class="col-md-3">
+                <div class="col-md-4 permiso-item" data-nombre="{{ strtolower($permiso->nombre_limpio) }}">
                   <div class="form-check form-switch">
                     <input class="form-check-input" type="checkbox" name="permissions[]" value="{{ $permiso->name }}">
-                    <label class="form-check-label">
-                      {{ Str::title(str_replace('_',' ', Str::afterLast($permiso->name, '.'))) }}
+                    <label class="form-check-label" title="{{ $permiso->nombre_limpio }}">
+                      {{ Str::limit($permiso->nombre_limpio, 38) }}
                     </label>
                   </div>
                 </div>
                 @endforeach
               </div>
-
             </div>
             @endforeach
 
@@ -96,3 +99,26 @@
   </div>
 </div>
 @endsection
+
+@pushOnce('script')
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.permiso-buscador').forEach(buscador => {
+      buscador.addEventListener('input', function () {
+        const filtro = this.value.trim().toLowerCase();
+        const collapseId = this.dataset.collapse;
+
+        const items = document
+          .getElementById(collapseId)
+          .querySelectorAll('.permiso-item');
+
+        items.forEach(item => {
+          const nombre = item.dataset.nombre;
+          item.style.display = (!filtro || nombre.includes(filtro)) ? '' : 'none';
+        });
+      });
+    });
+  });
+
+</script>
+@endpushOnce

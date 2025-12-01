@@ -44,7 +44,7 @@
             title="{{ $isInherited ? 'Este permiso no puede eliminarse manualmente porque es parte del ROL: ' . $rolName : '' }}"
             @if ($isDirect || $isInherited) selected @endif>
             @if ($isInherited)🔒@endif
-            {{ $permiso->name }}
+            {{ $permiso->nombre_limpio}}
           </option>
           @endforeach
         </select>
