@@ -79,12 +79,17 @@
             field: key,
             title: key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' '),
             sortable: true,
+            formatter: function (value) {
+              if (value == null) return '';
+              return `<span title="${value}">${value}</span>`;
+            },
             cellStyle: {
               css: {
                 'white-space': 'nowrap',
                 'text-overflow': 'ellipsis',
                 'overflow': 'hidden',
-                'max-width': '250px'
+                'max-width': '250px',
+                'cursor': 'pointer'
               }
             }
           }))

@@ -39,16 +39,16 @@
         </tr>
       </thead>
       <tbody id="lista-reportes">
-       <!--  <x-reporteItem
+        <x-reporteItem
           consecutivo="1"
           titulo="Novedades preoperacionales COP"
           area="RRHH"
-          descripcion="Reporte de conductores con bloqueos preoperacionales levantados por el COP"
+          descripcion="Reporte de conductores con bloqueos preoperacionales levantados por el COP."
           formato="EXCEL"
-          onclick="cargarModal(`{{ route('conductor.preoperacional.reporte') }}`, 'Reporte preoperacionales reportados COP','#firmaPreOpeForm','modal-md')" /> -->
+          onclick="cargarModal(`{{ route('conductor.preoperacional.reporte') }}`, 'Reporte preoperacionales reportados COP','#firmaPreOpeForm','modal-md')" />
 
         <x-reporteItem
-          consecutivo="1"
+          consecutivo="2"
           titulo="Firma politicas"
           area="RRHH"
           descripcion="Reporte de los empleados que han firmado las politicas de la empresa."
@@ -56,7 +56,7 @@
           onclick="cargarModal(`{{ route('empleados.firmaPoliticas') }}`, 'Reporte firma politicas','#firmaPoliticasForm','modal-lg')" />
 
         <x-reporteItem
-          consecutivo="2"
+          consecutivo="3"
           titulo="Actualización de datos"
           area="RRHH"
           descripcion="Reporte de los empleados y conductores que han realizado actualización de sus datos."
@@ -65,7 +65,7 @@
 
         @foreach ($reportes as $reporte)
           <x-reporteItem
-            consecutivo="{{ $loop->iteration + 2 }}"
+            consecutivo="{{ $loop->iteration + 3 }}"
             area="{{ $reporte->area }}"
             titulo="{{ $reporte->nombre }}"
             descripcion="{{ $reporte->descripcion }}"

@@ -1,211 +1,335 @@
-<!-- Modal formulario reporte -->
-<form id="formReporte" action="{{ route('reportes.show') }}" method="GET" {{-- onsubmit="deshabilitarSubmit(this)" --}}>
+@php
+function param($parametros, $key) {
+  return $parametros[$key] ?? null;
+}
 
+function req($parametros, $key) {
+  return isset($parametros[$key]) && !empty($parametros[$key]['requerido']);
+}
+
+function isOptionalParam($parametros, $key) {
+  return isset($parametros[$key]) && empty($parametros[$key]['requerido']);
+}
+
+@endphp
+
+<!-- Modal formulario reporte -->
+<form id="formReporte" action="{{ route('reportes.show') }}" method="GET">
   <input type="hidden" name="id" value="{{ $id }}">
 
   <div class="p-4">
-    @if($parametros && !in_array('paramFirmaPoliticas', $parametros))
-    <!-- Mensaje informativo sobre el rango de fechas -->
-    <div class="alert alert-info mb-4" role="alert">
-      <div class="d-flex align-items-center">
-        <i class="fas fa-info-circle me-2 text-info"></i>
-        <div>
-          <strong>Importante:</strong> El rango de fechas para la búsqueda no puede ser mayor a 1 mes (30 días).
-          <br><small class="text-muted">Seleccione fechas dentro de este límite para generar el reporte
-            correctamente.</small>
-        </div>
-      </div>
+
+    <div class="alert alert-info mb-4">
+      <strong>Nota:</strong> {{ $mensajeCabecera }}
     </div>
-    @else
-    <!-- Mensaje cuando el reporte no requiere parámetros -->
-    <div class="alert alert-info mb-4" role="alert">
-      <div class="d-flex align-items-center">
-        <i class="fas fa-check-circle me-2 text-info"></i>
-        <div>
-          <strong>Nota:</strong> Este reporte no requiere parámetros para su consulta.
-          <br><small class="text-muted">Puede generarlo directamente sin seleccionar opciones adicionales.</small>
-        </div>
-      </div>
-    </div>
-    @endif
 
     <div class="row mb-3 mx-1 pb-2">
-      @if(in_array('paramFechaInicio', $parametros))
+
+      {{-- Fecha Inicio --}}
+      @if(param($parametros,'paramFechaInicio'))
       <div class="col-md-6">
-        <label for="fechaInicio" class="form-label">Fecha Inicial *</label>
-        <input type="date" name="fechaInicio" id="fechaInicio" class="form-control" required>
-        <span class="error text-danger fw-bold" id="error-fechaInicio"></span>
+        <label class="form-label">Fecha Inicial @if(req($parametros,'paramFechaInicio'))* @endif</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-calendar-date"></i></span>
+          <input type="date" name="fechaInicio" class="form-control" @if(req($parametros,'paramFechaInicio')) required @endif>
+        </div>
       </div>
       @endif
 
-      @if(in_array('paramFechaFin', $parametros))
+      {{-- Fecha Fin --}}
+      @if(param($parametros,'paramFechaFin'))
       <div class="col-md-6">
-        <label for="fechaFin" class="form-label">Fecha Final *</label>
-        <input type="date" name="fechaFin" id="fechaFin" class="form-control" required>
-        <span class="error text-danger fw-bold" id="error-fechaFin"></span>
+        <label class="form-label">Fecha Final @if(req($parametros,'paramFechaFin'))* @endif</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-calendar-date"></i></span>
+          <input type="date" name="fechaFin" class="form-control" @if(req($parametros,'paramFechaFin')) required @endif>
+        </div>
       </div>
       @endif
 
-      @if(in_array('paramCuenta', $parametros))
-      <div class="col-12 col-md-6 mt-3">
-        <label for="cuenta" class="form-label">Numero de cuenta *</label>
-        <input type="number" name="cuenta" id="cuenta" class="form-control" required>
-        <span class="error text-danger fw-bold" id="error-cuenta"></span>
+      {{-- Cuenta --}}
+      @if(param($parametros,'paramCuenta'))
+      <div class="col-md-6 mt-3">
+        <label class="form-label">Número de cuenta @if(req($parametros,'paramCuenta'))* @endif</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-credit-card"></i></span>
+          <input type="number" name="cuenta" class="form-control" @if(req($parametros,'paramCuenta')) required @endif>
+        </div>
         <small class="text-muted">Digite el número largo de la cuenta LOGTRANS</small>
       </div>
       @endif
 
-      @if(in_array('paramCategoriaVehiculo', $parametros))
+      {{-- Categoría Vehículo --}}
+      @if(param($parametros,'paramCategoriaVehiculo'))
       <div class="col-md-6 mt-3">
-        <label for="categoriaVehiculo" class="form-label">Categoria Vehiculo</label>
-        <select class="form-select select2" id="categoriaVehiculo" name="categoriaVehiculo">
-          <option value="null">TODAS</option>
-          <option value="TURNADOR">TURNADOR</option>
-          @foreach($categorias as $categoria)
-          <option value="{{ $categoria->servicio }}">
-            {{ $categoria->servicio }}
-          </option>
-          @endforeach
-        </select>
-        <span class="error text-danger fw-bold" id="error-agencia"></span>
+        <label class="form-label">Categoría Vehículo</label>
+        <div class="input-group">
+          <select class="form-select select2" name="categoriaVehiculo">
+            <option value="null">TODAS</option>
+            <option value="TURNADOR">TURNADOR</option>
+            @foreach($categorias as $categoria)
+            <option value="{{ $categoria->servicio }}">{{ $categoria->servicio }}</option>
+            @endforeach
+          </select>
+        </div>
       </div>
       @endif
 
-      @if(in_array('paramAgencia', $parametros))
+      {{-- Agencia --}}
+      @if(param($parametros,'paramAgencia'))
       <div class="col-md-6 mt-3">
-        <label for="agencia" class="form-label">Agencia *</label>
-        <select class="form-select select2" id="agencia" name="agencia">
-          <option value="null">TODAS</option>
-          @foreach($agencias as $agencia)
-          <option value="{{ $agencia->codigo }}">
-            {{ $agencia->agencia }}
-          </option>
-          @endforeach
-        </select>
-        <span class="error text-danger fw-bold" id="error-agencia"></span>
-      </div>
-      @endif
-
-      @if(in_array('paramIdentificacion', $parametros))
-      <div class="col-12 col-md-6 mt-3">
-        <label for="identificacion" class="form-label">Número de documento</label>
-        <input type="number" name="identificacion" id="identificacion" class="form-control">
-        <span class="error text-danger fw-bold" id="error-identificacion"></span>
-      </div>
-      @endif
-
-      @if(in_array('paramTipoFiltro', $parametros))
-      <div class="col-12 col-md-6 mt-3">
-        <label class="form-label d-block">Filtrar por</label>
-        <div class="form-check form-check-inline">
-          <input class="form-check-input" type="radio" name="tipoFiltro" id="filtroCedula" value="identificacion"
-            onchange="habilitarInputFiltro(this)">
-          <label class="form-check-label" for="filtroCedula">Cédula</label>
+        <label class="form-label">Agencia @if(req($parametros,'paramAgencia'))* @endif</label>
+        <div class="input-group">
+          <select class="form-select select2" name="agencia" @if(req($parametros,'paramAgencia')) required @endif>
+            <option value="null">TODAS</option>
+            @foreach($agencias as $agencia)
+            <option value="{{ $agencia->codigo }}">{{ $agencia->agencia }}</option>
+            @endforeach
+          </select>
         </div>
-        <div class="form-check form-check-inline">
-          <input class="form-check-input" type="radio" name="tipoFiltro" id="filtroCodigo" value="codigo"
-            onchange="habilitarInputFiltro(this)">
-          <label class="form-check-label" for="filtroCodigo">Código</label>
+      </div>
+      @endif
+
+      {{-- Identificación --}}
+      @if(param($parametros,'paramIdentificacion'))
+      <div class="col-md-6 mt-3">
+        <label class="form-label">Número de documento @if(req($parametros,'paramIdentificacion'))* @endif</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
+          <input type="number" name="identificacion" class="form-control" @if(req($parametros,'paramIdentificacion')) required @endif>
         </div>
-        <div class="form-check form-check-inline">
-          <input class="form-check-input" type="radio" name="tipoFiltro" id="filtroTodos" value="todos" checked
-            onchange="habilitarInputFiltro(this)">
-          <label class="form-check-label" for="filtroTodos">Todos</label>
+
+        @if(isOptionalParam($parametros,'paramIdentificacion'))
+          <small class="text-muted fst-italic mt-1 d-block">Campo opcional</small>
+        @endif
+      </div>
+      @endif
+
+      {{-- Tipo filtro --}}
+      @if(param($parametros,'paramTipoFiltro'))
+      <div class="col-md-6 mt-3">
+        <label class="form-label">Filtrar por</label>
+        <div class="btn-group w-100" role="group">
+          <input type="radio" class="btn-check" name="tipoFiltro" value="identificacion" id="filtroCedula" autocomplete="off" onchange="habilitarInputFiltro(this)">
+          <label class="btn btn-outline-primary" for="filtroCedula">Cédula</label>
+
+          <input type="radio" class="btn-check" name="tipoFiltro" value="codigo" id="filtroCodigo" autocomplete="off" onchange="habilitarInputFiltro(this)">
+          <label class="btn btn-outline-primary" for="filtroCodigo">Código</label>
+
+          <input type="radio" class="btn-check" name="tipoFiltro" value="todos" id="filtroTodos" autocomplete="off" checked onchange="habilitarInputFiltro(this)">
+          <label class="btn btn-outline-primary" for="filtroTodos">Todos</label>
         </div>
-        <span class="error text-danger fw-bold" id="error-tipoFiltro"></span>
       </div>
       @endif
 
-      @if(in_array('paramValorFiltro', $parametros))
-      <div class="col-12 col-md-6 mt-3" id="parametro" style="display: none">
-        <label for="valorFiltro" class="form-label">Ingrese el parametro</label>
-        <input type="text" name="valorFiltro" id="valorFiltro" class="form-control">
-        <span class="error text-danger fw-bold" id="error-valorFiltro"></span>
+      {{-- Valor filtro --}}
+      @if(param($parametros,'paramValorFiltro'))
+      <div class="col-md-6 mt-3" id="parametro" style="display:none">
+        <label class="form-label">Ingrese el parámetro</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-search"></i></span>
+          <input type="text" name="valorFiltro" class="form-control" @if(req($parametros,'paramValorFiltro')) required @endif>
+        </div>
       </div>
       @endif
 
-      @if(in_array('paramPlacaVehiculo', $parametros))
-      <div class="col-12 col-md-6 mt-3" id="parametro">
-        <label for="placaVehiculo" class="form-label">
-          Número de la placa de vehículo
-        </label>
-        <input type="text" name="placaVehiculo" id="placaVehiculo" class="form-control"
-          pattern="[A-Za-z]{3}[0-9]{2}[A-Za-z0-9]{1}"
-          title="Ingrese la placa en formato ABC123 o ABC12A, sin espacios ni rayas">
-        <span class="error text-danger fw-bold" id="error-placaVehiculo"></span>
-        <small class="text-muted">Formato: <strong>ABC123</strong> (sin espacios, rayas ni puntos)</small>
+      {{-- Placa vehículo --}}
+      @if(param($parametros,'paramPlacaVehiculo'))
+      <div class="col-md-6 mt-3">
+        <label class="form-label">Placa del vehículo</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-car-front"></i></span>
+          <input type="text" name="placaVehiculo" class="form-control" pattern="[A-Za-z]{3}[0-9]{2}[A-Za-z0-9]{1}" title="Formato ABC123 o ABC12A" @if(req($parametros,'paramPlacaVehiculo')) required @endif>
+        </div>
+
+        @if(isOptionalParam($parametros,'paramPlacaVehiculo'))
+          <small class="text-muted fst-italic mt-1 d-block">Campo opcional</small>
+        @endif
       </div>
       @endif
 
-      <!-- Parametro concepto carga (reporte acuerdos)-->
-      @if(in_array('paramConceptoCarga', $parametros))
-      <div class="col-12 col-md-6 mt-3" id="parametro">
-        <label for="conceptoCarga" class="form-label">Seleccione el concepto</label>
-        <select name="conceptoCarga" id="conceptoCarga" class="form-select">
-          <option value="24">Remesas</option>
-          <option value="8">Seguro de carga</option>
-          <option value="53812152">Descuento comercial</option>
-        </select>
-        <span class="error text-danger fw-bold" id="error-conceptoCarga"></span>
+      {{-- Concepto carga --}}
+      @if(param($parametros,'paramConceptoCarga'))
+      <div class="col-md-6 mt-3">
+        <label class="form-label">Concepto carga</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-box-seam"></i></span>
+          <select name="conceptoCarga" class="form-select">
+            <option value="24">Remesas</option>
+            <option value="8">Seguro de carga</option>
+            <option value="53812152">Descuento comercial</option>
+          </select>
+        </div>
       </div>
       @endif
 
-      @if(in_array('paramCargo', $parametros))
-      <div class="col-12 col-md-6 mt-3" id="parametro">
-        <label for="cargo" class="form-label">Seleccione un filtro de busqueda</label>
-        <select name="cargo" id="cargo" class="form-select">
-          <option value="todos">Todos los empleados</option>
-          <option value="conductores">Todos los conductores</option>
-          <option value="carga">Conductores carga</option>
-          <option value="pasajes">Conductores pasajes</option>
-        </select>
-        <span class="error text-danger fw-bold" id="error-cargo"></span>
+      {{-- Cargo --}}
+      @if(param($parametros,'paramCargo'))
+      <div class="col-md-6 mt-3">
+        <label class="form-label">Cargo</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-person-workspace"></i></span>
+          <select name="cargo" class="form-select">
+            <option value="todos">Todos los empleados</option>
+            <option value="conductores">Todos los conductores</option>
+            <option value="carga">Conductores carga</option>
+            <option value="pasajes">Conductores pasajes</option>
+          </select>
+        </div>
       </div>
       @endif
 
-      @if(in_array('paramPersonaId', $parametros))
-      <div class="col-12 col-md-6 mt-3">
-        <label for="personaId" class="form-label">Ingrese el NIT</label>
-        <input type="string" name="personaId" id="personaId" class="form-control">
-        <span class="error text-danger fw-bold" id="error-personaId"></span>
+      {{-- Persona ID --}}
+      @if(param($parametros,'paramPersonaId'))
+      <div class="col-md-6 mt-3">
+        <label class="form-label">NIT</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-person-vcard"></i></span>
+          <input type="text" name="personaId" class="form-control" @if(req($parametros,'paramPersonaId')) required @endif>
+        </div>
+
+        @if(isOptionalParam($parametros,'paramPersonaId'))
+          <small class="text-muted fst-italic mt-1 d-block">Campo opcional</small>
+        @endif
       </div>
       @endif
 
-      @if(in_array('paramTerceroId', $parametros))
-      <div class="col-12 col-md-6 mt-3">
-        <label for="terceroId" class="form-label">Ingrese el tercero</label>
-        <input type="string" name="terceroId" id="terceroId" class="form-control">
-        <span class="error text-danger fw-bold" id="error-terceroId"></span>
-        <small class="text-muted">Este parametro es opcional</small>
+      {{-- Tercero ID --}}
+      @if(param($parametros,'paramTerceroId'))
+      <div class="col-md-6 mt-3">
+        <label class="form-label">Tercero</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-person-lines-fill"></i></span>
+          <input type="text" name="terceroId" class="form-control">
+        </div>
+
+        @if(isOptionalParam($parametros,'paramTerceroId'))
+          <small class="text-muted fst-italic mt-1 d-block">Campo opcional</small>
+        @endif
       </div>
       @endif
 
-      <!-- Parametros estado (ACTIVO,INACTIVO) -->
-      @if(in_array('paramEstado', $parametros))
-      <div class="col-12 col-md-6 mt-3" id="parametro">
-        <label for="estado" class="form-label">Seleccione el estado</label>
-        <select name="estado" id="estado" class="form-select">
-          <option value="todos">TODOS</option>
-          <option value="ACTIVO">ACTIVOS</option>
-          <option value="INACTIVO">INACTIVOS</option>
-        </select>
-        <span class="error text-danger fw-bold" id="error-estado"></span>
+      {{-- Estado --}}
+      @if(param($parametros,'paramEstado'))
+      <div class="col-md-6 mt-3">
+        <label class="form-label">Estado</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-toggle-on"></i></span>
+          <select name="estado" class="form-select">
+            <option value="todos">TODOS</option>
+            <option value="ACTIVO">ACTIVOS</option>
+            <option value="INACTIVO">INACTIVOS</option>
+          </select>
+        </div>
       </div>
       @endif
 
-      @if(in_array('paramNombre', $parametros))
-      <div class="col-12 col-md-6 mt-3">
-        <label for="nombre" class="form-label">Nombre persona</label>
-        <input type="string" name="nombre" id="nombre" class="form-control">
-        <span class="error text-danger fw-bold" id="error-nombre"></span>
+      {{-- Nombre --}}
+      @if(param($parametros,'paramNombre'))
+      <div class="col-md-6 mt-3">
+        <label class="form-label">Nombre</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-person"></i></span>
+          <input type="text" name="nombre" class="form-control" @if(req($parametros,'paramNombre')) required @endif>
+        </div>
+
+        @if(isOptionalParam($parametros,'paramNombre'))
+          <small class="text-muted fst-italic mt-1 d-block">Campo opcional</small>
+        @endif
+      </div>
+      @endif
+
+      {{-- Código --}}
+      @if(param($parametros,'paramCodigo'))
+      <div class="col-md-6 mt-3">
+        <label class="form-label">Código</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-upc-scan"></i></span>
+          <input type="text" name="codigo" class="form-control" @if(req($parametros,'paramCodigo')) required @endif placeholder="Ingrese el código...">
+        </div>
+
+        @if(isOptionalParam($parametros,'paramCodigo'))
+          <small class="text-muted fst-italic mt-1 d-block">Campo opcional</small>
+        @endif
+      </div>
+      @endif
+
+      {{-- Radicación --}}
+      @if(param($parametros,'paramRadicado'))
+      <div class="col-md-6 mt-3">
+        <label class="form-label">Radicación</label>
+        <div class="card p-2">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="radicado[]" value="SIN_RADICAR" id="radicado1" checked>
+            <label class="form-check-label" for="radicado1">Sin Radicar</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="radicado[]" value="SIN_MORA" id="radicado2">
+            <label class="form-check-label" for="radicado2">Radicadas sin Mora</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="radicado[]" value="1_30" id="radicado3">
+            <label class="form-check-label" for="radicado3">1-30 días</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="radicado[]" value="31_45" id="radicado4">
+            <label class="form-check-label" for="radicado4">31-45 días</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="radicado[]" value="46_60" id="radicado5">
+            <label class="form-check-label" for="radicado5">46-60 días</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="radicado[]" value="61_90" id="radicado6">
+            <label class="form-check-label" for="radicado6">61-90 días</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="radicado[]" value="MAS_90" id="radicado7">
+            <label class="form-check-label" for="radicado7">Más de 90 días</label>
+          </div>
+        </div>
+      </div>
+      @endif
+
+      {{-- Tipo cuenta --}}
+      @if(param($parametros,'paramTipoCuenta'))
+      <div class="col-md-6 mt-3">
+        <label class="form-label">Tipo de Cartera</label>
+        <div class="card p-2">
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="tipoCuenta" value="0" id="tipoCuenta0" checked>
+            <label class="form-check-label" for="tipoCuenta0">CORRIENTE</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="tipoCuenta" value="1" id="tipoCuenta1">
+            <label class="form-check-label" for="tipoCuenta1">LEY 550</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="tipoCuenta" value="2" id="tipoCuenta2">
+            <label class="form-check-label" for="tipoCuenta2">C. JURÍDICO</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="tipoCuenta" value="3" id="tipoCuenta3">
+            <label class="form-check-label" for="tipoCuenta3">RECLAMACIÓN</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="tipoCuenta" value="4" id="tipoCuenta4">
+            <label class="form-check-label" for="tipoCuenta4">INCOBRABLE</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="tipoCuenta" value="0,1,2,3,4" id="tipoCuentaTodos">
+            <label class="form-check-label" for="tipoCuentaTodos">TODOS</label>
+          </div>
+        </div>
       </div>
       @endif
 
     </div>
 
-    <div class="d-flex justify-content-end ms-3 pt-2 gap-2">
+    <div class="d-flex justify-content-end pt-3 gap-2">
       <button type="submit" class="btn btn-success">Consultar</button>
       <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Cancelar</button>
     </div>
+
   </div>
 </form>

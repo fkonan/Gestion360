@@ -27,57 +27,77 @@ class ReportesController extends Controller
 
     // Decodificar parámetros
     $parametrosArray = json_decode($reporte->parametros, true) ?? [];
-    $parametros = array_column($parametrosArray, 'nombre');
 
-    //Categoria vehiculos para consultas en LOGTRANS
-    if ($parametros && in_array('paramCategoriaVehiculo', $parametros)) {
-      $categorias = FitTipoVehiculos::select('servicio')
-        ->whereIn('descripcion', ['BUS','BUSETA','MICROBUS'])
-        ->get();
+    // Indexar por nombre
+    $parametros = collect($parametrosArray)->keyBy('nombre');
+
+    // Hay algún parámetro activo
+    $tieneFechaInicio = isset($parametros['paramFechaInicio']);
+    $tieneFechaFin    = isset($parametros['paramFechaFin']);
+
+    $hayParametros = $parametros->isNotEmpty();
+
+    // Mensaje de cabecera reporte
+    if (!$tieneFechaInicio && !$tieneFechaFin) {
+      $mensajeCabecera = $hayParametros
+        ? 'Este reporte no requiere de un rango de fechas.'
+        : 'Este reporte no requiere parámetros.';
+    } else {
+      $mensajeCabecera = 'El rango de fechas no puede ser mayor a 30 días.';
     }
 
-    // Agencias para consultas en FICS
-    if ($parametros && in_array('paramAgencia', $parametros)) {
-      $agencias = DB::connection('oracle')->select("
-        SELECT
-            n.codigo AS codigo,
-            n.nomsucursal AS agencia
-        FROM per_personas n
-        LEFT JOIN (
+    // ======== CATEGORÍAS VEHÍCULO ========
+    $categorias = isset($parametros['paramCategoriaVehiculo'])
+      ? FitTipoVehiculos::select('servicio')
+      ->whereIn('descripcion', ['BUS', 'BUSETA', 'MICROBUS'])
+      ->get()
+      : [];
+
+    // ======== AGENCIAS ========
+    $agencias = isset($parametros['paramAgencia'])
+      ? DB::connection('oracle')->select("
             SELECT
-                ep.pe_id_emp,
-                ep.codigo,
-                ep.pe_id_pe,
-                ROW_NUMBER() OVER (PARTITION BY ep.pe_id_emp ORDER BY ep.fecini DESC) AS rn
-            FROM per_empresapersonas ep
-            WHERE ep.tp_id = '14'
-              AND ep.activo = '1'
-              AND ep.estborrado = '0'
-        ) agente_actual
-            ON agente_actual.pe_id_emp = n.id
-            AND agente_actual.rn = 1
-        LEFT JOIN per_personas persona_agente
-            ON persona_agente.id = agente_actual.pe_id_pe
-            AND persona_agente.estborrado = '0'
-            AND persona_agente.estado = 'ACTIVO'
-        LEFT JOIN per_personas empresa_rel
-            ON empresa_rel.id = agente_actual.pe_id_emp
-        LEFT JOIN per_personas admon
-            ON admon.id = empresa_rel.pe_id_admon
-        WHERE n.identificacion = '890200928'
-          AND n.estborrado = '0'
-          AND n.nomsucursal != ' '
-          AND n.codigo != ' '
-          AND n.estado = 'ACTIVO'
-        ORDER BY n.codigo
-    ");
-    }
+                n.codigo AS codigo,
+                n.nomsucursal AS agencia
+            FROM per_personas n
+            LEFT JOIN (
+                SELECT
+                    ep.pe_id_emp,
+                    ep.codigo,
+                    ep.pe_id_pe,
+                    ROW_NUMBER() OVER (PARTITION BY ep.pe_id_emp ORDER BY ep.fecini DESC) AS rn
+                FROM per_empresapersonas ep
+                WHERE ep.tp_id = '14'
+                  AND ep.activo = '1'
+                  AND ep.estborrado = '0'
+            ) agente_actual
+                ON agente_actual.pe_id_emp = n.id
+                AND agente_actual.rn = 1
+            LEFT JOIN per_personas persona_agente
+                ON persona_agente.id = agente_actual.pe_id_pe
+                AND persona_agente.estborrado = '0'
+                AND persona_agente.estado = 'ACTIVO'
+            LEFT JOIN per_personas empresa_rel
+                ON empresa_rel.id = agente_actual.pe_id_emp
+            LEFT JOIN per_personas admon
+                ON admon.id = empresa_rel.pe_id_admon
+            WHERE n.identificacion = '890200928'
+              AND n.estborrado = '0'
+              AND n.nomsucursal != ' '
+              AND n.codigo != ' '
+              AND n.estado = 'ACTIVO'
+            ORDER BY n.codigo
+        ")
+      : [];
 
-    // Asegurar que las variables estén definidas
-    $agencias = $agencias ?? [];
-    $categorias = $categorias ?? [];
-
-    return view('reportes.formulario', compact('id', 'parametros', 'agencias', 'origen_db', 'categorias'));
+    return view('reportes.formulario', [
+      'id'              => $id,
+      'parametros'      => $parametros->toArray(),
+      'agencias'        => $agencias,
+      'origen_db'       => $origen_db,
+      'categorias'      => $categorias,
+      'mensajeCabecera' => $mensajeCabecera,
+    ]);
   }
 
   // bootstrap table con los resultados del reporte
@@ -296,4 +316,6 @@ class ReportesController extends Controller
   {
     return session('firmas') ?? [];
   }
+
+  //3. Reporte cartera
 }
