@@ -3,6 +3,7 @@
   <ul
     class="nav nav-pills nav-collapse-hide-child nav-sidebar flex-column"
     data-widget="treeview"
+    data-animation-speed="200"
     role="menu">
     <!-- Modulos principales -->
     @foreach($modulos as $modulo)

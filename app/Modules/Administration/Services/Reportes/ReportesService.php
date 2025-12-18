@@ -2,21 +2,33 @@
 
 namespace App\Modules\Administration\Services\Reportes;
 
-use App\Constants\Permisos;
 use App\Models\GESTIONADMIN\Reporteador;
 use App\Models\GESTIONPASAJES\FirmaPoliticas;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class ReportesService
 {
+  private const CACHE_ACTIVOS_KEY = 'reportes_activos_por_area';
+  private const CACHE_ACTIVOS_TTL_MINUTES = 10;
+  private const PERMISO_PREFIX = 'administracion.reportes.id_';
+
+  /** @var ApiReportes */
   protected $apiReportes;
+  /** @var Collection|null Cache en memoria de reportes activos agrupados por area */
+  protected ?Collection $reportesActivosPorArea = null;
 
   public function __construct(ApiReportes $apiReportes)
   {
     $this->apiReportes = $apiReportes;
   }
 
+  /**
+   * Solicita datos de un reporte via API y aplica formato especial.
+   */
   public function obtenerDatosReporte(array $params)
   {
     // Normalizamos el id para la API
@@ -25,31 +37,64 @@ class ReportesService
       unset($params['id']);
     }
 
+    $this->validarParametrosObligatorios($params);
+
     $reporte = Reporteador::findOrFail($params['idReporte']);
+    $inicio = microtime(true);
 
     // Consultar API
     $data = $this->apiReportes->obtenerReporte($params);
 
     if (!$data) {
+      Log::build([
+          'driver' => 'daily',
+          'path' => storage_path('logs/reportes/apiReportes.log'),
+          'days' => 7,
+        ])->info('Reporte sin datos o error al obtener', [
+        'id_reporte' => $reporte->id,
+        'area' => $reporte->area,
+        'user_id' => Auth::id(),
+        'duration_ms' => round((microtime(true) - $inicio) * 1000, 2),
+      ]);
+
       return [];
     }
 
-    // Incrementar contador de consultas
-    //$reporte->increment('total_consultas');
+    // Incrementar contador de consultas sin bloquear la respuesta
+    try {
+      $reporte->increment('total_consultas');
+    } catch (\Throwable $e) {
+      // Silenciar si falla el write; no debe afectar al usuario
+    }
 
     // Formatos especiales por reporte
     $data = $this->formatoEspecialReporte($reporte->id, $data);
 
+    Log::build([
+        'driver' => 'daily',
+        'path' => storage_path('logs/reportes/apiReportes.log'),
+        'days' => 7,
+      ])->info('Reporte consultado', [
+      'id_reporte' => $reporte->id,
+      'area' => $reporte->area,
+      'user_id' => Auth::id(),
+      'rows' => is_array($data) ? count($data) : 0,
+      'duration_ms' => round((microtime(true) - $inicio) * 1000, 2),
+    ]);
+
     return $data;
   }
 
+  /**
+   * Ajusta formatos o filtros puntuales por id de reporte.
+   */
   public function formatoEspecialReporte(int $idReporte, array $data)
   {
     switch ($idReporte) {
-      // Reporte 19: Conductores y empleados sin firma políticas
+      // Reporte 19: Conductores y empleados sin firma politicas
       /*
-        Este reporte muestra los conductores y empleados que no tienen firma en las políticas.
-        Por lo que se requiere cargar desde la base de datos de gestión de pasajes cuales son los empleados que tienen firma.
+        Este reporte muestra los conductores y empleados que no tienen firma en las politicas.
+        Por lo que se requiere cargar desde la base de datos de gestion de pasajes cuales son los empleados que tienen firma.
       */
       case 19:
         $empleadosConFirma = FirmaPoliticas::select('DocCon')
@@ -62,117 +107,104 @@ class ReportesService
         $data = array_values(array_filter($data, function ($item) use ($empleadosConFirma) {
           return !in_array($item['IDENTIFICACION'], $empleadosConFirma);
         }));
+        return $data;
       default:
         return $data;
     }
   }
 
+  protected function obtenerAreasConfig(): array
+  {
+    return config('reporteador.areas', []);
+  }
+
+  protected function validarParametrosObligatorios(array $params): void
+  {
+    if (empty($params['idReporte'])) {
+      throw new \InvalidArgumentException('El id del reporte es obligatorio.');
+    }
+  }
+
+  /**
+   * Devuelve los reportes activos agrupados por area (cache liviana).
+   */
+  protected function obtenerReportesActivosAgrupados(): Collection
+  {
+    if ($this->reportesActivosPorArea === null) {
+      $this->reportesActivosPorArea = Cache::remember(
+        self::CACHE_ACTIVOS_KEY,
+        now()->addMinutes(self::CACHE_ACTIVOS_TTL_MINUTES),
+        function () {
+          return Reporteador::where('estado', 'ACTIVO')
+            ->get()
+            ->groupBy('area');
+        }
+      );
+    }
+
+    return $this->reportesActivosPorArea;
+  }
+
+  protected function obtenerConfigPorSlug(string $slug): ?array
+  {
+    $areas = $this->obtenerAreasConfig();
+
+    return $areas[$slug] ?? null;
+  }
+
+  /**
+   * Nombre del permiso individual para un reporte especifico.
+   */
+  protected function permisoReporteId(int $id): string
+  {
+    return self::PERMISO_PREFIX . $id;
+  }
+
+  /**
+   * Slug y ruta generada a partir del nombre de area guardado en BD.
+   */
+  public function obtenerRutaAreaPorNombre(string $areaNombre): ?array
+  {
+    foreach ($this->obtenerAreasConfig() as $slug => $config) {
+      if (($config['nombre_bd'] ?? null) === $areaNombre) {
+        return [
+          'slug' => $slug,
+          'ruta' => route($config['ruta'] ?? 'reportes.area', ['area' => $slug]),
+        ];
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Devuelve listado de tipos de reporte accesibles por el usuario autenticado.
+   */
   public function tiposReporte()
   {
     /** @var \App\Models\User $user */
     $user = Auth::user();
 
-    // 1. Áreas con permisos
-    $areas = [
-      'personas' => ['nombre' => 'RRHH', 'permiso' => Permisos::ADMINISTRACION_REPORTES_EMPLEADOS],
-      'pasajes' => ['nombre' => 'Unidad pasajes', 'permiso' => Permisos::ADMINISTRACION_REPORTES_PASAJES],
-      'carga' => ['nombre' => 'Unidad carga', 'permiso' => Permisos::ADMINISTRACION_REPORTES_CARGA],
-      'cartera' => ['nombre' => 'Cartera', 'permiso' => Permisos::ADMINISTRACION_REPORTES_CARTERA],
-      'auditoria' => ['nombre' => 'Auditoría', 'permiso' => Permisos::ADMINISTRACION_REPORTES_AUDITORIA],
-      'crudo' => ['nombre' => 'Crudo', 'permiso' => Permisos::ADMINISTRACION_REPORTES_CRUDO],
-      'financiera' => ['nombre' => 'Financiera', 'permiso' => Permisos::ADMINISTRACION_REPORTES_FINANCIERA],
-      'fundacion_de_la_mujer' => ['nombre' => 'Fundación de la Mujer', 'permiso' => Permisos::ADMINISTRACION_REPORTES_FUNDACION_DE_LA_MUJER],
-      'contabilidad' => ['nombre' => 'Contabilidad', 'permiso' => Permisos::ADMINISTRACION_REPORTES_CONTABILIDAD],
-      'ficha_tecnica' => ['nombre' => 'Ficha Técnica', 'permiso' => Permisos::ADMINISTRACION_REPORTES_FICHA_TECNICA],
-      'giros_y_convenios_empresariales' => ['nombre' => 'Giros y Convenios Empresariales', 'permiso' => Permisos::ADMINISTRACION_REPORTES_GIROS_Y_CONVENIOS_EMPRESARIALES],
-    ];
-
-    // 2. Propiedades visuales por área
-    $visual = [
-      'personas' => [
-        'titulo' => 'Reportes Personas',
-        'descripcion' => 'Consultar',
-        'tooltip' => 'Incluye diversos reportes relacionados con empleados y conductores.',
-        'icono' => 'fa-solid fa-users',
-      ],
-      'pasajes' => [
-        'titulo' => 'Reportes Pasajes',
-        'descripcion' => 'Consultar',
-        'tooltip' => 'Reportes de pasajes, tiquetes y esquemas tarifarios.',
-        'icono' => 'fa-solid fa-ticket-alt',
-      ],
-      'carga' => [
-        'titulo' => 'Reportes Carga',
-        'descripcion' => 'Consultar',
-        'tooltip' => 'Reportes de análisis y gestión de carga.',
-        'icono' => 'fa-solid fa-truck-loading',
-      ],
-      'cartera' => [
-        'titulo' => 'Reportes Cartera',
-        'descripcion' => 'Consultar',
-        'tooltip' => 'Reportes de cartera, cobranzas y cuentas por cobrar.',
-        'icono' => 'fa-solid fa-wallet',
-      ],
-      'auditoria' => [
-        'titulo' => 'Reportes Auditoría',
-        'descripcion' => 'Consultar',
-        'tooltip' => 'Reportes relacionados con auditoría interna y controles.',
-        'icono' => 'fa-solid fa-file-alt',
-      ],
-      'crudo' => [
-        'titulo' => 'Reportes Crudo',
-        'descripcion' => 'Consultar',
-        'tooltip' => 'Flota dedicada, manifiestos, anticipos...',
-        'icono' => 'fa-solid fa-gas-pump',
-      ],
-      'financiera' => [
-        'titulo' => 'Reportes Financiera',
-        'descripcion' => 'Consultar',
-        'tooltip' => 'Gastos, ingresos, ventas por agencia y tipo de vehículo.',
-        'icono' => 'fa-solid fa-file-invoice-dollar',
-      ],
-      'fundacion_de_la_mujer' => [
-        'titulo' => 'Fundación de la Mujer',
-        'descripcion' => 'Consultar',
-        'tooltip' => 'Consultas generales de la Fundación de la Mujer.',
-        'icono' => 'fa-solid fa-university',
-      ],
-      'contabilidad' => [
-        'titulo' => 'Reportes Contabilidad',
-        'descripcion' => 'Consultar',
-        'tooltip' => 'Reportes contables y financieros.',
-        'icono' => 'fa-solid fa-calculator',
-      ],
-      'ficha_tecnica' => [
-        'titulo' => 'Reportes Ficha Técnica',
-        'descripcion' => 'Consultar',
-        'tooltip' => 'Documentos y relación de vehículos.',
-        'icono' => 'fa-solid fa-id-card',
-      ],
-      'giros_y_convenios_empresariales' => [
-        'titulo' => 'Reportes Giros y Convenios',
-        'descripcion' => 'Consultar',
-        'tooltip' => 'Consultas de Giros, Canales y Convenios.',
-        'icono' => 'fa-solid fa-handshake',
-      ],
-    ];
-
     $result = [];
 
-    foreach ($areas as $slug => $conf) {
+    $areasConfig = $this->obtenerAreasConfig();
+    $reportesPorArea = $this->obtenerReportesActivosAgrupados();
 
-      $areaNombre = $conf['nombre'];
-      $permisoArea = $conf['permiso'];
+    foreach ($areasConfig as $slug => $conf) {
 
-      $accesoPorArea = $user->can($permisoArea);
+      $areaNombre = $conf['nombre_bd'] ?? null;
+      $permisoArea = $conf['permiso'] ?? null;
 
-      $reportesArea = Reporteador::where('area', $areaNombre)
-        ->where('estado', 'ACTIVO')
-        ->get();
+      if (!$areaNombre) {
+        continue;
+      }
+
+      $accesoPorArea = $permisoArea ? $user->can($permisoArea) : false;
+
+      $reportesArea = $reportesPorArea->get($areaNombre, collect());
 
       $accesoIndividual = $reportesArea->contains(
-        fn($rep) =>
-        $user->can("administracion.reportes.id_{$rep->id}")
+        fn($rep) => $user->can($this->permisoReporteId($rep->id))
       );
 
       if (!$accesoPorArea && !$accesoIndividual) {
@@ -180,35 +212,44 @@ class ReportesService
       }
 
       $result[] = [
-        'titulo' => $visual[$slug]['titulo'],
-        'descripcion' => $visual[$slug]['descripcion'],
-        'tooltip' => $visual[$slug]['tooltip'],
-        'ruta' => ['reportes.area', $slug],
-        'icono' => $visual[$slug]['icono'],
+        'titulo' => $conf['titulo'] ?? $areaNombre,
+        'descripcion' => $conf['descripcion'] ?? 'Consultar',
+        'tooltip' => $conf['tooltip'] ?? null,
+        'ruta' => [$conf['ruta'] ?? 'reportes.area', $slug],
+        'icono' => $conf['icono'] ?? null,
       ];
     }
     return $result;
   }
 
-
+  /**
+   * Verifica si el usuario puede acceder a un area por permiso general o individual.
+   */
   public function usuarioPuedeVerArea($slugArea, $permisoArea)
   {
     /** @var \App\Models\User $user */
     $user = Auth::user();
 
-    // Permiso de área → acceso completo
-    if ($user->can($permisoArea)) {
+    $config = $this->obtenerConfigPorSlug($slugArea);
+
+    if (!$config) {
+      return false;
+    }
+
+    $permisoConfig = $config['permiso'] ?? $permisoArea;
+
+    // Permiso de area = acceso completo
+    if ($permisoConfig && $user->can($permisoConfig)) {
       return true;
     }
 
-    // Buscar reportes de esta área
-    $reportes = Reporteador::where('area', $slugArea)
-      ->where('estado', 'ACTIVO')
-      ->get();
+    // Buscar reportes de esta area
+    $reportes = $this->obtenerReportesActivosAgrupados()
+      ->get($config['nombre_bd'] ?? $slugArea, collect());
 
     // Ver si el usuario tiene permiso individual a alguno
     foreach ($reportes as $r) {
-      if ($user->can("administracion.reportes.id_{$r->id}")) {
+      if ($user->can($this->permisoReporteId($r->id))) {
         return true;
       }
     }
@@ -216,86 +257,41 @@ class ReportesService
     return false;
   }
 
-
+  /**
+   * Obtiene reportes de un area aplicando permisos de area e individuales.
+   */
   public function obtenerReportesPorArea(string $area): array
   {
-    $areas = [
-      'personas' => [
-        'nombre' => 'RRHH',
-        'permiso' => Permisos::ADMINISTRACION_REPORTES_EMPLEADOS,
-      ],
-      'pasajes' => [
-        'nombre' => 'Unidad pasajes',
-        'permiso' => Permisos::ADMINISTRACION_REPORTES_PASAJES,
-      ],
-      'carga' => [
-        'nombre' => 'Unidad carga',
-        'permiso' => Permisos::ADMINISTRACION_REPORTES_CARGA,
-      ],
-      'cartera' => [
-        'nombre' => 'Cartera',
-        'permiso' => Permisos::ADMINISTRACION_REPORTES_CARTERA,
-      ],
-      'auditoria' => [
-        'nombre' => 'Auditoría',
-        'permiso' => Permisos::ADMINISTRACION_REPORTES_AUDITORIA,
-      ],
-      'crudo' => [
-        'nombre' => 'Crudo',
-        'permiso' => Permisos::ADMINISTRACION_REPORTES_CRUDO,
-      ],
-      'financiera' => [
-        'nombre' => 'Financiera',
-        'permiso' => Permisos::ADMINISTRACION_REPORTES_FINANCIERA,
-      ],
-      'fundacion_de_la_mujer' => [
-        'nombre' => 'Fundación de la Mujer',
-        'permiso' => Permisos::ADMINISTRACION_REPORTES_FUNDACION_DE_LA_MUJER,
-      ],
-      'contabilidad' => [
-        'nombre' => 'Contabilidad',
-        'permiso' => Permisos::ADMINISTRACION_REPORTES_CONTABILIDAD,
-      ],
-      'ficha_tecnica' => [
-        'nombre' => 'Ficha Técnica',
-        'permiso' => Permisos::ADMINISTRACION_REPORTES_FICHA_TECNICA,
-      ],
-      'giros_y_convenios_empresariales' => [
-        'nombre' => 'Giros y Convenios Empresariales',
-        'permiso' => Permisos::ADMINISTRACION_REPORTES_GIROS_Y_CONVENIOS_EMPRESARIALES,
-      ],
-    ];
+    $config = $this->obtenerConfigPorSlug($area);
 
-    if (!isset($areas[$area])) {
-      abort(404, 'Área no encontrada');
+    if (!$config) {
+      abort(404, 'Area no encontrada');
     }
-
-    $config = $areas[$area];
     /** @var \App\Models\User $user */
     $user = Auth::user();
 
 
-    //1. OBTENER TODOS LOS REPORTES DEL ÁREA
-    $reportesArea = Reporteador::where('area', $config['nombre'])
-      ->where('estado', 'ACTIVO')
-      ->get();
+    //1. OBTENER TODOS LOS REPORTES DEL AREA
+    $reportesArea = $this->obtenerReportesActivosAgrupados()
+      ->get($config['nombre_bd'], collect());
 
-    //2. FILTRAR QUÉ REPORTES INDIVIDUALES EL USUARIO PUEDE VER
+    //2. FILTRAR QUE REPORTES INDIVIDUALES EL USUARIO PUEDE VER
     $reportesConPermisoIndividual = $reportesArea->filter(function ($reporte) use ($user) {
-      return $user->can("administracion.reportes.id_{$reporte->id}");
+      return $user->can($this->permisoReporteId($reporte->id));
     });
 
-    //3. SI EL USUARIO TIENE PERMISO DE ÁREA → MOSTRAR TODOS
-    if ($user->can($config['permiso'])) {
-      return ['reportes' => $reportesArea];
+    //3. SI EL USUARIO TIENE PERMISO DE AREA -> MOSTRAR TODOS
+    $permisoArea = $config['permiso'] ?? null;
+    if ($permisoArea && $user->can($permisoArea)) {
+      return ['reportes' => $reportesArea->values()];
     }
 
-    //4. SIN PERMISO DE ÁREA, PERO CON ALGÚN PERMISO INDIVIDUAL → MOSTRAR SOLO ESOS
+    //4. SIN PERMISO DE AREA, PERO CON ALGUN PERMISO INDIVIDUAL -> MOSTRAR SOLO ESOS
     if ($reportesConPermisoIndividual->isNotEmpty()) {
       return ['reportes' => $reportesConPermisoIndividual->values()];
     }
 
-    //5. SIN PERMISO DE ÁREA NI INDIVIDUAL → BLOQUEAR
+    //5. SIN PERMISO DE AREA NI INDIVIDUAL -> BLOQUEAR
     throw new AuthorizationException('No tienes permiso para acceder a estos reportes.');
   }
 }

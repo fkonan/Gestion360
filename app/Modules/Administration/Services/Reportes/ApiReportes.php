@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 
 class ApiReportes
 {
+
   public function obtenerToken()
   {
     $tokenCacheKey = config('apiReportes.token_cache_key');
@@ -28,7 +29,12 @@ class ApiReportes
       $token = $response->json()['token'];
 
       if (!$token) {
-        Log::error('No se pudo obtener el token de ApiReportes');
+        Log::build([
+          'driver' => 'daily',
+          'path' => storage_path('logs/reportes/apiReportes.log'),
+          'days' => 7,
+        ])->info('No se pudo obtener el token de ApiReportes');
+
         return null;
       }
 
@@ -41,17 +47,29 @@ class ApiReportes
     return null;
   }
 
-  public function obtenerReporte(array $params)
+  public function obtenerReporte(array $params, int $timeout = 120)
   {
     $token = $this->obtenerToken();
 
     if (!$token) {
+      Log::build([
+          'driver' => 'daily',
+          'path' => storage_path('logs/reportes/apiReportes.log'),
+          'days' => 7,
+        ])->info('ApiReportes: Token no disponible');
+
       return null;
     }
 
     // Validar que los parámetros obligatorios existan
     foreach (['idReporte'] as $obligatorio) {
       if (empty($params[$obligatorio])) {
+        Log::build([
+          'driver' => 'daily',
+          'path' => storage_path('logs/reportes/apiReportes.log'),
+          'days' => 7,
+        ])->info('ApiReportes: Falta parametro obligatorio', ['param' => $obligatorio]);
+
         return null;
       }
     }
@@ -67,14 +85,29 @@ class ApiReportes
       $payload['param' . ucfirst($key)] = $value;
     }
 
+    $start = microtime(true);
     $response = Http::withToken($token)
       ->withHeaders(['Content-Type' => 'application/json'])
-      ->timeout(120)
+      ->timeout($timeout)
+      ->retry(2, 2000)
       ->post(config('apiReportes.base_url') . "/reporte/{$params['idReporte']}", $payload);
 
+    $durationMs = round((microtime(true) - $start) * 1000, 2);
 
-    return $response->successful()
-      ? $response->json()['data']
-      : null;
+    if ($response->successful()) {
+      return $response->json()['data'];
+    }
+
+    Log::build([
+        'driver' => 'daily',
+        'path' => storage_path('logs/reportes/apiReportes.log'),
+        'days' => 7,
+      ])->info('ApiReportes: error al obtener reporte', [
+      'idReporte' => $params['idReporte'],
+      'status' => $response->status(),
+      'duration_ms' => $durationMs,
+    ]);
+
+    return null;
   }
 }

@@ -19,7 +19,7 @@ use Illuminate\Auth\Access\AuthorizationException;
 
 class ReportesController extends Controller
 {
-  // vista general para el formulario de reportes, aca se ingresan los parametros
+  // vista general para el formulario de reportes, aca se genera el formulario en base a los parametros
   public function mostrarFormulario($id)
   {
     $reporte = Reporteador::select('parametros', 'origen_db')->findOrFail($id);
@@ -101,7 +101,7 @@ class ReportesController extends Controller
   }
 
   // bootstrap table con los resultados del reporte
-  public function show(Request $request)
+  public function show(Request $request, ReportesService $reportesService)
   {
     // Validacion campos obligatorios
     $validator = Validator::make($request->all(), [
@@ -136,12 +136,6 @@ class ReportesController extends Controller
     $nombreReporte = $reporte->nombre;
     $nombreDocExcel = normalizarNombre($nombreReporte);
 
-    // Para el caso del reporte 9 el rango de fechas se amplia un mes
-    /* if ($id == 9) {
-      $fechaInicio = $fechaInicio->copy()->subMonth();
-      $fechaFin = $fechaFin->copy()->addMonth();
-    } */
-
     $params = $request->all();
     $params['fechaInicio'] = $fechaInicio->toDateString();
     $params['fechaFin'] = $fechaFin->toDateString();
@@ -149,15 +143,9 @@ class ReportesController extends Controller
     //Area del reporte
     $areaReporte = $reporte->area;
 
-    // Busca el área en la configuración (según el nombre)
-    $areaConfig = collect(config('reportes.areas'))
-      ->firstWhere('nombre', $areaReporte);
-
-    if ($areaConfig) {
-      $ruta = route($areaConfig['ruta'], ['area' => $areaConfig['nombre']]);
-    } else {
-      $ruta = url()->previous();
-    }
+    // Busca slug y ruta a partir del nombre de área almacenado en BD
+    $rutaArea = $reportesService->obtenerRutaAreaPorNombre($areaReporte);
+    $ruta = $rutaArea['ruta'] ?? url()->previous();
 
     return view('reportes.tabla', compact('id', 'nombreReporte', 'nombreDocExcel', 'params', 'ruta'));
   }
@@ -316,6 +304,4 @@ class ReportesController extends Controller
   {
     return session('firmas') ?? [];
   }
-
-  //3. Reporte cartera
 }

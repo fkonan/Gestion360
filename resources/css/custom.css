@@ -492,6 +492,24 @@ body:not(.sidebar-collapse) .nav-item .nav-treeview .nav-link {
     box-shadow: none !important;
 }
 
+/* Desactivar animaciones al expandir el treeview para evitar destellos */
+.nav-sidebar .nav-treeview,
+.nav-sidebar .nav-treeview .nav-link {
+    transition: none !important;
+    animation: none !important;
+}
+
+.nav-sidebar .nav-treeview {
+    overflow: hidden;
+    will-change: height, opacity;
+}
+
+.nav-sidebar .nav-link,
+.nav-sidebar .nav-link i {
+    transition: none !important;
+    animation: none !important;
+}
+
 
 /* Estilos select2 */
 .select2-container .select2-selection--single {
@@ -738,4 +756,3 @@ body:not(.sidebar-collapse) .nav-item .nav-treeview .nav-link {
 [data-bs-theme=dark] .img-basc > img{
     filter: grayscale(1);
 }
-
