@@ -170,8 +170,8 @@ class GestionPasajesController extends Controller
   public function imprimirTiquetes($token)
   {
     try {
-      /* $id = $this->decryptFromNode($token); */
-      $id = $token;
+      $id = $this->decryptFromNode($token);
+      /* $id = $token; */
 
       $conn = DB::connection('sqlsrv');
 

@@ -257,10 +257,14 @@ function isOptionalParam($parametros, $key) {
       {{-- Radicación --}}
       @if(param($parametros,'paramRadicado'))
       <div class="col-md-6 mt-3">
-        <label class="form-label">Radicación</label>
+        <label class="form-label">Estado de Radicación</label>
         <div class="card p-2">
           <div class="form-check">
-            <input class="form-check-input" type="checkbox" name="radicado[]" value="SIN_RADICAR" id="radicado1" checked>
+            <input class="form-check-input" type="checkbox" name="radicado[]" value="SIN_RADICAR,SIN_MORA,1_30,31_45,46_60,61_90,MAS_90" id="radicadoTodos" checked>
+            <label class="form-check-label" for="radicadoTodos">TODOS</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="radicado[]" value="SIN_RADICAR" id="radicado1">
             <label class="form-check-label" for="radicado1">Sin Radicar</label>
           </div>
           <div class="form-check">
@@ -297,7 +301,11 @@ function isOptionalParam($parametros, $key) {
         <label class="form-label">Tipo de Cartera</label>
         <div class="card p-2">
           <div class="form-check">
-            <input class="form-check-input" type="radio" name="tipoCuenta" value="0" id="tipoCuenta0" checked>
+            <input class="form-check-input" type="radio" name="tipoCuenta" value="0,1,2,3,4" id="tipoCuentaTodos" checked>
+            <label class="form-check-label" for="tipoCuentaTodos">TODOS</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="tipoCuenta" value="0" id="tipoCuenta0">
             <label class="form-check-label" for="tipoCuenta0">CORRIENTE</label>
           </div>
           <div class="form-check">
@@ -315,10 +323,6 @@ function isOptionalParam($parametros, $key) {
           <div class="form-check">
             <input class="form-check-input" type="radio" name="tipoCuenta" value="4" id="tipoCuenta4">
             <label class="form-check-label" for="tipoCuenta4">INCOBRABLE</label>
-          </div>
-          <div class="form-check">
-            <input class="form-check-input" type="radio" name="tipoCuenta" value="0,1,2,3,4" id="tipoCuentaTodos">
-            <label class="form-check-label" for="tipoCuentaTodos">TODOS</label>
           </div>
         </div>
       </div>

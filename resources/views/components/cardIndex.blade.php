@@ -9,9 +9,9 @@
     <h5 class="fw-semibold mb-2 fw-bold text-tertiary">{{ $titulo }}</h5>
     <p class="card-text text-muted mb-3">{{ $descripcion }}</p>
     @if($ruta === '#')
-    <a href="#" class="btn w-75 btn-tertiary disabled">Ingresar</a>
+      <a href="#" class="btn w-75 btn-tertiary disabled">Ingresar</a>
     @else
-    <a href="{{ $ruta }}" class="btn w-75 btn-tertiary">Ingresar</a>
+      <a href="{{ $ruta }}" class="btn w-75 btn-tertiary">Ingresar</a>
     @endif
   </div>
 </div>

@@ -165,7 +165,7 @@ class DescansosService
           $bloqueo->save();
         }
 
-        //CASO 2 - CREAR NUEVO BLOQUEO
+      //CASO 2 - CREAR NUEVO BLOQUEO
       } else {
         $bloqueo = new PerPersonaBloqueo();
         $bloqueo->id = DB::connection('oracle')->select("SELECT SEC_PER_PERSONASBLOQUEO.NEXTVAL as id FROM DUAL")[0]->id;

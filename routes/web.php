@@ -2,10 +2,13 @@
 
 use App\Constants\Permisos;
 use App\Constants\Roles;
+use App\Http\Controllers\MapaProcesosController;
 use App\Modules\Administration\Http\Controllers\GestionPasajesController;
 use App\Modules\GestionWeb\Http\Controllers\TrackingRemesasController;
+use App\Models\GESTIONADMIN\AutogestionNotificacion;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 
 Route::get('/home', function () {
   return view('home');
@@ -45,6 +48,24 @@ Route::post('/tracking-remesas/consultar', [TrackingRemesasController::class, 'c
 Route::get('/imprimir-tiquete/{id}', [GestionPasajesController::class, 'imprimirTiquetes'])->name('imprimir-tiquetes');
 
 
+// Notificaciones (placeholder para pruebas de campana)
+Route::middleware('auth')->group(function () {
+  Route::get('/notificaciones', function () {
+    return AutogestionNotificacion::where('user_id', Auth::id())
+      ->whereNull('leida_en')
+      ->orderByDesc('id')
+      ->limit(20)
+      ->get();
+  })->name('notificaciones.sig.index');
+
+  Route::post('/notificaciones/{id}/leer', function ($id) {
+    AutogestionNotificacion::where('id', $id)
+      ->where('user_id', Auth::id())
+      ->update(['leida_en' => now()]);
+    return ['ok' => true];
+  })->name('notificaciones.sig.leer');
+});
+
 // Rutas publicas
 require __DIR__ . '/auth.php';
 
@@ -55,3 +76,4 @@ require __DIR__.'/modulos/gestion-rrhh.php';
 require __DIR__.'/modulos/gestionWeb.php';
 require __DIR__.'/modulos/pagosRecaudos.php';
 require __DIR__.'/modulos/huellero.php';
+require __DIR__ . '/modulos/sig.php';

@@ -173,8 +173,9 @@
   function setupLocalExcelExport() {
     const exportBtn = document.getElementById('exportar');
     if (exportBtn && reportData.length > 0) {
-      exportBtn.setAttribute('data-url', JSON.stringify(reportData));
-      exportBtn.setAttribute('onclick', `exportarExcel(this.id, this.dataset.url, this.dataset.name, false)`);
+      // Reutiliza los datos en memoria para evitar duplicarlos en atributos del DOM
+      exportBtn.removeAttribute('data-url');
+      exportBtn.onclick = () => exportarExcel(exportBtn.id, reportData, exportBtn.dataset.name, false);
     }
   }
 

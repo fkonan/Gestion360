@@ -68,7 +68,12 @@ class Permisos
     // PAGOS Y RECAUDOS
     const PAGOS_Y_RECAUDOS_ACCEDER = 'pagos_y_recaudos.acceder';
     const PAGOS_Y_RECAUDOS_PAGOS_CONVENIOS_ACCEDER = 'pagos_y_recaudos.pagos_convenios.acceder';
+
+    // SIG
+    const SIG_ACCEDER = 'sig.acceder';
+    const SIG_MAPA_PROCESOS_ACCEDER = 'sig.mapa_procesos.acceder';
+    const SIG_MAPA_PROCESOS_ELIMINAR = 'sig.mapa_procesos.eliminar';
+    const SIG_MAPA_PROCESOS_CREAR_EMISION = 'sig.mapa_procesos.crear_emision';
+    const SIG_MAPA_PROCESOS_VER_EMISION = 'sig.mapa_procesos.ver_emision';
 }
-
-
 

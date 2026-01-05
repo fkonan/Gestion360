@@ -20,11 +20,10 @@
 - Always analyze files before modifying them
 - Explicitly state which files will be modified and why
 - Apply changes only after user confirmation
-- Prefer safe changes over large refactors
 
 ## Constraints
 - No breaking changes unless explicitly requested
-- Do not refactor the entire project
+- Do not refactor the entire project; if necessary, you must request approval.
 
 ## UI / UX Rules
 - When redesigning or improving UI, prioritize aesthetic, clean, and modern layouts using Bootstrap 5.3.
