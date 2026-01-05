@@ -109,4 +109,18 @@
 </style>
 @endpushOnce
 
-
+@pushOnce('script')
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const baseRuta = "{{ url('/sig/mapa-procesos') }}";
+    document.querySelectorAll('.hotspot').forEach((boton) => {
+      boton.addEventListener('click', () => {
+        const area = boton.dataset.area;
+        if (area) {
+          window.location.href = `${baseRuta}/${area}`;
+        }
+      });
+    });
+  });
+</script>
+@endpushOnce

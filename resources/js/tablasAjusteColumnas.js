@@ -1,8 +1,16 @@
+const escapeHtml = value => String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
 function initColumnaAjuste(selector, opciones = {}) {
     const tabla = $(selector);
     const columnasProtegidas = opciones.protegidas || [];
     let columnasOcultadas = [];
     let ajustando = false;
+    let resizeTimeout;
 
     // Guarda columnas ocultas para que generarDetalle pueda usarlas
     tabla.data('columnasOcultas', () => columnasOcultadas);
@@ -14,17 +22,29 @@ function initColumnaAjuste(selector, opciones = {}) {
         return container && container.scrollWidth > container.clientWidth;
     };
 
-    // Columnas que sí se pueden ocultar
+    // Columnas que se pueden ocultar
     const getTodasLasColumnasNoProtegidas = () => {
         const columnas = tabla.bootstrapTable('getOptions')?.columns?.[0] || [];
         return columnas.filter(col => col.field && !columnasProtegidas.includes(col.field));
     };
 
     const hayDetalleVisible = () => {
+        if (!columnasOcultadas.length) return false;
+
+        const definicionesColumnas = tabla.bootstrapTable('getOptions')?.columns?.[0] || [];
+        const columnasParaDetalle = definicionesColumnas
+            .filter(col => col.field && columnasOcultadas.includes(col.field))
+            .sort((a, b) => (a.orden ?? 999) - (b.orden ?? 999));
+
+        if (!columnasParaDetalle.length) return false;
+
         const filas = tabla.bootstrapTable('getData') || [];
+
         return filas.some(row => {
-            const contenido = generarDetalle(selector, row);
-            return contenido !== null && String(contenido).trim() !== '';
+            return columnasParaDetalle.some(col => {
+                const valor = row[col.field];
+                return valor !== null && valor !== undefined && String(valor).trim() !== '';
+            });
         });
     };
 
@@ -60,17 +80,22 @@ function initColumnaAjuste(selector, opciones = {}) {
         });
     };
 
-    // Ajustar después de cargar/actualizar datos
+    // Ajustar despues de cargar/actualizar datos
     tabla.on('post-body.bs.table', ajustarColumnas);
 
-    // Ajustar en resize (con throttling)
-    let resizeTimeout;
-    $(window).on('resize', () => {
+    // Ajustar en resize (con throttling y namespace para evitar duplicados)
+    const previousNamespace = tabla.data('resizeNamespace');
+    if (previousNamespace) {
+        $(window).off(`resize.${previousNamespace}`);
+    }
+    const resizeNamespace = `ajusteCol-${Math.random().toString(36).slice(2)}`;
+    tabla.data('resizeNamespace', resizeNamespace);
+
+    $(window).on(`resize.${resizeNamespace}`, () => {
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(ajustarColumnas, 100);
     });
 }
-
 
 export function generarDetalle(selector, row, opcionesFormatter = {}) {
     const tabla = $(selector);
@@ -78,7 +103,7 @@ export function generarDetalle(selector, row, opcionesFormatter = {}) {
     const columnasOcultas = obtenerColumnasOcultas();
     const definicionesColumnas = tabla.bootstrapTable('getOptions')?.columns?.[0] || [];
 
-     //orden del detalle segun el data-order definido
+    // orden del detalle segun el data-order definido
     const columnasOrdenadasParaDetalle = definicionesColumnas
         .filter(col => col.field && columnasOcultas.includes(col.field))
         .sort((a, b) => (a.orden ?? 999) - (b.orden ?? 999));
@@ -91,11 +116,11 @@ export function generarDetalle(selector, row, opcionesFormatter = {}) {
         const label = col.title || key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());
 
         let contenidoCampo = '';
-        //si la columna es una columna con formato
+        // si la columna es una columna con formato
         if (opcionesFormatter[key]) {
             contenidoCampo = opcionesFormatter[key](row[key], row);
         } else if (row[key] !== null && row[key] !== undefined) {
-            contenidoCampo = row[key];
+            contenidoCampo = escapeHtml(row[key]);
         }
 
         if (String(contenidoCampo).trim() !== '') {
@@ -103,7 +128,7 @@ export function generarDetalle(selector, row, opcionesFormatter = {}) {
             htmlContenidoDetalle += `
                 <li class="list-group-item sidebar-dark-primary">
                     <div class="d-flex align-items-center gap-2 flex-wrap">
-                        <strong style="white-space: nowrap;">${label}:</strong>
+                        <strong style="white-space: nowrap;">${escapeHtml(label)}:</strong>
                         <div>${contenidoCampo}</div>
                     </div>
                 </li>

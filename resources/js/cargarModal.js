@@ -1,4 +1,4 @@
-// Esta función puede ser importada en cualquier parte del proyecto y sirve
+﻿// Esta función puede ser importada en cualquier parte del proyecto y sirve
 // para mostrar un modal con el contenido de una URL específica y carga funciones adicionales requerias.
 //
 // Parámetros:
@@ -7,7 +7,8 @@
 // - formularioId: (Opcional) El ID del formulario para activar las validaciones con AJAX.
 // - size: (Opcional) El tamaño del modal. Puede ser "modal-xl", "modal-lg", "modal-sm" o ninguno (para tamaño normal).
 
-import { mostrarToast } from "./utils";
+import { error } from "jquery";
+import { mostrarToast, habilitarSubmit } from "./utils";
 
 function cargarModal(url, titulo = "", formularioId = null, size = null, type = "POST") {
     // Validar elementos DOM requeridos
@@ -18,14 +19,14 @@ function cargarModal(url, titulo = "", formularioId = null, size = null, type = 
 
     if (!$modal.length || !$modalContent.length || !$modalTitle.length) {
         console.error("No se encontraron los elementos del modal requeridos en el DOM.");
-        mostrarToast("Error: Modal no disponible", "error");
+        mostrarToast("Error: Modal no disponible", "danger");
         return;
     }
 
     // Validar URL básica
     if (!url || typeof url !== 'string') {
         console.error("URL no válida proporcionada a cargarModal");
-        mostrarToast("Error: URL no válida", "error");
+        mostrarToast("Error: URL no válida", "danger");
         return;
     }
 
@@ -47,15 +48,17 @@ function cargarModal(url, titulo = "", formularioId = null, size = null, type = 
 
     $.get(url)
         .done((response) => {
-            if(response.error){
+            if (response && typeof response === "object" && response.error) {
+                const message = response.message || "Error al cargar el contenido";
                 $modalContent.html(`
                 <div class="alert alert-danger m-3">
                     <i class="fas fa-exclamation-triangle me-2"></i>
-                    <strong>Error:</strong> ${response.message}
+                    <strong>Error:</strong> ${message}
                 </div>
                 `);
 
-                mostrarToast(response.message, "danger");
+                mostrarToast(message, "danger");
+                return;
             }
 
             // Agregar contenido y guardar URL cargada
@@ -66,27 +69,27 @@ function cargarModal(url, titulo = "", formularioId = null, size = null, type = 
             inicializarComponentesModal($modal, formularioId, type);
         })
         .fail((xhr, textStatus, errorThrown) => {
-            console.error("Error al cargar el contenido:", { 
-                status: xhr.status, 
-                textStatus, 
-                errorThrown, 
-                url 
+            console.error("Error al cargar el contenido:", {
+                status: xhr.status,
+                textStatus,
+                errorThrown,
+                url
             });
-            
-            const errorMsg = xhr.status === 404 
-                ? "Página no encontrada" 
-                : xhr.status === 500 
-                    ? "Error interno del servidor" 
+
+            const errorMsg = xhr.status === 404
+                ? "Página no encontrada"
+                : xhr.status === 500
+                    ? "Error interno del servidor"
                     : "Error al cargar el contenido";
-            
+
             $modalContent.html(`
                 <div class="alert alert-danger m-3">
                     <i class="fas fa-exclamation-triangle me-2"></i>
                     <strong>Error:</strong> ${errorMsg}
                 </div>
             `);
-            
-            mostrarToast(errorMsg, "error");
+
+            mostrarToast(errorMsg, "danger");
         });
 
     // Resetear el estado del modal cuando se cierra (solo una vez)
@@ -99,14 +102,16 @@ function cargarModal(url, titulo = "", formularioId = null, size = null, type = 
 
 function inicializarComponentesModal($modal, formularioId, type) {
     // Inicializar select2 solo si aún no está activado
-    const $select2Elements = $modal.find('.select2');
-    if ($select2Elements.length && $select2Elements.data('select2') === undefined) {
-        $select2Elements.select2({
-            theme: 'bootstrap-5',
-            dropdownParent: $modal,
-            width: '100%'
-        });
-    }
+    $modal.find('.select2').each(function () {
+        const $element = $(this);
+        if ($element.data('select2') === undefined) {
+            $element.select2({
+                theme: 'bootstrap-5',
+                dropdownParent: $modal,
+                width: '100%'
+            });
+        }
+    });
 
     // Validar formulario si se proporciona
     if (formularioId) {
@@ -161,10 +166,10 @@ function validarFormulario(form, TYPE = "POST") {
         submitHandler: function (form) {
             const $form = $(form);
             const URL = $form.attr("action");
-            
+
             if (!URL) {
                 habilitarSubmit(form);
-                mostrarToast("Error: No se encontró la URL del formulario", "error");
+                mostrarToast("Error: No se encontró la URL del formulario", "danger");
                 return;
             }
 
@@ -217,9 +222,12 @@ function validarFormulario(form, TYPE = "POST") {
     });
 
     // Limpia los errores al editar o agregar un nuevo registro
-    $("input, select").on("input", function () {
+    $(form).find("input, select").on("input change", function () {
+        const fieldId = $(this).attr("id");
         $(this).removeClass("is-invalid");
-        $("#error-" + $(this).attr("id")).text("");
+        if (fieldId) {
+            $("#error-" + fieldId).text("");
+        }
     });
 }
 

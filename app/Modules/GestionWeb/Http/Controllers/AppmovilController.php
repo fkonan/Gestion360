@@ -179,7 +179,7 @@ class AppmovilController extends Controller
         if (isset($destino['grupos'])) {
           $destinoFormateado .= collect($destino['grupos'])->map(
             fn($grupo) =>
-            "<span class='badge bg-secondary me-1'>$grupo</span>"
+            $grupo
           )->implode(' ');
         } elseif (isset($destino['usuarios'])) {
           // Obtener los usuarios relacionados al destino
@@ -196,7 +196,7 @@ class AppmovilController extends Controller
 
           $destinoFormateado .= collect($nombres)->map(
             fn($nombre) =>
-            "<span class='badge bg-secondary me-1'>$nombre</span>"
+            $nombre
           )->implode(' ');
         }
 

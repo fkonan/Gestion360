@@ -1,9 +1,12 @@
 :root {
-   --darkmode-bg-main: #1e1e1e;
-   --darkmode-bg-secondary: #2c3643;
-   --darkmode-bg-lightdark: #454d55;
-   --darkmode-input: #343a40;
-   --darkmode-text: #f1f1f1;
+   --darkmode-bg-main: #0b1323;
+   --darkmode-bg-secondary: #111b2d;
+   --darkmode-bg-lightdark: #16233b;
+   --darkmode-input: #1b2a45;
+   --darkmode-text: #e6edf5;
+   --darkmode-muted: #9fb3c9;
+   --darkmode-border: #243652;
+   --darkmode-accent: #4fa3ff;
 }
 
 /* Dark mode estilos (general) */
@@ -22,7 +25,7 @@ body.dark-mode #toggleDarkMode i {
 }
 
 body.dark-mode input::placeholder {
-   color: var(--darkmode-text);
+   color: var(--darkmode-muted);
    opacity: 1;
 }
 
@@ -33,20 +36,20 @@ body.dark-mode .container-fluid>div {
 
 body.dark-mode .container-fluid div,
 body.dark-mode .login-container div {
-   background-color: var(--darkmode-bg-main);
+   background-color: var(--darkmode-bg-secondary);
    color: var(--darkmode-text);
 }
 
 body.dark-mode .modal-content .container-fluid {
-   background-color: var(--darkmode-bg-main) !important;
+   background-color: var(--darkmode-bg-secondary) !important;
 }
 
 body.dark-mode .container-fluid .tableContainer {
-   background-color: var(--darkmode-bg-main) !important;
+   background-color: var(--darkmode-bg-secondary) !important;
 }
 
 body.dark-mode .container-fluid td {
-   background-color: var(--darkmode-bg-secondary);
+   background-color: var(--darkmode-bg-lightdark);
    color: var(--darkmode-text);
 }
 
@@ -55,7 +58,7 @@ body.dark-mode .container-fluid form {
 }
 
 body.dark-mode .container-fluid td div {
-   background-color: var(--darkmode-bg-secondary);
+   background-color: var(--darkmode-bg-lightdark);
    color: var(--darkmode-text);
 }
 
@@ -64,11 +67,11 @@ body.dark-mode .container-fluid .botonBoostrapTable {
 }
 
 body.dark-mode .modal-body {
-   background-color: var(--darkmode-bg-main) !important;
+   background-color: var(--darkmode-bg-secondary) !important;
 }
 
 body.dark-mode .modal-body .table {
-   background-color: var(--darkmode-bg-main) !important;
+   background-color: var(--darkmode-bg-secondary) !important;
    color: var(--darkmode-text) !important;
 }
 
@@ -78,7 +81,7 @@ body.dark-mode .breadcrumbs {
 
 /* Menu lateral */
 body.dark-mode .main-sidebar {
-   background-color: var(--darkmode-bg-main) !important;
+   background-color: var(--darkmode-bg-secondary) !important;
 }
 
 body.dark-mode .main-sidebar .nav-link i {
@@ -90,7 +93,7 @@ body.dark-mode .main-sidebar .nav-sidebar .nav-link p {
 }
 
 body.dark-mode .main-sidebar .nav-sidebar .nav-link.active {
-   background-color: var(--darkmode-bg-secondary) !important;
+   background-color: var(--darkmode-bg-lightdark) !important;
 }
 
 body.dark-mode .main-sidebar .nav-sidebar .nav-link.active i {
@@ -103,12 +106,12 @@ body.dark-mode .container-fluid .optionsMenu div {
 }
 
 body.dark-mode .container-fluid .optionsMenu .cardComponent {
-   background-color: var(--darkmode-bg-main);
+   background-color: var(--darkmode-bg-secondary);
    border: none !important;
 }
 
 body.dark-mode .container-fluid .optionsMenu .cardComponent div {
-   background-color: var(--darkmode-bg-main);
+   background-color: var(--darkmode-bg-secondary);
 }
 
 /* Select options */
@@ -138,7 +141,7 @@ body.dark-mode .select2-selection__rendered {
 
 /* Loader bootstrap table */
 body.dark-mode .fixed-table-loading {
-   background-color: var(--darkmode-bg-main) !important;
+   background-color: var(--darkmode-bg-secondary) !important;
    color: var(--darkmode-text) !important;
    border: none !important;
 }
@@ -150,16 +153,22 @@ body.dark-mode .detail-view div {
 
 /* Bootstrap table */
 body.dark-mode .table-primary {
-   --bs-table-bg: var(--bs-table-color) !important;
-   --bs-table-color: var(--darkmode-bg-main) !important;
+   --bs-table-bg: var(--darkmode-bg-lightdark) !important;
+   --bs-table-color: var(--darkmode-text) !important;
 }
 
 body.dark-mode .bootstrap-table .detail {
-   background-color: var(--darkmode-bg-main) !important;
+   background-color: var(--darkmode-bg-secondary) !important;
 }
 
 body.dark-mode .bootstrap-table .page-link {
    color: var(--darkmode-text) !important;
+   background-color: var(--darkmode-bg-secondary);
+   border-color: var(--darkmode-border);
+}
+
+body.dark-mode .bootstrap-table .page-link:hover {
+   color: var(--darkmode-accent) !important;
 }
 
 body.dark-mode .horaComponent {
@@ -168,7 +177,11 @@ body.dark-mode .horaComponent {
 }
 
 body.dark-mode a {
-   color: var(--darkmode-text);
+   color: var(--darkmode-accent);
+}
+
+body.dark-mode a:hover {
+   color: #80c4ff;
 }
 
 body.dark-mode .rolCreate p {
@@ -186,12 +199,12 @@ body.dark-mode .logoCopeBlanco {
 
 /* Loader */
 body.dark-mode .spinner-border {
-   color: var(--darkmode-text) !important;
+   color: var(--darkmode-accent) !important;
 }
 
 /* Login styles */
 body.dark-mode .login-container .card {
-   background-color: var(--darkmode-bg-lightdark);
+   background-color: var(--darkmode-bg-secondary);
    color: var(--darkmode-text);
 }
 
@@ -200,19 +213,19 @@ body.dark-mode .login-container .card p {
 }
 
 body.dark-mode .login-container input {
-   background-color: var(--darkmode-bg-main);
+   background-color: var(--darkmode-input);
    color: var(--darkmode-text);
 }
 
 body.dark-mode .login-container .input-group-text {
-   background-color: var(--darkmode-bg-secondary);
+   background-color: var(--darkmode-bg-lightdark);
    color: var(--darkmode-text);
 }
 
 /* Toast alert */
 body.dark-mode #toastAlert,
 body.dark-mode .toastAJAX {
-   background-color: var(--darkmode-bg-main) !important;
+   background-color: var(--darkmode-bg-secondary) !important;
    color: var(--darkmode-text) !important;
 }
 
@@ -229,7 +242,7 @@ body.dark-mode .indexContainer p {
 }
 
 body.dark-mode .cardIndex {
-   background-color: var(--darkmode-input) !important;
+   background-color: var(--darkmode-bg-secondary) !important;
    border: none !important;
 }
 
@@ -239,7 +252,7 @@ body.dark-mode .cardIndex {
 
 /* Header */
 body.dark-mode .content-header {
-   background-color: var(--darkmode-bg-secondary) !important;
+   background-color: var(--darkmode-bg-lightdark) !important;
 }
 
 
@@ -260,13 +273,13 @@ body.dark-mode .theme-icon {
 }
 
 body.dark-mode input:-webkit-autofill {
-   -webkit-text-fill-color: var(--darkmode-input);
+   -webkit-text-fill-color: var(--darkmode-text);
 }
 
 body.dark-mode input:-webkit-autofill:hover {
-   -webkit-text-fill-color: var(--darkmode-input);
+   -webkit-text-fill-color: var(--darkmode-text);
 }
 
 body.dark-mode input:-webkit-autofill:focus {
-   -webkit-text-fill-color: var(--darkmode-input);
+   -webkit-text-fill-color: var(--darkmode-text);
 }

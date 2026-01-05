@@ -12,9 +12,7 @@
     // Dark Mode Toggle
     document.addEventListener("DOMContentLoaded", () => {
       themeManager.initTheme();
-      // Configurar listener para cambios del sistema
       themeManager.setupSystemThemeListener();
-      // Configurar botón toggle si existe
       const toggleButton = document.querySelector("[data-theme-toggle]");
       if (toggleButton) {
         toggleButton.addEventListener("click", () => {
@@ -25,8 +23,7 @@
   </script>
 
   <link rel="icon" href="{{ asset('favicon.png') }}" type="image/png">
-  <link rel="preload" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" as="style"
-    onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
   </noscript>
@@ -35,13 +32,8 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-duallistbox/dist/bootstrap-duallistbox.min.css">
 
   <style>
-    body {
-      visibility: hidden;
-    }
-
-    body.show {
-      visibility: visible;
-    }
+    body { visibility: hidden; }
+    body.show { visibility: visible; }
   </style>
   <!--Vite -->
   @vite(['resources/css/app.css', 'resources/js/app.js','resources/css/custom.css','resources/css/mobile.css'])
@@ -65,20 +57,9 @@
       <div class="sidebar">
         <!-- Usuario -->
         <div class="user-panel mt-3 pt-1 pb-0 d-flex flex-column" style="border:none">
-
-          <!--  <div style="width: 2em; display: flex; align-items: center; justify-content: flex-start;" class="ms-3">
-                        <i id="toggleDarkMode" class="light-icon text-dark" style="cursor: pointer;"></i>
-                    </div>
-                  -->
-          {{-- Icono cambiar theme --}}
           <button class="btn rounded-circle me-3" title="Cambiar modo oscuro" style="width: 50px" data-theme-toggle>
             <i class="light-icon"></i>
           </button>
-
-          <!-- <div class="info d-flex flex-column align-items-center" style="width: 235px; margin: 0 auto; user-select: none;">
-                        <img src="{{ asset('img/LogoCope.png') }}" class="logoCope" style="width:100%; height: auto;" alt="Logo Cope">
-                        <img src="{{ asset('img/LogoCopeBlancoFull.png') }}" class="logoCopeBlanco py-3" style="width:80%; height: auto; display:none" alt="Logo Cope ">
-                    </div> -->
 
           <div class="info d-flex flex-column align-items-center logo-container">
             <img class="logo-responsive" alt="Logo Cope">
@@ -133,17 +114,32 @@
 
     <!-- Contenido Principal -->
     <div class="content-wrapper">
-      <section class="content-header mb-4 p-2 py-1 d-flex justify-content-between align-items-center bg-primary"
+      <section class="content-header mb-4 p-2 py-1 d-flex justify-content-between align-items-center bg-primary-subtle"
         style="position: sticky; top: 0; z-index: 1030;">
-        <div class="container-fluid my-2">
+        <div class="container-fluid my-2 d-flex align-items-center gap-3">
           <a class="pushmenu btn btn-sm text-light navbar-toggler" data-widget="pushmenu" data-enable-remember="true"
             href="#" role="button">
             <i class="fas fa-bars"></i>
           </a>
-          <!-- <img src="{{ asset('img/LogoCopeBlanco.png') }}" style="width:70px; height: 15px;" alt="Logo Cope" class="d-md-none"> -->
         </div>
-        <div class="d-none d-md-flex align-items-center gap-3 flex-wrap header-info" style="white-space: nowrap;">
+        <div class="d-flex align-items-center gap-3 flex-wrap header-info p-1" style="white-space: nowrap;">
           @yield('headerInfo')
+          <div class="position-relative">
+            <button id="btnNotificaciones" class="btn btn-sm btn-notificaciones">
+              <i class="fas fa-bell text-white"></i>
+              <span id="badgeNotificaciones" class="badge-notificaciones">3</span>
+            </button>
+            <div id="dropdownNotificaciones"
+              class="dropdown-noti bg-body text-dark shadow rounded position-absolute mt-2"
+              style="right:0; min-width:300px; display:none; max-height:360px; overflow-y:auto; z-index:1050;">
+              <div class="p-2 border-bottom fw-semibold bg-light text-dark d-flex justify-content-between align-items-center">
+                <span>Notificaciones</span>
+                <i class="fas fa-bell text-primary"></i>
+              </div>
+              <div id="listaNotificaciones" class="list-group list-group-flush small"></div>
+              <div id="sinNotificaciones" class="p-3 text-muted small text-center" style="display:none;">Sin notificaciones.</div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -167,33 +163,7 @@
     defer></script>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-
-  <script>
-    //Modal (evita errores de focus)
-    document.addEventListener('hidden.bs.modal', function (event) {
-      if (document.activeElement) {
-        document.activeElement.blur();
-      }
-    });
-
-    // Función para mostrar el toast
-    window.addEventListener('DOMContentLoaded', function () {
-      const title = sessionStorage.getItem('toastTitle');
-      const type = sessionStorage.getItem('toastType');
-
-      if (title && type) {
-        mostrarToast(title, type);
-        sessionStorage.removeItem('toastTitle');
-        sessionStorage.removeItem('toastType');
-      }
-    });
-
-    // Mostrar el cuerpo del documento después de cargar todo
-    window.addEventListener('load', function () {
-      document.body.classList.add('show');
-    });
-  </script>
-
+  @include('components.notificaciones-js')
   @stack('script')
 </body>
 

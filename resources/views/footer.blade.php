@@ -1,7 +1,18 @@
+<style>
+  .striped {
+  background: linear-gradient(
+    to bottom,
+    transparent 50%,
+    #0e2146 50%
+  );
+}
+</style>
+
 <br>
+
 <footer class="footer mt-5">
-  <div class="container-fluid bg-footer card p-5 m-0">
-    <div class="container">
+  <div class="container-fluid bg-footer border-0 card p-5 m-0 striped">
+    <div class="container bg-footer border p-5 rounded-3">
       <div class="row">
         <h3 class="mb-5">Cooperativa Santandereana de Transportadores LTDA</h3>
         <div class="col-8">
@@ -44,29 +55,45 @@
         </h4>
       </div>
       <div class="row align-items-center mb-3">
-        <div class="col img-footer">
-          <img src="https://autogestion.copetran.com.co/cdn/img/logos/LogoSIC-sinfondo-AZUL.png" width="100%">
+        <div class="col">
+          <a class="img-footer" href="https://www.supertransporte.gov.co/" target="_blank">
+            <img src="https://autogestion.copetran.com.co/cdn/img/logos/LogoSIC-sinfondo-AZUL.png" width="100%">
+          </a>
         </div>
-        <div class="col img-footer">
-          <img src="https://autogestion.copetran.com.co/cdn/img/logos/supertransporteblanco_azul.png" width="100%">
+        <div class="col">
+          <a class="img-footer" href="https://www.sic.gov.co/" target="_blank">
+            <img src="https://autogestion.copetran.com.co/cdn/img/logos/supertransporteblanco_azul.png" width="100%">
+          </a>
         </div>
-        <div class="col img-footer">
-          <img src="https://autogestion.copetran.com.co/cdn/img/logos/LOGO_TIC_AZUL.png" width="100%">
+        <div class="col">
+          <a class="img-footer" href="https://www.mintic.gov.co/portal/inicio/" target="_blank">
+            <img src="https://autogestion.copetran.com.co/cdn/img/logos/LOGO_TIC_AZUL.png" width="100%">
+          </a>
         </div>
-        <div class="col img-footer img-basc">
-          <img src="https://autogestion.copetran.com.co/cdn/img/logos/BASC.svg" width="100%">
+        <div class="col">
+          <a class="img-footer img-basc" href="https://sibasc.wbasco.org/mod_consulta_pag_wbo/consulta_empresa.php?empresa_id=23&capitulo_id=25&session_nomidioma=" target="_blank">
+            <img src="https://autogestion.copetran.com.co/cdn/img/logos/BASC.svg" width="100%">
+          </a>
         </div>
-        <div class="col img-footer">
-          <img src="https://autogestion.copetran.com.co/cdn/img/logos/ISO-9001-AZUL.png" width="50%">
+        <div class="col">
+          <a class="img-footer" href="http://qa.icontec.org:8027/#/SC3355-1" target="_blank">
+            <img src="https://autogestion.copetran.com.co/cdn/img/logos/ISO-9001-AZUL.png" width="50%">
+          </a>
         </div>
-        <div class="col img-footer">
-          <img src="https://autogestion.copetran.com.co/cdn/img/logos/ISO-14001-AZUL.png" width="50%">
+        <div class="col">
+          <a class="img-footer" href="http://qa.icontec.org:8027/#/SA337-1" target="_blank">
+            <img src="https://autogestion.copetran.com.co/cdn/img/logos/ISO-14001-AZUL.png" width="50%">
+          </a>
         </div>
-        <div class="col img-footer">
-          <img src="https://autogestion.copetran.com.co/cdn/img/logos/ISO-39001-AZUL.png" width="50%">
+        <div class="col">
+          <a class="img-footer" href="http://qa.icontec.org:8027/#/SV%20-CER898700" target="_blank">
+            <img src="https://autogestion.copetran.com.co/cdn/img/logos/ISO-39001-AZUL.png" width="50%">
+          </a>
         </div>
-        <div class="col img-footer">
-          <img src="https://autogestion.copetran.com.co/cdn/img/logos/ISO-45001-AZUL.png" width="50%">
+        <div class="col">
+          <a class="img-footer" href="http://qa.icontec.org:8027/#/OS269-1" target="_blank">
+            <img src="https://autogestion.copetran.com.co/cdn/img/logos/ISO-45001-AZUL.png" width="50%">
+          </a>
         </div>
       </div>
       <div class="row text-center">
@@ -86,5 +113,13 @@
         </div>
       </div>
     </div>
+    <div class="mt-4 d-flex justify-content-between align-items-center container">
+      <a href="{{ route('index') }}">
+        <img src="https://autogestion.copetran.com.co/cdn/img/logos/logo-blango.png" alt="Logo"
+          style="height: 70px;object-fit: contain;" />
+      </a>
+      <p class="mb-0 text-white">Todos los derechos Reservados 2025 © Sitio hecho con ❤ para COPETRAN</p>
+    </div>
+
   </div>
 </footer>

@@ -1,4 +1,4 @@
-<!-- @extends('layouts.dashboard')
+ @extends('layouts.dashboard')
 
 @section('title','Gestión appmovil')
 
@@ -101,6 +101,6 @@
   }
 </script>
 @endpushOnce
- -->
+
 
 

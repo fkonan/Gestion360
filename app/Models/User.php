@@ -13,11 +13,17 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Notifications\Notifiable;
 
+/**
+ * @method bool can(string|array $ability, array $arguments = [])
+ * @method bool canAny(array $abilities, array $arguments = [])
+ */
 class User extends Authenticatable
 {
   use HasFactory;
   use HasRoles;
+  use Notifiable;
 
   protected $guard_name = 'web';
   public const SUPER_ADMIN_ROLE = 'SUPER-ADMIN';
