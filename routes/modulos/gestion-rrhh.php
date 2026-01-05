@@ -1,17 +1,19 @@
 <?php
 
 use App\Constants\Permisos;
-use App\Http\Controllers\ConductorController;
-use App\Http\Controllers\IncapacidadController;
-use App\Http\Controllers\ModuloController;
-use App\Http\Controllers\SeguimientoIncapacidadController;
+use App\Modules\Configuracion\Http\Controllers\ModuloController;
+use App\Modules\GestionRRHH\Http\Controllers\ConductorController;
+use App\Modules\GestionRRHH\Http\Controllers\EmpleadoController;
+use App\Modules\GestionRRHH\Http\Controllers\Incapacidades\IncapacidadController;
+use App\Modules\GestionRRHH\Http\Controllers\Incapacidades\SeguimientoIncapacidadController;
+use App\Modules\GestionRRHH\Http\Controllers\PoliticasController;
 use Illuminate\Support\Facades\Route;
 
 
 //Rutas Modulo Gestion RRHH
 Route::prefix("gestionRRHH")->middleware(['auth', 'permisos:'.Permisos::GESTION_RRHH_ACCEDER,'modulo.activo:2'])->group(function(){
     Route::prefix("gestion-empleado")->middleware(['auth', 'permisos:'.Permisos::GESTION_RRHH_GESTION_EMPLEADO_ACCEDER,'submodulo.activo:7'])->group(function(){
-        Route::get("/",[ModuloController::class,"getGestionEmpleado"])->name("gestion-incapacidad.index");
+        Route::get("/",[ModuloController::class,"getGestionEmpleado"])->name("gestion-incapacidades.index");
         Route::get("/incapacidades",[IncapacidadController::class,"listaIncapacidades"])->name("gestion-empleado.incapacidades");
         Route::get("/incapacidades/cargarDatos",[IncapacidadController::class,"cargarDatos"])->middleware('soloAJAX')->name("gestion-empleado.incapacidades.cargarDatos");
         Route::get("/incapacidades/{id}/datos",[IncapacidadController::class,"editIncapacidad"])->middleware('soloAJAX')->name("gestion-empleado.incapacidades.edit");
@@ -30,5 +32,28 @@ Route::prefix("gestionRRHH")->middleware(['auth', 'permisos:'.Permisos::GESTION_
         //Registrar descanso conductores
         Route::get("/formDescansoConductores",[ConductorController::class,"formDescansoConductores"])->name("conductor.descanso");
         Route::post("/descansoConductores",[ConductorController::class,"registrarEvento"])->name("registrar.evento");
+
+        //Consulta firmas politicas conductores
+        Route::get("/firma-politicas",[PoliticasController::class,"index"])->name("politicas.index");
+        Route::post("/firma-politicas/conductor",[PoliticasController::class,"politicasFirmadas"])->name("politicas.conductor");
+        Route::get('/firmas/descargar', [PoliticasController::class, 'generarPDFPolitica'])->name('firmas.descargar');
+
+        //Solicitar nuevo ingreso empleado
+        Route::get("/solicitud-nuevo-ingreso",[EmpleadoController::class,"nuevoIngreso"])->name("empleado.nuevoIngreso");
+        Route::post("/gestion-nuevo-ingreso",[EmpleadoController::class,"gestionNuevoIngreso"])->name("gestion.nuevoIngreso");
+
+        //Novedad revisión preoperacional
+        Route::get("/preoperacional",[ConductorController::class,"revisionPreoperacional"])->name("conductor.preoperacional.index");
+        Route::post("/preoperacional-novedad",[ConductorController::class,"novedadPreoperacional"])->name("conductor.preoperacional.novedad");
+
+        //Buscar persona por identificación (AJAX)
+        Route::get('/persona/buscar/{identificacion}', [EmpleadoController::class, 'buscar'])
+            ->name('persona.buscar');
+
+        //Obtener ultimo evento descanso conductor (AJAX)
+        Route::post('/obtener-ultimo-evento', [ConductorController::class, 'obtenerUltimoEventoDescanso'])
+            ->name('obtener.ultimo.evento');
+
+
     });
 });

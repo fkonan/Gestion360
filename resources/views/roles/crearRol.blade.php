@@ -1,7 +1,7 @@
 @extends('layouts.dashboard')
 
 @section('title','Crear Rol')
-    
+
 @section('breadcrumb')
 <x-breadcrumb :items="[
         ['name' => 'Inicio', 'url' => route('home')],
@@ -15,60 +15,110 @@
 @section('content')
 <div class="container-fluid p-0 border rounded shadow sidebar-dark-primary">
 
-    <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-primary-subtle">
-        <span class="text-left text-light fs-5 fw-medium py-1">Crear Rol</span>
-    </div>
+  {{-- Header --}}
+  <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-primary-subtle">
+    <span class="text-left text-light fs-5 fw-medium py-2">Crear Rol</span>
+  </div>
 
-    <div class="row p-4 m-0">
-        <form id="formCrearRol" action="{{ route('roles.store') }}" method="POST">
-            @csrf
+  <div class="row p-4 m-0">
+    <form id="formCrearRol" action="{{ route('roles.store') }}" method="POST">
+      @csrf
 
-            <label for="name" class="form-label">Nombre</label>
-            <input type="name" class="form-control" id="name" name="name"  required>
-            
-            <br>
+      {{-- Nombre del Rol --}}
+      <div class="mb-3">
+        <label for="name" class="form-label fw-semibold">Nombre del rol</label>
+        <input type="text" class="form-control" id="name" name="name" required>
+      </div>
 
-            @foreach ($modulos as $modulo)
-                <div class="border border-primary rounded m-0 p-0 pb-3 mb-4 z-3">
-                <h5 class="p-2 bg-primary-subtle text-light">{{ ucfirst($modulo->ModNom) }}</h5>
+      {{-- Módulos --}}
+      @foreach ($modulos as $index => $modulo)
+      @php
+      $idCollapse = 'modulo_' . $index;
+      $nombreModulo = normalizarNombre($modulo->ModNom);
+      $permisoModulo = \Spatie\Permission\Models\Permission::where('name', "$nombreModulo.acceder")->first();
+      @endphp
 
-                @php
-                    $nombreModulo = normalizarNombre($modulo->ModNom);
-                    $permisoModulo = \Spatie\Permission\Models\Permission::where('name', "$nombreModulo.acceder")->first();
-                @endphp
+      <div class="border border-primary rounded mb-4">
 
-                @if($permisoModulo)
-                    <div class="m-3 form-check form-switch">
-                        <input class="form-check-input" type="checkbox" role="switch"
-                            name="permissions[]" value="{{ $permisoModulo->name }}">
-                        <label class="form-check-label">Acceso al módulo</label>
-                    </div>
-                @endif
+        {{-- Título del módulo --}}
+        <h5 class="p-2 px-3 bg-primary-subtle text-light d-flex justify-content-between align-items-center"
+          data-bs-toggle="collapse" data-bs-target="#{{ $idCollapse }}" aria-expanded="false" style="cursor:pointer;">
+          {{ ucfirst($modulo->ModNom) }}
+          <i class="fa fa-chevron-down"></i>
+        </h5>
 
-                @foreach ($modulo->submodulos as $submodulo)
-                    <div class="mx-4 rounded rolCreate">
-                        <p class="text-secondary fs-6 fw-medium m-0 p-0">{{ ucfirst($submodulo->SubModNom) }}</p>
-                        <div class="row mb-2">
-                            @foreach ($submodulo->permisos as $permiso)
-                                <div class="col-md-2">
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" role="switch"
-                                            name="permissions[]" value="{{ $permiso->name }}">
-                                        <label class="form-check-label">{{ Str::title(str_replace('_', ' ', Str::afterLast($permiso->name, '.'))) }}
-                                        </label>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                @endforeach
+        {{-- Contenido colapsable --}}
+        <div class="collapse" id="{{ $idCollapse }}">
+          <div class="px-3 pt-3 pb-2">
+
+            {{-- Switch acceso al módulo --}}
+            @if($permisoModulo)
+            <div class="form-check form-switch mb-3">
+              <input class="form-check-input" type="checkbox" name="permissions[]" value="{{ $permisoModulo->name }}">
+              <label class="form-check-label fw-medium">Acceso al módulo</label>
+            </div>
+            @endif
+
+            {{-- Buscador de permisos --}}
+            <div class="mb-3">
+              <input type="text" class="form-control permiso-buscador" data-collapse="{{ $idCollapse }}"
+                placeholder="Buscar permiso...">
+            </div>
+
+            {{-- Submódulos --}}
+            @foreach ($modulo->submodulos as $submodulo)
+            <div class="pb-3 mb-3 border-bottom submodulo-permisos" data-modulo="{{ $idCollapse }}">
+              <p class="text-secondary fw-semibold mb-2">
+                {{ ucfirst($submodulo->SubModNom) }}
+              </p>
+              <div class="row g-2">
+                @foreach ($submodulo->permisos as $permiso)
+                <div class="col-md-4 permiso-item" data-nombre="{{ strtolower($permiso->nombre_limpio) }}">
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" name="permissions[]" value="{{ $permiso->name }}">
+                    <label class="form-check-label" title="{{ $permiso->nombre_limpio }}">
+                      {{ Str::limit($permiso->nombre_limpio, 38) }}
+                    </label>
+                  </div>
                 </div>
+                @endforeach
+              </div>
+            </div>
             @endforeach
 
-            <button type="submit" class="btn btn-success my-3">Guardar</button>
-            <a type="button" class="btn btn-dark" href="{{ route('roles.index') }}">Cancelar</a>   
-            
-        </form>
-    </div>
+          </div>
+        </div>
+      </div>
+      @endforeach
+
+      {{-- Botones --}}
+      <button type="submit" class="btn btn-success my-3">Guardar</button>
+      <a href="{{ route('roles.index') }}" class="btn btn-dark">Cancelar</a>
+
+    </form>
+  </div>
 </div>
 @endsection
+
+@pushOnce('script')
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.permiso-buscador').forEach(buscador => {
+      buscador.addEventListener('input', function () {
+        const filtro = this.value.trim().toLowerCase();
+        const collapseId = this.dataset.collapse;
+
+        const items = document
+          .getElementById(collapseId)
+          .querySelectorAll('.permiso-item');
+
+        items.forEach(item => {
+          const nombre = item.dataset.nombre;
+          item.style.display = (!filtro || nombre.includes(filtro)) ? '' : 'none';
+        });
+      });
+    });
+  });
+
+</script>
+@endpushOnce

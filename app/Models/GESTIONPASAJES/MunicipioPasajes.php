@@ -8,16 +8,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class MunicipioPasajes extends Model
 {
-    use HasFactory;
+  use HasFactory;
 
-    protected $connection = 'mysql-gestion-pasajes';
-    protected $table = "_municipios";
-    protected $primaryKey = "IdMunicipio";
-    public $incrementing = false;
-    public $timestamps = false;
+  protected $connection = 'mysql-gestion-pasajes';
+  protected $table = "_municipios";
+  protected $primaryKey = "IdMunicipio";
+  public $incrementing = false;
+  public $timestamps = false;
 
-    public function departamento(): BelongsTo{
-        return $this->belongsTo(DepartamentoPasajes::class,'DepartamentoId','IdDepartamento');
-    }
-
+  public function departamento(): BelongsTo
+  {
+    return $this->belongsTo(DepartamentoPasajes::class, 'DepartamentoId', 'IdDepartamento');
+  }
 }

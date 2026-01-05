@@ -200,7 +200,7 @@
 }
 
 :root,[data-bs-theme=dark] {
-   --bs-primary: #fff;
+   --bs-primary: #ffffff;
    --bs-secondary: #89898c;
    --bs-tertiary: #fff;
    --bg-rgb:#2d6dec75;
@@ -347,7 +347,7 @@
     border: none !important;
 }
 
-[data-bs-theme="dark"] .bootstrap-duallistbox-container .box1, 
+[data-bs-theme="dark"] .bootstrap-duallistbox-container .box1,
 [data-bs-theme="dark"] .bootstrap-duallistbox-container .box2,
 [data-bs-theme="dark"] .bootstrap-duallistbox-container select{
     background-color: var(--bs-gray-800) !important;
@@ -357,7 +357,7 @@
 [data-bs-theme="dark"] #formNotificacion .form-control,
 [data-bs-theme="dark"] #formNotificacion .select-control,
 [data-bs-theme="dark"] #formNotificacion .select2-selection,
-[data-bs-theme="dark"] #formNotificacion .select2-selection__choice{   
+[data-bs-theme="dark"] #formNotificacion .select2-selection__choice{
     background-color: var(--bs-dark-bg-subtle) !important;
     color: var(--bs-light) !important;
 }
@@ -365,7 +365,11 @@
 [data-bs-theme="dark"] .form-control[readonly]{
     background-color: rgba(var(--bs-dark-rgb), var(--bs-bg-opacity)) !important;
 }
- 
+
+[data-bs-theme="dark"] .header-info{
+    color: var(--bs-gray-800);
+}
+
 .content-wrapper{
    background-color:var(--bs-light-rgb)
 }
@@ -486,6 +490,24 @@ body:not(.sidebar-collapse) .nav-item .nav-treeview .nav-link {
 
 .nav-sidebar .nav-item .nav-link.active{
     box-shadow: none !important;
+}
+
+/* Desactivar animaciones al expandir el treeview para evitar destellos */
+.nav-sidebar .nav-treeview,
+.nav-sidebar .nav-treeview .nav-link {
+    transition: none !important;
+    animation: none !important;
+}
+
+.nav-sidebar .nav-treeview {
+    overflow: hidden;
+    will-change: height, opacity;
+}
+
+.nav-sidebar .nav-link,
+.nav-sidebar .nav-link i {
+    transition: none !important;
+    animation: none !important;
 }
 
 
@@ -734,6 +756,3 @@ body:not(.sidebar-collapse) .nav-item .nav-treeview .nav-link {
 [data-bs-theme=dark] .img-basc > img{
     filter: grayscale(1);
 }
-
-    
-

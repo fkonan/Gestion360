@@ -9,7 +9,7 @@
       <div class="col-xs-12 col-sm-2 col-md-3 col-lg-4 col-xl-4 col-xxl-4"></div>
       <div class="col-xs-12 col-sm-8 col-md-6 col-lg-4 col-xl-4 col-xxl-4">
          <h3>
-            Sistema: <b>{{ env('APP_NAME') }}</b>
+            Sistema: <b>Autogestión</b>
          </h3>
 
          <!-- Mensaje informativo sobre credenciales -->
@@ -28,7 +28,7 @@
                <div class="d-flex justify-content-between align-items-center mb-3">
                   <h4><b>¡Hola de nuevo!</b></h4>
                </div>
-               <form method="POST" action="{{ route('login') }}" onsubmit="deshabilitarSubmit(this)">
+               <form id="login" method="POST" action="{{ route('login') }}" onsubmit="deshabilitarSubmit(this)">
                   @csrf
                   <div class="d-flex flex-column mb-3">
                      <div class="input-group">
@@ -57,13 +57,11 @@
                   </div>
 
                   <div class="d-flex flex-column my-4 align-items-center">
-                     <!-- <div class="captcha-container">
-                           {!! NoCaptcha::display() !!}
-                     </div> -->
+                     <div class="captcha-container">
+                        {!! NoCaptcha::display(['data-callback' => 'captchaOk']) !!}
+                     </div>
 
-                     @if ($errors->has('g-recaptcha-response'))
-                  <small class="text-danger">{{ $errors->first('g-recaptcha-response') }}</small>
-                  @endif
+                     <small id="captcha-error" class="text-danger d-none fw-bold">Por favor completa el captcha</small>
                   </div>
 
                   <div class="row">
@@ -102,15 +100,32 @@
 
 <!-- Sweet alert -->
 <x-alert />
-@endsection @pushOnce('script')
-<script>
-   function togglePasswordVisibility() {
-      let passwordField = document.getElementById("password");
-      if (passwordField.type === "password") {
-         passwordField.type = "text";
-      } else {
-         passwordField.type = "password";
+@endsection
+
+@pushOnce('script')
+   {!! NoCaptcha::renderJs() !!}
+   <script>
+      function captchaOk() {
+            document.getElementById('Boton').disabled = false;
+            document.getElementById('captcha-error').classList.add('d-none');
+        }
+
+        $form = document.getElementById('login');
+        $form.addEventListener('submit', function (e) {
+            if (grecaptcha.getResponse() === '') {
+                e.preventDefault();
+                habilitarSubmit($form);
+                document.getElementById('captcha-error').classList.remove('d-none');
+            }
+        });
+
+      function togglePasswordVisibility() {
+         let passwordField = document.getElementById("password");
+         if (passwordField.type === "password") {
+            passwordField.type = "text";
+         } else {
+            passwordField.type = "password";
+         }
       }
-   }
-</script>
+   </script>
 @endpushOnce

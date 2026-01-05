@@ -6,16 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 
 class TiquetesImpresos extends Model
 {
-    protected $connection = 'mysql-gestion-pasajes';
-    protected $table = "tiquetes_impresos";
-    protected $primaryKey = "IdPrint";
+  protected $connection = 'mysql-gestion-pasajes';
+  protected $table = "tiquetes_impresos";
+  protected $primaryKey = "IdPrint";
 
-    public $timestamps = false;
+  public $timestamps = false;
 
-    protected $casts = [
-        'PrecioBase' => 'float',
-        'Descuento' => 'float',
-        'PrecioTotal' => 'float',
-    ];
-    
+  protected $casts = [
+    'PrecioBase' => 'float',
+    'Descuento' => 'float',
+    'PrecioTotal' => 'float',
+  ];
 }

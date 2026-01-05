@@ -4,17 +4,30 @@
 // Parámetros:
 // - url: La URL de la página que se quiere mostrar en el modal.
 // - titulo: (Opcional) El título del modal. Por defecto, se muestra como "Contenido".
-// - formularioId: (Opcional) El ID del formulario para activar las validaciones (solo si el modal contiene un formulario).
+// - formularioId: (Opcional) El ID del formulario para activar las validaciones con AJAX.
 // - size: (Opcional) El tamaño del modal. Puede ser "modal-xl", "modal-lg", "modal-sm" o ninguno (para tamaño normal).
 
 import { mostrarToast } from "./utils";
 
-
 function cargarModal(url, titulo = "", formularioId = null, size = null, type = "POST") {
+    // Validar elementos DOM requeridos
     const $modal = $("#globalModal");
     const $modalContent = $("#globalModalContent");
     const $modalTitle = $("#globalModalTitle");
     const $modalDialog = $modal.find(".modal-dialog");
+
+    if (!$modal.length || !$modalContent.length || !$modalTitle.length) {
+        console.error("No se encontraron los elementos del modal requeridos en el DOM.");
+        mostrarToast("Error: Modal no disponible", "error");
+        return;
+    }
+
+    // Validar URL básica
+    if (!url || typeof url !== 'string') {
+        console.error("URL no válida proporcionada a cargarModal");
+        mostrarToast("Error: URL no válida", "error");
+        return;
+    }
 
     // Mostrar un loader mientras se carga el contenido
     $modalContent.html(`
@@ -34,50 +47,87 @@ function cargarModal(url, titulo = "", formularioId = null, size = null, type = 
 
     $.get(url)
         .done((response) => {
-            if (!$modalContent.length) {
-                console.error("No se encontró el contenedor #modalContent en el modal.");
-                return;
+            if(response.error){
+                $modalContent.html(`
+                <div class="alert alert-danger m-3">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Error:</strong> ${response.message}
+                </div>
+                `);
+
+                mostrarToast(response.message, "danger");
             }
 
             // Agregar contenido y guardar URL cargada
             $modalContent.html(response);
             $modalContent.data("loaded", url);
 
-            // Inicializar select2 solo si aún no está activado
-            if ($('.select2').data('select2') === undefined) {
-                $('.select2').select2({
-                    theme: 'bootstrap-5',
-                    dropdownParent: $modal,
-                    width: '100%'
-                });
-            }
-
-            // Validar formulario si se proporciona
-            if (formularioId) {
-                validarFormulario(formularioId, type);
-            }
-
-            // Inicializar listas duales solo si existen en el DOM
-            if ($modal.find('#permissions').length) {
-                bootstrapDualListInit('#permissions', 'Permisos');
-            }
-            if ($modal.find('#roles').length) {
-                bootstrapDualListInit('#roles', 'Roles');
-            }
-
-            if ($modal.find('#permisosRol').length) {
-                bootstrapDualListInit('#permisosRol', 'Permisos');
-            }
+            // Inicializar componentes del modal
+            inicializarComponentesModal($modal, formularioId, type);
         })
-        .fail((textStatus, errorThrown) => {
-            console.error("Error al cargar el contenido:", textStatus, errorThrown);
-            mostrarToast("Error al cargar el contenido", "error")
+        .fail((xhr, textStatus, errorThrown) => {
+            console.error("Error al cargar el contenido:", { 
+                status: xhr.status, 
+                textStatus, 
+                errorThrown, 
+                url 
+            });
+            
+            const errorMsg = xhr.status === 404 
+                ? "Página no encontrada" 
+                : xhr.status === 500 
+                    ? "Error interno del servidor" 
+                    : "Error al cargar el contenido";
+            
+            $modalContent.html(`
+                <div class="alert alert-danger m-3">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Error:</strong> ${errorMsg}
+                </div>
+            `);
+            
+            mostrarToast(errorMsg, "error");
         });
 
-    // Resetear el estado del modal cuando se cierra
-    $modal.on('hidden.bs.modal', function () {
+    // Resetear el estado del modal cuando se cierra (solo una vez)
+    $modal.off('hidden.bs.modal.cargarModal').on('hidden.bs.modal.cargarModal', function () {
         $modalContent.html('');
         $modalContent.removeData("loaded");
+        $modalDialog.removeClass("modal-xl modal-lg modal-sm"); // Resetear tamaño
+    });
+}
+
+function inicializarComponentesModal($modal, formularioId, type) {
+    // Inicializar select2 solo si aún no está activado
+    const $select2Elements = $modal.find('.select2');
+    if ($select2Elements.length && $select2Elements.data('select2') === undefined) {
+        $select2Elements.select2({
+            theme: 'bootstrap-5',
+            dropdownParent: $modal,
+            width: '100%'
+        });
+    }
+
+    // Validar formulario si se proporciona
+    if (formularioId) {
+        validarFormulario(formularioId, type);
+    }
+
+    // Inicializar listas duales
+    inicializarListasDuales($modal);
+}
+
+function inicializarListasDuales($modal) {
+    const listasConfig = [
+        { selector: '#permissions', nombre: 'Permisos' },
+        { selector: '#roles', nombre: 'Roles' },
+        { selector: '#permisosRol', nombre: 'Permisos' }
+    ];
+
+    listasConfig.forEach(config => {
+        if ($modal.find(config.selector).length) {
+            bootstrapDualListInit(config.selector, config.nombre);
+        }
     });
 }
 
@@ -93,13 +143,12 @@ function bootstrapDualListInit(id, nombre) {
     });
 
     $('.box1').attr('data-title', 'Todos los ' + nombre + ' disponibles');
-    $('.box2').attr('data-title',  nombre + ' asignados');
+    $('.box2').attr('data-title', nombre + ' asignados');
     $('.moveall').text('Agregar todos »');
     $('.removeall').text('« Quitar todos');
 }
 
-function validarFormulario(form, TYPE="POST") {
-
+function validarFormulario(form, TYPE = "POST") {
     $.extend($.validator.messages, {
         required: "Este campo es obligatorio.",
         email: "Por favor ingrese un email válido.",
@@ -112,6 +161,13 @@ function validarFormulario(form, TYPE="POST") {
         submitHandler: function (form) {
             const $form = $(form);
             const URL = $form.attr("action");
+            
+            if (!URL) {
+                habilitarSubmit(form);
+                mostrarToast("Error: No se encontró la URL del formulario", "error");
+                return;
+            }
+
             const formData = new FormData(form);
 
             $.ajax({
@@ -122,17 +178,17 @@ function validarFormulario(form, TYPE="POST") {
                 contentType: false,
                 dataType: "json",
                 success: function (response) {
-                    $("#innerHtml").html(''); 
+                    $("#innerHtml").html('');
 
-                    //caso 1: Se retorne un html -> se carga el html en la misma vista
+                    // Caso 1: Se retorne un html -> se carga el html en la misma vista
                     if (response.success && response.html) {
                         $("#innerHtml").html(response.html);
 
-                    //caso 2: No se retorne un redirect -> se queda en la misma vista y se muestra un toast con los datos
-                    }else if(response.redirect == '#'){
+                    // Caso 2: No se retorne un redirect -> se queda en la misma vista y se muestra un toast con los datos
+                    } else if (response.redirect == '#') {
                         mostrarToast(response.title, response.type);
 
-                    //casi 3: Se retorna un redirect -> se redirige y al recargar se carga un toast con los datos en session
+                    // Caso 3: Se retorna un redirect -> se redirige y al recargar se carga un toast con los datos en session
                     } else {
                         sessionStorage.setItem('toastTitle', response.title);
                         sessionStorage.setItem('toastType', response.type);
@@ -144,11 +200,15 @@ function validarFormulario(form, TYPE="POST") {
                 error: function (xhr) {
                     $(".error").text("");
                     if (xhr.status === 422) {
-                        let errors = xhr.responseJSON.errors;
-                        $.each(errors, function (key, value) {
-                            $("#error-" + key).text(value[0]);
-                            $("#" + key).addClass("is-invalid");
-                        });
+                        let errors = xhr.responseJSON?.errors;
+                        if (errors) {
+                            $.each(errors, function (key, value) {
+                                $("#error-" + key).text(value[0]);
+                                $("#" + key).addClass("is-invalid");
+                            });
+                        }
+                    } else {
+                        mostrarToast("Error al procesar el formulario", "danger");
                     }
                     habilitarSubmit(form);
                 }
@@ -156,7 +216,7 @@ function validarFormulario(form, TYPE="POST") {
         }
     });
 
-    //Limpia los errores al editar o agregar un nuevo registro
+    // Limpia los errores al editar o agregar un nuevo registro
     $("input, select").on("input", function () {
         $(this).removeClass("is-invalid");
         $("#error-" + $(this).attr("id")).text("");

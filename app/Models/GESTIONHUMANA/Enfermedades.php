@@ -8,13 +8,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Enfermedades extends Model
 {
-    protected $connection = 'mysql-gestion-humana';
-    protected $table = "Enfermedades";
-    protected $primaryKey = "IdEnfermedad";
+  protected $connection = 'mysql-gestion-humana';
+  protected $table = "Enfermedades";
+  protected $primaryKey = "IdEnfermedad";
 
-    public $timestamps = false;
+  public $timestamps = false;
 
-    public function usuarioRegistro(): BelongsTo{
-        return $this->belongsTo(User::class,'IdUserReg','IdUsuario');
-    }
+  public function usuarioRegistro(): BelongsTo
+  {
+    return $this->belongsTo(User::class, 'IdUserReg', 'IdUsuario');
+  }
 }

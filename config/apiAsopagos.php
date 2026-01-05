@@ -22,4 +22,6 @@ return [
 
     'token_cache_key' => 'api_asopagos_token2',
     'token_cache_minutes' => 30,
+
+    'test_mode' => env('API_ASOPAGOS_TEST_MODE', false),
 ];

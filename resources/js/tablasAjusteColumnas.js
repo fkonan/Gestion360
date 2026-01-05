@@ -4,22 +4,22 @@ function initColumnaAjuste(selector, opciones = {}) {
     let columnasOcultadas = [];
     let ajustando = false;
 
-     // Obtiene el contenedor con scroll horizontal
-    const getContainer = () => tabla.closest('.bootstrap-table').find('.fixed-table-body')[0];
+    // Guarda columnas ocultas para que generarDetalle pueda usarlas
+    tabla.data('columnasOcultas', () => columnasOcultadas);
 
-     // Verifica si existe scroll horizontal (indicando que el ancho es insuficiente)
+    // Contenedor de scroll horizontal
+    const getContainer = () => tabla.closest('.bootstrap-table').find('.fixed-table-body')[0];
     const tieneScrollHorizontal = () => {
         const container = getContainer();
         return container && container.scrollWidth > container.clientWidth;
     };
 
-     // Obtiene todas las columnas no protegidas para poder ocultarlas si es necesario
+    // Columnas que sí se pueden ocultar
     const getTodasLasColumnasNoProtegidas = () => {
         const columnas = tabla.bootstrapTable('getOptions')?.columns?.[0] || [];
         return columnas.filter(col => col.field && !columnasProtegidas.includes(col.field));
     };
 
-    // Determina si al menos una fila tiene detalle visible
     const hayDetalleVisible = () => {
         const filas = tabla.bootstrapTable('getData') || [];
         return filas.some(row => {
@@ -28,24 +28,17 @@ function initColumnaAjuste(selector, opciones = {}) {
         });
     };
 
-    /**
-     * Ajusta dinámicamente las columnas según el espacio visible
-     * También activa o desactiva el detalle si hay contenido para mostrar.
-     */
     const ajustarColumnas = () => {
         if (ajustando) return;
         ajustando = true;
 
-         // Esperar al próximo repintado para no forzar recálculos de layout
         requestAnimationFrame(() => {
             columnasOcultadas = [];
             tabla.bootstrapTable('showAllColumns');
 
-            // Ordenar de derecha a izquierda para ocultar las menos prioritarias
+            // Ocultar de derecha a izquierda
             const columnasOrdenadasParaOcultar = getTodasLasColumnasNoProtegidas().map(c => c.field).reverse();
             let i = 0;
-
-            // Oculta columnas hasta que desaparezca el scroll horizontal
             while (i < columnasOrdenadasParaOcultar.length && tieneScrollHorizontal()) {
                 const colField = columnasOrdenadasParaOcultar[i];
                 tabla.bootstrapTable('hideColumn', colField);
@@ -53,45 +46,31 @@ function initColumnaAjuste(selector, opciones = {}) {
                 i++;
             }
 
-             // Obtener si debe o no mostrarse el detalle por fila
+            // Cambiar detailView sin destruir tabla
             const opcionesActuales = tabla.bootstrapTable('getOptions');
             const debeMostrarDetalle = hayDetalleVisible();
 
-            // Solo recrear la tabla si ha cambiado la configuración de detalle
             if (opcionesActuales.detailView !== debeMostrarDetalle) {
-                const data = tabla.bootstrapTable('getData');
-                const prevOnPostBody = opcionesActuales['onPostBody'];
-
-                tabla.bootstrapTable('destroy');
-                tabla.bootstrapTable({
-                    ...opcionesActuales,
-                    data,
-                    detailView: debeMostrarDetalle,
+                tabla.bootstrapTable('refreshOptions', {
+                    detailView: debeMostrarDetalle
                 });
-
-                if (prevOnPostBody && typeof prevOnPostBody === 'function') {
-                    tabla.on('post-body.bs.table', prevOnPostBody);
-                }
-
-                tabla.on('post-body.bs.table', ajustarColumnas);
             }
 
             ajustando = false;
         });
     };
 
-    // Ejecutar ajuste después de que se renderice el cuerpo de la tabla
+    // Ajustar después de cargar/actualizar datos
     tabla.on('post-body.bs.table', ajustarColumnas);
 
-    // Aplicar ajuste al redimensionar la ventana (con throttling)
+    // Ajustar en resize (con throttling)
     let resizeTimeout;
     $(window).on('resize', () => {
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(ajustarColumnas, 100);
     });
-
-    tabla.data('columnasOcultas', () => columnasOcultadas);
 }
+
 
 export function generarDetalle(selector, row, opcionesFormatter = {}) {
     const tabla = $(selector);

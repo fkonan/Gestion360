@@ -8,14 +8,14 @@ use Illuminate\Support\Facades\Auth;
 
 class ViewServiceProvider extends ServiceProvider
 {
-    public function boot()
-    {
-        // Para TODAS las vistas
-        View::composer('layouts.dashboard', function ($view) {
-            if (Auth::check()) {
-                $user = Auth::user()->loadMissing('persona', 'ultimaSesion');
-                view()->share('user', $user);
-            }
-        });
-    }
+  public function boot()
+  {
+    // Para TODAS las vistas
+    View::composer('layouts.dashboard', function ($view) {
+      if (Auth::check()) {
+        $user = Auth::user()->loadMissing('persona', 'ultimaSesion');
+        view()->share('user', $user);
+      }
+    });
+  }
 }

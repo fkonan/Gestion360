@@ -28,9 +28,21 @@ class Permisos
     const ADMINISTRACION_PERSONAS_CREAR = 'administracion.personas.crear';
     const ADMINISTRACION_PERSONAS_ACTUALIZAR = 'administracion.personas.actualizar';
 
+    // ROLES REPORTES
     const ADMINISTRACION_REPORTES_ACCEDER = 'administracion.reportes.acceder';
     const ADMINISTRACION_REPORTES_CONDUCTORES = 'administracion.reportes.reportes_conductores';
+    const ADMINISTRACION_REPORTES_CARGA = 'administracion.reportes.reportes_carga';
     const ADMINISTRACION_REPORTES_PASAJES = 'administracion.reportes.reportes_pasajes';
+    const ADMINISTRACION_REPORTES_EMPLEADOS = 'administracion.reportes.reportes_empleados';
+    const ADMINISTRACION_REPORTES_PERSONAS = 'administracion.reportes.reportes_personas';
+    const ADMINISTRACION_REPORTES_CARTERA = 'administracion.reportes.reportes_cartera';
+    const ADMINISTRACION_REPORTES_AUDITORIA = 'administracion.reportes.reportes_auditoria';
+    const ADMINISTRACION_REPORTES_CRUDO = 'administracion.reportes.reportes_crudo';
+    const ADMINISTRACION_REPORTES_FINANCIERA = 'administracion.reportes.reportes_financiera';
+    const ADMINISTRACION_REPORTES_FUNDACION_DE_LA_MUJER = 'administracion.reportes.reportes_fundacion_de_la_mujer';
+    const ADMINISTRACION_REPORTES_CONTABILIDAD = 'administracion.reportes.reportes_contabilidad';
+    const ADMINISTRACION_REPORTES_FICHA_TECNICA = 'administracion.reportes.reportes_ficha_tecnica';
+    const ADMINISTRACION_REPORTES_GIROS_Y_CONVENIOS_EMPRESARIALES = 'administracion.reportes.reportes_giros_y_convenios_empresariales';
 
     const ADMINISTRACION_EMPLEADOS_ACCEDER = 'administracion.empleados.acceder';
 
@@ -55,4 +67,8 @@ class Permisos
 
     // PAGOS Y RECAUDOS
     const PAGOS_Y_RECAUDOS_ACCEDER = 'pagos_y_recaudos.acceder';
+    const PAGOS_Y_RECAUDOS_PAGOS_CONVENIOS_ACCEDER = 'pagos_y_recaudos.pagos_convenios.acceder';
 }
+
+
+

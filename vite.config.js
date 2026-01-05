@@ -3,8 +3,11 @@ import laravel from 'laravel-vite-plugin';
 
 export default defineConfig({
 
-   /* base: '/gestion/autogestion2/public/build/',  */
-    base: '/gestion/public/build/',
+    /* Pruebas */
+    base: '/gestion/autogestion2/public/build/',
+
+    /* Produccion */
+    /* base: '/gestion/public/build/', */
 
     plugins: [
         laravel({
