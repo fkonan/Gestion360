@@ -23,7 +23,7 @@ Route::get('/clear', function () {
     /* Artisan::call('route:cache'); */
     return "Cleared!";
 })->middleware(['auth', 'can:'.Roles::SUPER_ADMIN])->name('clear');
- 
+
 
 //Rutas Modulo Gestion Pasajes
 Route::prefix("gestionPasajes")->middleware(['auth', 'permisos:'.Permisos::GESTION_PASAJES_ACCEDER,'modulo.activo:13'])->group(function(){
@@ -50,3 +50,4 @@ require __DIR__.'/modulos/configuracion.php';
 require __DIR__.'/modulos/gestion-rrhh.php';
 require __DIR__.'/modulos/gestionWeb.php';
 require __DIR__.'/modulos/pagosRecaudos.php';
+require __DIR__.'/modulos/huellero.php';

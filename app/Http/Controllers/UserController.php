@@ -17,163 +17,164 @@ use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
-    public function index(){
-        return view("usuarios.index");
-    }
+   public function index()
+   {
+      return view("usuarios.index");
+   }
 
-    public function cambiarEstado($id){
-        try{
-            $resultado = UsuarioService::cambiarEstado($id, Auth::id());
-            return response()->json($resultado);
+   public function cambiarEstado($id)
+   {
+      try {
+         $resultado = UsuarioService::cambiarEstado($id, Auth::id());
+         return response()->json($resultado);
+      } catch (Exception $e) {
+         Log::error('Error al actualizar el estado del usuario: ' . $e->getMessage());
+         return response()->json([
+            'message' => 'Error al actualizar el estado del usuario',
+            'type' => 'danger'
+         ]);
+      }
+   }
 
-        }catch(Exception $e){
-            Log::error('Error al actualizar el estado del usuario: ' . $e->getMessage());
-            return response()->json([
-                'message' => 'Error al actualizar el estado del usuario',
-                'type' => 'danger'
-            ]);
-        }
-    }
+   public function cargarDatos(Request $request)
+   {
 
-    public function cargarDatos(Request $request){
+      try {
+         //Paginacion y parametros de ordenamiento
+         $limit = $request->get('limit', 25);
+         $offset = $request->get('offset', 0);
+         $search = $request->get('search');
+         $order = $request->get('order', 'desc');
+         $sort = $request->get('sort');
 
-        try{
-            //Paginacion y parametros de ordenamiento
-            $limit = $request->get('limit', 25);
-            $offset = $request->get('offset', 0);
-            $search = $request->get('search');
-            $order = $request->get('order', 'desc');
-            $sort = $request->get('sort');
+         //Traer documentos válidos desde Oracle (los empleados con estado 1 y estborrado 0)
+         $documentosEmpleados = EmpleadoService::documentosEmpleadosValidos();
 
-            //Traer documentos válidos desde Oracle (los empleados con estado 1 y estborrado 0)
-            $documentosEmpleados = EmpleadoService::documentosEmpleadosValidos();
-          
-            $query = $this->buildUsuariosQuery($documentosEmpleados, $search, $sort, $order);
-            $total = $query->count();
+         $query = $this->buildUsuariosQuery($documentosEmpleados, $search, $sort, $order);
+         $total = $query->count();
 
-            //Obtener solo los paginados
-            $usuariosPaginados = $query
-                ->skip($offset)
-                ->take($limit)
-                ->get();
+         //Obtener solo los paginados
+         $usuariosPaginados = $query
+            ->skip($offset)
+            ->take($limit)
+            ->get();
 
-            //Solo traemos los centros de costo de esos usuarios visibles
-            $identificacionesPagina = $usuariosPaginados->pluck('persona.PerNumDoc')->toArray();
-            $centrosCosto = EmpleadoService::obtenerCentrosCostoMasivos($identificacionesPagina);
-    
-            //Formar los datos de la respuesta
-            $rows = $usuariosPaginados->map(function ($item) use ($centrosCosto) {
-                $doc = $item->persona->PerNumDoc;
+         //Solo traemos los centros de costo de esos usuarios visibles
+         $identificacionesPagina = $usuariosPaginados->pluck('persona.PerNumDoc')->toArray();
+         $centrosCosto = EmpleadoService::obtenerCentrosCostoMasivos($identificacionesPagina);
 
-                return [
-                    'PerNumDoc' => $doc,
-                    'nombreCompleto' => $item->persona->PerNombres . ' ' . $item->persona->PerApellidos,
-                    'fechaHoraRegistro' => $item->UsuFecReg . ' ' . $item->UsuHorReg,
-                    'estado' => $item->UsuarioEstado,
-                    'IdUsuario' => $item->IdUsuario,
-                    'rol' => $item->roles->pluck('name')->first() ?: 'SIN ROL',
-                    'centroCosto' => $centrosCosto[$doc] ?? 'No asignado',
-                ];
-            });
+         //Formar los datos de la respuesta
+         $rows = $usuariosPaginados->map(function ($item) use ($centrosCosto) {
+            $doc = $item->persona->PerNumDoc;
 
-            return response()->json([
-                'total' => $total,
-                'rows' => $rows
-            ]);
+            return [
+               'PerNumDoc' => $doc,
+               'nombreCompleto' => $item->persona->PerNombres . ' ' . $item->persona->PerApellidos,
+               'fechaHoraRegistro' => $item->UsuFecReg . ' ' . $item->UsuHorReg,
+               'estado' => $item->UsuarioEstado,
+               'IdUsuario' => $item->IdUsuario,
+               'rol' => $item->roles->pluck('name')->first() ?: 'SIN ROL',
+               'centroCosto' => $centrosCosto[$doc] ?? 'No asignado',
+            ];
+         });
 
-        }
-       catch(Exception $e){
-            Log::error('Error al cargar los datos de los usuarios: ' . $e->getMessage());
-        }
-    }
+         return response()->json([
+            'total' => $total,
+            'rows' => $rows
+         ]);
+      } catch (Exception $e) {
+         Log::error('Error al cargar los datos de los usuarios: ' . $e->getMessage());
+      }
+   }
 
-    private function buildUsuariosQuery(array $documentosEmpleados, ?string $search, ?string $sort, string $order)
-    {
-        $query = User::with(['persona', 'roles'])
-            ->whereHas('persona', fn($q) => $q->whereIn('PerNumDoc', $documentosEmpleados));
+   private function buildUsuariosQuery(array $documentosEmpleados, ?string $search, ?string $sort, string $order)
+   {
+      $query = User::with(['persona', 'roles'])
+         ->whereHas('persona', fn($q) => $q->whereIn('PerNumDoc', $documentosEmpleados));
 
-        if (!empty($search)) {
-            $query->where(function ($q) use ($search) {
-                $q->where('UsuFecReg', 'like', "%$search%")
-                    ->orWhere('UsuHorReg', 'like', "%$search%")
-                    ->orWhereHas('persona', function ($q2) use ($search) {
-                        $q2->where('PerNumDoc', 'like', "%$search%")
-                            ->orWhere(DB::raw("CONCAT(PerNombres, ' ', PerApellidos)"), 'like', "%$search%");
-                    });
-            });
-        }
+      if (!empty($search)) {
+         $query->where(function ($q) use ($search) {
+            $q->where('UsuFecReg', 'like', "%$search%")
+               ->orWhere('UsuHorReg', 'like', "%$search%")
+               ->orWhereHas('persona', function ($q2) use ($search) {
+                  $q2->where('PerNumDoc', 'like', "%$search%")
+                     ->orWhere(DB::raw("CONCAT(PerNombres, ' ', PerApellidos)"), 'like', "%$search%");
+               });
+         });
+      }
 
-        if ($sort === 'fechaHoraRegistro') {
-            $query->orderBy('UsuFecReg', $order)
-                ->orderBy('UsuHorReg', $order);
-        }
+      if ($sort === 'fechaHoraRegistro') {
+         $query->orderBy('UsuFecReg', $order)
+            ->orderBy('UsuHorReg', $order);
+      }
 
-        return $query;
-    }
+      return $query;
+   }
 
-    public function create(){
-        $personas = Persona::all();
-        $roles = Role::all();
-        return view("usuarios.crearUsuario", compact("personas","roles"));
-    }
+   public function create()
+   {
+      $personas = Persona::all();
+      $roles = Role::all();
+      return view("usuarios.crearUsuario", compact("personas", "roles"));
+   }
 
-    public function store(Request $request){
+   public function store(Request $request)
+   {
 
-        $validator = Validator::make($request->all(), [
-            'idPersona' => 'required|unique:_usuarios,idPersona',
-        ],[
-            'idPersona.required' => 'Debe seleccionar una persona',
-            'idPersona.unique' => 'La persona seleccionada ya tiene un usuario asignado',
-        ]);
+      $validator = Validator::make($request->all(), [
+         'idPersona' => 'required|unique:_usuarios,idPersona',
+      ], [
+         'idPersona.required' => 'Debe seleccionar una persona',
+         'idPersona.unique' => 'La persona seleccionada ya tiene un usuario asignado',
+      ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'errors' => $validator->errors()
-            ], 422);
-        }
+      if ($validator->fails()) {
+         return response()->json([
+            'errors' => $validator->errors()
+         ], 422);
+      }
 
-        try{
-            $service = new UsuarioService();
-            $service->crearUsuarioConRol($request->only('idPersona', 'rol'));
-            
-            return toastModal("Usuario creado exitosamente","success",route('usuarios.index'));
-    
-        }catch(Exception $e){
-            Log::error('Error al crear el usuario: ' . $e->getMessage());
-            return toastModal("Error al crear el usuario","error",route('usuarios.index'));
-        }
-    }
+      try {
+         $service = new UsuarioService();
+         $service->crearUsuarioConRol($request->only('idPersona', 'rol'));
 
-    public function edit($id){
-        $usuario = User::findOrFail($id);
-        return view("usuarios.editarUsuario",compact("usuario"));
-    }
+         return toastModal("Usuario creado exitosamente", "success", route('usuarios.index'));
+      } catch (Exception $e) {
+         Log::error('Error al crear el usuario: ' . $e->getMessage());
+         return toastModal("Error al crear el usuario", "error", route('usuarios.index'));
+      }
+   }
 
-    public function update(Request $request, $id){
-        $validator = Validator::make($request->all(), [
-            'UsuarioEstado' => 'required',
-            'Verificado' => 'required',
-        ]);
+   public function edit($id)
+   {
+      $usuario = User::findOrFail($id);
+      return view("usuarios.editarUsuario", compact("usuario"));
+   }
 
-        if ($validator->fails()) {
-            return response()->json([
-                'errors' => $validator->errors()
-            ], 422);
-        }
+   public function update(Request $request, $id)
+   {
+      $validator = Validator::make($request->all(), [
+         'UsuarioEstado' => 'required',
+         'Verificado' => 'required',
+      ]);
 
-        try{
-            $data = $request->all();
-            if ($request->has('Password')) {
-                $data['Password'] = Hash::make($request->Password);
-            }
+      if ($validator->fails()) {
+         return response()->json([
+            'errors' => $validator->errors()
+         ], 422);
+      }
 
-            User::findOrFail($id)->update($data);
-            return toastModal("Usuario modificado exitosamente","success",route('usuarios.index'));
-    
-        }catch(Exception $e){
-            Log::error('Error al modificar el usuario: ' . $e->getMessage());
-            return toastModal("Error al modificar el usuario","error",route('usuarios.index'));
-        }
-        
-    }
+      try {
+         $data = $request->all();
+         if ($request->has('Password')) {
+            $data['Password'] = Hash::make($request->Password);
+         }
+
+         User::findOrFail($id)->update($data);
+         return toastModal("Usuario modificado exitosamente", "success", route('usuarios.index'));
+      } catch (Exception $e) {
+         Log::error('Error al modificar el usuario: ' . $e->getMessage());
+         return toastModal("Error al modificar el usuario", "error", route('usuarios.index'));
+      }
+   }
 }

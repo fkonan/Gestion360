@@ -23,6 +23,7 @@ class LoginController extends Controller
 
    public function login(Request $request)
    {
+      // dd(Hash::make(123456789));
       $request->validate([
          'identificacion' => 'required|numeric',
          'password' => 'required|string',

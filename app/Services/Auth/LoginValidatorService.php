@@ -7,10 +7,10 @@ use App\Models\GESTIONADMIN\PersonaDatos;
 use App\Models\User;
 use App\Services\EmpleadoService;
 use Auth;
-use DB;
-use Hash;
+use Illuminate\Support\Facades\DB;
 use Exception;
-use Log;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Spatie\Permission\Models\Role;
 class LoginValidatorService
 {
@@ -34,7 +34,6 @@ class LoginValidatorService
    public function validarLogtrans(string $identificacion, string $password)
    {
       $persona = EmpleadoService::esEmpleadoActivo($identificacion, true);
-      dd($persona);
       if (!$persona) {
          return ['message' => 'Solo los empleados activos pueden iniciar sesión.', 'type' => 'danger'];
       }
