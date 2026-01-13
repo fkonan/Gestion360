@@ -1,7 +1,7 @@
 <?php
 
 use App\Constants\Permisos;
-use App\Http\Controllers\MapaProcesosController;
+use App\Modules\SIG\Http\Controllers\MapaProcesosController;
 use Illuminate\Support\Facades\Route;
 
 // Rutas SIG
@@ -36,6 +36,24 @@ Route::prefix('sig')->middleware(['auth', 'permisos:' . Permisos::SIG_ACCEDER, '
 
     Route::post('/mapa-procesos/documento/{id}/emision', [MapaProcesosController::class, 'guardarEmision'])
       ->name('mapa-procesos.documento.emision.guardar');
+  });
+
+  // Acciones de documento (editar)
+  Route::middleware('permisos:' . Permisos::SIG_MAPA_PROCESOS_EDITAR)->group(function () {
+    Route::get('/mapa-procesos/documento/{id}/editar', [MapaProcesosController::class, 'editarDocumento'])
+      ->name('mapa-procesos.documento.editar');
+
+    Route::post('/mapa-procesos/documento/{id}/actualizar', [MapaProcesosController::class, 'actualizarDocumento'])
+      ->name('mapa-procesos.documento.actualizar');
+  });
+
+  // Nuevo documento
+  Route::middleware('permisos:' . Permisos::SIG_MAPA_PROCESOS_CREAR)->group(function () {
+    Route::get('/mapa-procesos/documento/nuevo', [MapaProcesosController::class, 'crearDocumentoNuevo'])
+      ->name('mapa-procesos.documento.nuevo');
+
+    Route::post('/mapa-procesos/documento', [MapaProcesosController::class, 'guardarDocumentoNuevo'])
+      ->name('mapa-procesos.documento.guardar');
   });
 
   // Acciones de administracion (aprobar / devolver / rechazar / estado / pendientes / admin)

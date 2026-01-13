@@ -37,10 +37,6 @@ $.fn.modal = function (...args) {
 import Swal from 'sweetalert2';
 window.Swal = Swal;
 
-// XLSX (excels)
-import * as XLSX from 'xlsx';
-window.XLSX = XLSX;
-
 import { deshabilitarSubmit,
         habilitarSubmit,
         actualizarReloj,

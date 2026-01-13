@@ -13,11 +13,17 @@
                 <h4 class="mb-0">Mapa de Procesos</h4>
                 <small class="text-muted">Haga clic sobre cada área del mapa para navegar.</small>
             </div>
-
-            <a href="#"
-               class="btn btn-sm btn-outline-primary">
-                <i class="fas fa-cog me-1"></i> Administrar mapa
-            </a>
+            <div class="d-flex gap-2">
+                @permite(\App\Constants\Permisos::SIG_MAPA_PROCESOS_CREAR)
+                    <button
+                        type="button"
+                        class="btn btn-primary btn-sm"
+                        data-role="nuevo-documento"
+                        data-url="{{ route('mapa-procesos.documento.nuevo') }}">
+                        Nuevo documento
+                    </button>
+                @endpermite
+            </div>
         </div>
     </div>
 
@@ -110,9 +116,12 @@
 @endpushOnce
 
 @pushOnce('script')
+@vite(['resources/js/cargarModal.js'])
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     const baseRuta = "{{ url('/sig/mapa-procesos') }}";
+    const btnNuevo = document.querySelector('[data-role="nuevo-documento"]');
+
     document.querySelectorAll('.hotspot').forEach((boton) => {
       boton.addEventListener('click', () => {
         const area = boton.dataset.area;
@@ -121,6 +130,15 @@
         }
       });
     });
+
+    if (btnNuevo) {
+      btnNuevo.addEventListener('click', () => {
+        const url = btnNuevo.getAttribute('data-url');
+        if (url && window.cargarModal) {
+          window.cargarModal(url, 'Nuevo documento', '#formNuevoDocumento', 'modal-lg');
+        }
+      });
+    }
   });
 </script>
 @endpushOnce

@@ -115,7 +115,7 @@
             theadClasses: 'table-primary',
             rowStyle: function (row, index) {
               return {
-                classes: 'bg-primary text-white'
+                classes: 'text-white'
               }
             }
           });

@@ -31,12 +31,12 @@
 
       <thead class="table-primary m-0 p-0 border-bottom">
         <tr>
-          <th>Número</th>
-          <th>Reporte</th>
-          <th>Área</th>
-          <th>Descripción</th>
-          <th>Formato de salida</th>
-          <th>Acción</th>
+          <th data-field="consecutivo" data-sortable="true">N&uacute;mero</th>
+          <th data-field="titulo" data-sortable="true">Reporte</th>
+          <th data-field="area" data-sortable="true">&Aacute;rea</th>
+          <th data-field="descripcion" data-sortable="true">Descripci&oacute;n</th>
+          <th data-field="formato" data-sortable="true">Formato de salida</th>
+          <th data-field="acciones" data-align="center">Acci&oacute;n</th>
         </tr>
       </thead>
       <tbody id="lista-reportes">
@@ -60,11 +60,23 @@
 @vite(['resources/js/cargarModal.js'])
 <script>
   document.addEventListener("DOMContentLoaded", () => {
+    const extraerTexto = (valor) => {
+      if (valor === null || valor === undefined) return '';
+      if (typeof valor !== 'string') return String(valor);
+      const contenedor = document.createElement('div');
+      contenedor.innerHTML = valor;
+      return (contenedor.textContent || '').trim();
+    };
+
     initTablaBootstrapTable(
       '#reportesArea', {
         protegidas: ['']
       },
-      'detalleReporte'
+      'detalleReporte',
+      {
+        formato: (valor) => extraerTexto(valor),
+        acciones: (valor) => valor ?? ''
+      }
     );
   });
 </script>

@@ -23,6 +23,14 @@ export function actualizarReloj() {
     if(ampmLocal) ampmLocal.innerText = ampm;
 }
 
+let xlsxModulePromise;
+
+function cargarXlsx() {
+    if (!xlsxModulePromise) {
+        xlsxModulePromise = import('xlsx');
+    }
+    return xlsxModulePromise;
+}
 
 function mostrarLoader() {
     const loader = document.getElementById('fullscreen-loader');
@@ -105,12 +113,23 @@ export function exportarExcel(button, origenDatos, nombreArchivo, esURL = true) 
     const oldText = btnExportar.innerHTML;
     btnExportar.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Descargando...`;
 
+    const xlsxCarga = cargarXlsx();
+
     const finalizar = () => {
         btnExportar.disabled = false;
         btnExportar.innerHTML = oldText;
     };
 
-    const procesarExportacion = (data) => {
+    const procesarExportacion = async (data) => {
+        let XLSX;
+        try {
+            XLSX = await xlsxCarga;
+        } catch (error) {
+            mostrarToast('No se pudo cargar el modulo de Excel.', 'danger');
+            finalizar();
+            return;
+        }
+
         let ws = XLSX.utils.json_to_sheet(data);
         let wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Datos");

@@ -82,7 +82,10 @@
     return `
             <div class="col-md-12">
                 @permite(\App\Constants\Permisos::ADMINISTRACION_PERSONAS_ACTUALIZAR)
-                     <a class="text-decoration-none" href="${rutaPersona}"
+                     <a href="${rutaPersona}"
+                        class="sig-action-btn"
+                        data-title="Editar"
+                        aria-label="Editar"
                         style="cursor: pointer;"
                         title="Editar persona">
                         <img src="{{ asset('img/edit.png') }}" alt="Editar Persona" style="width: 32px; height: 32px;">
