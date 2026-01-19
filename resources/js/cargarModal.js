@@ -231,5 +231,62 @@ function validarFormulario(form, TYPE = "POST") {
     });
 }
 
+function abrirPdfModal(url, titulo = "Documento PDF", size = "modal-xl") {
+    const $modal = $("#globalModal");
+    const $modalContent = $("#globalModalContent");
+    const $modalTitle = $("#globalModalTitle");
+    const $modalDialog = $modal.find(".modal-dialog");
+
+    if (!$modal.length || !$modalContent.length || !$modalTitle.length) {
+        console.error("No se encontraron los elementos del modal requeridos en el DOM.");
+        mostrarToast("Error: Modal no disponible", "danger");
+        return;
+    }
+
+    if (!url || typeof url !== "string") {
+        console.error("URL no valida proporcionada a abrirPdfModal");
+        mostrarToast("Error: URL no valida", "danger");
+        return;
+    }
+
+    const separator = url.includes("#") ? "&" : "#";
+    const iframeUrl = `${url}${separator}toolbar=0&navpanes=0&scrollbar=1`;
+
+    if (size) {
+        $modalDialog.removeClass("modal-xl modal-lg modal-sm").addClass(size);
+    }
+
+    $modalTitle.text(titulo);
+    $modalContent.html(`
+        <div class="sig-pdf-viewer" oncontextmenu="return false">
+            <iframe class="sig-pdf-frame" src="${iframeUrl}" title="${titulo}" loading="lazy" oncontextmenu="return false"></iframe>
+        </div>
+    `);
+
+    const bloquearTeclas = (event) => {
+        const key = String(event.key || "").toLowerCase();
+        if ((event.ctrlKey || event.metaKey) && (key === "s" || key === "p")) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+    };
+
+    const bloquearMenu = (event) => {
+        event.preventDefault();
+    };
+
+    document.addEventListener("keydown", bloquearTeclas, true);
+    $modalContent.on("contextmenu.sigpdf", bloquearMenu);
+
+    $modal.modal("show");
+
+    $modal.off("hidden.bs.modal.pdfModal").on("hidden.bs.modal.pdfModal", function () {
+        document.removeEventListener("keydown", bloquearTeclas, true);
+        $modalContent.off("contextmenu.sigpdf", bloquearMenu);
+        $modalDialog.removeClass("modal-xl modal-lg modal-sm");
+    });
+}
+
 window.cargarModal = cargarModal;
 window.validarFormulario = validarFormulario;
+window.abrirPdfModal = abrirPdfModal;

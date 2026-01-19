@@ -73,7 +73,9 @@ class Permisos
     const SIG_ACCEDER = 'sig.acceder';
     const SIG_MAPA_PROCESOS_ACCEDER = 'sig.mapa_procesos.acceder';
     const SIG_MAPA_PROCESOS_ELIMINAR = 'sig.mapa_procesos.eliminar';
+    const SIG_MAPA_PROCESOS_CREAR = 'sig.mapa_procesos.crear';
     const SIG_MAPA_PROCESOS_CREAR_EMISION = 'sig.mapa_procesos.crear_emision';
     const SIG_MAPA_PROCESOS_VER_EMISION = 'sig.mapa_procesos.ver_emision';
+    const SIG_MAPA_PROCESOS_EDITAR = 'sig.mapa_procesos.editar';
+    const SIG_MAPA_PROCESOS_VER_TODOS = 'sig.mapa_procesos.ver_todos';
 }
-

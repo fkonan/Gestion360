@@ -129,6 +129,48 @@ class User extends Authenticatable
     });
   }
 
+  public function obtenerCodigoCentroCosto()
+  {
+    $key = 'centrocosto_codigo_' . $this->persona->PerNumDoc;
+
+    return Cache::remember($key, now()->addHours(6), function () {
+      return DB::connection('oracle')
+        ->table('per_contrato_persona as cp')
+        ->join('per_empresapersonas as ep', 'cp.pe_id_pe', '=', 'ep.pe_id_pe')
+        ->join('per_cargoccostos as cc', 'ep.cc_id', '=', 'cc.id')
+        ->join('per_centrocostos as ct', 'cc.ct_codigo', '=', 'ct.codigo')
+        ->where('cp.identificacion', $this->persona->PerNumDoc)
+        ->where('ep.activo', 1)
+        ->where('ep.estborrado', 0)
+        ->where('cc.activo', 1)
+        ->where('cc.estborrado', 0)
+        ->where('ct.estado', 1)
+        ->where('ct.estborrado', 0)
+        ->pluck('ct.codigo')
+        ->first();
+    });
+  }
+
+  public static function obtenerCentrosCostosActivos()
+  {
+    return Cache::remember('centros_costos_activos', now()->addHours(6), function () {
+      return DB::connection('oracle')
+        ->table('per_contrato_persona as cp')
+        ->join('per_empresapersonas as ep', 'cp.pe_id_pe', '=', 'ep.pe_id_pe')
+        ->join('per_cargoccostos as cc', 'ep.cc_id', '=', 'cc.id')
+        ->join('per_centrocostos as ct', 'cc.ct_codigo', '=', 'ct.codigo')
+        ->where('ep.activo', 1)
+        ->where('ep.estborrado', 0)
+        ->where('cc.activo', 1)
+        ->where('cc.estborrado', 0)
+        ->where('ct.estado', 1)
+        ->where('ct.estborrado', 0)
+        ->distinct()
+        ->orderBy('ct.descripcion')
+        ->get(['ct.descripcion', 'ct.codigo']);
+    });
+  }
+
   // Verificar contraseña con SHA-1
   public function validateCredentials($password)
   {

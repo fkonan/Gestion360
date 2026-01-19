@@ -100,16 +100,22 @@
     return `
             <div class="d-flex flex-row align-items-center justify-content-center gap-3" style="flex-wrap:nowrap;">
             @permite(\App\Constants\Permisos::ADMINISTRACION_USUARIOS_ASIGNAR_PERMISOS)
-                <a class="text-decoration-none"
+                <a
                 title="Gestionar permisos del usuario"
+                class="sig-action-btn"
+                data-title="Permisos usuario"
+                aria-label="Permisos usuario"
                 style="cursor: pointer;"
                 onclick="cargarModal('${urlPermisos}', 'Permisos usuario', '#formPermisoUsuario', 'modal-xl')">
-                <img src="https://autogestion.copetran.com.co/gestion_2/aFrame/library/bower_components/Ionicons/png/512/Permiso00.png" alt="Permisos" style="width: 30px; height: 30px;">
+                <img src="{{ asset('img/permisosEdit.png') }}" alt="Permisos" style="width: 30px; height: 30px;">
                 </a>
             @endpermite
             @permite(\App\Constants\Permisos::ADMINISTRACION_USUARIOS_ASIGNAR_ROLES)
-                <a class="text-decoration-none"
+                <a
                 title="Gestionar roles del usuario"
+                class="sig-action-btn"
+                data-title="Roles usuario"
+                aria-label="Roles usuario"
                 style="cursor: pointer;"
                 onclick="cargarModal('${urlRoles}', 'Roles usuario', '#formRolUsuario', 'modal-xl')">
                 <img src="{{ asset('img/rolesEdit.png') }}" alt="Roles" style="width: 32px; height: 32px;">
@@ -118,6 +124,9 @@
             @permite(\App\Constants\Permisos::ADMINISTRACION_USUARIOS_ACTUALIZAR)
                 <a
                 title="Editar usuario"
+                class="sig-action-btn"
+                data-title="Editar"
+                aria-label="Editar"
                 style="cursor: pointer;"
                 onclick="cargarModal('${urlUsuarios}', 'Editar Usuario', '#formEditUsuario', 'modal-lg')">
                 <img src="{{ asset('img/edit.png') }}" alt="Editar Usuario" style="width: 32px; height: 32px;">

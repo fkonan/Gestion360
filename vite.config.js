@@ -12,19 +12,32 @@ export default defineConfig({
     plugins: [
         laravel({
             input: ['resources/css/app.css',
+                    'resources/js/notificaciones.js',
                     'resources/css/custom.css',
                     'resources/css/mobile.css',
                     'resources/js/app.js',
                     'resources/js/cargarModal.js',
-                    'resources/js/utils.js',
-                    // Scripts del sistema de huellas
-                    'resources/js/huellero/laravel-fingerprint-sdk.js',
-                    'resources/js/huellero/integration-bridge.js',
-                    'resources/js/huellero/dashboard.js',
-                    'resources/js/huellero/captura.js',
-                    'resources/js/huellero/verificacion.js',
                 ],
             refresh: true,
         }),
     ],
+    build: {
+        rollupOptions: {
+            output: {
+                manualChunks(id) {
+                    if (!id.includes('node_modules')) {
+                        return;
+                    }
+                    if (id.includes('xlsx')) return 'xlsx';
+                    if (id.includes('bootstrap-table')) return 'vendor';
+                    if (id.includes('jquery')) return 'vendor';
+                    if (id.includes('jquery-validation')) return 'vendor';
+                    if (id.includes('select2')) return 'select2';
+                    if (id.includes('sweetalert2')) return 'sweetalert2';
+                    if (id.includes('bootstrap')) return 'bootstrap';
+                    return 'vendor';
+                },
+            },
+        },
+    },
 });

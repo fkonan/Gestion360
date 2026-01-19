@@ -11,7 +11,7 @@ class MenuComposer
   public function compose(View $view): void
   {
 
-    $modulos = Cache::remember('modulos_con_submodulos', now()->addHours(4), function () {
+    $modulos = Cache::remember('modulos_con_submodulos', now()->addHours(1), function () {
 
       // Aquí se puede definir el orden de los módulos según su ID
       $ordenPersonalizado = [

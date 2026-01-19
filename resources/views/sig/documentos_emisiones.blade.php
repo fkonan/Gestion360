@@ -19,12 +19,12 @@
     data-detail-formatter="detalleDocumentos">
     <thead class="table-primary text-center">
       <tr>
-        <th class="text-nowrap text-start">Emision</th>
+        <th class="text-nowrap text-start">Emisi&oacute;n</th>
         <th class="text-nowrap text-start">Comentario</th>
-        <th class="text-nowrap text-start">Elaboro</th>
+        <th class="text-nowrap text-start">Elabor&oacute;</th>
        <!--  <th class="text-nowrap text-start">Reviso</th>
         <th class="text-nowrap text-start">Aprueba</th> -->
-        <th class="text-nowrap text-start">Fecha aprobacion</th>
+        <th class="text-nowrap text-start">Fecha aprobaci&oacute;n</th>
         <th class="text-nowrap text-center">Acciones</th>
       </tr>
     </thead>
@@ -46,8 +46,11 @@
             @endif
           </td>
           <td class="text-center align-middle">
-            <button type="button" class="btn btn-link p-0" title="Ver PDF (proximamente)" disabled>
-              <img src="{{ asset('img/verPDF.png') }}" alt="PDF" style="width: 24px; height: 24px;">
+            <button type="button"
+              class="btn btn-link p-0 sig-action-btn"
+              data-title="PDF" aria-label="Ver PDF"
+              onclick="abrirPdfModal('{{ asset('storage/pdfs/documento_pruebas.pdf') }}', 'Documento PDF')">
+              <img src="{{ asset('img/descargarPDF.png') }}" alt="PDF" style="width: 32px; height: 32px;">
             </button>
           </td>
         </tr>
