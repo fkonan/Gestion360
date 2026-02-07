@@ -78,4 +78,11 @@ class Permisos
     const SIG_MAPA_PROCESOS_VER_EMISION = 'sig.mapa_procesos.ver_emision';
     const SIG_MAPA_PROCESOS_EDITAR = 'sig.mapa_procesos.editar';
     const SIG_MAPA_PROCESOS_VER_TODOS = 'sig.mapa_procesos.ver_todos';
+
+    // BIOMETRIA
+    const BIOMETRIA_GESTION_HUELLERO_ACCESO_PERSONAL = 'biometria.gestion_huellero.acceso_personal';
+    const BIOMETRIA_GESTION_HUELLERO_INGRESO_MANUAL = 'biometria.gestion_huellero.ingreso_manual';
+    const BIOMETRIA_GESTION_HUELLERO_ENROLL = 'biometria.gestion_huellero.enroll';
+    const BIOMETRIA_GESTION_HUELLERO_VERIFICAR = 'biometria.gestion_huellero.verificar';
+    const BIOMETRIA_GESTION_HUELLERO_DESCANSO_CONDUCTORES = 'biometria.gestion_huellero.descanso_conductores';
 }

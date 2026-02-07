@@ -73,5 +73,7 @@ require __DIR__ . '/modulos/administracion.php';
 require __DIR__ . '/modulos/configuracion.php';
 require __DIR__ . '/modulos/gestion-rrhh.php';
 require __DIR__ . '/modulos/gestionWeb.php';
+require __DIR__ . '/modulos/huellero.php';
+require __DIR__ . '/modulos/camara.php';
 require __DIR__ . '/modulos/pagosRecaudos.php';
 require __DIR__ . '/modulos/sig.php';

@@ -33,7 +33,7 @@
           <th class="text-nowrap" data-field="Documento" data-sortable="true">Identificación</th>
           <th class="text-nowrap" data-field="Código" data-sortable="true">Código</th>
           <th class="text-nowrap" data-field="Cargo" data-sortable="true">Cargo</th>
-          <th class="text-nowrap" data-field="Nombre Política" data-sortable="true">Política firmada</th>
+          <th class="text-nowrap" data-field="Nombre Política" data-sortable="true">Documento firmado</th>
           <th class="text-nowrap" data-field="Fecha de Firma" data-sortable="true">Fecha de firma</th>
           <th class="text-nowrap" data-field="Correo Electrónico" data-sortable="true">Correo</th>
           <th class="text-nowrap" data-field="acciones" data-formatter="comprobantePDF" class="text-center">Acciones</th>

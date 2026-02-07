@@ -49,9 +49,9 @@
 
         <x-reporteItem
           consecutivo="2"
-          titulo="Firma politicas"
+          titulo="Firma documentos"
           area="RRHH"
-          descripcion="Reporte de los empleados que han firmado las politicas de la empresa."
+          descripcion="Reporte de las firmas digitales de empleados y conductores."
           formato="EXCEL"
           onclick="cargarModal(`{{ route('empleados.firmaPoliticas') }}`, 'Reporte firma politicas','#firmaPoliticasForm','modal-lg')" />
 

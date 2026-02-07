@@ -53,6 +53,7 @@ class BloqueoPersonalEstadosCommand extends Command
                 'CONDUCTOR PASAJES',
                 'CONDUCTOR TURNADOR CACIQUE DE ORO'
               )
+              AND PoliticaId = 6
             GROUP BY DocCon
         ");
 
@@ -103,7 +104,7 @@ class BloqueoPersonalEstadosCommand extends Command
 
         $this->info('🚀 Insertando bloqueos en PE_PersonalEstados (SQL Server)...');
         $bloques = array_chunk($tripulantesFiltrados, 1000);
-        $tiposBloqueo = [28, 31, 32, 33];
+        $tiposBloqueo = [34];
         $totalInsertados = 0;
 
         foreach ($bloques as $index => $grupo) {
@@ -129,7 +130,7 @@ class BloqueoPersonalEstadosCommand extends Command
                                 :personal_id,
                                 :tipo_estado,
                                 GETDATE(),
-                                DATEADD(YEAR, 1, GETDATE()),
+                                DATEADD(YEAR, 2, GETDATE()),
                                 0,
                                 NULL,
                                 0.00,
