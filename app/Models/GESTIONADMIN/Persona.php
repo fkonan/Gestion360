@@ -3,6 +3,8 @@
 namespace App\Models\GESTIONADMIN;
 
 use App\Models\User;
+use App\Modules\Administration\Models\Municipio;
+use App\Modules\Administration\Models\TipoDocumento;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -43,7 +45,7 @@ class Persona extends Model
     return $this->belongsTo(Municipio::class, "PerLugNac", "IdMunicipio");
   }
 
-  public function minicipioExp(): BelongsTo
+  public function municipioExp(): BelongsTo
   {
     return $this->belongsTo(Municipio::class, "PerLugExp", "IdMunicipio");
   }

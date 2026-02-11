@@ -15,6 +15,7 @@ class PersonaDatos extends Model
   public $timestamps = false;
 
   protected $fillable = [
+    "IdPersona",
     "PerTelefono",
     "PerEmail",
     "PerDir",

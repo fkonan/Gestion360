@@ -1,0 +1,47 @@
+<?php
+
+namespace App\Modules\Administration\Models;
+
+use App\Models\GESTIONADMIN\Persona;
+use App\Modules\Configuracion\Models\Departamento;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class Municipio extends Model
+{
+    use HasFactory;
+
+    protected $connection = 'mysql-gestion-admin';
+
+    protected $table = '_municipios';
+
+    protected $primaryKey = 'IdMunicipio';
+
+    public $incrementing = false;
+
+    public $timestamps = false;
+
+    protected $fillable = [
+        'IdMunicipio',
+        'MunNon',
+        'MunNomMin',
+        'IdDepartamento',
+    ];
+
+    public function departamento(): BelongsTo
+    {
+        return $this->belongsTo(Departamento::class, 'IdDepartamento', 'IdDepartamento');
+    }
+
+    public function personasNac(): HasMany
+    {
+        return $this->hasMany(Persona::class, 'PerLugNac', 'IdMunicipio');
+    }
+
+    public function personasExp(): HasMany
+    {
+        return $this->hasMany(Persona::class, 'PerLugExp', 'IdMunicipio');
+    }
+}
