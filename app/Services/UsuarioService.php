@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Shared\Services;
+namespace App\Services;
 
 use App\Mail\CorreoCredenciales;
 use App\Models\User;

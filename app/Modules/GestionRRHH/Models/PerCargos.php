@@ -1,8 +1,7 @@
 <?php
 
-namespace App\Models\LOGTRANS;
+namespace App\Modules\GestionRRHH\Models;
 
-use App\Models\LOGTRANS\PerContratoPersona;
 use Illuminate\Database\Eloquent\Model;
 
 class PerCargos extends Model
@@ -15,9 +14,10 @@ class PerCargos extends Model
 
     public $timestamps = false;
 
-    public function perContratoPersona(){
-        return $this->hasOne(PerContratoPersona::class,'cargo','codigo')
-                ->where('estborrado',0)
-                ->where('estado',1);
+    public function perContratoPersona()
+    {
+        return $this->hasOne(PerContratoPersona::class, 'cargo', 'codigo')
+                ->where('estborrado', 0)
+                ->where('estado', 1);
     }
 }

@@ -8,16 +8,16 @@ class CamaraController extends Controller
 {
   public function index()
   {
-    return view('camara.index');
+    return view('camara::camara.index');
   }
 
   public function enroll()
   {
-    return view('camara.enroll');
+    return view('camara::camara.enroll');
   }
 
   public function recognize()
   {
-    return view('camara.recognize');
+    return view('camara::camara.recognize');
   }
 }

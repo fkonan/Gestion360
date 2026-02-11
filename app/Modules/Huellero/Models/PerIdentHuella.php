@@ -41,6 +41,24 @@ class PerIdentHuella extends Model
         'estborrado' => 'integer',
     ];
 
+    public const DEDOS = [
+        '01' => 'Pulgar derecho',
+        '02' => 'Índice derecho',
+        '03' => 'Medio derecho',
+        '04' => 'Anular derecho',
+        '05' => 'Menique derecho',
+        '06' => 'Pulgar izquierdo',
+        '07' => 'Indice izquierdo',
+        '08' => 'Medio izquierdo',
+        '09' => 'Anular izquierdo',
+        '10' => 'Menique izquierdo',
+    ];
+
+    public static function dedosDisponibles(): array
+    {
+        return self::DEDOS;
+    }
+
     /**
      * Relación con la tabla de personas
      */
@@ -70,20 +88,7 @@ class PerIdentHuella extends Model
      */
     public function getNombreDedeAttribute()
     {
-        $dedos = [
-            '01' => 'Pulgar derecho',
-            '02' => 'Índice derecho',
-            '03' => 'Medio derecho',
-            '04' => 'Anular derecho',
-            '05' => 'Meñique derecho',
-            '06' => 'Pulgar izquierdo',
-            '07' => 'Índice izquierdo',
-            '08' => 'Medio izquierdo',
-            '09' => 'Anular izquierdo',
-            '10' => 'Meñique izquierdo',
-        ];
-
-        return $dedos[$this->dedo] ?? 'Dedo desconocido';
+        return self::DEDOS[$this->dedo] ?? 'Dedo desconocido';
     }
 
     /**

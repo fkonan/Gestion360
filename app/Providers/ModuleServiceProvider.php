@@ -20,6 +20,7 @@ class ModuleServiceProvider extends ServiceProvider
      */
     private const VIEW_SLUGS = [
         'Administration' => 'administration',
+        'Camara' => 'camara',
         'Configuracion' => 'configuracion',
         'GestionRRHH' => 'gestionrrhh',
         'GestionWeb' => 'gestionweb',

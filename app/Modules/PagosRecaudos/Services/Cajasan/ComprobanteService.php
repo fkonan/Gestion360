@@ -7,7 +7,7 @@ use App\Modules\GestionRRHH\Services\EmpleadoService;
 use App\Modules\PagosRecaudos\Models\ConAuxComprobantes;
 use App\Modules\PagosRecaudos\Models\ConComprobantes;
 use App\Modules\PagosRecaudos\Models\ConDetPagoRecaudo;
-use App\Shared\Services\UsuarioService;
+use App\Services\UsuarioService;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;

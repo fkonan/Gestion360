@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\GESTIONADMIN\Persona;
 use App\Models\User;
 use App\Modules\GestionRRHH\Services\EmpleadoService;
-use App\Shared\Services\UsuarioService;
+use App\Services\UsuarioService;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;

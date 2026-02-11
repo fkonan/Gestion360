@@ -4,7 +4,7 @@ namespace App\Modules\PagosRecaudos\Services\Cajasan;
 
 use App\Modules\GestionRRHH\Models\PerPersonas;
 use App\Modules\PagosRecaudos\Models\TesCajaTurnoDoc;
-use App\Shared\Services\UsuarioService;
+use App\Services\UsuarioService;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;

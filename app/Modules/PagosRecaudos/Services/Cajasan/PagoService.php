@@ -4,7 +4,7 @@ namespace App\Modules\PagosRecaudos\Services\Cajasan;
 
 use App\Modules\PagosRecaudos\Models\ConDetCarguePagRec;
 use App\Modules\PagosRecaudos\Models\ConPagosRecaudos;
-use App\Shared\Services\UsuarioService;
+use App\Services\UsuarioService;
 use Exception;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;

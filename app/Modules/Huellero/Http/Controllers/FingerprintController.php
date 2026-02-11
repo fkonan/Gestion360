@@ -5,12 +5,12 @@ namespace App\Modules\Huellero\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\GESTIONADMIN\Notificaciones;
 use App\Models\GESTIONADMIN\Persona;
-use App\Models\HUELLERO\PrsHuellaEventos;
-use App\Models\HUELLERO\PrsPersonas;
 use App\Models\User;
-use App\Models\LOGTRANS\PerContratoPersona;
-use App\Models\LOGTRANS\PerPersonas;
-use App\Models\ODIN\PerIdentHuella;
+use App\Modules\GestionRRHH\Models\PerContratoPersona;
+use App\Modules\GestionRRHH\Models\PerPersonas;
+use App\Modules\Huellero\Models\PerIdentHuella;
+use App\Modules\Huellero\Models\PrsHuellaEventos;
+use App\Modules\Huellero\Models\PrsPersonas;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -30,7 +30,7 @@ class FingerprintController extends Controller
         ->value('id');
     }
 
-    return view('fingerprint.enroll', [
+    return view('huellero::fingerprint.enroll', [
       'dedos' => PerIdentHuella::dedosDisponibles(),
       'idCreacion' => $idCreacion,
     ]);
@@ -38,24 +38,24 @@ class FingerprintController extends Controller
 
   public function gestionHuellero()
   {
-    return view('modulos.gestionHuellero');
+    return view('huellero::modulos.gestionHuellero');
   }
 
   public function verify(Request $request)
   {
-    return view('fingerprint.verify', [
+    return view('huellero::fingerprint.verify', [
       'dedos' => PerIdentHuella::dedosDisponibles(),
     ]);
   }
 
   public function eventosEmpleados(Request $request)
   {
-    return view('fingerprint.ingreso_personal');
+    return view('huellero::fingerprint.ingreso_personal');
   }
 
   public function eventosConductores(Request $request)
   {
-    return view('fingerprint.descanso_conductores');
+    return view('huellero::fingerprint.descanso_conductores');
   }
 
   public function storeEventoEmpleado(Request $request)

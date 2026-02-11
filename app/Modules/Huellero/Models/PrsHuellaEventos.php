@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\HUELLERO;
+namespace App\Modules\Huellero\Models;
 
 use Illuminate\Database\Eloquent\Model;
 

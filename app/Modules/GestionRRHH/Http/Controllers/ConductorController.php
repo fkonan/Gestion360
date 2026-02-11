@@ -18,7 +18,7 @@ class ConductorController extends Controller
 {
     public function reportePreoperacionales()
     {
-        return view('reportes.conductores.preoperacionales.form');
+        return view('administration::reportes.conductores.preoperacionales.form');
     }
 
     public function preoperacionArchivo($id)
@@ -54,7 +54,7 @@ class ConductorController extends Controller
 
         return response()->json([
             'success' => true,
-            'html' => view('reportes.conductores.preoperacionales.adjunto', compact('preoperacional'))->render(),
+            'html' => view('administration::reportes.conductores.preoperacionales.adjunto', compact('preoperacional'))->render(),
         ]);
     }
 

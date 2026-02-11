@@ -3,7 +3,7 @@
 namespace App\Modules\PagosRecaudos\Services\Cajasan;
 
 use App\Modules\PagosRecaudos\Models\ConPagosRecaudos;
-use App\Shared\Services\UsuarioService;
+use App\Services\UsuarioService;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;

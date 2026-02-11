@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\LOGTRANS;
+namespace App\Modules\GestionRRHH\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -18,5 +18,4 @@ class PerEmpresaPersonas extends Model
     {
         return $this->belongsTo(PerPersonas::class, 'pe_id_emp', 'id');
     }
-
 }

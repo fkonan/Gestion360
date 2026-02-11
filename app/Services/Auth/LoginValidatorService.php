@@ -6,7 +6,7 @@ use App\Models\GESTIONADMIN\Persona;
 use App\Models\GESTIONADMIN\PersonaDatos;
 use App\Models\User;
 use App\Modules\GestionRRHH\Services\EmpleadoService;
-use App\Shared\Services\UsuarioService;
+use App\Services\UsuarioService;
 use Auth;
 use Illuminate\Support\Facades\DB;
 use Exception;
