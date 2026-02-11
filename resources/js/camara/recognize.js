@@ -3,7 +3,6 @@ import {
   stopStream,
   getCsrfToken,
   showInlineAlert,
-  dedupePush,
   isUnknown,
   hasValidFace,
   normalizeDetections,
@@ -19,10 +18,20 @@ document.addEventListener('DOMContentLoaded', () => {
     cameraStatus: document.getElementById('cameraStatus'),
     faceStatus: document.getElementById('faceStatus'),
     serviceStatus: document.getElementById('serviceStatus'),
+    serviceMessage: document.getElementById('serviceMessage'),
     lastPayloadSize: document.getElementById('lastPayloadSize'),
     sendPreview: document.getElementById('sendPreview'),
     video: document.getElementById('cameraVideo'),
     canvas: document.getElementById('captureCanvas'),
+    eventIngreso: document.getElementById('eventIngreso'),
+    eventSalida: document.getElementById('eventSalida'),
+    eventIngresoLabel: document.getElementById('eventIngresoLabel'),
+    eventSalidaLabel: document.getElementById('eventSalidaLabel'),
+    eventModeBanner: document.getElementById('eventModeBanner'),
+    eventModeIcon: document.getElementById('eventModeIcon'),
+    eventModeText: document.getElementById('eventModeText'),
+    eventModeDot: document.getElementById('eventModeDot'),
+    leftPanel: document.getElementById('leftPanel'),
     startBtn: document.getElementById('startBtn'),
     stopBtn: document.getElementById('stopBtn'),
     retryBtn: document.getElementById('retryBtn'),
@@ -54,21 +63,25 @@ document.addEventListener('DOMContentLoaded', () => {
       maxFaces: 4,
       cropBase: 384,
       cropBig: 448,
-      cropQuality: 0.8,
+      cropQuality: 1,
       cropQualitySmall: 0.85,
       cropPaddingBase: 0.25,
       cropPaddingSmall: 0.45,
       smallFaceW: 0.06,
       fullWidth: 640,
       fullHeight: 480,
-      fullQuality: 0.8,
+      fullQuality: 1,
     },
     send: {
       intervalMs: 1200,
       batchSize: 4,
       globalCooldownMs: 200,
       identityCooldownMs: 15000,
-      timeoutMs: 1400,
+      timeoutMs: 5000,
+    },
+    health: {
+      pollMs: 4000,
+      resumeDelayMs: 400,
     },
     listMax: 50,
     debug: false,
@@ -85,8 +98,12 @@ document.addEventListener('DOMContentLoaded', () => {
   let liveActive = false;
   let liveCaptureTimer = null;
   let liveSendTimer = null;
+  let healthTimer = null;
+  let healthInFlight = false;
   let liveBuffer = [];
   let liveInFlight = false;
+  let serviceOnline = null;
+  let resumeSendAt = 0;
   let lastAlert = '';
   let recognizedList = [];
   let lastFaceSeenAt = 0;
@@ -94,10 +111,11 @@ document.addEventListener('DOMContentLoaded', () => {
   let lastDetectionsAt = 0;
   let lastSendAt = 0;
   let previewUrls = [];
-  const lastSeenByName = new Map();
+  const lastSeenByKey = new Map();
   let captureInFlight = false;
   let faceRotationIndex = 0;
   let lastCaptureMode = 'precision';
+  let recognizeAbortController = null;
 
   function inlineAlert(type, message) {
     lastAlert = showInlineAlert(ui.alertContainer, type, message, lastAlert);
@@ -143,12 +161,67 @@ document.addEventListener('DOMContentLoaded', () => {
     ui.serviceStatus.textContent = cfg.text;
   }
 
+  function setServiceMessage(message, cls = 'text-muted') {
+    if (!ui.serviceMessage) {
+      return;
+    }
+    ui.serviceMessage.className = `small ${cls}`;
+    ui.serviceMessage.textContent = message || '';
+  }
+
   function setControls(active, failed = false) {
     if (ui.startBtn) ui.startBtn.disabled = active;
     if (ui.stopBtn) ui.stopBtn.disabled = !active;
     if (ui.retryBtn) {
       ui.retryBtn.classList.toggle('d-none', !failed);
     }
+  }
+
+  function startSendLoop() {
+    if (liveSendTimer || !liveActive) return;
+    liveSendTimer = setInterval(sendLiveBatch, CONFIG.send.intervalMs);
+  }
+
+  function stopSendLoop() {
+    if (!liveSendTimer) return;
+    clearInterval(liveSendTimer);
+    liveSendTimer = null;
+  }
+
+  function markServiceOffline() {
+    if (serviceOnline === false) return;
+    serviceOnline = false;
+    setServiceStatus('error');
+    setServiceMessage('Servicio fuera de linea. Esperando reconexion...', 'text-danger');
+    liveBuffer = [];
+    stopSendLoop();
+    startHealthPolling();
+  }
+
+  function markServiceOnline() {
+    if (serviceOnline === true) return;
+    serviceOnline = true;
+    setServiceStatus('ok');
+    setServiceMessage('Servicio restaurado.', 'text-success');
+    window.setTimeout(() => setServiceMessage(''), 2500);
+    liveBuffer = [];
+    lastSendAt = 0;
+    resumeSendAt = Date.now() + CONFIG.health.resumeDelayMs;
+    if (liveActive) {
+      startSendLoop();
+    }
+    stopHealthPolling();
+  }
+
+  function startHealthPolling() {
+    if (healthTimer) return;
+    healthTimer = setInterval(checkHealth, CONFIG.health.pollMs);
+  }
+
+  function stopHealthPolling() {
+    if (!healthTimer) return;
+    clearInterval(healthTimer);
+    healthTimer = null;
   }
 
   function formatKb(bytes) {
@@ -326,7 +399,51 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function canSendNow() {
     const now = Date.now();
-    return now >= (lastSendAt + CONFIG.send.globalCooldownMs);
+    return now >= (lastSendAt + CONFIG.send.globalCooldownMs) && now >= resumeSendAt;
+  }
+
+  function setSelectedEvent(value) {
+    const next = value === '1' ? '1' : '2';
+    if (ui.eventIngreso) ui.eventIngreso.checked = next === '2';
+    if (ui.eventSalida) ui.eventSalida.checked = next === '1';
+    localStorage.setItem('camara_evento', next);
+    updateEventUI(next);
+  }
+
+  function getSelectedEvent() {
+    if (ui.eventSalida?.checked) return '1';
+    return '2';
+  }
+
+  function updateEventUI(eventValue) {
+    const isIngreso = eventValue === '2';
+    if (ui.eventModeBanner) {
+      ui.eventModeBanner.classList.toggle('bg-success', isIngreso);
+      ui.eventModeBanner.classList.toggle('bg-danger', !isIngreso);
+    }
+    if (ui.eventModeIcon) {
+      ui.eventModeIcon.className = isIngreso
+        ? 'fa-solid fa-arrow-right-to-bracket fa-2x'
+        : 'fa-solid fa-arrow-right-from-bracket fa-2x';
+    }
+    if (ui.eventModeText) {
+      ui.eventModeText.textContent = isIngreso ? 'MODO: INGRESO' : 'MODO: SALIDA';
+    }
+    if (ui.eventModeDot) {
+      ui.eventModeDot.classList.toggle('bg-white', true);
+    }
+    if (ui.leftPanel) {
+      ui.leftPanel.classList.toggle('border-success', isIngreso);
+      ui.leftPanel.classList.toggle('border-danger', !isIngreso);
+    }
+    if (ui.eventIngresoLabel) {
+      ui.eventIngresoLabel.classList.toggle('btn-success', isIngreso);
+      ui.eventIngresoLabel.classList.toggle('btn-outline-success', !isIngreso);
+    }
+    if (ui.eventSalidaLabel) {
+      ui.eventSalidaLabel.classList.toggle('btn-danger', !isIngreso);
+      ui.eventSalidaLabel.classList.toggle('btn-outline-danger', isIngreso);
+    }
   }
 
   async function captureFrame() {
@@ -396,31 +513,40 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function extractIdentificaciones(payload) {
-    if (!payload) return [];
-    if (Array.isArray(payload.data)) {
-      return payload.data
-        .map((item) => item.nombre)
-        .filter((value) => value && !isUnknown(value));
+  function extractPersons(payload) {
+    if (!payload || payload.ok !== true || !Array.isArray(payload.personas)) {
+      return [];
     }
-    if (Array.isArray(payload.results)) {
-      const ids = [];
-      payload.results.forEach((result) => {
-        if (!result || !Array.isArray(result.faces)) return;
-        result.faces.forEach((face) => {
-          if (face && face.identificacion && !isUnknown(face.identificacion)) {
-            ids.push(String(face.identificacion).trim());
-          }
-        });
-      });
-      return ids;
-    }
-    return [];
+    return payload.personas
+      .map((person) => ({
+        identificacion: person?.identificacion ? String(person.identificacion).trim() : '',
+        nombre: person?.nombre ? String(person.nombre).trim() : '',
+        distance: typeof person?.distance === 'number' ? person.distance : null,
+        filename: person?.filename ? String(person.filename).trim() : '',
+        evento: person?.evento === 1 ? 1 : 2,
+      }))
+      .filter((person) => person.nombre || person.identificacion)
+      .filter((person) => !isUnknown(person.nombre) && !isUnknown(person.identificacion));
   }
 
-  function addRecognized(id) {
-    if (!id) return;
-    recognizedList = dedupePush(recognizedList, id, CONFIG.listMax);
+  function getPersonKey(person) {
+    if (!person) return '';
+    if (person.identificacion) return `id:${person.identificacion}`;
+    if (person.nombre) return `nm:${person.nombre.toLowerCase()}`;
+    return '';
+  }
+
+  function upsertRecognized(person) {
+    const key = getPersonKey(person);
+    if (!key) return;
+    recognizedList = recognizedList.filter((item) => getPersonKey(item) !== key);
+    recognizedList.push({
+      ...person,
+      lastSeenAt: Date.now(),
+    });
+    if (CONFIG.listMax && recognizedList.length > CONFIG.listMax) {
+      recognizedList.splice(0, recognizedList.length - CONFIG.listMax);
+    }
   }
 
   function highlightMatch(text, term) {
@@ -440,7 +566,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const term = ui.searchInput ? ui.searchInput.value.trim().toLowerCase() : '';
     const list = term
-      ? recognizedList.filter((item) => item.toLowerCase().includes(term))
+      ? recognizedList.filter((item) => {
+        const haystack = `${item.nombre || ''} ${item.identificacion || ''}`.toLowerCase();
+        return haystack.includes(term);
+      })
       : recognizedList;
 
     ui.recognizeList.innerHTML = '';
@@ -457,8 +586,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     list.forEach((item) => {
       const li = document.createElement('li');
-      li.className = 'list-group-item py-2 fs-6';
-      li.innerHTML = highlightMatch(item, term);
+      li.className = 'list-group-item py-2';
+      const name = item.nombre || item.identificacion || 'Sin nombre';
+      const idText = item.identificacion ? `CC: ${item.identificacion}` : '';
+      const eventBadge = item.evento === 1
+        ? '<span class="badge bg-danger">Salida</span>'
+        : '<span class="badge bg-success">Ingreso</span>';
+      const metaParts = [idText].filter(Boolean).join(' · ');
+      li.innerHTML = `
+        <div class="d-flex align-items-center justify-content-between gap-2">
+          <div class="fw-semibold">${highlightMatch(name, term)}</div>
+          ${eventBadge}
+        </div>
+        ${metaParts ? `<div class="small text-muted">${highlightMatch(metaParts, term)}</div>` : ''}
+      `;
       ui.recognizeList.appendChild(li);
     });
 
@@ -478,6 +619,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function sendLiveBatch() {
     if (!liveActive || liveInFlight) {
+      return;
+    }
+    if (serviceOnline === false) {
       return;
     }
     const now = Date.now();
@@ -501,14 +645,18 @@ document.addEventListener('DOMContentLoaded', () => {
       updateSendPreview(batch);
     }
 
+    let timeoutId = null;
     try {
       const controller = new AbortController();
+      recognizeAbortController = controller;
       const startedAt = performance.now();
-      const timeoutId = window.setTimeout(() => controller.abort(), CONFIG.send.timeoutMs);
+      timeoutId = window.setTimeout(() => controller.abort('request-timeout'), CONFIG.send.timeoutMs);
       const formData = new FormData();
       batch.forEach((blob, index) => {
         formData.append('images[]', blob, `frame_${index + 1}.jpg`);
       });
+      const selectedEvent = getSelectedEvent();
+      formData.append('evento', selectedEvent);
       const response = await fetch(getEndpointUrl('recognize'), {
         method: 'POST',
         headers: {
@@ -519,36 +667,54 @@ document.addEventListener('DOMContentLoaded', () => {
         credentials: 'same-origin',
         signal: controller.signal,
       });
+      const headersAt = performance.now();
       clearTimeout(timeoutId);
+      timeoutId = null;
       const data = await response.json().catch(() => null);
+      const parsedAt = performance.now();
       if (!response.ok || !data) {
+        markServiceOffline();
         inlineAlert('warning', 'No se pudo reconocer en vivo.');
         return;
       }
-      const ids = extractIdentificaciones(data);
-      if (ids.length) {
-        ids.forEach((id) => {
-          const lastSeen = lastSeenByName.get(id) || 0;
-          if ((Date.now() - lastSeen) >= CONFIG.send.identityCooldownMs) {
-            addRecognized(id);
-            lastSeenByName.set(id, Date.now());
-          }
+      const persons = extractPersons(data);
+      if (persons.length) {
+        persons.forEach((person) => {
+          const key = getPersonKey(person);
+          if (!key) return;
+          upsertRecognized(person);
+          lastSeenByKey.set(key, Date.now());
         });
       }
+      const updatedAt = performance.now();
       renderRecognized();
+      const renderedAt = performance.now();
       if (CONFIG.debug) {
-        const elapsed = Math.round(performance.now() - startedAt);
-        console.debug('[camara] recognize ms', elapsed);
+        console.debug('[camara] recognize ms', {
+          total: Math.round(renderedAt - startedAt),
+          tHeaders: Math.round(headersAt - startedAt),
+          tJson: Math.round(parsedAt - headersAt),
+          tUpdate: Math.round(updatedAt - parsedAt),
+          tRender: Math.round(renderedAt - updatedAt),
+          evento: selectedEvent,
+          ok: data?.ok,
+          count: persons.length,
+        });
       }
     } catch (error) {
       if (error && error.name === 'AbortError') {
         if (CONFIG.debug) {
-          console.debug('[camara] recognize abort timeout');
+          console.debug('[camara] recognize abort (timeout or stop/pagehide)');
         }
       } else {
+        markServiceOffline();
         inlineAlert('warning', 'Error de red en reconocimiento en vivo.');
       }
     } finally {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      recognizeAbortController = null;
       liveInFlight = false;
     }
   }
@@ -561,7 +727,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     liveActive = true;
     liveBuffer = [];
+    const healthOk = await checkHealth();
+    if (!healthOk) {
+      startHealthPolling();
+    }
     liveCaptureTimer = setInterval(async () => {
+      if (serviceOnline === false) {
+        liveBuffer = [];
+        return;
+      }
       if (!lastFaceDetected) {
         return;
       }
@@ -571,20 +745,24 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       await captureFrame();
     }, CONFIG.capture.intervalMs);
-    liveSendTimer = setInterval(sendLiveBatch, CONFIG.send.intervalMs);
+    if (serviceOnline !== false) {
+      startSendLoop();
+    }
     setControls(true, false);
   }
 
   function stopLiveRecognize() {
     liveActive = false;
+    if (recognizeAbortController) {
+      recognizeAbortController.abort();
+      recognizeAbortController = null;
+    }
     if (liveCaptureTimer) {
       clearInterval(liveCaptureTimer);
       liveCaptureTimer = null;
     }
-    if (liveSendTimer) {
-      clearInterval(liveSendTimer);
-      liveSendTimer = null;
-    }
+    stopSendLoop();
+    stopHealthPolling();
     liveBuffer = [];
     liveInFlight = false;
     clearPreview();
@@ -593,7 +771,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function checkHealth() {
+    if (healthInFlight) {
+      return serviceOnline === true;
+    }
     setServiceStatus('loading');
+    healthInFlight = true;
     try {
       const response = await fetch(getEndpointUrl('health'), {
         method: 'GET',
@@ -603,22 +785,33 @@ document.addEventListener('DOMContentLoaded', () => {
         credentials: 'same-origin',
       });
       if (!response.ok) {
-        setServiceStatus('error');
-        return;
+        markServiceOffline();
+        return false;
       }
       const data = await response.json().catch(() => null);
       if (data && data.status && data.status !== 'error') {
-        setServiceStatus('ok');
-      } else {
-        setServiceStatus('error');
+        markServiceOnline();
+        return true;
       }
+      markServiceOffline();
+      return false;
     } catch (error) {
-      setServiceStatus('error');
+      markServiceOffline();
+      return false;
+    } finally {
+      healthInFlight = false;
     }
   }
 
   if (ui.searchInput) {
     ui.searchInput.addEventListener('input', renderRecognized);
+  }
+
+  if (ui.eventIngreso || ui.eventSalida) {
+    const saved = localStorage.getItem('camara_evento');
+    setSelectedEvent(saved === '1' ? '1' : '2');
+    ui.eventIngreso?.addEventListener('change', () => setSelectedEvent('2'));
+    ui.eventSalida?.addEventListener('change', () => setSelectedEvent('1'));
   }
 
   if (ui.startBtn) {
@@ -639,6 +832,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setCameraStatus('off');
   setFaceStatus(false);
   setControls(false, false);
+  setServiceMessage('');
   renderRecognized();
   checkHealth();
   startLiveRecognize();

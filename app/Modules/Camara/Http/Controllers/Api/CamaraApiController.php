@@ -57,9 +57,10 @@ class CamaraApiController extends Controller
   {
     $file = $request->file('image');
     $identificacion = trim((string) $request->input('identificacion'));
+    $usrcreacion = $request->user()?->persona?->PerNumDoc;
 
     try {
-      $response = $this->cameraService->enroll($file, $identificacion);
+      $response = $this->cameraService->enroll($file, $identificacion, $usrcreacion);
     } catch (\Throwable $e) {
       logger()->error('Camara enroll: no se pudo contactar el servicio', [
         'error' => $e->getMessage(),
@@ -96,13 +97,17 @@ class CamaraApiController extends Controller
   public function recognizeLive(RecognizeLiveRequest $request)
   {
     $files = $request->file('images', []);
+    $evento = (int) $request->input('evento', 2);
+    $usrcreacion = $request->user()?->persona?->PerNumDoc;
 
     logger()->info('Camara recognize-live request', [
       'count' => count($files),
+      'evento' => $evento,
+      'usrcreacion' => $usrcreacion,
     ]);
 
     try {
-      $response = $this->cameraService->recognizeBatch($files);
+      $response = $this->cameraService->recognizeBatch($files, $evento, $usrcreacion);
     } catch (\Throwable $e) {
       return response()->json([
         'status' => 'error',

@@ -90,7 +90,7 @@ class FingerprintController extends Controller
       }
 
     try {
-      $limiteDuplicado = now()->subMinutes(0);
+      $limiteDuplicado = now()->subMinutes(5);
       $eventoReciente = PrsHuellaEventos::query()
         ->where('identificacion', $payload['identificacion'])
         ->where('evento', (int) $payload['evento'])
@@ -277,7 +277,7 @@ class FingerprintController extends Controller
       }
 
     try {
-      $limiteDuplicado = now()->subMinutes(0);
+      $limiteDuplicado = now()->subMinutes(5);
       $eventoReciente = PrsHuellaEventos::query()
         ->where('identificacion', $payload['identificacion'])
         ->where('evento', (int) $payload['evento'])
@@ -378,10 +378,10 @@ class FingerprintController extends Controller
 
       $isSalida = $evento === 1;
       $titulo = $isSalida ? 'Salida registrada' : 'Ingreso registrado';
-      $fechaEvento = $fecha ? $fecha->format('d/m/Y h:i A') : now()->format('d/m/Y h:i A');
+      $fechaEvento = $fecha ? $fecha->format('h:i A d/m/Y') : now()->format('h:i A d/m/Y');
       $bodyPush = $isSalida
-        ? 'Hasta luego. Tu salida se registro a las ' . $fechaEvento . '.'
-        : 'Bienvenido. Tu ingreso se registro a las ' . $fechaEvento . '.';
+        ? 'Hasta luego. Tu salida se registró a las ' . $fechaEvento . '.'
+        : 'Bienvenido. Tu ingreso se registró a las ' . $fechaEvento . '.';
       $destino = json_encode(['usuarios' => [(int) $usuario->IdUsuario]]);
 
       Notificaciones::create([

@@ -40,7 +40,7 @@ class CameraService
   /**
    * @param UploadedFile[] $files
    */
-  public function recognizeBatch(array $files): Response
+  public function recognizeBatch(array $files, int $evento = 2, ?string $usrcreacion = null): Response
   {
     $client = $this->client()->asMultipart();
     foreach ($files as $file) {
@@ -50,11 +50,20 @@ class CameraService
         $file->getClientOriginalName() ?: 'frame.jpg'
       );
     }
-    return $client->post($this->baseUrl . '/recognize');
+    $payload = ['evento' => $evento];
+    if ($usrcreacion) {
+      $payload['usrcreacion'] = $usrcreacion;
+    }
+    return $client->post($this->baseUrl . '/recognize', $payload);
   }
 
-  public function enroll(UploadedFile $file, string $identificacion): Response
+  public function enroll(UploadedFile $file, string $identificacion, ?string $usrcreacion = null): Response
   {
+    $payload = ['identificacion' => $identificacion];
+    if ($usrcreacion) {
+      $payload['usrcreacion'] = $usrcreacion;
+    }
+
     return $this->client()
       ->asMultipart()
       ->attach(
@@ -62,8 +71,6 @@ class CameraService
         fopen($file->getRealPath(), 'r'),
         $file->getClientOriginalName() ?: 'face.jpg'
       )
-      ->post($this->baseUrl . '/enroll', [
-        'identificacion' => $identificacion,
-      ]);
+      ->post($this->baseUrl . '/enroll', $payload);
   }
 }
