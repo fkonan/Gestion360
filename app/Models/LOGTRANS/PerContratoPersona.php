@@ -26,4 +26,35 @@ class PerContratoPersona extends Model
     }
     return mb_strtoupper($nombre . ' ' . $apellido, 'UTF-8');
   }
+
+  public function perEmpresaPersonas()
+  {
+    return $this->hasOne(PerEmpresaPersonas::class, 'pe_id_pe', 'pe_id_pe')
+      ->where('activo', 1)
+      ->where('estborrado', 0)
+      ->whereIn('tp_id', [1, 11])
+      ->whereNull('fecfin');
+  }
+
+  public function cargoDetallado(): ?PerCargos
+  {
+    $ca = (new PerCargos)->getTable();
+
+    return PerCargos::from("$ca as ca")
+      ->select('ca.*')
+      ->join('per_cargoccostos as cc', 'cc.ca_codigo', '=', 'ca.codigo')
+      ->join('per_empresapersonas as ep', 'ep.cc_id', '=', 'cc.id')
+      ->join('per_centrocostos as ct', 'ct.codigo', '=', 'cc.ct_codigo')
+      ->where('ep.pe_id_pe', $this->pe_id_pe)
+      ->whereIn('ep.tp_id', [1, 11])
+      ->where('ep.activo', 1)
+      ->where('ep.estborrado', 0)
+      ->whereNull('ep.fecfin')
+      ->where('cc.activo', 1)
+      ->where('cc.estborrado', 0)
+      ->where('ct.estado', 1)
+      ->where('ct.estborrado', 0)
+      ->where('ca.estborrado', 0)
+      ->first();
+  }
 }

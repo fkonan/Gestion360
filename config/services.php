@@ -23,6 +23,15 @@ return [
         'secret' => env('NOCAPTCHA_SECRET'),
     ],
 
+    'fingerprint' => [
+        'url' => env('FINGERPRINT_SERVICE_URL', 'http://127.0.0.1:5055'),
+        'key' => env('FINGERPRINT_SERVICE_KEY'),
+    ],
+
+    'camera' => [
+        'url' => env('CAMERA_SERVICE_URL'),
+    ],
+
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),

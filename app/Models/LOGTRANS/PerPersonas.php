@@ -21,6 +21,10 @@ class PerPersonas extends Model
       ->where('estado', 1);
   }
 
+  public function perEmpresaPersonas(){
+        return $this->hasMany(PerEmpresaPersonas::class, 'pe_id_pe', 'id');
+    }
+
   public function nombreCompleto()
   {
     $nombre = $this->pnombre;

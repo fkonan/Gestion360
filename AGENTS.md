@@ -19,7 +19,6 @@
 ## Agent Behavior
 - Always analyze files before modifying them
 - Explicitly state which files will be modified and why
-- Apply changes only after user confirmation
 
 ## Constraints
 - No breaking changes unless explicitly requested

@@ -19,6 +19,7 @@ class PoliticasController extends Controller
   public const ID_POLITICA_MENORES  = 3;
   public const ID_POLITICA_SARLAFT  = 4;
   public const ID_POLITICA_MASCOTAS = 5;
+  public const ID_ANEXO_TRABAJO_SUPLEMENTARIO = 6;
 
   public function index()
   {
@@ -88,6 +89,13 @@ class PoliticasController extends Controller
     //Plantilla pdf SARLAFT
     if ($politicaId == self::ID_POLITICA_SARLAFT) {
       $pdf = Pdf::loadView('politicas.plantillasPDF.sarlaft', compact('firma'));
+      $pdf->setPaper('A4', 'portrait');
+      return $pdf->stream($politica->politica . '-' . $firma->NomCon . '.pdf');
+    }
+
+    //Plantilla pdf anexo trabajo suplementario
+    if ($politicaId == self::ID_ANEXO_TRABAJO_SUPLEMENTARIO) {
+      $pdf = Pdf::loadView('politicas.plantillasPDF.anexoTrabajoSuplementario', compact('firma'));
       $pdf->setPaper('A4', 'portrait');
       return $pdf->stream($politica->politica . '-' . $firma->NomCon . '.pdf');
     }

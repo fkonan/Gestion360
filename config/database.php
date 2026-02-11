@@ -83,7 +83,7 @@ return [
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],
-        
+
 
         //Conexion base de datos GESTION PASAJES
         'mysql-gestion-pasajes' => [
@@ -119,7 +119,7 @@ return [
             'prefix' => '',
             'prefix_schema' => '',
             'options' => [
-                PDO::ATTR_AUTOCOMMIT => false, 
+                PDO::ATTR_AUTOCOMMIT => false,
             ]
         ],
 
@@ -137,6 +137,24 @@ return [
             'prefix_indexes' => true,
             // 'encrypt' => env('DB_ENCRYPT', 'yes'),
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
+        ],
+
+        //Conexion base de datos ORACLE logtrans
+        'oracle-360' => [
+            'driver' => 'oracle',
+            'tns' => '',
+            'host' => env('DB_HOST_6'),
+            'port' => env('DB_PORT_6'),
+            'database' => env('DB_DATABASE_6'),
+            'username' => env('DB_USERNAME_6'),
+            'password' => env('DB_PASSWORD_6'),
+            'service_name' => env('DB_SERVICE_NAME_6'),
+            'charset' => 'AL32UTF8',
+            'prefix' => '',
+            'prefix_schema' => '',
+            'options' => [
+                PDO::ATTR_AUTOCOMMIT => false,
+            ]
         ],
 
         'mariadb' => [

@@ -409,7 +409,6 @@ class GestionPasajesController extends Controller
     } catch (Exception $e) {
       $mensajeError = "⚠️ " . now()->format('Y-m-d H:i:s') .
         " | Error al generar tiquete" .
-        " | Mensaje: " . $e->getMessage() .
         " | Token: {$token}";
 
       Log::build([
