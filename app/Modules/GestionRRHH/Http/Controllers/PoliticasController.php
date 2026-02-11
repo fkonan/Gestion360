@@ -3,12 +3,11 @@
 namespace App\Modules\GestionRRHH\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-
-use App\Models\GESTIONPASAJES\ActualizacionDatos;
-use App\Models\GESTIONPASAJES\ConfigPoliticas;
-use App\Models\GESTIONPASAJES\FirmaPoliticas;
-use Illuminate\Http\Request;
+use App\Modules\Administration\Models\ActualizacionDatos;
+use App\Modules\Administration\Models\ConfigPoliticas;
+use App\Modules\Administration\Models\FirmaPoliticas;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class PoliticasController extends Controller
@@ -21,19 +20,19 @@ class PoliticasController extends Controller
   public const ID_POLITICA_MASCOTAS = 5;
   public const ID_ANEXO_TRABAJO_SUPLEMENTARIO = 6;
 
-  public function index()
-  {
-    return view("politicas.index");
-  }
+    public function index()
+    {
+        return view('gestionrrhh::politicas.index');
+    }
 
-  public function politicasFirmadas(Request $request)
-  {
+    public function politicasFirmadas(Request $request)
+    {
 
-    $identificacion = $request->identificacion;
+        $identificacion = $request->identificacion;
 
-    //Obtener los ultimos registros de firma para cada politica
-    $firmas = DB::connection('mysql-gestion-pasajes')
-      ->select("
+        // Obtener los ultimos registros de firma para cada politica
+        $firmas = DB::connection('mysql-gestion-pasajes')
+            ->select("
                 SELECT f.*, cp.politica
                 FROM _FirConductores f
                 INNER JOIN (
@@ -48,43 +47,45 @@ class PoliticasController extends Controller
                 WHERE f.DocCon = ?
             ", [$identificacion, $identificacion]);
 
-    if (empty($firmas)) {
-      return toastModal("No hay registros de firmas asociados al documento ingresado", "warning");
+        if (empty($firmas)) {
+            return toastModal('No hay registros de firmas asociados al documento ingresado', 'warning');
+        }
+
+        return response()->json([
+            'success' => true,
+            'html' => view('gestionrrhh::politicas.firmados', [
+                'firmas' => $firmas,
+            ])->render(),
+        ]);
     }
 
-    return response()->json([
-      'success' => true,
-      'html' => view('politicas.firmados', [
-        'firmas' => $firmas,
-      ])->render(),
-    ]);
-  }
+    // otro_si - Actualizacion datos
+    public function generarPDFDatosActualizacion(Request $request)
+    {
+        $firma = ActualizacionDatos::findOrFail($request->firma_id);
+        $pdf = Pdf::loadView('gestionrrhh::politicas.plantillasPDF.actualizacionDatos', compact('firma'));
+        $pdf->setPaper('A4', 'portrait');
 
-  //otro_si - Actualizacion datos
-  public function generarPDFDatosActualizacion(Request $request)
-  {
-    $firma = ActualizacionDatos::findOrFail($request->firma_id);
-    $pdf = Pdf::loadView('politicas.plantillasPDF.actualizacionDatos', compact('firma'));
-    $pdf->setPaper('A4', 'portrait');
-    return $pdf->stream('ActualizacionDatos-' . $firma->NomCon . '.pdf');
-  }
-
-  //Generar PDF politica firmada
-  public function generarPDFPolitica(Request $request)
-  {
-    $firma = FirmaPoliticas::findOrFail($request->firma_id);
-
-    $politicaId = $firma->PoliticaId;
-    $politica = ConfigPoliticas::findOrFail($politicaId);
-
-    //Plantilla pdf camaras
-    if ($politicaId == self::ID_POLITICA_CAMARAS) {
-      $funcionesCargo = ConductorController::funcionesCargo($firma->Cargo);
-
-      $pdf = Pdf::loadView('politicas.plantillasPDF.camaras', compact('firma', 'funcionesCargo'));
-      $pdf->setPaper('A4', 'portrait');
-      return $pdf->stream($politica->politica . '-' . $firma->NomCon . '.pdf');
+        return $pdf->stream('ActualizacionDatos-'.$firma->NomCon.'.pdf');
     }
+
+    // Generar PDF politica firmada
+    public function generarPDFPolitica(Request $request)
+    {
+        $firma = FirmaPoliticas::findOrFail($request->firma_id);
+
+        $politicaId = $firma->PoliticaId;
+        $politica = ConfigPoliticas::findOrFail($politicaId);
+
+        // Plantilla pdf camaras
+        if ($politicaId == self::ID_POLITICA_CAMARAS) {
+            $funcionesCargo = ConductorController::funcionesCargo($firma->Cargo);
+
+            $pdf = Pdf::loadView('gestionrrhh::politicas.plantillasPDF.camaras', compact('firma', 'funcionesCargo'));
+            $pdf->setPaper('A4', 'portrait');
+
+            return $pdf->stream($politica->politica.'-'.$firma->NomCon.'.pdf');
+        }
 
     //Plantilla pdf SARLAFT
     if ($politicaId == self::ID_POLITICA_SARLAFT) {
@@ -100,16 +101,17 @@ class PoliticasController extends Controller
       return $pdf->stream($politica->politica . '-' . $firma->NomCon . '.pdf');
     }
 
-    //Plantilla otras politicas
-    $pdf = Pdf::loadView('politicas.plantillasPDF.clausulaCumplimiento', [
-      'firma' => $firma,
-      'politicaId' => $politicaId,
-      'ID_POLITICA_EQUIPAJE' => self::ID_POLITICA_EQUIPAJE,
-      'ID_POLITICA_MENORES' => self::ID_POLITICA_MENORES,
-      'ID_POLITICA_MASCOTAS' => self::ID_POLITICA_MASCOTAS,
-    ]);
+        // Plantilla otras politicas
+        $pdf = Pdf::loadView('gestionrrhh::politicas.plantillasPDF.clausulaCumplimiento', [
+            'firma' => $firma,
+            'politicaId' => $politicaId,
+            'ID_POLITICA_EQUIPAJE' => self::ID_POLITICA_EQUIPAJE,
+            'ID_POLITICA_MENORES' => self::ID_POLITICA_MENORES,
+            'ID_POLITICA_MASCOTAS' => self::ID_POLITICA_MASCOTAS,
+        ]);
 
-    $pdf->setPaper('A4', 'portrait');
-    return $pdf->stream($politica->politica . '-' . $firma->NomCon . '.pdf');
-  }
+        $pdf->setPaper('A4', 'portrait');
+
+        return $pdf->stream($politica->politica.'-'.$firma->NomCon.'.pdf');
+    }
 }
