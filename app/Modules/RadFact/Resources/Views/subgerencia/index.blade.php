@@ -103,7 +103,7 @@
                                     </a>
 
                                     @if($radicacion->pdf)
-                                        <a href="{{ Storage::url($radicacion->pdf) }}"
+                                        <a href="{{ Storage::disk('public')->url($radicacion->pdf) }}"
                                            target="_blank"
                                            class="btn btn-outline-danger"
                                            title="Ver PDF">

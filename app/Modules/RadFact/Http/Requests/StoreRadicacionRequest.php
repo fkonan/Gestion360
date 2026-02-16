@@ -22,7 +22,7 @@ class StoreRadicacionRequest extends FormRequest
         return [
             // Datos de radicación
             'proveedor_id' => 'required|exists:rad_fact_proveedores,id',
-            'num_factura' => 'required|string|max:50',
+            'num_factura' => 'required|string|max:50|unique:rad_fact_radicaciones,num_factura',
             'num_contrato' => 'nullable|string|max:50',
             'numero_pagos' => 'required|integer|min:1|max:999',
             'fecha_radicacion' => 'required|date',
@@ -49,6 +49,7 @@ class StoreRadicacionRequest extends FormRequest
             'proveedor_id.required' => 'Debe seleccionar un proveedor.',
             'proveedor_id.exists' => 'El proveedor seleccionado no existe.',
             'num_factura.required' => 'El número de factura es obligatorio.',
+            'num_factura.unique' => 'El número de factura ya se encuentra radicado.',
             'numero_pagos.min' => 'Debe haber al menos 1 pago.',
             'fecha_radicacion.required' => 'La fecha de radicación es obligatoria.',
             'fecha_vencimiento.required' => 'La fecha de vencimiento es obligatoria.',

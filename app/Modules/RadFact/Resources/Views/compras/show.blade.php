@@ -102,7 +102,7 @@
                     @if($radicacion->pdf)
                     <div class="row">
                         <div class="col-12">
-                            <a href="{{ Storage::url($radicacion->pdf) }}" target="_blank" class="btn btn-outline-danger">
+                            <a href="{{ Storage::disk('public')->url($radicacion->pdf) }}" target="_blank" class="btn btn-outline-danger">
                                 <i class="fas fa-file-pdf"></i> Ver PDF de Factura
                             </a>
                         </div>

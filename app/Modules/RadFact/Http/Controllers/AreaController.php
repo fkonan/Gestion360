@@ -46,7 +46,6 @@ class AreaController extends Controller
 
             // Total
             $total = $query->count();
-
             // Ordenamiento y paginación
             $rows = $query->orderBy($sort, $order)
                 ->skip($offset)
@@ -123,8 +122,7 @@ class AreaController extends Controller
         try {
             $area->update($request->validated());
 
-            return redirect()->route('radfact.areas.index')
-                ->with('success', 'Área actualizada exitosamente');
+            return toastModal('Área actualizada exitosamente', 'success', route('radfact.areas.index'));
         } catch (\Exception $e) {
             Log::error('Error actualizando área', ['error' => $e->getMessage()]);
 

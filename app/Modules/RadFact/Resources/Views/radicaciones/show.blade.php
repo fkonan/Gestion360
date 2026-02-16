@@ -90,11 +90,13 @@
             <div class="col-md-3 mb-3">
                 <label class="form-label fw-bold">PDF</label>
                 @if($radicacion->pdf)
-                    <a href="{{ Storage::url($radicacion->pdf) }}" target="_blank" class="btn btn-sm btn-outline-primary w-100">
+                    <a href="{{ Storage::disk('public')->url($radicacion->pdf) }}" target="_blank" class="btn btn-sm btn-outline-primary w-100">
                         <i class="fas fa-file-pdf"></i> Ver PDF
                     </a>
                 @else
-                    <input type="text" class="form-control" value="Sin adjunto" disabled>
+                    <a href="{{ route('radfact.radicaciones.edit_adjunto', $radicacion) }}" class="btn btn-sm btn-warning w-100">
+                        <i class="fas fa-upload"></i> Cargar Adjunto
+                    </a>
                 @endif
             </div>
         </div>
@@ -308,8 +310,12 @@
         @endif
 
         @if($radicacion->pdf)
-            <a href="{{ Storage::url($radicacion->pdf) }}" target="_blank" class="btn btn-outline-primary">
+            <a href="{{ Storage::disk('public')->url($radicacion->pdf) }}" target="_blank" class="btn btn-outline-primary">
                 <i class="fas fa-file-pdf"></i> Ver PDF Completo
+            </a>
+        @else
+            <a href="{{ route('radfact.radicaciones.edit_adjunto', $radicacion) }}" class="btn btn-warning">
+                <i class="fas fa-upload"></i> Cargar PDF
             </a>
         @endif
     </div>

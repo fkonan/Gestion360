@@ -3,6 +3,10 @@
 namespace App\Modules\RadFact\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\RadFact\Http\Requests\StoreRadicacionRequest;
+use App\Modules\RadFact\Http\Requests\UpdateDistribucionesRequest;
+use App\Modules\RadFact\Http\Requests\UpdateRadicacionAdjuntoRequest;
+use App\Modules\RadFact\Mail\RadFactDistribucionNotificacionMail;
 use App\Modules\RadFact\Models\RadFactAprobacion;
 use App\Modules\RadFact\Models\RadFactArea;
 use App\Modules\RadFact\Models\RadFactDistribucion;
@@ -11,6 +15,8 @@ use App\Modules\RadFact\Models\RadFactRadicacion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 
 class RadicacionController extends Controller
 {
@@ -107,33 +113,13 @@ class RadicacionController extends Controller
     /**
      * Guardar nueva radicación con distribuciones
      */
-    public function store(Request $request)
+    public function store(StoreRadicacionRequest $request)
     {
-        $validated = $request->validate([
-            'proveedor_id' => 'required|exists:rad_fact_proveedores,id',
-            'num_factura' => 'required|string|max:50',
-            'num_contrato' => 'nullable|string|max:50',
-            'numero_pagos' => 'required|integer|min:1',
-            'fecha_radicacion' => 'required|date',
-            'fecha_vencimiento' => 'required|date|after_or_equal:fecha_radicacion',
-            'necesita_visto_bueno' => 'boolean',
-            'descripcion' => 'nullable|string',
-            'valor' => 'required|numeric|min:0',
-            'pdf' => 'nullable|file|mimes:pdf|max:10240',
-            'observacion' => 'nullable|string',
-            // Distribuciones
-            'distribuciones' => 'required|array|min:1',
-            'distribuciones.*.area_id' => 'required|exists:rad_fact_areas,id',
-            'distribuciones.*.porcentaje' => 'required|numeric|min:0|max:100',
-        ]);
-
-        // Validar que los porcentajes sumen 100
-        $totalPorcentaje = collect($validated['distribuciones'])->sum('porcentaje');
-        if (abs($totalPorcentaje - 100) > 0.01) {
-            return back()->with('error', 'Los porcentajes deben sumar 100%')->withInput();
-        }
+        $validated = $request->validated();
+        $correosAreas = $this->obtenerCorreosAreasDistribuidas($validated['distribuciones']);
 
         DB::beginTransaction();
+
         try {
             // Guardar PDF si existe
             $pdfPath = null;
@@ -181,13 +167,66 @@ class RadicacionController extends Controller
             $radicacion->update(['estado' => 'EN_APROBACION']);
             DB::commit();
 
-            return redirect()->route('radfact.radicaciones.index')->with('success', 'Radicación creada exitosamente');
+            $resultadoNotificacion = $this->enviarNotificacionAreasDistribuidas(
+                $radicacion->fresh(['proveedor']),
+                $correosAreas
+            );
+            $mensajeToast = $this->resolverMensajeNotificacion(
+                'Radicación creada exitosamente.',
+                $resultadoNotificacion
+            );
+
+            return toastModal($mensajeToast['mensaje'], $mensajeToast['tipo'], route('radfact.radicaciones.index'));
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error creando radicación', ['error' => $e->getMessage()]);
 
             return back()->with('error', 'Error al crear radicación')->withInput();
         }
+    }
+
+    /**
+     * Buscar última factura por número de contrato para autocompletar formulario.
+     */
+    public function buscarPorContrato(Request $request)
+    {
+        $numeroContrato = trim((string) $request->get('num_contrato', ''));
+
+        if ($numeroContrato === '') {
+            return response()->json(['encontrado' => false]);
+        }
+
+        $radicacion = RadFactRadicacion::query()
+            ->with(['distribucionesActivas', 'proveedor'])
+            ->where('num_contrato', $numeroContrato)
+            ->latest('id')
+            ->first();
+
+        if (! $radicacion) {
+            return response()->json(['encontrado' => false]);
+        }
+
+        return response()->json([
+            'encontrado' => true,
+            'data' => [
+                'proveedor_id' => $radicacion->proveedor_id,
+                'num_factura' => $radicacion->num_factura,
+                'numero_pagos' => $radicacion->numero_pagos,
+                'fecha_vencimiento' => optional($radicacion->fecha_vencimiento)->format('Y-m-d'),
+                'necesita_visto_bueno' => (bool) $radicacion->necesita_visto_bueno,
+                'descripcion' => $radicacion->descripcion,
+                'valor' => $radicacion->valor,
+                'observacion' => $radicacion->observacion,
+                'distribuciones' => $radicacion->distribucionesActivas
+                    ->map(function (RadFactDistribucion $distribucion) {
+                        return [
+                            'area_id' => $distribucion->area_id,
+                            'porcentaje' => $distribucion->porcentaje,
+                        ];
+                    })
+                    ->values(),
+            ],
+        ]);
     }
 
     /**
@@ -205,6 +244,65 @@ class RadicacionController extends Controller
         ]);
 
         return view('radfact::radicaciones.show', compact('radicacion'));
+    }
+
+    /**
+     * Mostrar formulario para cargar adjunto cuando no existe PDF.
+     */
+    public function editAdjunto(RadFactRadicacion $radicacion)
+    {
+        if (! empty($radicacion->pdf)) {
+            return toast(
+                'La radicación ya cuenta con un PDF adjunto.',
+                'warning',
+                route('radfact.radicaciones.show', $radicacion)
+            );
+        }
+
+        return view('radfact::radicaciones.edit-adjunto', compact('radicacion'));
+    }
+
+    /**
+     * Actualizar adjunto de una radicación.
+     */
+    public function updateAdjunto(UpdateRadicacionAdjuntoRequest $request, RadFactRadicacion $radicacion)
+    {
+        if (! empty($radicacion->pdf)) {
+            return toast(
+                'La radicación ya cuenta con un PDF adjunto.',
+                'warning',
+                route('radfact.radicaciones.show', $radicacion)
+            );
+        }
+
+        try {
+            $pdfPath = $request->file('pdf')->store('radfact/pdfs', 'public');
+
+            $radicacion->update([
+                'pdf' => $pdfPath,
+            ]);
+
+            return toast(
+                'Adjunto cargado exitosamente.',
+                'success',
+                route('radfact.radicaciones.show', $radicacion)
+            );
+        } catch (\Exception $e) {
+            Log::error('Error actualizando adjunto de radicación', [
+                'radicacion_id' => $radicacion->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            if (! empty($pdfPath ?? null)) {
+                Storage::disk('public')->delete($pdfPath);
+            }
+
+            return toast(
+                'No fue posible cargar el adjunto. Intente nuevamente.',
+                'error',
+                route('radfact.radicaciones.show', $radicacion)
+            );
+        }
     }
 
     /**
@@ -231,19 +329,10 @@ class RadicacionController extends Controller
     /**
      * Actualizar distribuciones (crear nuevas versiones)
      */
-    public function updateDistribuciones(Request $request, RadFactRadicacion $radicacion)
+    public function updateDistribuciones(UpdateDistribucionesRequest $request, RadFactRadicacion $radicacion)
     {
-        $validated = $request->validate([
-            'distribuciones' => 'required|array|min:1',
-            'distribuciones.*.area_id' => 'required|exists:rad_fact_areas,id',
-            'distribuciones.*.porcentaje' => 'required|numeric|min:0|max:100',
-        ]);
-
-        // Validar que los porcentajes sumen 100
-        $totalPorcentaje = collect($validated['distribuciones'])->sum('porcentaje');
-        if (abs($totalPorcentaje - 100) > 0.01) {
-            return back()->with('error', 'Los porcentajes deben sumar 100%')->withInput();
-        }
+        $validated = $request->validated();
+        $correosAreas = $this->obtenerCorreosAreasDistribuidas($validated['distribuciones']);
 
         DB::beginTransaction();
         try {
@@ -275,13 +364,125 @@ class RadicacionController extends Controller
 
             DB::commit();
 
-            return redirect()->route('radfact.radicaciones.show', $radicacion)
-                ->with('success', 'Distribuciones actualizadas exitosamente');
+            $resultadoNotificacion = $this->enviarNotificacionAreasDistribuidas(
+                $radicacion->fresh(['proveedor']),
+                $correosAreas
+            );
+            $mensajeToast = $this->resolverMensajeNotificacion(
+                'Distribuciones actualizadas exitosamente.',
+                $resultadoNotificacion
+            );
+
+            return toast(
+                $mensajeToast['mensaje'],
+                $mensajeToast['tipo'],
+                route('radfact.radicaciones.show', $radicacion)
+            );
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error actualizando distribuciones', ['error' => $e->getMessage()]);
 
             return back()->with('error', 'Error al actualizar distribuciones')->withInput();
         }
+    }
+
+    /**
+     * Obtiene los correos válidos de las áreas incluidas en la distribución.
+     */
+    private function obtenerCorreosAreasDistribuidas(array $distribuciones): array
+    {
+        $areaIds = collect($distribuciones)
+            ->pluck('area_id')
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($areaIds->isEmpty()) {
+            return [];
+        }
+
+        $correos = RadFactArea::query()
+            ->whereIn('id', $areaIds->all())
+            ->pluck('correo')
+            ->map(function ($correo) {
+                return strtolower(trim((string) $correo));
+            })
+            ->filter();
+
+        $correosInvalidos = $correos->filter(function ($correo) {
+            return ! filter_var($correo, FILTER_VALIDATE_EMAIL);
+        })->values();
+
+        if ($correosInvalidos->isNotEmpty()) {
+            Log::warning('Se omitieron correos inválidos de áreas RadFact', [
+                'correos_invalidos' => $correosInvalidos->all(),
+            ]);
+        }
+
+        return $correos
+            ->filter(function ($correo) {
+                return filter_var($correo, FILTER_VALIDATE_EMAIL);
+            })
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Enviar correo a cada área distribuida.
+     */
+    private function enviarNotificacionAreasDistribuidas(RadFactRadicacion $radicacion, array $correosAreas): array
+    {
+        $enviados = 0;
+        $fallidos = [];
+
+        foreach ($correosAreas as $correoArea) {
+            try {
+                Mail::to($correoArea)->send(new RadFactDistribucionNotificacionMail($radicacion));
+                $enviados++;
+            } catch (\Exception $e) {
+                $fallidos[] = $correoArea;
+
+                Log::warning('No se pudo enviar correo de radicación a área', [
+                    'radicacion_id' => $radicacion->id,
+                    'correo' => $correoArea,
+                    'error' => $e->getMessage(),
+                    'mailer' => config('mail.default'),
+                    'smtp_host' => config('mail.mailers.smtp.host'),
+                    'smtp_port' => config('mail.mailers.smtp.port'),
+                ]);
+            }
+        }
+
+        return [
+            'total' => count($correosAreas),
+            'enviados' => $enviados,
+            'fallidos' => count($fallidos),
+        ];
+    }
+
+    /**
+     * Construye mensaje de resultado del envío de correos.
+     */
+    private function resolverMensajeNotificacion(string $mensajeBase, array $resultado): array
+    {
+        if (($resultado['total'] ?? 0) === 0) {
+            return [
+                'mensaje' => $mensajeBase.' No se enviaron correos porque las áreas no tienen un correo válido configurado.',
+                'tipo' => 'warning',
+            ];
+        }
+
+        if (($resultado['fallidos'] ?? 0) > 0) {
+            return [
+                'mensaje' => $mensajeBase." Correos enviados: {$resultado['enviados']}/{$resultado['total']}. Revise logs para más detalle.",
+                'tipo' => 'warning',
+            ];
+        }
+
+        return [
+            'mensaje' => $mensajeBase,
+            'tipo' => 'success',
+        ];
     }
 }

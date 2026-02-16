@@ -60,6 +60,10 @@ Route::middleware(['auth'])->prefix('radicacion-facturas')->name('radfact.')->gr
         Route::get('/', [RadicacionController::class, 'index'])->name('index');
         Route::get('/crear', [RadicacionController::class, 'create'])->name('create');
         Route::post('/', [RadicacionController::class, 'store'])->name('store');
+        Route::get('/{radicacion}/editar-adjunto', [RadicacionController::class, 'editAdjunto'])
+            ->name('edit_adjunto');
+        Route::put('/{radicacion}/actualizar-adjunto', [RadicacionController::class, 'updateAdjunto'])
+            ->name('update_adjunto');
         Route::get('/{radicacion}', [RadicacionController::class, 'show'])->name('show');
 
         // Ajustar distribuciones (cuando hay rechazos)
@@ -70,14 +74,16 @@ Route::middleware(['auth'])->prefix('radicacion-facturas')->name('radfact.')->gr
 
         // AJAX
         Route::get('/api/cargar-datos', [RadicacionController::class, 'cargarDatos'])->name('cargarDatos');
+        Route::get('/api/buscar-contrato', [RadicacionController::class, 'buscarPorContrato'])->name('buscar_contrato');
     });
 
     // ========== APROBACIONES (ÁREAS) ==========
     Route::prefix('aprobaciones')->name('aprobaciones.')->group(function () {
         Route::get('/', [AprobacionController::class, 'index'])->name('index');
-        Route::get('/{aprobacion}', [AprobacionController::class, 'show'])->name('show');
-        Route::post('/{aprobacion}/aprobar', [AprobacionController::class, 'aprobar'])->name('aprobar');
-        Route::post('/{aprobacion}/rechazar', [AprobacionController::class, 'rechazar'])->name('rechazar');
+        Route::get('/index', [AprobacionController::class, 'index'])->name('index_alias');
+        Route::get('/{aprobacion}', [AprobacionController::class, 'show'])->whereNumber('aprobacion')->name('show');
+        Route::post('/{aprobacion}/aprobar', [AprobacionController::class, 'aprobar'])->whereNumber('aprobacion')->name('aprobar');
+        Route::post('/{aprobacion}/rechazar', [AprobacionController::class, 'rechazar'])->whereNumber('aprobacion')->name('rechazar');
 
         // Historial
         Route::get('/historial/mis-aprobaciones', [AprobacionController::class, 'historial'])->name('historial');
