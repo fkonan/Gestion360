@@ -85,4 +85,8 @@ class Permisos
     const BIOMETRIA_GESTION_HUELLERO_ENROLL = 'biometria.gestion_huellero.enroll';
     const BIOMETRIA_GESTION_HUELLERO_VERIFICAR = 'biometria.gestion_huellero.verificar';
     const BIOMETRIA_GESTION_HUELLERO_DESCANSO_CONDUCTORES = 'biometria.gestion_huellero.descanso_conductores';
+
+    // BIOMETRIA - CAMARA
+    const BIOMETRIA_GESTION_CAMARA_ENROLL = 'biometria.reconocimiento_facial.enroll';
+    const BIOMETRIA_GESTION_CAMARA_RECONOCER = 'biometria.reconocimiento_facial.reconocer';
 }

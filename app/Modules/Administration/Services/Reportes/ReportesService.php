@@ -7,22 +7,17 @@ use App\Modules\Administration\Models\Reporteador;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class ReportesService
 {
-    private const CACHE_ACTIVOS_KEY = 'reportes_activos_por_area';
-
-    private const CACHE_ACTIVOS_TTL_MINUTES = 10;
-
     private const PERMISO_PREFIX = 'administracion.reportes.id_';
 
     /** @var ApiReportes */
     protected $apiReportes;
 
-    /** @var Collection|null Cache en memoria de reportes activos agrupados por area */
-    protected ?Collection $reportesActivosPorArea = null;
+    /** @var Collection|null Cache en memoria de reportes activos */
+    protected ?Collection $reportesActivos = null;
 
     public function __construct(ApiReportes $apiReportes)
     {
@@ -130,22 +125,77 @@ class ReportesService
     }
 
     /**
-     * Devuelve los reportes activos agrupados por area (cache liviana).
+     * Devuelve los reportes activos (cache liviana).
      */
-    protected function obtenerReportesActivosAgrupados(): Collection
+    protected function obtenerReportesActivos(): Collection
     {
-        if ($this->reportesActivosPorArea === null) {
-            $this->reportesActivosPorArea = Cache::remember(
-                self::CACHE_ACTIVOS_KEY,
-                now()->addMinutes(self::CACHE_ACTIVOS_TTL_MINUTES),
-                function () {
-                    return Reporteador::get()
-                        ->groupBy('area');
-                }
-            );
+        if ($this->reportesActivos === null) {
+            // Sin cache persistente para reflejar cambios manuales en BD al instante.
+            $this->reportesActivos = Reporteador::get();
         }
 
-        return $this->reportesActivosPorArea;
+        return $this->reportesActivos;
+    }
+
+    protected function normalizarArea(?string $area): string
+    {
+        return strtolower(trim((string) $area));
+    }
+
+    /**
+     * Soporta area simple (ej: RRHH) y lista delimitada (ej: |RRHH|Unidad pasajes|).
+     */
+    protected function extraerAreasDesdeCampo(?string $areaRaw): array
+    {
+        if ($areaRaw === null) {
+            return [];
+        }
+
+        $areaRaw = trim($areaRaw);
+
+        if ($areaRaw === '') {
+            return [];
+        }
+
+        // Compatibilidad adicional por si se guarda JSON en pruebas.
+        if (str_starts_with($areaRaw, '[')) {
+            $decoded = json_decode($areaRaw, true);
+            if (is_array($decoded)) {
+                return collect($decoded)
+                    ->filter(fn ($area) => is_string($area) && trim($area) !== '')
+                    ->map(fn ($area) => trim($area))
+                    ->unique()
+                    ->values()
+                    ->all();
+            }
+        }
+
+        if (str_contains($areaRaw, '|')) {
+            return collect(explode('|', $areaRaw))
+                ->map(fn ($area) => trim($area))
+                ->filter(fn ($area) => $area !== '')
+                ->unique()
+                ->values()
+                ->all();
+        }
+
+        return [$areaRaw];
+    }
+
+    protected function reportePerteneceAArea(Reporteador $reporte, string $areaNombre): bool
+    {
+        $areaBuscada = $this->normalizarArea($areaNombre);
+        $areasReporte = collect($this->extraerAreasDesdeCampo($reporte->area ?? null))
+            ->map(fn ($area) => $this->normalizarArea($area))
+            ->values()
+            ->all();
+
+        return in_array($areaBuscada, $areasReporte, true);
+    }
+
+    protected function filtrarReportesPorNombreArea(Collection $reportes, string $areaNombre): Collection
+    {
+        return $reportes->filter(fn ($reporte) => $this->reportePerteneceAArea($reporte, $areaNombre));
     }
 
     protected function obtenerConfigPorSlug(string $slug): ?array
@@ -168,12 +218,16 @@ class ReportesService
      */
     public function obtenerRutaAreaPorNombre(string $areaNombre): ?array
     {
-        foreach ($this->obtenerAreasConfig() as $slug => $config) {
-            if (($config['nombre_bd'] ?? null) === $areaNombre) {
-                return [
-                    'slug' => $slug,
-                    'ruta' => route($config['ruta'] ?? 'reportes.area', ['area' => $slug]),
-                ];
+        $areasReporte = $this->extraerAreasDesdeCampo($areaNombre);
+
+        foreach ($areasReporte as $area) {
+            foreach ($this->obtenerAreasConfig() as $slug => $config) {
+                if ($this->normalizarArea($config['nombre_bd'] ?? null) === $this->normalizarArea($area)) {
+                    return [
+                        'slug' => $slug,
+                        'ruta' => route($config['ruta'] ?? 'reportes.area', ['area' => $slug]),
+                    ];
+                }
             }
         }
 
@@ -191,7 +245,7 @@ class ReportesService
         $result = [];
 
         $areasConfig = $this->obtenerAreasConfig();
-        $reportesPorArea = $this->obtenerReportesActivosAgrupados();
+        $reportesActivos = $this->obtenerReportesActivos();
 
         foreach ($areasConfig as $slug => $conf) {
 
@@ -204,7 +258,7 @@ class ReportesService
 
             $accesoPorArea = $permisoArea ? $user->can($permisoArea) : false;
 
-            $reportesArea = $reportesPorArea->get($areaNombre, collect());
+            $reportesArea = $this->filtrarReportesPorNombreArea($reportesActivos, $areaNombre);
 
             $accesoIndividual = $reportesArea->contains(
                 fn ($rep) => $user->can($this->permisoReporteId($rep->id))
@@ -248,8 +302,10 @@ class ReportesService
         }
 
         // Buscar reportes de esta area
-        $reportes = $this->obtenerReportesActivosAgrupados()
-            ->get($config['nombre_bd'] ?? $slugArea, collect());
+        $reportes = $this->filtrarReportesPorNombreArea(
+            $this->obtenerReportesActivos(),
+            $config['nombre_bd'] ?? $slugArea
+        );
 
         // Ver si el usuario tiene permiso individual a alguno
         foreach ($reportes as $r) {
@@ -275,8 +331,10 @@ class ReportesService
         $user = Auth::user();
 
         // 1. OBTENER TODOS LOS REPORTES DEL AREA
-        $reportesArea = $this->obtenerReportesActivosAgrupados()
-            ->get($config['nombre_bd'], collect());
+        $reportesArea = $this->filtrarReportesPorNombreArea(
+            $this->obtenerReportesActivos(),
+            $config['nombre_bd']
+        );
 
         // 2. FILTRAR QUE REPORTES INDIVIDUALES EL USUARIO PUEDE VER
         $reportesConPermisoIndividual = $reportesArea->filter(function ($reporte) use ($user) {

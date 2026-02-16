@@ -67,7 +67,7 @@
             <div class="border rounded p-3">
               <div class="fw-semibold mb-2">Identificación</div>
               <!-- <label class="form-label" for="personSelect">Identificacion</label> -->
-              <select id="personSelect" class="form-select form-select-sm" data-url="{{ route('fingerprint.personas') }}" data-placeholder="Selecciona una identificacion...">
+              <select id="personSelect" class="form-select form-select-sm" data-url="{{ route('camera.personas') }}" data-placeholder="Selecciona una identificacion...">
                 <option value=""></option>
               </select>
             </div>

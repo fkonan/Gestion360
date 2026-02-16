@@ -213,6 +213,46 @@ export function pickTopFaces(faces, maxFaces, rotationIndex = 0) {
   return rotated.slice(0, maxFaces);
 }
 
+export function iouBoxes(boxA, boxB) {
+  if (!boxA || !boxB) return 0;
+  const ax1 = boxA.xCenter - (boxA.width / 2);
+  const ay1 = boxA.yCenter - (boxA.height / 2);
+  const ax2 = boxA.xCenter + (boxA.width / 2);
+  const ay2 = boxA.yCenter + (boxA.height / 2);
+
+  const bx1 = boxB.xCenter - (boxB.width / 2);
+  const by1 = boxB.yCenter - (boxB.height / 2);
+  const bx2 = boxB.xCenter + (boxB.width / 2);
+  const by2 = boxB.yCenter + (boxB.height / 2);
+
+  const ix1 = Math.max(ax1, bx1);
+  const iy1 = Math.max(ay1, by1);
+  const ix2 = Math.min(ax2, bx2);
+  const iy2 = Math.min(ay2, by2);
+
+  const iw = Math.max(0, ix2 - ix1);
+  const ih = Math.max(0, iy2 - iy1);
+  const inter = iw * ih;
+  if (inter <= 0) return 0;
+
+  const areaA = Math.max(0, ax2 - ax1) * Math.max(0, ay2 - ay1);
+  const areaB = Math.max(0, bx2 - bx1) * Math.max(0, by2 - by1);
+  const union = areaA + areaB - inter;
+  return union > 0 ? (inter / union) : 0;
+}
+
+export function faceUtilityScore(face, {
+  scoreWeight = 0.5,
+  sizeWeight = 0.35,
+  centerWeight = 0.15,
+} = {}) {
+  if (!face?.box) return 0;
+  const detScore = Math.max(0, Math.min(1, face.score || 0));
+  const sizeScore = Math.max(0, Math.min(1, face.box.width || 0));
+  const centerScore = Math.max(0, Math.min(1, 1 - Math.min(1, face.centerDist || 1)));
+  return (detScore * scoreWeight) + (sizeScore * sizeWeight) + (centerScore * centerWeight);
+}
+
 export async function cropFacesToBlobs(videoEl, canvasEl, faces, {
   size = 320,
   padding = 0.25,

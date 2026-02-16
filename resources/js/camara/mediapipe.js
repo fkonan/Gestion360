@@ -1,6 +1,7 @@
 import { FaceDetection } from '@mediapipe/face_detection';
 
-const MEDIAPIPE_BASE_PATH = '/vendor/mediapipe/face_detection/';
+/* const MEDIAPIPE_BASE_PATH = '/vendor/mediapipe/face_detection/'; */
+const MEDIAPIPE_BASE_PATH = '/gestion360/public/';
 
 export function getMediapipeBaseUrl() {
   return new URL(MEDIAPIPE_BASE_PATH, window.location.origin).toString();

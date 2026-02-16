@@ -173,9 +173,9 @@ class GestionPasajesController extends Controller
     {
         try {
             $id = $this->decryptFromNode($token);
-            /* $id = $token; */
-
-            $conn = DB::connection('sqlsrv');
+            /* $id = $token;
+ */
+            $conn = DB::connection('sqlsrv-lectura');
 
             /*  $abordo = $conn->selectOne("
              select vd.Abordo from PasajesOperaciones as po

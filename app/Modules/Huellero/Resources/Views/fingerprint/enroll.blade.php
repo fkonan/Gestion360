@@ -625,7 +625,6 @@
               };
 
             if (useMockResponse) {
-                /* console.log('Fingerprint enroll payload', payload); */
                 sendInProgress = false;
                 updateProgress();
                 showSuccessModal();
@@ -655,7 +654,6 @@
                 }
 
                 if (!response.ok || !data || data.ok !== true) {
-                    /* console.log('Fingerprint enroll payload', payload); */
                     showAlert('warning', (data && data.error) ? data.error : 'Servicio no disponible.');
                     sendInProgress = false;
                     updateProgress();
@@ -666,7 +664,6 @@
                 updateProgress();
                 showSuccessModal();
             } catch (err) {
-                /* console.log('Fingerprint enroll payload', payload); */
                 showAlert('warning', 'No se pudo contactar el servicio. Payload guardado.');
                 sendInProgress = false;
                 updateProgress();

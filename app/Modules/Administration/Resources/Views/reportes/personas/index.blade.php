@@ -66,7 +66,7 @@
         @foreach ($reportes as $reporte)
           <x-reporteItem
             consecutivo="{{ $loop->iteration + 3 }}"
-            area="{{ $reporte->area }}"
+            area="{{ str($reporte->area ?? '')->trim('|')->replace('|', ', ') }}"
             titulo="{{ $reporte->nombre }}"
             descripcion="{{ $reporte->descripcion }}"
             formato="{{ $reporte->formato_salida }}"

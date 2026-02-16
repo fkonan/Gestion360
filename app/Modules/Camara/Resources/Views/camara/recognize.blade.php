@@ -50,7 +50,7 @@
           <div class="card-body d-flex flex-column gap-3">
             <div id="eventModeBanner" class="px-3 py-3 text-white d-flex align-items-center justify-content-between gap-3 bg-success">
               <div class="d-flex align-items-center gap-3">
-                <i id="eventModeIcon" class="fa-solid fa-arrow-right-to-bracket fa-2x"></i>
+                <i id="eventModeIcon" class="fas fa-sign-in-alt fa-2x"></i>
                 <div>
                   <div class="text-uppercase small opacity-75">Evento actual</div>
                   <div id="eventModeText" class="mode-title fs-5">MODO: INGRESO</div>
@@ -64,21 +64,21 @@
               <div class="d-flex flex-wrap align-items-center gap-2">
                 <div class="d-flex align-items-center gap-2">
                   <span class="text-muted small d-flex align-items-center gap-2">
-                    <i class="fa-solid fa-video"></i> Camara
+                    <i class="fas fa-video"></i> Camara
                   </span>
                   <span id="cameraStatus" class="badge rounded-pill bg-secondary">Camara detenida</span>
                 </div>
                 <div class="vr d-none d-md-block"></div>
                 <div class="d-flex align-items-center gap-2">
                   <span class="text-muted small d-flex align-items-center gap-2">
-                    <i class="fa-solid fa-server"></i> Servicio
+                    <i class="fas fa-server"></i> Servicio
                   </span>
                   <span id="serviceStatus" class="badge rounded-pill bg-secondary">Comprobando...</span>
                 </div>
                 <div class="vr d-none d-md-block"></div>
                 <div class="d-flex align-items-center gap-2">
                   <span class="text-muted small d-flex align-items-center gap-2">
-                    <i class="fa-solid fa-cloud-arrow-up"></i> Envio
+                    <i class="fas fa-cloud-upload-alt"></i> Envio
                   </span>
                   <span id="lastPayloadSize" class="badge rounded-pill bg-info">--</span>
                 </div>
@@ -91,11 +91,11 @@
                 <div class="btn-group btn-group-sm" role="group" aria-label="Evento reconocimiento">
                   <input type="radio" class="btn-check" name="evento" id="eventIngreso" value="2" autocomplete="off">
                   <label id="eventIngresoLabel" class="btn btn-outline-success" for="eventIngreso">
-                    <i class="fa-solid fa-arrow-right-to-bracket me-1"></i>Ingreso
+                    <i class="fas fa-sign-in-alt me-1"></i>Ingreso
                   </label>
                   <input type="radio" class="btn-check" name="evento" id="eventSalida" value="1" autocomplete="off">
                   <label id="eventSalidaLabel" class="btn btn-outline-danger" for="eventSalida">
-                    <i class="fa-solid fa-arrow-right-from-bracket me-1"></i>Salida
+                    <i class="fas fa-sign-out-alt me-1"></i>Salida
                   </label>
                 </div>
               </div>
@@ -104,11 +104,6 @@
             <div class="ratio ratio-16x9 bg-dark rounded overflow-hidden">
               <video id="cameraVideo" class="w-100 h-100" autoplay muted playsinline></video>
             </div>
-            <div class="border rounded p-2">
-              <div class="small text-muted mb-2">Preview envio (debug)</div>
-              <div id="sendPreview" class="d-flex flex-wrap gap-2" style="min-height: 150px;"></div>
-            </div>
-
             <div class="d-flex flex-wrap gap-2">
               <button id="startBtn" class="btn btn-success" type="button"
                 data-health-url="{{ route('camera.health') }}"

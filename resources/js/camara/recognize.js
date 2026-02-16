@@ -9,6 +9,8 @@ import {
   pickTopFaces,
   cropFaceToBlob,
   captureFullFrameBlob,
+  iouBoxes,
+  faceUtilityScore,
 } from './shared';
 import { createFaceDetector } from './mediapipe';
 
@@ -20,7 +22,6 @@ document.addEventListener('DOMContentLoaded', () => {
     serviceStatus: document.getElementById('serviceStatus'),
     serviceMessage: document.getElementById('serviceMessage'),
     lastPayloadSize: document.getElementById('lastPayloadSize'),
-    sendPreview: document.getElementById('sendPreview'),
     video: document.getElementById('cameraVideo'),
     canvas: document.getElementById('captureCanvas'),
     eventIngreso: document.getElementById('eventIngreso'),
@@ -49,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const CONFIG = {
     // Balanced for entry: faster response (~1s) without saturating network.
     detection: {
-      intervalMs: 150,
+      intervalMs: 180,
       model: 'full',
       minScoreEnter: 0.45,
       minScoreExit: 0.40,
@@ -58,37 +59,48 @@ document.addEventListener('DOMContentLoaded', () => {
       recentMs: 700,
     },
     capture: {
-      intervalMs: 450,
+      intervalMs: 500,
       crowdThreshold: 5,
       maxFaces: 4,
       cropBase: 384,
       cropBig: 448,
-      cropQuality: 1,
-      cropQualitySmall: 0.85,
+      cropQuality: 0.82,
+      cropQualitySmall: 0.86,
       cropPaddingBase: 0.25,
-      cropPaddingSmall: 0.45,
-      smallFaceW: 0.06,
+      cropPaddingSmall: 0.50,
+      smallFaceW: 0.07,
       fullWidth: 640,
       fullHeight: 480,
-      fullQuality: 1,
+      fullQuality: 0.8,
     },
     send: {
-      intervalMs: 1200,
-      batchSize: 4,
+      intervalMs: 1500,
+      // Selecciona y envia pocos frames utiles por ciclo para evitar duplicados.
+      maxImagesPerRequest: 8,
+      maxBufferImages: 10,
+      maxPayloadBytes: 900 * 1024,
+      maxFramesPerSend: 3,
+      preferBestFrames: true,
+      enableFrameDedupe: true,
+      dedupeWindowMs: 2200,
+      bboxIouThreshold: 0.9,
+      bboxCenterThreshold: 0.035,
+      minFrameGapMs: 220,
       globalCooldownMs: 200,
       identityCooldownMs: 15000,
-      timeoutMs: 5000,
+      timeoutMs: 1400,
     },
     health: {
       pollMs: 4000,
       resumeDelayMs: 400,
     },
     listMax: 50,
+    listTtlMs: 20000,
     debug: false,
   };
   // Ajustes rapidos:
   // - Mas lejos: bajar minFaceRatio/minScore, subir width/quality.
-  // - Menos CPU/red: subir cooldowns o bajar batchSize/quality.
+  // - Menos CPU/red: subir cooldowns o bajar maxFramesPerSend/quality.
 
   let stream = null;
   let faceDetector = null;
@@ -96,8 +108,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let detectionInFlight = false;
   let lastFaceDetected = false;
   let liveActive = false;
-  let liveCaptureTimer = null;
-  let liveSendTimer = null;
+  let liveCaptureLoopActive = false;
+  let liveSendLoopActive = false;
   let healthTimer = null;
   let healthInFlight = false;
   let liveBuffer = [];
@@ -110,15 +122,34 @@ document.addEventListener('DOMContentLoaded', () => {
   let lastDetections = [];
   let lastDetectionsAt = 0;
   let lastSendAt = 0;
-  let previewUrls = [];
   const lastSeenByKey = new Map();
   let captureInFlight = false;
   let faceRotationIndex = 0;
-  let lastCaptureMode = 'precision';
   let recognizeAbortController = null;
+  let alertDismissTimer = null;
+  let recognizedPruneTimer = null;
+  const recentCapturedFaces = [];
+  let cycleStats = {
+    captured: 0,
+    discardedDedupe: 0,
+    discardedSelection: 0,
+    sent: 0,
+    sentBytes: 0,
+  };
 
   function inlineAlert(type, message) {
     lastAlert = showInlineAlert(ui.alertContainer, type, message, lastAlert);
+    if (!ui.alertContainer || !message) {
+      return;
+    }
+    if (alertDismissTimer) {
+      clearTimeout(alertDismissTimer);
+    }
+    alertDismissTimer = window.setTimeout(() => {
+      ui.alertContainer.innerHTML = '';
+      lastAlert = '';
+      alertDismissTimer = null;
+    }, 4000);
   }
 
   function setCameraStatus(state) {
@@ -177,34 +208,82 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  function sleep(ms) {
+    return new Promise((resolve) => {
+      window.setTimeout(resolve, ms);
+    });
+  }
+
   function startSendLoop() {
-    if (liveSendTimer || !liveActive) return;
-    liveSendTimer = setInterval(sendLiveBatch, CONFIG.send.intervalMs);
+    if (liveSendLoopActive || !liveActive) return;
+    liveSendLoopActive = true;
+    const run = async () => {
+      while (liveSendLoopActive && liveActive) {
+        await sendLiveBatch();
+        if (!liveSendLoopActive || !liveActive) {
+          break;
+        }
+        await sleep(CONFIG.send.intervalMs);
+      }
+    };
+    void run();
   }
 
   function stopSendLoop() {
-    if (!liveSendTimer) return;
-    clearInterval(liveSendTimer);
-    liveSendTimer = null;
+    liveSendLoopActive = false;
+  }
+
+  function startCaptureLoop() {
+    if (liveCaptureLoopActive || !liveActive) return;
+    liveCaptureLoopActive = true;
+    const run = async () => {
+      while (liveCaptureLoopActive && liveActive) {
+        if (serviceOnline === false) {
+          liveBuffer = [];
+        } else if (lastFaceDetected && (Date.now() - lastFaceSeenAt) <= CONFIG.detection.recentMs) {
+          await captureFrame();
+        } else {
+          liveBuffer = [];
+        }
+
+        if (!liveCaptureLoopActive || !liveActive) {
+          break;
+        }
+        await sleep(CONFIG.capture.intervalMs);
+      }
+    };
+    void run();
+  }
+
+  function stopCaptureLoop() {
+    liveCaptureLoopActive = false;
   }
 
   function markServiceOffline() {
-    if (serviceOnline === false) return;
+    if (serviceOnline === false) {
+      setServiceStatus('error');
+      return;
+    }
     serviceOnline = false;
     setServiceStatus('error');
     setServiceMessage('Servicio fuera de linea. Esperando reconexion...', 'text-danger');
     liveBuffer = [];
+    resetCycleStats();
     stopSendLoop();
     startHealthPolling();
   }
 
   function markServiceOnline() {
-    if (serviceOnline === true) return;
+    if (serviceOnline === true) {
+      setServiceStatus('ok');
+      return;
+    }
     serviceOnline = true;
     setServiceStatus('ok');
     setServiceMessage('Servicio restaurado.', 'text-success');
     window.setTimeout(() => setServiceMessage(''), 2500);
     liveBuffer = [];
+    resetCycleStats();
     lastSendAt = 0;
     resumeSendAt = Date.now() + CONFIG.health.resumeDelayMs;
     if (liveActive) {
@@ -234,44 +313,128 @@ document.addEventListener('DOMContentLoaded', () => {
     ui.lastPayloadSize.textContent = formatKb(bytes);
   }
 
-  function clearPreview() {
-    if (!previewUrls.length) return;
-    previewUrls.forEach((url) => URL.revokeObjectURL(url));
-    previewUrls = [];
-    if (ui.sendPreview) {
-      ui.sendPreview.innerHTML = '';
+  function resetCycleStats() {
+    cycleStats = {
+      captured: 0,
+      discardedDedupe: 0,
+      discardedSelection: 0,
+      sent: 0,
+      sentBytes: 0,
+    };
+  }
+
+  function makeCandidate(face, blob, mode, capturedAt) {
+    const score = face?.score || 0;
+    const faceRatio = face?.box?.width || 0;
+    const centerDist = face?.centerDist || 1;
+    const utility = faceUtilityScore(face);
+    return {
+      blob,
+      bytes: blob?.size || 0,
+      capturedAt,
+      mode,
+      score,
+      faceRatio,
+      centerDist,
+      utility,
+      box: face?.box || null,
+    };
+  }
+
+  function isNearDuplicate(candidate) {
+    if (!CONFIG.send.enableFrameDedupe || !candidate?.box) {
+      return false;
+    }
+    const now = candidate.capturedAt || Date.now();
+    const cutoff = now - CONFIG.send.dedupeWindowMs;
+    for (let i = recentCapturedFaces.length - 1; i >= 0; i -= 1) {
+      const prev = recentCapturedFaces[i];
+      if ((prev.capturedAt || 0) < cutoff) {
+        break;
+      }
+      const iou = iouBoxes(candidate.box, prev.box);
+      const dx = Math.abs((candidate.box.xCenter || 0) - (prev.box.xCenter || 0));
+      const dy = Math.abs((candidate.box.yCenter || 0) - (prev.box.yCenter || 0));
+      if (iou >= CONFIG.send.bboxIouThreshold &&
+        dx <= CONFIG.send.bboxCenterThreshold &&
+        dy <= CONFIG.send.bboxCenterThreshold) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function registerCapturedFace(candidate) {
+    if (!candidate?.box) return;
+    recentCapturedFaces.push({
+      capturedAt: candidate.capturedAt,
+      box: candidate.box,
+    });
+    const cutoff = (candidate.capturedAt || Date.now()) - (CONFIG.send.dedupeWindowMs * 2);
+    while (recentCapturedFaces.length && (recentCapturedFaces[0].capturedAt || 0) < cutoff) {
+      recentCapturedFaces.shift();
     }
   }
 
-  function updateSendPreview(blobs) {
-    if (!ui.sendPreview || !Array.isArray(blobs)) return;
-    // Reuse existing <img> nodes to avoid layout thrash/flicker
-    const existing = Array.from(ui.sendPreview.children);
-    // Revoke old URLs
-    if (previewUrls.length) {
-      previewUrls.forEach((url) => URL.revokeObjectURL(url));
-      previewUrls = [];
+  function appendToLiveBuffer(candidates) {
+    if (!Array.isArray(candidates) || candidates.length === 0) return;
+    liveBuffer.push(...candidates);
+    if (liveBuffer.length > CONFIG.send.maxBufferImages) {
+      liveBuffer.splice(0, liveBuffer.length - CONFIG.send.maxBufferImages);
     }
-    blobs.forEach((blob, index) => {
-      if (!blob) return;
-      const url = URL.createObjectURL(blob);
-      previewUrls.push(url);
-      let img = existing[index];
-      if (!img) {
-        img = document.createElement('img');
-        img.className = 'img-fluid rounded border';
-        img.style.maxHeight = '140px';
-        img.style.objectFit = 'cover';
-        img.style.flex = '0 0 auto';
-        ui.sendPreview.appendChild(img);
+  }
+
+  function buildBatchWithinLimits() {
+    const maxCount = Math.max(1, CONFIG.send.maxImagesPerRequest);
+    const maxFrames = Math.max(1, CONFIG.send.maxFramesPerSend || maxCount);
+    const maxBytes = Math.max(64 * 1024, CONFIG.send.maxPayloadBytes || (900 * 1024));
+    if (!liveBuffer.length) {
+      return [];
+    }
+
+    const source = liveBuffer.slice(-maxCount);
+    const candidates = CONFIG.send.preferBestFrames
+      ? [...source].sort((a, b) => {
+        if ((b.utility || 0) !== (a.utility || 0)) return (b.utility || 0) - (a.utility || 0);
+        return (b.capturedAt || 0) - (a.capturedAt || 0);
+      })
+      : [...source].reverse();
+
+    const selected = [];
+    let totalBytes = 0;
+    for (const candidate of candidates) {
+      const nextSize = candidate?.bytes || 0;
+      // Siempre permitir al menos una imagen por request.
+      if (selected.length > 0 && (totalBytes + nextSize) > maxBytes) {
+        cycleStats.discardedSelection += 1;
+        continue;
       }
-      img.src = url;
-      img.alt = 'Preview envio';
-    });
-    // Remove extra nodes
-    for (let i = blobs.length; i < existing.length; i += 1) {
-      existing[i].remove();
+      if (selected.length >= maxFrames) {
+        cycleStats.discardedSelection += 1;
+        continue;
+      }
+      const tooClose = selected.some((item) => {
+        const dt = Math.abs((candidate.capturedAt || 0) - (item.capturedAt || 0));
+        if (dt < CONFIG.send.minFrameGapMs) return true;
+        if (!candidate?.box || !item?.box) return false;
+        if (dt > CONFIG.send.dedupeWindowMs) return false;
+        return iouBoxes(candidate.box, item.box) >= CONFIG.send.bboxIouThreshold;
+      });
+      if (tooClose) {
+        cycleStats.discardedSelection += 1;
+        continue;
+      }
+      selected.push(candidate);
+      totalBytes += nextSize;
     }
+
+    if (CONFIG.send.preferBestFrames) {
+      selected.sort((a, b) => (a.capturedAt || 0) - (b.capturedAt || 0));
+    } else {
+      selected.reverse();
+    }
+
+    return selected;
   }
 
   function getEndpointUrl(type) {
@@ -333,13 +496,6 @@ document.addEventListener('DOMContentLoaded', () => {
       liveBuffer = [];
     }
 
-    if (CONFIG.debug && detections.length) {
-      console.debug('[camara] detect', {
-        stable,
-        score: Array.isArray(detections[0]?.score) ? detections[0].score[0] : detections[0]?.score,
-        width: detections[0]?.boundingBox?.width ?? 0,
-      });
-    }
   }
 
   function startDetectionLoop() {
@@ -423,8 +579,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (ui.eventModeIcon) {
       ui.eventModeIcon.className = isIngreso
-        ? 'fa-solid fa-arrow-right-to-bracket fa-2x'
-        : 'fa-solid fa-arrow-right-from-bracket fa-2x';
+        ? 'fas fa-sign-in-alt fa-2x'
+        : 'fas fa-sign-out-alt fa-2x';
     }
     if (ui.eventModeText) {
       ui.eventModeText.textContent = isIngreso ? 'MODO: INGRESO' : 'MODO: SALIDA';
@@ -473,18 +629,26 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       if (faces.length >= CONFIG.capture.crowdThreshold) {
         // Modo CROWD: enviar 1 frame completo cuando hay muchas caras.
-        lastCaptureMode = 'crowd';
+        const refFace = pickTopFaces(faces, 1)[0] || null;
         const blob = await captureFullFrameBlob(ui.video, ui.canvas, {
           width: CONFIG.capture.fullWidth,
           height: CONFIG.capture.fullHeight,
           quality: CONFIG.capture.fullQuality,
         });
-        liveBuffer = blob ? [blob] : [];
+        if (blob && refFace) {
+          const candidate = makeCandidate(refFace, blob, 'crowd', Date.now());
+          if (isNearDuplicate(candidate)) {
+            cycleStats.discardedDedupe += 1;
+          } else {
+            cycleStats.captured += 1;
+            registerCapturedFace(candidate);
+            appendToLiveBuffer([candidate]);
+          }
+        }
         return;
       }
 
       // Modo PRECISION: crops por cara (1..4).
-      lastCaptureMode = 'precision';
       if (faces.length > CONFIG.capture.maxFaces) {
         faceRotationIndex = (faceRotationIndex + 1) % faces.length;
       }
@@ -494,7 +658,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      const blobs = [];
+      const candidates = [];
       for (const face of selected) {
         const isSmall = face.box.width < CONFIG.capture.smallFaceW;
         const padding = isSmall ? CONFIG.capture.cropPaddingSmall : CONFIG.capture.cropPaddingBase;
@@ -505,9 +669,17 @@ document.addEventListener('DOMContentLoaded', () => {
           size,
           quality,
         });
-        if (blob) blobs.push(blob);
+        if (!blob) continue;
+        const candidate = makeCandidate(face, blob, 'crop', Date.now());
+        if (isNearDuplicate(candidate)) {
+          cycleStats.discardedDedupe += 1;
+          continue;
+        }
+        cycleStats.captured += 1;
+        registerCapturedFace(candidate);
+        candidates.push(candidate);
       }
-      liveBuffer = blobs;
+      appendToLiveBuffer(candidates);
     } finally {
       captureInFlight = false;
     }
@@ -549,6 +721,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  function pruneRecognizedList() {
+    const cutoff = Date.now() - CONFIG.listTtlMs;
+    const next = recognizedList.filter((item) => (item.lastSeenAt || 0) >= cutoff);
+    const changed = next.length !== recognizedList.length;
+    recognizedList = next;
+    return changed;
+  }
+
   function highlightMatch(text, term) {
     if (!term) return text;
     const lower = text.toLowerCase();
@@ -564,6 +744,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!ui.recognizeList || !ui.recognizeEmpty) {
       return;
     }
+    pruneRecognizedList();
     const term = ui.searchInput ? ui.searchInput.value.trim().toLowerCase() : '';
     const list = term
       ? recognizedList.filter((item) => {
@@ -636,14 +817,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     liveInFlight = true;
     lastSendAt = Date.now();
-    const maxBatch = lastCaptureMode === 'crowd' ? 1 : CONFIG.send.batchSize;
-    const batch = liveBuffer.slice(0, maxBatch);
-    liveBuffer = [];
-    const batchSizeBytes = batch.reduce((sum, blob) => sum + (blob?.size || 0), 0);
-    setLastPayloadSize(batchSizeBytes);
-    if (batch.length) {
-      updateSendPreview(batch);
+    const batchCandidates = buildBatchWithinLimits();
+    if (batchCandidates.length === 0) {
+      liveBuffer = [];
+      liveInFlight = false;
+      return;
     }
+    // Reinicia ventana de captura tras cada envio: no mantener backlog antiguo.
+    liveBuffer = [];
+    const batch = batchCandidates.map((item) => item.blob).filter(Boolean);
+    if (batch.length === 0) {
+      liveInFlight = false;
+      return;
+    }
+    const batchSizeBytes = batchCandidates.reduce((sum, item) => sum + (item?.bytes || 0), 0);
+    setLastPayloadSize(batchSizeBytes);
 
     let timeoutId = null;
     try {
@@ -689,27 +877,15 @@ document.addEventListener('DOMContentLoaded', () => {
       const updatedAt = performance.now();
       renderRecognized();
       const renderedAt = performance.now();
-      if (CONFIG.debug) {
-        console.debug('[camara] recognize ms', {
-          total: Math.round(renderedAt - startedAt),
-          tHeaders: Math.round(headersAt - startedAt),
-          tJson: Math.round(parsedAt - headersAt),
-          tUpdate: Math.round(updatedAt - parsedAt),
-          tRender: Math.round(renderedAt - updatedAt),
-          evento: selectedEvent,
-          ok: data?.ok,
-          count: persons.length,
-        });
-      }
+      cycleStats.sent = batch.length;
+      cycleStats.sentBytes = batchSizeBytes;
+      resetCycleStats();
     } catch (error) {
-      if (error && error.name === 'AbortError') {
-        if (CONFIG.debug) {
-          console.debug('[camara] recognize abort (timeout or stop/pagehide)');
-        }
-      } else {
+      if (!(error && error.name === 'AbortError')) {
         markServiceOffline();
         inlineAlert('warning', 'Error de red en reconocimiento en vivo.');
       }
+      resetCycleStats();
     } finally {
       if (timeoutId) {
         clearTimeout(timeoutId);
@@ -727,24 +903,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     liveActive = true;
     liveBuffer = [];
+    resetCycleStats();
     const healthOk = await checkHealth();
     if (!healthOk) {
       startHealthPolling();
     }
-    liveCaptureTimer = setInterval(async () => {
-      if (serviceOnline === false) {
-        liveBuffer = [];
-        return;
-      }
-      if (!lastFaceDetected) {
-        return;
-      }
-      if ((Date.now() - lastFaceSeenAt) > CONFIG.detection.recentMs) {
-        liveBuffer = [];
-        return;
-      }
-      await captureFrame();
-    }, CONFIG.capture.intervalMs);
+    startCaptureLoop();
     if (serviceOnline !== false) {
       startSendLoop();
     }
@@ -757,15 +921,12 @@ document.addEventListener('DOMContentLoaded', () => {
       recognizeAbortController.abort();
       recognizeAbortController = null;
     }
-    if (liveCaptureTimer) {
-      clearInterval(liveCaptureTimer);
-      liveCaptureTimer = null;
-    }
+    stopCaptureLoop();
     stopSendLoop();
     stopHealthPolling();
     liveBuffer = [];
+    resetCycleStats();
     liveInFlight = false;
-    clearPreview();
     setControls(false, false);
     stopCamera();
   }
@@ -826,6 +987,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   window.addEventListener('pagehide', () => {
     stopLiveRecognize();
+    if (recognizedPruneTimer) {
+      clearInterval(recognizedPruneTimer);
+      recognizedPruneTimer = null;
+    }
   });
 
   initFaceDetection();
@@ -834,6 +999,11 @@ document.addEventListener('DOMContentLoaded', () => {
   setControls(false, false);
   setServiceMessage('');
   renderRecognized();
+  recognizedPruneTimer = window.setInterval(() => {
+    if (pruneRecognizedList()) {
+      renderRecognized();
+    }
+  }, 1000);
   checkHealth();
   startLiveRecognize();
 });

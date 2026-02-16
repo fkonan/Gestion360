@@ -599,6 +599,12 @@ body.sidebar-collapse .main-sidebar .nav-sidebar {
     transition: transform 0s ease;
 }
 
+/* Oculta flechas de treeview en sidebar colapsado para evitar superposicion */
+body.sidebar-collapse:not(.sidebar-open) .main-sidebar:not(:hover) .nav-sidebar .nav-link > .right,
+body.sidebar-collapse:not(.sidebar-open) .main-sidebar:not(:hover) .nav-sidebar .nav-link p .right {
+    display: none !important;
+}
+
 /* padding de los ítems del menú */
 .main-sidebar .nav-sidebar > .nav-item > .nav-link {
     padding-left: 6px !important;

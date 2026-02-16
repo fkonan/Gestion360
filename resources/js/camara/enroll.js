@@ -261,7 +261,6 @@ document.addEventListener('DOMContentLoaded', () => {
    let alignedState = false;
    let faceEma = null;
    let ovalTarget = null;
-   let lastDetectionLogAt = 0;
    let stableOkFrames = 0;
    let holdStartTs = null;
    let holdProgress = 0;
@@ -340,11 +339,11 @@ document.addEventListener('DOMContentLoaded', () => {
             loadingMore: () => 'Cargando mas resultados...',
          },
          placeholder: ui.personSelect.dataset.placeholder || 'Selecciona una identificacion...',
-         minimumInputLength: 4,
+         minimumInputLength: 3,
          ajax: {
             url,
             dataType: 'json',
-            delay: 250,
+            delay: 120,
             data: function (params) {
                return {
                   query: params.term
@@ -856,14 +855,6 @@ document.addEventListener('DOMContentLoaded', () => {
       lastFaceDetected = stable;
       setFaceStatus(stable);
 
-      if (ui.debugToggle && ui.debugToggle.checked && detections.length) {
-         const now = Date.now();
-         if (now - lastDetectionLogAt > 1000) {
-            console.log('[MP raw detection sample]', detections[0]);
-            lastDetectionLogAt = now;
-         }
-      }
-
       if (!detections.length) {
          isAligned = false;
          alignedState = false;
@@ -910,24 +901,6 @@ document.addEventListener('DOMContentLoaded', () => {
          detections.length
       );
 
-      if (ui.debugToggle && ui.debugToggle.checked) {
-         console.log('[debug] face', {
-            score: smoothedFace.score,
-            cx: smoothedFace.cx,
-            cy: smoothedFace.cy,
-            w: smoothedFace.w,
-            h: smoothedFace.h,
-            dist: validation.dist,
-            sizeRel: validation.sizeRel,
-            inside: validation.inside,
-            sizeOk: validation.sizeOk,
-            scoreOk: validation.scoreOk,
-            dx: validation.dx,
-            dy: validation.dy,
-            level: validation.level,
-            detections: detections.length,
-         });
-      }
    }
 
    function startDetectionLoop() {
