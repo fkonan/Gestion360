@@ -413,7 +413,7 @@
                     searching: () => 'Buscando...',
                     loadingMore: () => 'Cargando mas resultados...',
                 },
-                placeholder: 'Buscar por nombre o documento',
+                placeholder: 'Buscar por documento',
                 minimumInputLength: 4,
                 ajax: {
                     url: '{{ route("fingerprint.personas") }}',

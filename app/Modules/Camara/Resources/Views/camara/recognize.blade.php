@@ -107,6 +107,7 @@
             <div class="d-flex flex-wrap gap-2">
               <button id="startBtn" class="btn btn-success" type="button"
                 data-health-url="{{ route('camera.health') }}"
+                data-keepalive-url="{{ route('camera.session-keepalive') }}"
                 data-recognize-url="{{ route('camera.recognize-live') }}">Iniciar</button>
               <button id="stopBtn" class="btn btn-outline-secondary btn-sm" type="button" disabled>Detener</button>
               <button id="retryBtn" class="btn btn-outline-warning btn-sm d-none" type="button">Reintentar camara</button>

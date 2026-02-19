@@ -91,15 +91,21 @@ class FingerprintController extends Controller
 
     try {
       $limiteDuplicado = now()->subMinutes(5);
-      $eventoReciente = PrsHuellaEventos::query()
+      $ultimoEvento = PrsHuellaEventos::query()
         ->where('identificacion', $payload['identificacion'])
-        ->where('evento', (int) $payload['evento'])
         ->where('tipo', 1)
-        ->where('fecha_creacion', '>=', $limiteDuplicado)
         ->orderByDesc('fecha_creacion')
         ->first();
 
-      if ($eventoReciente) {
+      $fechaUltimoEvento = $ultimoEvento?->fecha_creacion
+        ? Carbon::parse($ultimoEvento->fecha_creacion)
+        : null;
+      $esEventoRepetidoEnVentana = $ultimoEvento
+        && (int) $ultimoEvento->evento === (int) $payload['evento']
+        && $fechaUltimoEvento
+        && $fechaUltimoEvento->greaterThanOrEqualTo($limiteDuplicado);
+
+      if ($esEventoRepetidoEnVentana) {
         return response()->json([
           'ok' => false,
           'error' => 'Ya existe un registro reciente para este evento. Intenta nuevamente en unos minutos.',
@@ -278,15 +284,21 @@ class FingerprintController extends Controller
 
     try {
       $limiteDuplicado = now()->subMinutes(5);
-      $eventoReciente = PrsHuellaEventos::query()
+      $ultimoEvento = PrsHuellaEventos::query()
         ->where('identificacion', $payload['identificacion'])
-        ->where('evento', (int) $payload['evento'])
         ->where('tipo', 2)
-        ->where('fecha_creacion', '>=', $limiteDuplicado)
         ->orderByDesc('fecha_creacion')
         ->first();
 
-      if ($eventoReciente) {
+      $fechaUltimoEvento = $ultimoEvento?->fecha_creacion
+        ? Carbon::parse($ultimoEvento->fecha_creacion)
+        : null;
+      $esEventoRepetidoEnVentana = $ultimoEvento
+        && (int) $ultimoEvento->evento === (int) $payload['evento']
+        && $fechaUltimoEvento
+        && $fechaUltimoEvento->greaterThanOrEqualTo($limiteDuplicado);
+
+      if ($esEventoRepetidoEnVentana) {
         return response()->json([
           'ok' => false,
           'error' => 'Ya existe un registro reciente para este evento. Intenta nuevamente en unos minutos.',

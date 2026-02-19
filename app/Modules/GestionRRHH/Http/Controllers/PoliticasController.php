@@ -89,7 +89,7 @@ class PoliticasController extends Controller
 
     //Plantilla pdf SARLAFT
     if ($politicaId == self::ID_POLITICA_SARLAFT) {
-      $pdf = Pdf::loadView('politicas.plantillasPDF.sarlaft', compact('firma'));
+      $pdf = Pdf::loadView('gestionrrhh::politicas.plantillasPDF.sarlaft', compact('firma'));
       $pdf->setPaper('A4', 'portrait');
       return $pdf->stream($politica->politica . '-' . $firma->NomCon . '.pdf');
     }

@@ -32,10 +32,10 @@ ensureMediapipeAssets();
 export default defineConfig({
 
     /* Pruebas */
-    /* base: '/gestion/autogestion2/public/build/', */
+   /*  base: '/gestion/autogestion2/public/build/', */
 
     /* Produccion */
-    base: '/gestion_3/public/build/',
+    base: '/gestion360/public/build/',
 
     plugins: [
         laravel({

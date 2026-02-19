@@ -173,9 +173,8 @@ class GestionPasajesController extends Controller
     {
         try {
             $id = $this->decryptFromNode($token);
-            /* $id = $token;
- */
-            $conn = DB::connection('sqlsrv-lectura');
+            /* $id = $token; */
+            $conn = DB::connection('sqlsrv');
 
             /*  $abordo = $conn->selectOne("
              select vd.Abordo from PasajesOperaciones as po
@@ -189,113 +188,120 @@ class GestionPasajesController extends Controller
              } */
 
             $tiquete = $conn->selectOne("
-      SELECT
-          /*Información del Cliente*/
-          COALESCE(ec.Nombre, CONCAT(p.Nombres, ' ', p.Apellido)) AS clienteEmpresa,
-          COALESCE(pdpemp.Codigo, pdpas.Codigo) AS tipoDocumentoCliente,
-          COALESCE(ec.CUIT, p.Documento) AS numeroDocumentoCliente,
-          COALESCE(ec.Telefono, p.Telefonos) AS telefonoCliente,
-          LOWER(COALESCE(ec.Email, p.Email)) AS correoCliente,
+          SELECT
+            COALESCE(ec.Nombre, CONCAT(p.Nombres, ' ', p.Apellido)) AS clienteEmpresa,
+            COALESCE(pdpemp.Codigo, pdpas.Codigo) AS tipoDocumentoCliente,
+            COALESCE(ec.CUIT, p.Documento) AS numeroDocumentoCliente,
+            COALESCE(ec.Telefono, p.Telefonos) AS telefonoCliente,
+            LOWER(COALESCE(ec.Email, p.Email)) AS correoCliente,
 
-          /*Información del Pasajero*/
-          CONCAT(p.Nombres, ' ', p.Apellido) AS pasajero,
-          pdpas.Codigo AS tipoDocumentoPasajero,
-          p.Documento AS numeroDocumentoPasajero,
-          p.Telefonos AS telefonoPasajero,
-          LOWER(p.Email) AS correoPasajero,
+            CONCAT(p.Nombres, ' ', p.Apellido) AS pasajero,
+            pdpas.Codigo AS tipoDocumentoPasajero,
+            p.Documento AS numeroDocumentoPasajero,
+            p.Telefonos AS telefonoPasajero,
+            LOWER(p.Email) AS correoPasajero,
 
-          /*Información del Pasaje*/
-          tpjo.Nombre AS origenTiquete,
-          tpjd.Nombre AS destinoTiquete,
-          CASE
-              WHEN vb.Butaca is null THEN 'sin puesto asignado'
-              ELSE vb.Butaca
-          END AS puestoTiquete,
-          CASE
-              WHEN v.FechaPartida is null THEN 'Sin Viaje Asignado'
-              ELSE FORMAT(v.FechaPartida, 'dd/MM/yyyy')
-          END AS fechaViaje,
-          CASE
-              WHEN v.FechaPartida is null THEN  'Sin Viaje Asignado'
-              ELSE FORMAT(v.FechaPartida, 'hh:mm tt')
-          END AS horaViaje2,
-          CASE
-              WHEN (SELECT FORMAT(vr.FechaPartida, 'HH:mm') AS horaViaje FROM ViajesRecorridos as vr WHERE vr.Viaje=pj.Viaje and vr.Terminal =tpjo.Id) IS NULL THEN 'Sin Viaje Asignado'
-              ELSE (SELECT FORMAT(vr.FechaPartida, 'HH:mm') AS horaViaje FROM ViajesRecorridos as vr WHERE vr.Viaje=pj.Viaje and vr.Terminal =tpjo.Id)
-          END AS horaViaje,
-          CASE
-              WHEN vto.Nombre IS NULL THEN 'Sin Viaje Asignado'
-              ELSE vto.Nombre
-          END AS 'ORIGENVIAJE',
-          CASE
-              WHEN vtd.Nombre IS NULL THEN 'Sin Viaje Asignado'
-              ELSE vtd.Nombre
-          END AS 'DESTINOVIAJE',
-          FORMAT(po.FechaOperacion, 'dd/MM/yyyy') AS fechaExpedicionTiquete,
-          FORMAT(po.FechaOperacion, 'hh:mm tt') AS horaExpedicionTiquete,
-          pj.Numero AS numeroTiquete,
-          pj.ImporteBase AS valorTiquete,
-          pj.ImporteDescuentos AS descuentoTiquete,
-          pj.ImporteFinal AS valorTotal,
-          b.Nombre AS nombreBoleteria,
-          /*Bus*/
-          CASE
-              WHEN co.Nombre IS NULL THEN 'Sin Viaje Asignado'
-              ELSE REPLACE(co.Nombre, 'Int ', '')
-          END AS internoBus,
-          CASE
-              WHEN co.Matricula IS NULL THEN 'Sin Viaje Asignado'
-              ELSE UPPER(co.Matricula)
-          END AS placaBus,
-          CASE
-              WHEN cs.NombreCorto IN ('PR', 'PRL') THEN 'Preferencial de Lujo'
-              WHEN cs.NombreCorto = 'SPR' THEN 'Basico Sprinter'
-              WHEN cs.NombreCorto = 'BUS' THEN 'Lujo Busetón'
-              WHEN cs.NombreCorto = 'VAN' THEN 'Van'
-              WHEN cs.NombreCorto IN ('DP') THEN 'Lujo Doble Piso'
-              WHEN cs.NombreCorto IN ('DP+') THEN 'Lujo Doble Piso +'
-              WHEN cs.NombreCorto = 'PR+' THEN 'Lujo Preferencial Pantallas'
-              WHEN cs.NombreCorto = 'EXP' THEN 'EXPRESO'
-              ELSE 'Otro'
-          END AS servicioBus,
+            tpjo.Nombre AS origenTiquete,
+            tpjd.Nombre AS destinoTiquete,
+            CASE
+                WHEN vb.Butaca IS NULL THEN 'sin puesto asignado'
+                ELSE vb.Butaca
+            END AS puestoTiquete,
 
-          /*Pagos*/
-          CASE
-              WHEN po.MedioPago = 4 THEN 'Crédito'
-              WHEN po.MedioPago IN (6, 8, 9, 10, 22, 26, 32) THEN 'Tarjeta de crédito'
-              WHEN po.MedioPago IN (7, 11) THEN 'Tarjeta débito'
-              ELSE m.Nombre
-          END AS formaPagoTiquete,
-          CASE
-              WHEN po.MedioPago = 4 THEN '30 días'
-              WHEN po.MedioPago IN (1, 6, 7, 8, 9, 10, 11, 21, 22, 23, 25, 26, 28, 36) THEN 'No aplica'
-              ELSE m.Nombre
-          END AS plazoTiquete,
-          m.Nombre AS medioPago,
+            CASE
+                WHEN vr.FechaPartida IS NULL THEN 'Sin Viaje Asignado'
+                ELSE FORMAT(vr.FechaPartida, 'dd/MM/yyyy')
+            END AS fechaViaje,
+            CASE
+                WHEN vr.FechaPartida IS NULL THEN 'Sin Viaje Asignado'
+                ELSE FORMAT(vr.FechaPartida, 'hh:mm tt')
+            END AS horaViaje2,
+            CASE
+                WHEN vr.FechaPartida IS NULL THEN 'Sin Viaje Asignado'
+                ELSE FORMAT(vr.FechaPartida, 'HH:mm')
+            END AS horaViaje,
 
-          /*Identificadores adicionales*/
-          pj.id AS idPasaje,
-          pj.Viaje AS idViaje,
-          pj.Persona AS persona
-      FROM
-          Pasajes AS pj WITH(NOLOCK)
-          INNER JOIN PasajesOperaciones AS po WITH(NOLOCK) ON po.pasajenumero = pj.Numero
-          INNER JOIN MediosPago m WITH(NOLOCK) ON m.Id = po.MedioPago
-          INNER JOIN Boleterias AS b WITH(NOLOCK) ON b.Id = po.Boleteria
-          INNER JOIN Terminales AS tpjo WITH(NOLOCK) ON tpjo.Id = pj.TerminalOrigen
-          INNER JOIN Terminales AS tpjd WITH(NOLOCK) ON tpjd.Id = pj.TerminalDestino
-          INNER JOIN Personas AS p WITH(NOLOCK) ON p.Id = pj.Persona
-          INNER JOIN G_PaisesDocumentos AS pdpas WITH(NOLOCK) ON pdpas.PaisDocumentoID = p.DocumentoTipo
-          LEFT JOIN EmpresasClientesPasajesOperaciones AS ecp WITH(NOLOCK) ON ecp.PasajeID = pj.Id
-          LEFT JOIN EmpresasClientes AS ec WITH(NOLOCK) ON ec.EmpresaID = ecp.EmpresaClienteID
-          LEFT JOIN G_PaisesDocumentos AS pdpemp WITH(NOLOCK) ON pdpemp.PaisDocumentoID = ec.PaisDocumentoId
-          LEFT JOIN ViajesButacas AS vb WITH(NOLOCK) ON vb.PasajeNumero = pj.Numero
-          LEFT JOIN Viajes AS v WITH(NOLOCK) ON v.id = pj.Viaje
-          LEFT JOIN Terminales AS vto WITH(NOLOCK) ON vto.Id=v.TerminalOrigen
-          LEFT JOIN Terminales AS vtd WITH(NOLOCK) ON vtd.Id=v.TerminalDestino
-          LEFT JOIN CategoriasServicios cs  WITH(NOLOCK)  ON cs.Id = v.Categoria
-          LEFT JOIN Coches co  WITH(NOLOCK)  ON co.Id = v.Coche
-      WHERE
+            CASE
+                WHEN vto.Nombre IS NULL THEN 'Sin Viaje Asignado'
+                ELSE vto.Nombre
+            END AS ORIGENVIAJE,
+            CASE
+                WHEN vtd.Nombre IS NULL THEN 'Sin Viaje Asignado'
+                ELSE vtd.Nombre
+            END AS DESTINOVIAJE,
+
+            FORMAT(po.FechaOperacion, 'dd/MM/yyyy') AS fechaExpedicionTiquete,
+            FORMAT(po.FechaOperacion, 'hh:mm tt') AS horaExpedicionTiquete,
+            pj.Numero AS numeroTiquete,
+            pj.ImporteBase AS valorTiquete,
+            pj.ImporteDescuentos AS descuentoTiquete,
+            pj.ImporteFinal AS valorTotal,
+            b.Nombre AS nombreBoleteria,
+
+            /*Bus*/
+            CASE
+                WHEN co.Nombre IS NULL THEN 'Sin Viaje Asignado'
+                ELSE REPLACE(co.Nombre, 'Int ', '')
+            END AS internoBus,
+            CASE
+                WHEN co.Matricula IS NULL THEN 'Sin Viaje Asignado'
+                ELSE UPPER(co.Matricula)
+            END AS placaBus,
+            CASE
+                WHEN cs.NombreCorto IN ('PR', 'PRL') THEN 'Preferencial de Lujo'
+                WHEN cs.NombreCorto = 'SPR' THEN 'Basico Sprinter'
+                WHEN cs.NombreCorto = 'BUS' THEN 'Lujo Busetón'
+                WHEN cs.NombreCorto = 'VAN' THEN 'Van'
+                WHEN cs.NombreCorto IN ('DP') THEN 'Lujo Doble Piso'
+                WHEN cs.NombreCorto IN ('DP+') THEN 'Lujo Doble Piso +'
+                WHEN cs.NombreCorto = 'PR+' THEN 'Lujo Preferencial Pantallas'
+                WHEN cs.NombreCorto = 'EXP' THEN 'EXPRESO'
+                ELSE 'Otro'
+            END AS servicioBus,
+
+            /*Pagos*/
+            CASE
+                WHEN po.MedioPago = 4 THEN 'Crédito'
+                WHEN po.MedioPago IN (6, 8, 9, 10, 22, 26, 32) THEN 'Tarjeta de crédito'
+                WHEN po.MedioPago IN (7, 11) THEN 'Tarjeta débito'
+                ELSE m.Nombre
+            END AS formaPagoTiquete,
+            CASE
+                WHEN po.MedioPago = 4 THEN '30 días'
+                WHEN po.MedioPago IN (1, 6, 7, 8, 9, 10, 11, 21, 22, 23, 25, 26, 28, 36) THEN 'No aplica'
+                ELSE m.Nombre
+            END AS plazoTiquete,
+            m.Nombre AS medioPago,
+
+            /*Identificadores adicionales*/
+            pj.Id AS idPasaje,
+            pj.Viaje AS idViaje,
+            pj.Persona AS persona
+        FROM
+            Pasajes AS pj WITH(NOLOCK)
+            INNER JOIN PasajesOperaciones AS po WITH(NOLOCK) ON po.pasajenumero = pj.Numero
+            INNER JOIN MediosPago m WITH(NOLOCK) ON m.Id = po.MedioPago
+            INNER JOIN Boleterias AS b WITH(NOLOCK) ON b.Id = po.Boleteria
+            INNER JOIN Terminales AS tpjo WITH(NOLOCK) ON tpjo.Id = pj.TerminalOrigen
+            INNER JOIN Terminales AS tpjd WITH(NOLOCK) ON tpjd.Id = pj.TerminalDestino
+            INNER JOIN Personas AS p WITH(NOLOCK) ON p.Id = pj.Persona
+            INNER JOIN G_PaisesDocumentos AS pdpas WITH(NOLOCK) ON pdpas.PaisDocumentoID = p.DocumentoTipo
+            LEFT JOIN EmpresasClientesPasajesOperaciones AS ecp WITH(NOLOCK) ON ecp.PasajeID = pj.Id
+            LEFT JOIN EmpresasClientes AS ec WITH(NOLOCK) ON ec.EmpresaID = ecp.EmpresaClienteID
+            LEFT JOIN G_PaisesDocumentos AS pdpemp WITH(NOLOCK) ON pdpemp.PaisDocumentoID = ec.PaisDocumentoId
+            LEFT JOIN ViajesButacas AS vb WITH(NOLOCK) ON vb.PasajeNumero = pj.Numero
+            LEFT JOIN Viajes AS v WITH(NOLOCK) ON v.Id = pj.Viaje
+
+            /* >>> JOIN CLAVE PARA FECHAPARTIDA CORRECTA <<< */
+            LEFT JOIN ViajesRecorridos AS vr WITH(NOLOCK)
+                ON vr.Viaje = pj.Viaje
+              AND vr.Terminal = pj.TerminalOrigen
+
+            LEFT JOIN Terminales AS vto WITH(NOLOCK) ON vto.Id = v.TerminalOrigen
+            LEFT JOIN Terminales AS vtd WITH(NOLOCK) ON vtd.Id = v.TerminalDestino
+            LEFT JOIN CategoriasServicios cs WITH(NOLOCK) ON cs.Id = v.Categoria
+            LEFT JOIN Coches co WITH(NOLOCK) ON co.Id = v.Coche
+        WHERE
           po.Operacion = 0
           AND pj.Numero = ?;
         ", [$id]);
@@ -305,8 +311,7 @@ class GestionPasajesController extends Controller
                 DB::disconnect('sqlsrv');
 
                 $mensajeError = '⚠️ '.now()->format('Y-m-d H:i:s').
-                  " | Tiquete: {$id} | No se encontraron tiquetes para el ID proporcionado".
-                  " | Token: {$token}";
+                  " | Tiquete: {$id} | No se encontraron tiquetes para el ID proporcionado";
 
                 Log::build([
                     'driver' => 'daily',
@@ -410,8 +415,7 @@ class GestionPasajesController extends Controller
         } catch (Exception $e) {
             $mensajeError = '⚠️ '.now()->format('Y-m-d H:i:s').
               ' | Error al generar tiquete'.
-              ' | Mensaje: '.$e->getMessage().
-              " | Token: {$token}";
+              ' | Mensaje: '.$e->getMessage();
 
             Log::build([
                 'driver' => 'daily',

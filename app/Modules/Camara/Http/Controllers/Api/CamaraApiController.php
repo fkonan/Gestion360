@@ -31,6 +31,17 @@ class CamaraApiController extends Controller
       ->header('Content-Type', $response->header('Content-Type', 'application/json'));
   }
 
+  public function sessionKeepalive(Request $request)
+  {
+    // Fuerza escritura de actividad para extender la sesion en vistas de camara.
+    $request->session()->put('camara_last_keepalive_at', now()->timestamp);
+
+    return response()->json([
+      'ok' => true,
+      'timestamp' => now()->toIso8601String(),
+    ]);
+  }
+
   public function recognize(RecognizeRequest $request)
   {
     $file = $request->file('image');

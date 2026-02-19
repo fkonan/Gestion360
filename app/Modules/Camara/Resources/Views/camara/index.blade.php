@@ -28,7 +28,7 @@
       <x-card
         color="bg-info"
         titulo="Reconocer rostro"
-        descripcion="Consulta"
+        descripcion="Evento empleados"
         icono="fa-user-check"
         ruta="{{ route('face.recognize') }}" />
     </div>

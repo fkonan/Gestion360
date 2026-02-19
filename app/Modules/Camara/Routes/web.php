@@ -5,7 +5,7 @@ use App\Modules\Camara\Http\Controllers\Api\CamaraApiController;
 use App\Modules\Camara\Http\Controllers\CamaraController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'deny.mobile'])->group(function () {
     Route::get('/reconocimiento-facial', [CamaraController::class, 'index'])
         ->name('reconocimientoFacial.index');
 
@@ -28,6 +28,10 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/camera/health', [CamaraApiController::class, 'health'])
         ->name('camera.health');
+
+    Route::get('/camera/session-keepalive', [CamaraApiController::class, 'sessionKeepalive'])
+        ->middleware('permisos:' . Permisos::BIOMETRIA_GESTION_CAMARA_RECONOCER)
+        ->name('camera.session-keepalive');
 
     Route::get('/camera/personas', [CamaraApiController::class, 'personas'])
         ->middleware('permisos:' . Permisos::BIOMETRIA_GESTION_CAMARA_ENROLL)

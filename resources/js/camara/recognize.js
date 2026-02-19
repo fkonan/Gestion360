@@ -94,6 +94,9 @@ document.addEventListener('DOMContentLoaded', () => {
       pollMs: 4000,
       resumeDelayMs: 400,
     },
+    session: {
+      keepaliveMs: 60000,
+    },
     listMax: 50,
     listTtlMs: 20000,
     debug: false,
@@ -128,6 +131,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let recognizeAbortController = null;
   let alertDismissTimer = null;
   let recognizedPruneTimer = null;
+  let keepaliveTimer = null;
+  let keepaliveInFlight = false;
   const recentCapturedFaces = [];
   let cycleStats = {
     captured: 0,
@@ -444,6 +449,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const routes = {
       health: ui.startBtn.dataset.healthUrl,
+      keepalive: ui.startBtn.dataset.keepaliveUrl,
       recognize: ui.startBtn.dataset.recognizeUrl,
     };
     const candidate = routes[type];
@@ -455,6 +461,50 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) {
       return fallback;
     }
+  }
+
+  async function pingSessionKeepalive(force = false) {
+    if (keepaliveInFlight && !force) {
+      return;
+    }
+    keepaliveInFlight = true;
+    try {
+      const response = await fetch(getEndpointUrl('keepalive'), {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+        credentials: 'same-origin',
+      });
+      if (response.status === 401 || response.status === 419) {
+        inlineAlert('warning', 'La sesion expiro. Recargando...');
+        window.setTimeout(() => window.location.reload(), 1200);
+      }
+    } catch (error) {
+      if (CONFIG.debug) {
+        console.debug('[camara][keepalive] fallo', error);
+      }
+    } finally {
+      keepaliveInFlight = false;
+    }
+  }
+
+  function startSessionKeepalive() {
+    if (keepaliveTimer) {
+      return;
+    }
+    pingSessionKeepalive(true);
+    keepaliveTimer = window.setInterval(() => {
+      void pingSessionKeepalive();
+    }, CONFIG.session.keepaliveMs);
+  }
+
+  function stopSessionKeepalive() {
+    if (!keepaliveTimer) {
+      return;
+    }
+    clearInterval(keepaliveTimer);
+    keepaliveTimer = null;
   }
 
   function initFaceDetection() {
@@ -987,9 +1037,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   window.addEventListener('pagehide', () => {
     stopLiveRecognize();
+    stopSessionKeepalive();
     if (recognizedPruneTimer) {
       clearInterval(recognizedPruneTimer);
       recognizedPruneTimer = null;
+    }
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      void pingSessionKeepalive(true);
     }
   });
 
@@ -999,6 +1056,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setControls(false, false);
   setServiceMessage('');
   renderRecognized();
+  startSessionKeepalive();
   recognizedPruneTimer = window.setInterval(() => {
     if (pruneRecognizedList()) {
       renderRecognized();

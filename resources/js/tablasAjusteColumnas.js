@@ -13,6 +13,15 @@ const stripHtml = (value) => {
     return (contenedor.textContent || '').trim();
 };
 
+const decodeHtml = (value) => {
+    if (value === null || value === undefined) return '';
+    const contenedor = document.createElement('textarea');
+    contenedor.innerHTML = String(value);
+    return contenedor.value;
+};
+
+const contieneHtml = (value) => /<[^>]+>/.test(String(value ?? ''));
+
 function obtenerCampoUnico(opciones = {}) {
     return opciones.uniqueId || opciones.idField || null;
 }
@@ -295,14 +304,19 @@ export function generarDetalle(selector, row, opcionesFormatter = {}) {
         const label = col.title || key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());
 
         let contenidoCampo = '';
-        // si la columna es una columna con formato
+        // Prioriza formatter explicito del detalle, luego formatter de la propia columna.
         if (opcionesFormatter[key]) {
             contenidoCampo = opcionesFormatter[key](row[key], row);
+        } else if (typeof col.formatter === 'function') {
+            contenidoCampo = col.formatter(row[key], row, 0, key);
+        } else if (typeof col.formatter === 'string' && typeof window[col.formatter] === 'function') {
+            contenidoCampo = window[col.formatter](row[key], row, 0, key);
         } else if (row[key] !== null && row[key] !== undefined) {
-            if (key === 'acciones') {
-                contenidoCampo = row[key];
-            } else if (key === 'formato' && String(row[key]).includes('<')) {
+            const valorDecodificado = decodeHtml(row[key]);
+            if (key === 'formato' && String(row[key]).includes('<')) {
                 contenidoCampo = escapeHtml(stripHtml(row[key]));
+            } else if (contieneHtml(valorDecodificado)) {
+                contenidoCampo = valorDecodificado;
             } else {
                 contenidoCampo = escapeHtml(row[key]);
             }
