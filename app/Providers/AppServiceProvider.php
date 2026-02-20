@@ -7,10 +7,17 @@ use App\Modules\Configuracion\Models\Permisos;
 use App\Modules\Configuracion\Models\SubModulo;
 use App\Modules\Configuracion\Observers\ModuloObserver;
 use App\Modules\Configuracion\Observers\SubmoduloObserver;
+use App\Modules\Sarlaft\Events\AlertaGenerada;
+use App\Modules\Sarlaft\Events\BloqueoCreado;
+use App\Modules\Sarlaft\Events\ConsultaRealizada;
+use App\Modules\Sarlaft\Listeners\NotificarAlerta;
+use App\Modules\Sarlaft\Listeners\RegistrarBloqueo;
+use App\Modules\Sarlaft\Listeners\RegistrarConsulta;
 use App\Observers\PermisoObserver;
 use App\View\Composers\MenuComposer;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -39,5 +46,8 @@ class AppServiceProvider extends ServiceProvider
               && Auth::user()->can($permiso);
         });
 
+        Event::listen(ConsultaRealizada::class, RegistrarConsulta::class);
+        Event::listen(AlertaGenerada::class, NotificarAlerta::class);
+        Event::listen(BloqueoCreado::class, RegistrarBloqueo::class);
     }
 }

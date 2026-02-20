@@ -233,4 +233,15 @@ protected function isAccessible(User $user, ?string $path = null): bool
 ## Tailwind 3
 
 - Always use Tailwind CSS v3 - verify you're using only classes supported by this version.
+
+
+=== sarlaft overrides ===
+
+## SARLAFT Module Overrides (Autogestion2)
+
+- For tasks under `app/Modules/Sarlaft`, prioritize `.ia-sarlaft/README.md` and linked files.
+- SARLAFT API authentication is custom Bearer middleware, not Sanctum.
+- SARLAFT persistence uses prefixed tables `sarlaft_*` in connection `mysql-sarlaft`.
+- User relations in SARLAFT must point to `App\Models\User` owner key `IdUsuario`.
+- Do not couple SARLAFT changes with `RadFact` unless explicitly requested.
 </laravel-boost-guidelines>

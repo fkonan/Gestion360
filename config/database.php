@@ -42,7 +42,7 @@ return [
             'synchronous' => null,
         ],
 
-        //Conexion base de datos GESTION ADMIN
+        // Conexion base de datos GESTION ADMIN
         'mysql-gestion-admin' => [
             'driver' => 'mysql',
             'url' => env('DB_URL'),
@@ -63,7 +63,28 @@ return [
             ]) : [],
         ],
 
-        //Conexion base de datos GESTION HUMANA
+        // Conexion base de datos SARLAFT
+        'mysql-sarlaft' => [
+            'driver' => 'mysql',
+            'url' => env('DB_URL_SARLAFT'),
+            'host' => env('DB_SARLAFT_HOST', '172.16.48.99'),
+            'port' => env('DB_SARLAFT_PORT', env('DB_PORT', '3306')),
+            'database' => env('DB_SARLAFT_DATABASE', 'gestion_admin'),
+            'username' => env('DB_SARLAFT_USERNAME', env('DB_USERNAME', 'root')),
+            'password' => env('DB_SARLAFT_PASSWORD', env('DB_PASSWORD', '')),
+            'unix_socket' => env('DB_SARLAFT_SOCKET', env('DB_SOCKET', '')),
+            'charset' => env('DB_CHARSET', 'utf8mb4'),
+            'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+            ]) : [],
+        ],
+
+        // Conexion base de datos GESTION HUMANA
         'mysql-gestion-humana' => [
             'driver' => 'mysql',
             'url' => env('DB_URL'),
@@ -84,8 +105,7 @@ return [
             ]) : [],
         ],
 
-
-        //Conexion base de datos GESTION PASAJES
+        // Conexion base de datos GESTION PASAJES
         'mysql-gestion-pasajes' => [
             'driver' => 'mysql',
             'url' => env('DB_URL'),
@@ -106,7 +126,7 @@ return [
             ]) : [],
         ],
 
-        //Conexion base de datos ORACLE logtrans
+        // Conexion base de datos ORACLE logtrans
         'oracle' => [
             'driver' => 'oracle',
             'tns' => '',
@@ -120,11 +140,11 @@ return [
             'prefix_schema' => '',
             'options' => [
                 PDO::ATTR_AUTOCOMMIT => false,
-            ]
+            ],
         ],
 
-         //CONEXION SQLSERVER GESTION PASAJES PRUEBAS
-         'sqlsrv' => [
+        // CONEXION SQLSERVER GESTION PASAJES PRUEBAS
+        'sqlsrv' => [
             'driver' => 'sqlsrv',
             'url' => env('DB_URL_5'),
             'host' => env('DB_HOST_5', '172.16.48.56'),
@@ -139,7 +159,7 @@ return [
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         ],
 
-        //Conexion base de datos ORACLE logtrans
+        // Conexion base de datos ORACLE logtrans
         'oracle-360' => [
             'driver' => 'oracle',
             'tns' => '',
@@ -154,7 +174,7 @@ return [
             'prefix_schema' => '',
             'options' => [
                 PDO::ATTR_AUTOCOMMIT => false,
-            ]
+            ],
         ],
 
         'mariadb' => [
@@ -190,7 +210,7 @@ return [
             'prefix_indexes' => true,
             'search_path' => 'public',
             'sslmode' => 'prefer',
-        ]
+        ],
 
     ],
 

@@ -513,3 +513,13 @@ Cuando están disponibles:
 - ❌ Crear nuevas carpetas base sin aprobación
 - ❌ Pest (usar PHPUnit)
 - ❌ Tailwind CSS (usar Bootstrap 5)
+
+---
+
+## SARLAFT (Integración en este repositorio)
+
+- Contexto IA del módulo: `.ia-sarlaft/README.md` (entrypoint).
+- Código del módulo: `app/Modules/Sarlaft`.
+- API SARLAFT usa middleware Bearer custom (`AutenticarSistemaConsumidor`, `RateLimitSistema`), no Sanctum.
+- Persistencia SARLAFT en tablas prefijadas `sarlaft_*` sobre conexión `mysql-sarlaft`.
+- Relación con usuario corporativo: `App\Models\User` con owner key `IdUsuario`.

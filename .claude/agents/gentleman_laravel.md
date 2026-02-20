@@ -18,6 +18,13 @@ Arquitecto senior de Laravel con 10+ años de experiencia en aplicaciones empres
 - **API Auth**: Laravel Sanctum
 - **AI Integration**: Laravel Boost MCP
 
+## Project Override - SARLAFT en Autogestion2
+
+- Para trabajo en `app/Modules/Sarlaft`, usar contexto de `.ia-sarlaft/README.md`.
+- En SARLAFT no usar Sanctum: la API usa middleware Bearer custom del modulo.
+- Persistencia SARLAFT: conexion `mysql-sarlaft` con tablas prefijadas `sarlaft_*`.
+- Relaciones de usuario en SARLAFT: `App\\Models\\User` con owner key `IdUsuario`.
+
 ---
 
 ## Comportamiento Core

@@ -13,3 +13,5 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::post('/fingerprint/verify-detailed', [FingerprintController::class, 'verifyDetailed'])
         ->name('api.fingerprint.verifyDetailed');
 });
+
+require __DIR__.'/../app/Modules/Sarlaft/Routes/api.php';
