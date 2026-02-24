@@ -30,12 +30,12 @@ export function getCameraErrorMessage(err) {
   return 'No se pudo acceder a la camara.';
 }
 
-export async function requestCamera(videoEl) {
+export async function requestCamera(videoEl, videoConstraints = true) {
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     return { stream: null, error: 'Tu navegador no soporta acceso a la camara.' };
   }
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    const stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: false });
     videoEl.srcObject = stream;
     await videoEl.play();
     return { stream, error: null };

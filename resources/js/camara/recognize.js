@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     cameraStatus: document.getElementById('cameraStatus'),
     faceStatus: document.getElementById('faceStatus'),
     serviceStatus: document.getElementById('serviceStatus'),
+    serviceStatusTop: document.getElementById('serviceStatusTop'),
     serviceMessage: document.getElementById('serviceMessage'),
     lastPayloadSize: document.getElementById('lastPayloadSize'),
     video: document.getElementById('cameraVideo'),
@@ -51,6 +52,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Balanced for entry: faster response (~1s) without saturating network.
     detection: {
       intervalMs: 180,
+      // Procesa deteccion en menor resolucion para bajar CPU sin afectar la captura real.
+      processWidth: 960,
+      processHeight: 540,
       model: 'full',
       minScoreEnter: 0.45,
       minScoreExit: 0.40,
@@ -59,53 +63,88 @@ document.addEventListener('DOMContentLoaded', () => {
       recentMs: 700,
     },
     capture: {
-      intervalMs: 500,
+      // Captura moderada: suficiente variedad sin sobrecargar CPU/red.
+      intervalMs: 450,
       crowdThreshold: 5,
       maxFaces: 4,
       cropBase: 384,
       cropBig: 448,
-      cropQuality: 0.82,
-      cropQualitySmall: 0.86,
+      cropQuality: 0.8,
+      cropQualitySmall: 0.84,
       cropPaddingBase: 0.25,
       cropPaddingSmall: 0.50,
       smallFaceW: 0.07,
-      fullWidth: 640,
-      fullHeight: 480,
-      fullQuality: 0.8,
+      fullWidth: 1920,
+      fullHeight: 1080,
+      fullQuality: 0.78,
     },
     send: {
-      intervalMs: 1500,
+      // Produccion balanceada: respuesta rapida (~1-1.5s) con carga controlada.
+      intervalMs: 1200,
+      loopTickMs: 160,
       // Selecciona y envia pocos frames utiles por ciclo para evitar duplicados.
-      maxImagesPerRequest: 8,
-      maxBufferImages: 10,
-      maxPayloadBytes: 900 * 1024,
-      maxFramesPerSend: 3,
+      maxImagesPerRequest: 5,
+      maxBufferImages: 5,
+      maxPayloadBytes: 700 * 1024,
+      maxFramesPerSend: 2,
       preferBestFrames: true,
       enableFrameDedupe: true,
       dedupeWindowMs: 2200,
       bboxIouThreshold: 0.9,
       bboxCenterThreshold: 0.035,
       minFrameGapMs: 220,
-      globalCooldownMs: 200,
+      globalCooldownMs: 180,
       identityCooldownMs: 15000,
-      timeoutMs: 1400,
+      maxConsecutiveFailures: 3,
+      // Timeout de seguridad para evitar peticiones colgadas indefinidamente.
+      timeoutMs: 4500,
     },
     health: {
       pollMs: 4000,
       resumeDelayMs: 400,
+      timeoutMs: 2500,
     },
     session: {
       keepaliveMs: 60000,
+      timeoutMs: 2500,
     },
     listMax: 50,
-    listTtlMs: 20000,
+    listTtlMs: 5000,
     debug: false,
   };
+  const CAMERA_CONSTRAINTS_FALLBACK = [
+    {
+      width: { ideal: 1920, min: 640 },
+      height: { ideal: 1080, min: 480 },
+      frameRate: { ideal: 30, max: 30 },
+      facingMode: 'user',
+    },
+    {
+      width: { ideal: 1280, min: 640 },
+      height: { ideal: 720, min: 480 },
+      frameRate: { ideal: 30, max: 30 },
+      facingMode: 'user',
+    },
+    {
+      width: { ideal: 960, min: 640 },
+      height: { ideal: 540, min: 480 },
+      frameRate: { ideal: 30, max: 30 },
+      facingMode: 'user',
+    },
+    {
+      width: { ideal: 640, min: 640 },
+      height: { ideal: 480, min: 480 },
+      frameRate: { ideal: 30, max: 30 },
+      facingMode: 'user',
+    },
+  ];
   // Ajustes rapidos:
   // - Mas lejos: bajar minFaceRatio/minScore, subir width/quality.
   // - Menos CPU/red: subir cooldowns o bajar maxFramesPerSend/quality.
 
   let stream = null;
+  let detectionCanvas = null;
+  let detectionCtx = null;
   let faceDetector = null;
   let detectionTimer = null;
   let detectionInFlight = false;
@@ -125,7 +164,6 @@ document.addEventListener('DOMContentLoaded', () => {
   let lastDetections = [];
   let lastDetectionsAt = 0;
   let lastSendAt = 0;
-  const lastSeenByKey = new Map();
   let captureInFlight = false;
   let faceRotationIndex = 0;
   let recognizeAbortController = null;
@@ -133,6 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let recognizedPruneTimer = null;
   let keepaliveTimer = null;
   let keepaliveInFlight = false;
+  let sendFailureStreak = 0;
   const recentCapturedFaces = [];
   let cycleStats = {
     captured: 0,
@@ -184,7 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function setServiceStatus(state) {
-    if (!ui.serviceStatus) {
+    if (!ui.serviceStatus && !ui.serviceStatusTop) {
       return;
     }
     const map = {
@@ -193,8 +232,14 @@ document.addEventListener('DOMContentLoaded', () => {
       error: { text: 'Offline', cls: 'bg-danger' },
     };
     const cfg = map[state] || map.loading;
-    ui.serviceStatus.className = `badge ${cfg.cls}`;
-    ui.serviceStatus.textContent = cfg.text;
+    if (ui.serviceStatus) {
+      ui.serviceStatus.className = `badge ${cfg.cls}`;
+      ui.serviceStatus.textContent = cfg.text;
+    }
+    if (ui.serviceStatusTop) {
+      ui.serviceStatusTop.className = `badge rounded-pill ${cfg.cls}`;
+      ui.serviceStatusTop.textContent = cfg.text;
+    }
   }
 
   function setServiceMessage(message, cls = 'text-muted') {
@@ -213,10 +258,77 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  function getRequestedCameraSummary() {
+    return '1920x1080@30';
+  }
+
+  async function waitForVideoMetadata(videoEl) {
+    if (videoEl.videoWidth && videoEl.videoHeight) {
+      return;
+    }
+    await new Promise((resolve) => {
+      const onLoaded = () => {
+        clearTimeout(timeoutId);
+        videoEl.removeEventListener('loadedmetadata', onLoaded);
+        resolve();
+      };
+      const timeoutId = window.setTimeout(() => {
+        videoEl.removeEventListener('loadedmetadata', onLoaded);
+        resolve();
+      }, 1500);
+      videoEl.addEventListener('loadedmetadata', onLoaded, { once: true });
+    });
+  }
+
+  function syncProcessingCanvases() {
+    const vw = ui.video.videoWidth || CONFIG.capture.fullWidth;
+    const vh = ui.video.videoHeight || CONFIG.capture.fullHeight;
+    if (!vw || !vh) {
+      return { width: CONFIG.capture.fullWidth, height: CONFIG.capture.fullHeight };
+    }
+    if (ui.canvas.width !== vw) ui.canvas.width = vw;
+    if (ui.canvas.height !== vh) ui.canvas.height = vh;
+    if (!detectionCanvas) {
+      detectionCanvas = document.createElement('canvas');
+      detectionCtx = detectionCanvas.getContext('2d');
+    }
+
+    const maxDw = Math.max(320, Number(CONFIG.detection.processWidth) || vw);
+    const maxDh = Math.max(240, Number(CONFIG.detection.processHeight) || vh);
+    const scale = Math.min(1, maxDw / vw, maxDh / vh);
+    const dw = Math.max(320, Math.round(vw * scale));
+    const dh = Math.max(240, Math.round(vh * scale));
+    if (detectionCanvas.width !== dw) detectionCanvas.width = dw;
+    if (detectionCanvas.height !== dh) detectionCanvas.height = dh;
+    return { width: vw, height: vh };
+  }
+
   function sleep(ms) {
     return new Promise((resolve) => {
       window.setTimeout(resolve, ms);
     });
+  }
+
+  async function fetchJsonWithTimeout(url, options = {}, timeoutMs = 0) {
+    const controller = new AbortController();
+    const timeoutId = timeoutMs > 0
+      ? window.setTimeout(() => controller.abort('request-timeout'), timeoutMs)
+      : null;
+    try {
+      const response = await fetch(url, {
+        ...options,
+        signal: controller.signal,
+      });
+      const data = await response.json().catch(() => null);
+      return { response, data, aborted: false };
+    } catch (error) {
+      const aborted = !!(error && error.name === 'AbortError');
+      return { response: null, data: null, error, aborted };
+    } finally {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    }
   }
 
   function startSendLoop() {
@@ -228,7 +340,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!liveSendLoopActive || !liveActive) {
           break;
         }
-        await sleep(CONFIG.send.intervalMs);
+        await sleep(CONFIG.send.loopTickMs);
       }
     };
     void run();
@@ -245,6 +357,8 @@ document.addEventListener('DOMContentLoaded', () => {
       while (liveCaptureLoopActive && liveActive) {
         if (serviceOnline === false) {
           liveBuffer = [];
+        } else if (liveInFlight && liveBuffer.length >= Math.max(1, CONFIG.send.maxFramesPerSend)) {
+          // Mientras hay una request activa, no seguir acumulando frames similares.
         } else if (lastFaceDetected && (Date.now() - lastFaceSeenAt) <= CONFIG.detection.recentMs) {
           await captureFrame();
         } else {
@@ -278,12 +392,22 @@ document.addEventListener('DOMContentLoaded', () => {
     startHealthPolling();
   }
 
+  function registerSendFailure() {
+    sendFailureStreak += 1;
+    if (sendFailureStreak >= CONFIG.send.maxConsecutiveFailures) {
+      markServiceOffline();
+      return true;
+    }
+    return false;
+  }
+
   function markServiceOnline() {
     if (serviceOnline === true) {
       setServiceStatus('ok');
       return;
     }
     serviceOnline = true;
+    sendFailureStreak = 0;
     setServiceStatus('ok');
     setServiceMessage('Servicio restaurado.', 'text-success');
     window.setTimeout(() => setServiceMessage(''), 2500);
@@ -469,13 +593,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     keepaliveInFlight = true;
     try {
-      const response = await fetch(getEndpointUrl('keepalive'), {
+      const { response, aborted } = await fetchJsonWithTimeout(getEndpointUrl('keepalive'), {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
         },
         credentials: 'same-origin',
-      });
+      }, CONFIG.session.timeoutMs);
+      if (aborted) {
+        if (CONFIG.debug) {
+          console.debug('[camara][keepalive] timeout');
+        }
+        return;
+      }
+      if (!response) {
+        return;
+      }
       if (response.status === 401 || response.status === 419) {
         inlineAlert('warning', 'La sesion expiro. Recargando...');
         window.setTimeout(() => window.location.reload(), 1200);
@@ -560,7 +693,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       detectionInFlight = true;
-      faceDetector.send({ image: ui.video })
+      syncProcessingCanvases();
+      if (!detectionCanvas || !detectionCtx) {
+        detectionInFlight = false;
+        return;
+      }
+      detectionCtx.drawImage(ui.video, 0, 0, detectionCanvas.width, detectionCanvas.height);
+      faceDetector.send({ image: detectionCanvas })
         .catch(() => {
           /* inlineAlert('warning', 'No se pudo ejecutar la deteccion facial.'); */
         })
@@ -582,7 +721,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (stream) {
       return true;
     }
-    const result = await requestCamera(ui.video);
+    console.info(`[camera] requested ${getRequestedCameraSummary()}`);
+    let result = { stream: null, error: null };
+    for (const constraints of CAMERA_CONSTRAINTS_FALLBACK) {
+      result = await requestCamera(ui.video, constraints);
+      if (result.stream) {
+        break;
+      }
+    }
     if (!result.stream) {
       inlineAlert('danger', result.error || 'No se pudo acceder a la camara.');
       setCameraStatus('error');
@@ -590,6 +736,14 @@ document.addEventListener('DOMContentLoaded', () => {
       return false;
     }
     stream = result.stream;
+    await waitForVideoMetadata(ui.video);
+    const dims = syncProcessingCanvases();
+    const track = stream.getVideoTracks?.()[0];
+    const settings = track?.getSettings ? track.getSettings() : {};
+    const gotWidth = ui.video.videoWidth || dims.width;
+    const gotHeight = ui.video.videoHeight || dims.height;
+    const gotFps = settings.frameRate ? Number(settings.frameRate).toFixed(1) : '~30';
+    console.info(`[camera] got ${gotWidth}x${gotHeight}@${gotFps}`);
     setCameraStatus('on');
     setControls(true, false);
     startDetectionLoop();
@@ -652,6 +806,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  function handleEventKeyboardShortcut(event) {
+    const target = event.target;
+    const tag = target?.tagName;
+    const isEditable = target?.isContentEditable
+      || tag === 'INPUT'
+      || tag === 'TEXTAREA'
+      || tag === 'SELECT';
+    if (isEditable) {
+      return;
+    }
+
+    // Atajo solo visual/UI: tecla 1 => Ingreso, tecla 2 => Salida.
+    // Los valores reales enviados al backend se mantienen (Ingreso=2, Salida=1).
+    if (event.key === '1' || event.code === 'Numpad1') {
+      setSelectedEvent('2');
+    } else if (event.key === '2' || event.code === 'Numpad2') {
+      setSelectedEvent('1');
+    }
+  }
+
   async function captureFrame() {
     if (!stream || ui.video.readyState < 2) {
       return;
@@ -666,7 +840,8 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    const faces = normalizeDetections(lastDetections, ui.video, {
+    const detectionRef = detectionCanvas || ui.video;
+    const faces = normalizeDetections(lastDetections, detectionRef, {
       minScore: CONFIG.detection.minScoreEnter,
       minFaceRatio: CONFIG.detection.minFaceRatio,
     });
@@ -677,12 +852,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     captureInFlight = true;
     try {
+      const dims = syncProcessingCanvases();
       if (faces.length >= CONFIG.capture.crowdThreshold) {
         // Modo CROWD: enviar 1 frame completo cuando hay muchas caras.
         const refFace = pickTopFaces(faces, 1)[0] || null;
         const blob = await captureFullFrameBlob(ui.video, ui.canvas, {
-          width: CONFIG.capture.fullWidth,
-          height: CONFIG.capture.fullHeight,
+          width: dims.width,
+          height: dims.height,
           quality: CONFIG.capture.fullQuality,
         });
         if (blob && refFace) {
@@ -746,6 +922,8 @@ document.addEventListener('DOMContentLoaded', () => {
         distance: typeof person?.distance === 'number' ? person.distance : null,
         filename: person?.filename ? String(person.filename).trim() : '',
         evento: person?.evento === 1 ? 1 : 2,
+        fechaRegistro: person?.fecha_registro ? String(person.fecha_registro).trim() : '',
+        horaRegistro: person?.hora_registro ? String(person.hora_registro).trim() : '',
       }))
       .filter((person) => person.nombre || person.identificacion)
       .filter((person) => !isUnknown(person.nombre) && !isUnknown(person.identificacion));
@@ -762,12 +940,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const key = getPersonKey(person);
     if (!key) return;
     recognizedList = recognizedList.filter((item) => getPersonKey(item) !== key);
-    recognizedList.push({
+    recognizedList.unshift({
       ...person,
       lastSeenAt: Date.now(),
     });
     if (CONFIG.listMax && recognizedList.length > CONFIG.listMax) {
-      recognizedList.splice(0, recognizedList.length - CONFIG.listMax);
+      recognizedList.splice(CONFIG.listMax);
     }
   }
 
@@ -817,19 +995,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     list.forEach((item) => {
       const li = document.createElement('li');
-      li.className = 'list-group-item py-2';
+      li.className = 'list-group-item';
       const name = item.nombre || item.identificacion || 'Sin nombre';
       const idText = item.identificacion ? `CC: ${item.identificacion}` : '';
+      const registeredTime = item.horaRegistro || '';
+      const registeredDate = item.fechaRegistro || '';
       const eventBadge = item.evento === 1
-        ? '<span class="badge bg-danger">Salida</span>'
-        : '<span class="badge bg-success">Ingreso</span>';
-      const metaParts = [idText].filter(Boolean).join(' · ');
+        ? '<span class="badge bg-danger recognize-event-badge">Salida</span>'
+        : '<span class="badge bg-success recognize-event-badge">Ingreso</span>';
+      const metaParts = [idText].filter(Boolean);
       li.innerHTML = `
-        <div class="d-flex align-items-center justify-content-between gap-2">
-          <div class="fw-semibold">${highlightMatch(name, term)}</div>
-          ${eventBadge}
+        <div class="recognize-item-row">
+          <div class="recognize-item-main">
+            <div class="recognize-item-name">${highlightMatch(name, term)}</div>
+            ${metaParts.length ? `<div class="recognize-item-meta text-muted">${highlightMatch(metaParts.join(' - '), term)}</div>` : ''}
+            ${registeredDate ? `<div class="recognize-item-date text-muted">Fecha: ${registeredDate}</div>` : ''}
+          </div>
+          <div class="recognize-item-side">
+            ${eventBadge}
+            ${registeredTime ? `<div class="recognize-item-time"><span class="recognize-item-time-label"><i class="far fa-clock"></i> Hora</span><span class="recognize-item-time-value">${registeredTime}</span></div>` : ''}
+          </div>
         </div>
-        ${metaParts ? `<div class="small text-muted">${highlightMatch(metaParts, term)}</div>` : ''}
       `;
       ui.recognizeList.appendChild(li);
     });
@@ -856,6 +1042,9 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     const now = Date.now();
+    if ((now - lastSendAt) < CONFIG.send.intervalMs) {
+      return;
+    }
     if (!lastFaceDetected || (now - lastFaceSeenAt) > CONFIG.detection.recentMs) {
       liveBuffer = [];
       return;
@@ -866,7 +1055,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!canSendNow()) return;
 
     liveInFlight = true;
-    lastSendAt = Date.now();
     const batchCandidates = buildBatchWithinLimits();
     if (batchCandidates.length === 0) {
       liveBuffer = [];
@@ -888,7 +1076,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const controller = new AbortController();
       recognizeAbortController = controller;
       const startedAt = performance.now();
-      timeoutId = window.setTimeout(() => controller.abort('request-timeout'), CONFIG.send.timeoutMs);
+      lastSendAt = Date.now();
+      if (CONFIG.send.timeoutMs > 0) {
+        timeoutId = window.setTimeout(() => controller.abort('request-timeout'), CONFIG.send.timeoutMs);
+      }
       const formData = new FormData();
       batch.forEach((blob, index) => {
         formData.append('images[]', blob, `frame_${index + 1}.jpg`);
@@ -911,29 +1102,58 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await response.json().catch(() => null);
       const parsedAt = performance.now();
       if (!response.ok || !data) {
-        markServiceOffline();
-        inlineAlert('warning', 'No se pudo reconocer en vivo.');
+        const offlineMarked = registerSendFailure();
+        if (offlineMarked) {
+          inlineAlert('warning', 'Servicio de reconocimiento fuera de linea.');
+        } else if (CONFIG.debug) {
+          console.debug('[camara][recognize-live] fallo transitorio', response.status);
+        }
         return;
       }
+      sendFailureStreak = 0;
       const persons = extractPersons(data);
       if (persons.length) {
         persons.forEach((person) => {
           const key = getPersonKey(person);
           if (!key) return;
           upsertRecognized(person);
-          lastSeenByKey.set(key, Date.now());
         });
       }
       const updatedAt = performance.now();
       renderRecognized();
       const renderedAt = performance.now();
+      if (CONFIG.debug) {
+        console.debug('[camara][live] ok', {
+          sentFrames: batch.length,
+          payloadKb: Number((batchSizeBytes / 1024).toFixed(1)),
+          tHeadersMs: Number((headersAt - startedAt).toFixed(1)),
+          tParseMs: Number((parsedAt - headersAt).toFixed(1)),
+          tRenderMs: Number((renderedAt - updatedAt).toFixed(1)),
+          tTotalMs: Number((renderedAt - startedAt).toFixed(1)),
+          captured: cycleStats.captured,
+          discardedDedupe: cycleStats.discardedDedupe,
+          discardedSelection: cycleStats.discardedSelection,
+        });
+      }
       cycleStats.sent = batch.length;
       cycleStats.sentBytes = batchSizeBytes;
       resetCycleStats();
     } catch (error) {
-      if (!(error && error.name === 'AbortError')) {
-        markServiceOffline();
-        inlineAlert('warning', 'Error de red en reconocimiento en vivo.');
+      const isAbort = !!(error && error.name === 'AbortError');
+      if (!isAbort) {
+        const offlineMarked = registerSendFailure();
+        if (offlineMarked) {
+          inlineAlert('warning', 'Error de red en reconocimiento en vivo.');
+        } else if (CONFIG.debug) {
+          console.debug('[camara][recognize-live] error transitorio de red', {
+            message: error?.message || 'network-error',
+            failureStreak: sendFailureStreak,
+          });
+        }
+      } else if (CONFIG.debug) {
+        console.debug('[camara][recognize-live] request aborted', {
+          reason: error?.message || 'abort',
+        });
       }
       resetCycleStats();
     } finally {
@@ -954,6 +1174,7 @@ document.addEventListener('DOMContentLoaded', () => {
     liveActive = true;
     liveBuffer = [];
     resetCycleStats();
+    sendFailureStreak = 0;
     const healthOk = await checkHealth();
     if (!healthOk) {
       startHealthPolling();
@@ -976,6 +1197,7 @@ document.addEventListener('DOMContentLoaded', () => {
     stopHealthPolling();
     liveBuffer = [];
     resetCycleStats();
+    sendFailureStreak = 0;
     liveInFlight = false;
     setControls(false, false);
     stopCamera();
@@ -985,21 +1207,26 @@ document.addEventListener('DOMContentLoaded', () => {
     if (healthInFlight) {
       return serviceOnline === true;
     }
-    setServiceStatus('loading');
+    if (serviceOnline === null) {
+      setServiceStatus('loading');
+    }
     healthInFlight = true;
     try {
-      const response = await fetch(getEndpointUrl('health'), {
+      const { response, data, aborted } = await fetchJsonWithTimeout(getEndpointUrl('health'), {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
         },
         credentials: 'same-origin',
-      });
+      }, CONFIG.health.timeoutMs);
+      if (aborted || !response) {
+        markServiceOffline();
+        return false;
+      }
       if (!response.ok) {
         markServiceOffline();
         return false;
       }
-      const data = await response.json().catch(() => null);
       if (data && data.status && data.status !== 'error') {
         markServiceOnline();
         return true;
@@ -1023,6 +1250,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setSelectedEvent(saved === '1' ? '1' : '2');
     ui.eventIngreso?.addEventListener('change', () => setSelectedEvent('2'));
     ui.eventSalida?.addEventListener('change', () => setSelectedEvent('1'));
+    document.addEventListener('keydown', handleEventKeyboardShortcut);
   }
 
   if (ui.startBtn) {
@@ -1038,6 +1266,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('pagehide', () => {
     stopLiveRecognize();
     stopSessionKeepalive();
+    document.removeEventListener('keydown', handleEventKeyboardShortcut);
     if (recognizedPruneTimer) {
       clearInterval(recognizedPruneTimer);
       recognizedPruneTimer = null;
@@ -1062,6 +1291,5 @@ document.addEventListener('DOMContentLoaded', () => {
       renderRecognized();
     }
   }, 1000);
-  checkHealth();
   startLiveRecognize();
 });

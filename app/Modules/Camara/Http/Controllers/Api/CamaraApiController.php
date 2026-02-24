@@ -45,9 +45,10 @@ class CamaraApiController extends Controller
   public function recognize(RecognizeRequest $request)
   {
     $file = $request->file('image');
+    $identCrea = $request->user()?->persona?->PerNumDoc;
 
     try {
-      $response = $this->cameraService->recognize($file);
+      $response = $this->cameraService->recognize($file, $identCrea);
     } catch (\Throwable $e) {
       return response()->json([
         'status' => 'error',
@@ -68,12 +69,13 @@ class CamaraApiController extends Controller
 
   public function enroll(EnrollRequest $request)
   {
-    $file = $request->file('image');
+    $files = $request->file('images', []);
     $identificacion = trim((string) $request->input('identificacion'));
     $usrcreacion = $request->user()?->persona?->PerNumDoc;
+    $identCrea = $usrcreacion;
 
     try {
-      $response = $this->cameraService->enroll($file, $identificacion, $usrcreacion);
+      $response = $this->cameraService->enroll($files, $identificacion, $usrcreacion, $identCrea);
     } catch (\Throwable $e) {
       logger()->error('Camara enroll: no se pudo contactar el servicio', [
         'error' => $e->getMessage(),
@@ -112,9 +114,10 @@ class CamaraApiController extends Controller
     $files = $request->file('images', []);
     $evento = (int) $request->input('evento', 2);
     $usrcreacion = $request->user()?->persona?->PerNumDoc;
+    $identCrea = $usrcreacion;
 
     try {
-      $response = $this->cameraService->recognizeBatch($files, $evento, $usrcreacion);
+      $response = $this->cameraService->recognizeBatch($files, $evento, $usrcreacion, $identCrea);
     } catch (\Throwable $e) {
       return response()->json([
         'status' => 'error',

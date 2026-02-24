@@ -30,10 +30,80 @@
         border: 0;
         border-bottom: 1px solid #cbd5e1 !important;
         box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+        padding-top: .7rem !important;
+        padding-bottom: .7rem !important;
       }
       .camara-recognize-list .list-group-item:last-child {
         border-bottom: 0;
         box-shadow: none;
+      }
+      .camara-recognize-list .recognize-item-name {
+        font-size: 1.24rem;
+        font-weight: 800;
+        line-height: 1.2;
+      }
+      .camara-recognize-list .recognize-item-meta {
+        font-size: 1.05rem;
+        font-weight: 500;
+      }
+      .camara-recognize-list .recognize-item-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: .75rem;
+      }
+      .camara-recognize-list .recognize-item-main {
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+      .camara-recognize-list .recognize-item-side {
+        flex: 0 0 auto;
+        min-width: 170px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: .35rem;
+      }
+      .camara-recognize-list .recognize-event-badge {
+        font-size: .95rem;
+        padding: .4rem .62rem;
+        border-radius: 999px;
+      }
+      .camara-recognize-list .recognize-item-time {
+        margin-top: 0;
+        font-size: 1.08rem;
+        font-weight: 700;
+        color: #0d6efd;
+        background: rgba(13, 110, 253, .12);
+        border: 1px solid rgba(13, 110, 253, .28);
+        border-radius: .5rem;
+        padding: .22rem .48rem;
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+      }
+      .camara-recognize-list .recognize-item-time-label {
+        font-size: .9rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        opacity: .85;
+      }
+      .camara-recognize-list .recognize-item-time-value {
+        font-size: 1.12rem;
+        font-weight: 800;
+      }
+      .camara-recognize-list .recognize-item-date {
+        margin-top: .2rem;
+        font-size: .9rem;
+        line-height: 1.15;
+      }
+      .camara-video-wrap {
+        max-width: 840px;
+      }
+      .camera-mirror {
+        transform: scaleX(-1);
+        transform-origin: center;
       }
       [data-bs-theme="dark"] .camara-recognize-list .list-group-item {
         background-color: var(--darkmode-bg-lightdark) !important;
@@ -41,11 +111,26 @@
         border-bottom: 1px solid #3b4d69 !important;
         box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.05);
       }
+      [data-bs-theme="dark"] .camara-recognize-list .recognize-item-time {
+        color: #9ec5fe;
+        background: rgba(13, 110, 253, .18);
+        border-color: rgba(158, 197, 254, .45);
+      }
+      @media (max-width: 576px) {
+        .camara-recognize-list .recognize-item-row {
+          flex-direction: column;
+        }
+        .camara-recognize-list .recognize-item-side {
+          width: 100%;
+          min-width: 0;
+          align-items: flex-start;
+        }
+      }
     </style>
     <div id="alertContainer"></div>
 
     <div class="row g-3 mt-3">
-      <div class="col-12 col-lg-8">
+      <div class="col-12 col-lg-6">
         <div id="leftPanel" class="card h-100 border-2">
           <div class="card-body d-flex flex-column gap-3">
             <div id="eventModeBanner" class="px-3 py-3 text-white d-flex align-items-center justify-content-between gap-3 bg-success">
@@ -91,18 +176,20 @@
                 <div class="btn-group btn-group-sm" role="group" aria-label="Evento reconocimiento">
                   <input type="radio" class="btn-check" name="evento" id="eventIngreso" value="2" autocomplete="off">
                   <label id="eventIngresoLabel" class="btn btn-outline-success" for="eventIngreso">
-                    <i class="fas fa-sign-in-alt me-1"></i>Ingreso
+                    <i class="fas fa-sign-in-alt me-1"></i>Ingreso (1)
                   </label>
                   <input type="radio" class="btn-check" name="evento" id="eventSalida" value="1" autocomplete="off">
                   <label id="eventSalidaLabel" class="btn btn-outline-danger" for="eventSalida">
-                    <i class="fas fa-sign-out-alt me-1"></i>Salida
+                    <i class="fas fa-sign-out-alt me-1"></i>Salida (2)
                   </label>
                 </div>
               </div>
             </div>
 
-            <div class="ratio ratio-16x9 bg-dark rounded overflow-hidden">
-              <video id="cameraVideo" class="w-100 h-100" autoplay muted playsinline></video>
+            <div class="camara-video-wrap w-100 mx-auto">
+              <div class="ratio ratio-16x9 bg-dark rounded overflow-hidden">
+                <video id="cameraVideo" class="w-100 h-100 camera-mirror" autoplay muted playsinline></video>
+              </div>
             </div>
             <div class="d-flex flex-wrap gap-2">
               <button id="startBtn" class="btn btn-success" type="button"
@@ -118,25 +205,15 @@
         </div>
       </div>
 
-      <div class="col-12 col-lg-4">
+      <div class="col-12 col-lg-6">
         <div class="card h-100">
           <div class="card-body d-flex flex-column gap-3">
-            <div class="d-flex align-items-center justify-content-between">
-              <div class="fw-semibold">Reconocidos</div>
-              <span id="recognizedCount" class="badge rounded-pill bg-primary">0</span>
-            </div>
-
-            <div class="input-group input-group-sm">
-              <span class="input-group-text">Buscar</span>
-              <input id="searchInput" class="form-control" type="text" placeholder="Identificacion o nombre">
-            </div>
-            <div class="d-flex align-items-center justify-content-between">
-              <small class="text-muted">Escribe para buscar.</small>
-              <span id="searchStatus" class="badge bg-secondary d-none">Encontrado</span>
+            <div class="d-flex align-items-center justify-content-end">
+              <span id="serviceStatusTop" class="badge rounded-pill bg-secondary">Comprobando...</span>
             </div>
 
             <div id="recognizeEmpty" class="text-muted small">Sin coincidencias todavia.</div>
-            <ul id="recognizeList" class="list-group list-group-flush overflow-auto camara-recognize-list" style="max-height: 420px;"></ul>
+            <ul id="recognizeList" class="list-group list-group-flush overflow-auto camara-recognize-list" style="max-height: 680px;"></ul>
           </div>
         </div>
       </div>

@@ -16,7 +16,7 @@
     <div class="col">
       <x-card
         color="bg-primary"
-        titulo="Enrolar rostro"
+        titulo="Registrar rostro"
         descripcion="Registro"
         icono="fa-camera"
         ruta="{{ route('face.enroll') }}" />

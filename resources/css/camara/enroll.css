@@ -11,6 +11,8 @@
   object-fit: cover;
   display: block;
   z-index: 1;
+  transform: scaleX(-1);
+  transform-origin: center;
 }
 
 .overlay-canvas {
@@ -20,16 +22,14 @@
   height: 100%;
   z-index: 2;
   pointer-events: none;
+  transform: scaleX(-1);
+  transform-origin: center;
 }
 
 .face-overlay {
   position: absolute;
   inset: 0;
   z-index: 3;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
   pointer-events: none;
   background: transparent;
 }
@@ -118,4 +118,75 @@
 
 .auto-status.is-ok {
   background: rgba(25, 135, 84, 0.35);
+}
+
+#enrollStepTitle {
+  font-weight: 700;
+}
+
+#enrollCountdown {
+  min-height: 1.2rem;
+  font-size: 1rem;
+}
+
+#enrollChecklist li {
+  margin-bottom: 0.25rem;
+}
+
+#enrollChecklist li.is-ok {
+  color: var(--bs-success);
+  font-weight: 600;
+}
+
+#stepFrontBadge,
+#stepLeftBadge,
+#stepRightBadge {
+  border: 1px solid transparent;
+}
+
+.enroll-step-active {
+  box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.2);
+  border-color: rgba(13, 110, 253, 0.45) !important;
+}
+
+#thumbFront,
+#thumbLeft,
+#thumbRight {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+.enroll-status-panel .status-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  color: var(--bs-secondary-color);
+}
+
+.enroll-status-panel .status-chip {
+  width: 100%;
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.enroll-status-item {
+  height: 100%;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 0.6rem;
+  padding: 0.5rem 0.65rem;
+  background: rgba(13, 110, 253, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+[data-bs-theme="dark"] .enroll-status-item {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.03);
 }

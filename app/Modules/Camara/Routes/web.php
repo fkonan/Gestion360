@@ -5,7 +5,7 @@ use App\Modules\Camara\Http\Controllers\Api\CamaraApiController;
 use App\Modules\Camara\Http\Controllers\CamaraController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'deny.mobile'])->group(function () {
+Route::middleware(['auth', 'deny.mobile', 'deny.external.camera'])->group(function () {
     Route::get('/reconocimiento-facial', [CamaraController::class, 'index'])
         ->name('reconocimientoFacial.index');
 
