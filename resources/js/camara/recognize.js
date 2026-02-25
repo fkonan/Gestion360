@@ -52,13 +52,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Balanced for entry: faster response (~1s) without saturating network.
     detection: {
       intervalMs: 180,
+      slowIntervalMs: 260,
+      slowAfterMs: 3000,
       // Procesa deteccion en menor resolucion para bajar CPU sin afectar la captura real.
       processWidth: 960,
       processHeight: 540,
       model: 'full',
       minScoreEnter: 0.45,
       minScoreExit: 0.40,
-      minFaceRatio: 0.03,
+      // Evita reconocer rostros lejanos; ajustado para ~1.5m en camaras tipo C920.
+      minFaceRatio: 0.075,
       stableWindowMs: 500,
       recentMs: 700,
     },
@@ -82,6 +85,11 @@ document.addEventListener('DOMContentLoaded', () => {
       // Produccion balanceada: respuesta rapida (~1-1.5s) con carga controlada.
       intervalMs: 1200,
       loopTickMs: 160,
+      adaptiveInterval: true,
+      minIntervalMs: 1000,
+      maxIntervalMs: 1500,
+      adaptStepUpMs: 120,
+      adaptStepDownMs: 80,
       // Selecciona y envia pocos frames utiles por ciclo para evitar duplicados.
       maxImagesPerRequest: 5,
       maxBufferImages: 5,
@@ -109,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
       timeoutMs: 2500,
     },
     listMax: 50,
-    listTtlMs: 5000,
+    listTtlMs: 7000,
     debug: false,
   };
   const CAMERA_CONSTRAINTS_FALLBACK = [
@@ -148,6 +156,9 @@ document.addEventListener('DOMContentLoaded', () => {
   let faceDetector = null;
   let detectionTimer = null;
   let detectionInFlight = false;
+  let detectionNextAt = 0;
+  let noFaceSinceAt = 0;
+  let currentDetectionIntervalMs = CONFIG.detection.intervalMs;
   let lastFaceDetected = false;
   let liveActive = false;
   let liveCaptureLoopActive = false;
@@ -172,6 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let keepaliveTimer = null;
   let keepaliveInFlight = false;
   let sendFailureStreak = 0;
+  let dynamicSendIntervalMs = CONFIG.send.intervalMs;
   const recentCapturedFaces = [];
   let cycleStats = {
     captured: 0,
@@ -350,6 +362,33 @@ document.addEventListener('DOMContentLoaded', () => {
     liveSendLoopActive = false;
   }
 
+  function getCurrentSendIntervalMs() {
+    if (!CONFIG.send.adaptiveInterval) {
+      return CONFIG.send.intervalMs;
+    }
+    return dynamicSendIntervalMs;
+  }
+
+  function adjustSendIntervalMs(lastCycleMs) {
+    if (!CONFIG.send.adaptiveInterval || !Number.isFinite(lastCycleMs)) {
+      return;
+    }
+    const base = CONFIG.send.intervalMs;
+    if (lastCycleMs > (base + 250)) {
+      dynamicSendIntervalMs = Math.min(
+        CONFIG.send.maxIntervalMs,
+        dynamicSendIntervalMs + CONFIG.send.adaptStepUpMs
+      );
+      return;
+    }
+    if (lastCycleMs < (base - 250)) {
+      dynamicSendIntervalMs = Math.max(
+        CONFIG.send.minIntervalMs,
+        dynamicSendIntervalMs - CONFIG.send.adaptStepDownMs
+      );
+    }
+  }
+
   function startCaptureLoop() {
     if (liveCaptureLoopActive || !liveActive) return;
     liveCaptureLoopActive = true;
@@ -414,6 +453,7 @@ document.addEventListener('DOMContentLoaded', () => {
     liveBuffer = [];
     resetCycleStats();
     lastSendAt = 0;
+    dynamicSendIntervalMs = CONFIG.send.intervalMs;
     resumeSendAt = Date.now() + CONFIG.health.resumeDelayMs;
     if (liveActive) {
       startSendLoop();
@@ -656,6 +696,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function handleFaceResults(results) {
+    const now = Date.now();
     const detections = results?.detections ?? [];
     const minScore = lastFaceDetected ? CONFIG.detection.minScoreExit : CONFIG.detection.minScoreEnter;
     const foundNow = hasValidFace(detections, {
@@ -664,17 +705,26 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (foundNow) {
-      lastFaceSeenAt = Date.now();
+      lastFaceSeenAt = now;
     }
     lastDetections = detections;
-    lastDetectionsAt = Date.now();
+    lastDetectionsAt = now;
 
     if (!window.__mpLastSeenAt) window.__mpLastSeenAt = 0;
-    if (foundNow) window.__mpLastSeenAt = Date.now();
-    const stable = (Date.now() - window.__mpLastSeenAt) <= CONFIG.detection.stableWindowMs;
+    if (foundNow) window.__mpLastSeenAt = now;
+    const stable = (now - window.__mpLastSeenAt) <= CONFIG.detection.stableWindowMs;
 
     lastFaceDetected = stable;
     setFaceStatus(stable);
+    if (stable) {
+      noFaceSinceAt = 0;
+      currentDetectionIntervalMs = CONFIG.detection.intervalMs;
+    } else {
+      noFaceSinceAt = noFaceSinceAt || now;
+      if ((now - noFaceSinceAt) >= CONFIG.detection.slowAfterMs) {
+        currentDetectionIntervalMs = CONFIG.detection.slowIntervalMs;
+      }
+    }
     if (!stable) {
       liveBuffer = [];
     }
@@ -692,6 +742,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (detectionInFlight) {
         return;
       }
+      const now = Date.now();
+      if (now < detectionNextAt) {
+        return;
+      }
+      detectionNextAt = now + currentDetectionIntervalMs;
       detectionInFlight = true;
       syncProcessingCanvases();
       if (!detectionCanvas || !detectionCtx) {
@@ -715,13 +770,18 @@ document.addEventListener('DOMContentLoaded', () => {
       detectionTimer = null;
     }
     detectionInFlight = false;
+    detectionNextAt = 0;
+    noFaceSinceAt = 0;
+    currentDetectionIntervalMs = CONFIG.detection.intervalMs;
   }
 
   async function startCamera() {
     if (stream) {
       return true;
     }
-    console.info(`[camera] requested ${getRequestedCameraSummary()}`);
+    if (CONFIG.debug) {
+      console.info(`[camera] requested ${getRequestedCameraSummary()}`);
+    }
     let result = { stream: null, error: null };
     for (const constraints of CAMERA_CONSTRAINTS_FALLBACK) {
       result = await requestCamera(ui.video, constraints);
@@ -743,7 +803,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const gotWidth = ui.video.videoWidth || dims.width;
     const gotHeight = ui.video.videoHeight || dims.height;
     const gotFps = settings.frameRate ? Number(settings.frameRate).toFixed(1) : '~30';
-    console.info(`[camera] got ${gotWidth}x${gotHeight}@${gotFps}`);
+    if (CONFIG.debug) {
+      console.info(`[camera] got ${gotWidth}x${gotHeight}@${gotFps}`);
+    }
     setCameraStatus('on');
     setControls(true, false);
     startDetectionLoop();
@@ -938,7 +1000,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function upsertRecognized(person) {
     const key = getPersonKey(person);
-    if (!key) return;
+    if (!key) return false;
     recognizedList = recognizedList.filter((item) => getPersonKey(item) !== key);
     recognizedList.unshift({
       ...person,
@@ -947,6 +1009,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (CONFIG.listMax && recognizedList.length > CONFIG.listMax) {
       recognizedList.splice(CONFIG.listMax);
     }
+    return true;
   }
 
   function pruneRecognizedList() {
@@ -1003,17 +1066,22 @@ document.addEventListener('DOMContentLoaded', () => {
       const eventBadge = item.evento === 1
         ? '<span class="badge bg-danger recognize-event-badge">Salida</span>'
         : '<span class="badge bg-success recognize-event-badge">Ingreso</span>';
-      const metaParts = [idText].filter(Boolean);
       li.innerHTML = `
-        <div class="recognize-item-row">
-          <div class="recognize-item-main">
-            <div class="recognize-item-name">${highlightMatch(name, term)}</div>
-            ${metaParts.length ? `<div class="recognize-item-meta text-muted">${highlightMatch(metaParts.join(' - '), term)}</div>` : ''}
-            ${registeredDate ? `<div class="recognize-item-date text-muted">Fecha: ${registeredDate}</div>` : ''}
+        <div class="recognize-card-head">
+          <div class="recognize-card-ident">
+            <div class="recognize-card-name">${highlightMatch(name, term)}</div>
+            ${idText ? `<div class="recognize-card-doc">${highlightMatch(idText, term)}</div>` : ''}
           </div>
-          <div class="recognize-item-side">
-            ${eventBadge}
-            ${registeredTime ? `<div class="recognize-item-time"><span class="recognize-item-time-label"><i class="far fa-clock"></i> Hora</span><span class="recognize-item-time-value">${registeredTime}</span></div>` : ''}
+          ${eventBadge}
+        </div>
+        <div class="recognize-meta-grid">
+          <div class="recognize-meta-pill recognize-meta-pill-date">
+            <span class="recognize-meta-label">Fecha:</span>
+            <span class="recognize-meta-value">${registeredDate || '--'}</span>
+          </div>
+          <div class="recognize-meta-pill recognize-meta-pill-time">
+            <span class="recognize-meta-label"><i class="far fa-clock"></i> Hora:</span>
+            <span class="recognize-meta-value">${registeredTime || '--'}</span>
           </div>
         </div>
       `;
@@ -1042,7 +1110,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     const now = Date.now();
-    if ((now - lastSendAt) < CONFIG.send.intervalMs) {
+    if ((now - lastSendAt) < getCurrentSendIntervalMs()) {
       return;
     }
     if (!lastFaceDetected || (now - lastFaceSeenAt) > CONFIG.detection.recentMs) {
@@ -1112,24 +1180,31 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       sendFailureStreak = 0;
       const persons = extractPersons(data);
+      let listChanged = false;
       if (persons.length) {
         persons.forEach((person) => {
           const key = getPersonKey(person);
           if (!key) return;
-          upsertRecognized(person);
+          listChanged = upsertRecognized(person) || listChanged;
         });
       }
       const updatedAt = performance.now();
-      renderRecognized();
-      const renderedAt = performance.now();
+      let renderedAt = updatedAt;
+      if (listChanged) {
+        renderRecognized();
+        renderedAt = performance.now();
+      }
+      adjustSendIntervalMs(parsedAt - startedAt);
       if (CONFIG.debug) {
         console.debug('[camara][live] ok', {
           sentFrames: batch.length,
+          sendIntervalMs: getCurrentSendIntervalMs(),
           payloadKb: Number((batchSizeBytes / 1024).toFixed(1)),
           tHeadersMs: Number((headersAt - startedAt).toFixed(1)),
           tParseMs: Number((parsedAt - headersAt).toFixed(1)),
           tRenderMs: Number((renderedAt - updatedAt).toFixed(1)),
           tTotalMs: Number((renderedAt - startedAt).toFixed(1)),
+          listChanged,
           captured: cycleStats.captured,
           discardedDedupe: cycleStats.discardedDedupe,
           discardedSelection: cycleStats.discardedSelection,
@@ -1175,6 +1250,7 @@ document.addEventListener('DOMContentLoaded', () => {
     liveBuffer = [];
     resetCycleStats();
     sendFailureStreak = 0;
+    dynamicSendIntervalMs = CONFIG.send.intervalMs;
     const healthOk = await checkHealth();
     if (!healthOk) {
       startHealthPolling();
@@ -1198,6 +1274,7 @@ document.addEventListener('DOMContentLoaded', () => {
     liveBuffer = [];
     resetCycleStats();
     sendFailureStreak = 0;
+    dynamicSendIntervalMs = CONFIG.send.intervalMs;
     liveInFlight = false;
     setControls(false, false);
     stopCamera();

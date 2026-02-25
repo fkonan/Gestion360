@@ -17,7 +17,7 @@
     titulo="Panel de Reportes"
     rutaVolver="{{ route('home') }}" />
 
-  <div style="padding:1.5em" class="mt-md-5">
+  <div style="padding:1.5em">
     <div class="alert alert-info mt-3" role="alert">
       Bienvenido al Panel de Reportes. En este módulo puedes acceder a diversos informes agrupados por categorías como conductores, pasajes y carga.
       Utiliza los menús para seleccionar y consultar el reporte que necesitas.

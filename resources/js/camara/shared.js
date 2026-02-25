@@ -84,8 +84,8 @@ export function showSwal(type, message, title) {
 
 export function captureJpegFromVideo(videoEl, canvasEl, { width, height, quality }) {
   return new Promise((resolve) => {
-    canvasEl.width = width;
-    canvasEl.height = height;
+    if (canvasEl.width !== width) canvasEl.width = width;
+    if (canvasEl.height !== height) canvasEl.height = height;
     const ctx = canvasEl.getContext('2d');
     ctx.drawImage(videoEl, 0, 0, width, height);
     canvasEl.toBlob((blob) => {
@@ -263,6 +263,8 @@ export async function cropFacesToBlobs(videoEl, canvasEl, faces, {
   const vh = videoEl.videoHeight || videoEl.clientHeight;
   if (!vw || !vh) return [];
   const ctx = canvasEl.getContext('2d');
+  if (canvasEl.width !== size) canvasEl.width = size;
+  if (canvasEl.height !== size) canvasEl.height = size;
   const results = [];
   for (const face of faces) {
     const { xCenter, yCenter, width, height } = face.box;
@@ -273,8 +275,6 @@ export async function cropFacesToBlobs(videoEl, canvasEl, faces, {
     const sy = Math.max(0, (yCenter - h / 2) * vh);
     const sw = Math.min(vw, w * vw);
     const sh = Math.min(vh, h * vh);
-    canvasEl.width = size;
-    canvasEl.height = size;
     ctx.drawImage(videoEl, sx, sy, sw, sh, 0, 0, size, size);
     const blob = await new Promise((resolve) => {
       canvasEl.toBlob((b) => resolve(b || null), 'image/jpeg', quality);
@@ -302,8 +302,8 @@ export async function cropFaceToBlob(videoEl, canvasEl, face, {
   const sw = Math.min(vw, w * vw);
   const sh = Math.min(vh, h * vh);
   const ctx = canvasEl.getContext('2d');
-  canvasEl.width = size;
-  canvasEl.height = size;
+  if (canvasEl.width !== size) canvasEl.width = size;
+  if (canvasEl.height !== size) canvasEl.height = size;
   ctx.drawImage(videoEl, sx, sy, sw, sh, 0, 0, size, size);
   return new Promise((resolve) => {
     canvasEl.toBlob((b) => resolve(b || null), 'image/jpeg', quality);
@@ -320,8 +320,8 @@ export async function captureFullFrameBlob(videoEl, canvasEl, {
   const vh = videoEl.videoHeight || videoEl.clientHeight;
   if (!vw || !vh) return null;
   const ctx = canvasEl.getContext('2d');
-  canvasEl.width = width;
-  canvasEl.height = height;
+  if (canvasEl.width !== width) canvasEl.width = width;
+  if (canvasEl.height !== height) canvasEl.height = height;
   ctx.drawImage(videoEl, 0, 0, width, height);
   return new Promise((resolve) => {
     canvasEl.toBlob((b) => resolve(b || null), 'image/jpeg', quality);

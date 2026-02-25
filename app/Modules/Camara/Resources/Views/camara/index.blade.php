@@ -27,8 +27,8 @@
     <div class="col">
       <x-card
         color="bg-info"
-        titulo="Reconocer rostro"
-        descripcion="Evento empleados"
+        titulo="Ingreso/Salida Personal"
+        descripcion="Registro de entrada y salida"
         icono="fa-user-check"
         ruta="{{ route('face.recognize') }}" />
     </div>

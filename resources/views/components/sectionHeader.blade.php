@@ -20,7 +20,7 @@
 </div>
 
 <div class="{{ $clasePosition ? 'botonBoostrapTable mt-2' : 'mt-3' }} ms-4">
-    <a style="width: 150px;" class="btn btn-success fw-bold" href="{{ $rutaVolver }}">Regresar</a>
+    <!-- <a style="width: 150px;" class="btn btn-success fw-bold" href="{{ $rutaVolver }}">Regresar</a> -->
     @if (trim($slot))
         <span class="ms-2 d-inline-flex align-items-center gap-2">
             {{ $slot }}

@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Modules\GestionRRHH\Models\PerContratoPersona;
 use App\Modules\GestionRRHH\Models\PerPersonas;
 use App\Modules\Huellero\Models\PerIdentHuella;
+use App\Modules\Huellero\Models\PerPersonasEventos;
 use App\Modules\Huellero\Models\PrsHuellaEventos;
 use App\Modules\Huellero\Models\PrsPersonas;
 use Carbon\Carbon;
@@ -82,10 +83,14 @@ class FingerprintController extends Controller
       $nombre = null;
       $cargo = null;
       $usuarioCreacionId = null;
+      $usuarioPerPersonasId = null;
       $documentoUsuario = $request->user()?->persona?->PerNumDoc;
       if ($documentoUsuario) {
         $usuarioCreacionId = PrsPersonas::query()
           ->where('numero_documento', $documentoUsuario)
+          ->value('id');
+        $usuarioPerPersonasId = PerPersonas::query()
+          ->where('identificacion', $documentoUsuario)
           ->value('id');
       }
 
@@ -157,6 +162,13 @@ class FingerprintController extends Controller
       $evento->fecha_creacion = $fecha;
       $evento->usuario_creacion = $usuarioCreacionId;
       $evento->save();
+
+      $this->registrarEventoPerPersonas(
+        $payload['identificacion'],
+        $payload['descripcion'],
+        $fecha,
+        $usuarioPerPersonasId ? (int) $usuarioPerPersonasId : null
+      );
 
       $this->registrarNotificacionEventoEmpleado($payload['identificacion'], (int) $payload['evento'], $fecha);
     } catch (Throwable $e) {
@@ -366,6 +378,42 @@ class FingerprintController extends Controller
         'cargo' => $cargo,
       ],
     ]);
+  }
+
+  private function registrarEventoPerPersonas(
+    string $identificacion,
+    string $descripcion,
+    Carbon $fechaEvento,
+    ?int $usuarioPerPersonasId
+  ): void {
+    $personaId = PerPersonas::query()
+      ->where('identificacion', $identificacion)
+      ->value('id');
+
+    if (!$personaId) {
+      throw new \RuntimeException('No se encontro la persona en PER_PERSONAS para registrar PER_PERSONASEVENTOS.');
+    }
+
+    $esEntrada = strtolower(trim($descripcion)) === 'entrada';
+    $codigoEvento = $esEntrada ? 49 : 50;
+    $anotacion = $esEntrada ? 'ENTRADA POR HUELLERO' : 'SALIDA POR HUELLERO';
+    $fechaSistema = now();
+
+    $eventoPersona = new PerPersonasEventos();
+    $eventoPersona->pe_id = (int) $personaId;
+    $eventoPersona->fechaevento = $fechaEvento;
+    $eventoPersona->evento = $codigoEvento;
+    $eventoPersona->anotacion = $anotacion;
+    $eventoPersona->fecmodifica = $fechaSistema;
+    $eventoPersona->usrmodifica = $usuarioPerPersonasId;
+    $eventoPersona->rolmodifica = 60;
+    $eventoPersona->empmodifica = 6761;
+    $eventoPersona->estborrado = 0;
+    $eventoPersona->feccreacion = $fechaSistema;
+    $eventoPersona->usrcreacion = $usuarioPerPersonasId;
+    $eventoPersona->empcreacion = 6761;
+    $eventoPersona->tiporegistro = 0;
+    $eventoPersona->save();
   }
 
   private function registrarNotificacionEventoEmpleado(string $identificacion, int $evento, ?Carbon $fecha = null): bool

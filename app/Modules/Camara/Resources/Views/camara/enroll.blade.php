@@ -15,7 +15,7 @@
 <div class="container-fluid p-0 border rounded sidebar-dark-primary tableContainer" style="min-height:150px;">
   <x-sectionHeader titulo="Registrar rostro" rutaVolver="{{ route('reconocimientoFacial.index') }}" :crear="false" />
 
-  <div class="p-4 mt-5">
+  <div class="p-4">
     <div id="alertContainer"></div>
 
     <div class="row g-3 mt-3">
