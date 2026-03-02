@@ -32,6 +32,15 @@
         icono="fa-user-check"
         ruta="{{ route('face.recognize') }}" />
     </div>
+
+    <div class="col">
+      <x-card
+        color="bg-secondary"
+        titulo="Validar persona"
+        descripcion="Verificacion informativa"
+        icono="fa-user-shield"
+        ruta="{{ route('face.verify') }}" />
+    </div>
     @endif
   </div>
 </div>

@@ -48,6 +48,7 @@ export default defineConfig({
                     'resources/js/cargarModal.js',
                     'resources/js/camara/enroll.js',
                     'resources/js/camara/recognize.js',
+                    'resources/js/camara/verify.js',
                 ],
             refresh: true,
         }),

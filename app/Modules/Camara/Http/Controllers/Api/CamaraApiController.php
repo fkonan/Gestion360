@@ -6,9 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Modules\Camara\Http\Requests\EnrollRequest;
 use App\Modules\Camara\Http\Requests\RecognizeLiveRequest;
 use App\Modules\Camara\Http\Requests\RecognizeRequest;
+use App\Modules\Camara\Http\Requests\VerifyLiveRequest;
 use App\Modules\GestionRRHH\Models\PerPersonas;
+use Carbon\Carbon;
 use App\Modules\Camara\Services\CameraService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class CamaraApiController extends Controller
 {
@@ -136,9 +140,37 @@ class CamaraApiController extends Controller
       ->header('Content-Type', $response->header('Content-Type', 'application/json'));
   }
 
+  public function verifyLive(VerifyLiveRequest $request)
+  {
+    $files = $request->file('images', []);
+    $usrcreacion = $request->user()?->persona?->PerNumDoc;
+    $identCrea = $usrcreacion;
+
+    try {
+      $response = $this->cameraService->verifyBatch($files, $usrcreacion, $identCrea);
+    } catch (\Throwable $e) {
+      return response()->json([
+        'status' => 'error',
+        'message' => 'No se pudo contactar el servicio.',
+      ], 503);
+    }
+
+    if ($response->failed()) {
+      return response()->json([
+        'status' => 'error',
+        'message' => 'Servicio no disponible.',
+      ], $response->status());
+    }
+
+    return response($response->body(), $response->status())
+      ->header('Content-Type', $response->header('Content-Type', 'application/json'));
+  }
+
   public function personas(Request $request)
   {
     $query = trim((string) $request->query('query', ''));
+    $query = preg_replace('/[^\pL\pN\s]/u', '', $query);
+    $query = trim((string) preg_replace('/\s+/', ' ', $query));
     if ($query === '') {
       return response()->json([]);
     }
@@ -181,5 +213,100 @@ class CamaraApiController extends Controller
     });
 
     return response()->json($data);
+  }
+
+  public function ultimosEventos()
+  {
+    $rows = DB::connection('oracle-360')
+      ->table('PRS_EVENTOS as e')
+      ->leftJoin('PRS_PERSONAS as p', 'p.numero_documento', '=', 'e.identificacion')
+      ->whereIn('e.evento', [1, 2])
+      ->orderByDesc('e.fecha_creacion')
+      ->limit(10)
+      ->get([
+        'e.identificacion',
+        'e.evento',
+        'e.descripcion',
+        'e.fecha_creacion',
+        'p.NOMBRES as nombres',
+        'p.PRIMER_APELLIDO as primer_apellido',
+        'p.SEGUNDO_APELLIDO as segundo_apellido',
+      ]);
+
+    $data = $this->mapEventoRows($rows);
+
+    return response()->json([
+      'ok' => true,
+      'data' => $data,
+    ]);
+  }
+
+  public function eventosHoyPorIdentificacion(Request $request)
+  {
+    $validator = Validator::make($request->all(), [
+      'identificacion' => ['required', 'string', 'max:20', 'regex:/^\d+$/'],
+    ]);
+
+    if ($validator->fails()) {
+      return response()->json([
+        'ok' => false,
+        'message' => 'Identificacion invalida.',
+        'errors' => $validator->errors(),
+      ], 422);
+    }
+
+    $identificacion = preg_replace('/\D+/', '', (string) $request->input('identificacion'));
+    $identificacion = trim((string) $identificacion);
+
+    $rows = DB::connection('oracle-360')
+      ->table('PRS_EVENTOS as e')
+      ->leftJoin('PRS_PERSONAS as p', 'p.numero_documento', '=', 'e.identificacion')
+      ->where('e.identificacion', $identificacion)
+      ->whereIn('e.evento', [1, 2])
+      ->whereRaw('TRUNC(e.fecha_creacion) = TRUNC(SYSDATE)')
+      ->orderByDesc('e.fecha_creacion')
+      ->limit(30)
+      ->get([
+        'e.identificacion',
+        'e.evento',
+        'e.descripcion',
+        'e.fecha_creacion',
+        'p.NOMBRES as nombres',
+        'p.PRIMER_APELLIDO as primer_apellido',
+        'p.SEGUNDO_APELLIDO as segundo_apellido',
+      ]);
+
+    return response()->json([
+      'ok' => true,
+      'identificacion' => $identificacion,
+      'data' => $this->mapEventoRows($rows),
+    ]);
+  }
+
+  private function mapEventoRows($rows)
+  {
+    return collect($rows)->map(function ($row) {
+      $nombre = trim(
+        trim((string) ($row->nombres ?? '')) . ' ' .
+        trim((string) ($row->primer_apellido ?? '') . ' ' . (string) ($row->segundo_apellido ?? ''))
+      );
+
+      $horaEvento = null;
+      if (!empty($row->fecha_creacion)) {
+        try {
+          $horaEvento = Carbon::parse($row->fecha_creacion)->format('g:i a');
+        } catch (\Throwable $e) {
+          $horaEvento = null;
+        }
+      }
+
+      return [
+        'identificacion' => (string) ($row->identificacion ?? ''),
+        'nombre' => $nombre !== '' ? $nombre : 'Sin nombre',
+        'descripcion' => (string) ($row->descripcion ?? ''),
+        'hora_evento' => $horaEvento,
+        'evento' => (int) ($row->evento ?? 0),
+      ];
+    })->values();
   }
 }

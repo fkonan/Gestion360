@@ -5,7 +5,7 @@ use App\Modules\Camara\Http\Controllers\Api\CamaraApiController;
 use App\Modules\Camara\Http\Controllers\CamaraController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'deny.mobile', 'deny.external.camera'])->group(function () {
+Route::middleware(['auth', 'deny.mobile'])->group(function () {
     Route::get('/reconocimiento-facial', [CamaraController::class, 'index'])
         ->name('reconocimientoFacial.index');
 
@@ -16,6 +16,10 @@ Route::middleware(['auth', 'deny.mobile', 'deny.external.camera'])->group(functi
     Route::get('/face-recognize', [CamaraController::class, 'recognize'])
         ->middleware('permisos:' . Permisos::BIOMETRIA_GESTION_CAMARA_RECONOCER)
         ->name('face.recognize');
+
+    Route::get('/face-verify', [CamaraController::class, 'verify'])
+        ->middleware('permisos:' . Permisos::BIOMETRIA_GESTION_CAMARA_RECONOCER)
+        ->name('face.verify');
 
     Route::get('/health', [CamaraApiController::class, 'health'])
         ->name('face-api.health');
@@ -44,4 +48,16 @@ Route::middleware(['auth', 'deny.mobile', 'deny.external.camera'])->group(functi
     Route::post('/camera/recognize-live', [CamaraApiController::class, 'recognizeLive'])
         ->middleware('permisos:' . Permisos::BIOMETRIA_GESTION_CAMARA_RECONOCER)
         ->name('camera.recognize-live');
+
+    Route::get('/camera/ultimos-eventos', [CamaraApiController::class, 'ultimosEventos'])
+        ->middleware('permisos:' . Permisos::BIOMETRIA_GESTION_CAMARA_RECONOCER)
+        ->name('camera.ultimos-eventos');
+
+    Route::get('/camera/eventos-hoy', [CamaraApiController::class, 'eventosHoyPorIdentificacion'])
+        ->middleware('permisos:' . Permisos::BIOMETRIA_GESTION_CAMARA_RECONOCER)
+        ->name('camera.eventos-hoy');
+
+    Route::post('/camera/verify-live', [CamaraApiController::class, 'verifyLive'])
+        ->middleware('permisos:' . Permisos::BIOMETRIA_GESTION_CAMARA_RECONOCER)
+        ->name('camera.verify-live');
 });

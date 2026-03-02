@@ -20,4 +20,9 @@ class CamaraController extends Controller
   {
     return view('camara::camara.recognize');
   }
+
+  public function verify()
+  {
+    return view('camara::camara.verify');
+  }
 }

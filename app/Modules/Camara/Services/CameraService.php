@@ -76,6 +76,30 @@ class CameraService
   /**
    * @param UploadedFile[] $files
    */
+  public function verifyBatch(array $files, ?string $usrcreacion = null, ?string $identCrea = null): Response
+  {
+    $client = $this->client()->asMultipart();
+    foreach ($files as $file) {
+      $client = $client->attach(
+        'files',
+        fopen($file->getRealPath(), 'r'),
+        $file->getClientOriginalName() ?: 'frame.jpg'
+      );
+    }
+    $payload = [];
+    if ($usrcreacion) {
+      $payload['usrcreacion'] = $usrcreacion;
+    }
+    if ($identCrea) {
+      $payload['ident_crea'] = $identCrea;
+    }
+
+    return $client->post($this->baseUrl . '/verify', $payload);
+  }
+
+  /**
+   * @param UploadedFile[] $files
+   */
   public function enroll(array $files, string $identificacion, ?string $usrcreacion = null, ?string $identCrea = null): Response
   {
     $payload = ['identificacion' => $identificacion];

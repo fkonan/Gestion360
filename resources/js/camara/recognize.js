@@ -42,6 +42,14 @@ document.addEventListener('DOMContentLoaded', () => {
     recognizedCount: document.getElementById('recognizedCount'),
     searchInput: document.getElementById('searchInput'),
     searchStatus: document.getElementById('searchStatus'),
+    latestEventsBtn: document.getElementById('latestEventsBtn'),
+    latestEventsModal: document.getElementById('latestEventsModal'),
+    latestEventsLoading: document.getElementById('latestEventsLoading'),
+    latestEventsEmpty: document.getElementById('latestEventsEmpty'),
+    latestEventsList: document.getElementById('latestEventsList'),
+    todayEventsDocInput: document.getElementById('todayEventsDocInput'),
+    todayEventsSearchBtn: document.getElementById('todayEventsSearchBtn'),
+    todayEventsResetBtn: document.getElementById('todayEventsResetBtn'),
   };
 
   if (!ui.video || !ui.canvas) {
@@ -184,6 +192,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let keepaliveInFlight = false;
   let sendFailureStreak = 0;
   let dynamicSendIntervalMs = CONFIG.send.intervalMs;
+  let latestEventsModalInstance = null;
+  let latestEventsInFlight = false;
   const recentCapturedFaces = [];
   let cycleStats = {
     captured: 0,
@@ -615,6 +625,8 @@ document.addEventListener('DOMContentLoaded', () => {
       health: ui.startBtn.dataset.healthUrl,
       keepalive: ui.startBtn.dataset.keepaliveUrl,
       recognize: ui.startBtn.dataset.recognizeUrl,
+      latestEvents: ui.startBtn.dataset.latestEventsUrl,
+      todayEvents: ui.startBtn.dataset.todayEventsUrl,
     };
     const candidate = routes[type];
     if (!candidate) {
@@ -1020,15 +1032,127 @@ document.addEventListener('DOMContentLoaded', () => {
     return changed;
   }
 
+  function escapeHtml(value) {
+    const text = String(value ?? '');
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   function highlightMatch(text, term) {
-    if (!term) return text;
-    const lower = text.toLowerCase();
+    const source = String(text ?? '');
+    if (!term) return escapeHtml(source);
+    const lower = source.toLowerCase();
     const idx = lower.indexOf(term);
-    if (idx === -1) return text;
-    const before = text.slice(0, idx);
-    const match = text.slice(idx, idx + term.length);
-    const after = text.slice(idx + term.length);
-    return `${before}<mark class="px-1">${match}</mark>${after}`;
+    if (idx === -1) return escapeHtml(source);
+    const before = source.slice(0, idx);
+    const match = source.slice(idx, idx + term.length);
+    const after = source.slice(idx + term.length);
+    return `${escapeHtml(before)}<mark class="px-1">${escapeHtml(match)}</mark>${escapeHtml(after)}`;
+  }
+
+  function sanitizeIdentificationInput(value) {
+    return String(value || '').replace(/\D+/g, '').slice(0, 20);
+  }
+
+  function getEventVisual(eventCode) {
+    const isSalida = Number(eventCode) === 1;
+    return {
+      isSalida,
+      label: isSalida ? 'Salida' : 'Ingreso',
+      badgeClass: isSalida ? 'bg-danger' : 'bg-success',
+      borderColor: isSalida ? '#dc3545' : '#198754',
+    };
+  }
+
+  function setSearchStatus(term, listLength) {
+    if (!ui.searchStatus) return;
+    if (!term) {
+      ui.searchStatus.className = 'badge bg-secondary d-none';
+      ui.searchStatus.textContent = 'Encontrado';
+      return;
+    }
+    if (listLength > 0) {
+      ui.searchStatus.className = 'badge bg-success';
+      ui.searchStatus.textContent = 'Encontrado';
+      return;
+    }
+    ui.searchStatus.className = 'badge bg-danger';
+    ui.searchStatus.textContent = 'No aparece';
+  }
+
+  function buildRecognizedItemElement(item, term) {
+    const li = document.createElement('li');
+    li.className = 'list-group-item';
+    const name = item.nombre || item.identificacion || 'Sin nombre';
+    const idText = item.identificacion ? `CC: ${item.identificacion}` : '';
+    const registeredTime = escapeHtml(item.horaRegistro || '--');
+    const registeredDate = escapeHtml(item.fechaRegistro || '--');
+    const eventVisual = getEventVisual(item.evento);
+
+    li.innerHTML = `
+      <div class="recognize-card-head">
+        <div class="recognize-card-ident">
+          <div class="recognize-card-name">${highlightMatch(name, term)}</div>
+          ${idText ? `<div class="recognize-card-doc">${highlightMatch(idText, term)}</div>` : ''}
+        </div>
+        <span class="badge ${eventVisual.badgeClass} recognize-event-badge">${eventVisual.label}</span>
+      </div>
+      <div class="recognize-meta-grid">
+        <div class="recognize-meta-pill recognize-meta-pill-date">
+          <span class="recognize-meta-label">Fecha:</span>
+          <span class="recognize-meta-value">${registeredDate}</span>
+        </div>
+        <div class="recognize-meta-pill recognize-meta-pill-time">
+          <span class="recognize-meta-label"><i class="far fa-clock"></i> Hora:</span>
+          <span class="recognize-meta-value">${registeredTime}</span>
+        </div>
+      </div>
+    `;
+    return li;
+  }
+
+  function buildLatestEventItemElement(item) {
+    const li = document.createElement('li');
+    const eventVisual = getEventVisual(item?.evento || 0);
+    const nombre = escapeHtml(item?.nombre || 'Sin nombre');
+    const identificacion = item?.identificacion ? `CC ${escapeHtml(item.identificacion)}` : '';
+    const descripcion = item?.descripcion ? escapeHtml(String(item.descripcion).trim()) : '';
+    const hora = escapeHtml(item?.hora_evento || '--');
+
+    li.className = 'list-group-item d-flex align-items-center justify-content-between gap-3';
+    li.style.borderLeft = `4px solid ${eventVisual.borderColor}`;
+    li.innerHTML = `
+      <div style="min-width:0; flex:1 1 auto;">
+        <div class="fw-semibold text-truncate">${nombre}</div>
+        ${identificacion ? `<div class="text-muted small">${identificacion}</div>` : ''}
+        ${descripcion ? `<div class="small">${descripcion}</div>` : ''}
+      </div>
+      <div class="d-flex flex-column align-items-end gap-1" style="white-space:nowrap;">
+        <span class="badge ${eventVisual.badgeClass}">${eventVisual.label}</span>
+        <div class="fw-semibold" style="font-size:1rem;">${hora}</div>
+      </div>
+    `;
+    return li;
+  }
+
+  function setLatestEventsFetchError(message = 'No se pudieron consultar los registros.') {
+    renderLatestEvents([], message);
+    if (!ui.latestEventsEmpty) return;
+    ui.latestEventsEmpty.classList.remove('d-none');
+    ui.latestEventsEmpty.textContent = message;
+  }
+
+  function setLatestEventsLoading(isLoading) {
+    if (ui.latestEventsLoading) {
+      ui.latestEventsLoading.classList.toggle('d-none', !isLoading);
+    }
+    if (ui.latestEventsBtn) {
+      ui.latestEventsBtn.disabled = isLoading;
+    }
   }
 
   function renderRecognized() {
@@ -1056,49 +1180,100 @@ document.addEventListener('DOMContentLoaded', () => {
       ui.recognizeEmpty.classList.add('d-none');
     }
 
+    const fragment = document.createDocumentFragment();
     list.forEach((item) => {
-      const li = document.createElement('li');
-      li.className = 'list-group-item';
-      const name = item.nombre || item.identificacion || 'Sin nombre';
-      const idText = item.identificacion ? `CC: ${item.identificacion}` : '';
-      const registeredTime = item.horaRegistro || '';
-      const registeredDate = item.fechaRegistro || '';
-      const eventBadge = item.evento === 1
-        ? '<span class="badge bg-danger recognize-event-badge">Salida</span>'
-        : '<span class="badge bg-success recognize-event-badge">Ingreso</span>';
-      li.innerHTML = `
-        <div class="recognize-card-head">
-          <div class="recognize-card-ident">
-            <div class="recognize-card-name">${highlightMatch(name, term)}</div>
-            ${idText ? `<div class="recognize-card-doc">${highlightMatch(idText, term)}</div>` : ''}
-          </div>
-          ${eventBadge}
-        </div>
-        <div class="recognize-meta-grid">
-          <div class="recognize-meta-pill recognize-meta-pill-date">
-            <span class="recognize-meta-label">Fecha:</span>
-            <span class="recognize-meta-value">${registeredDate || '--'}</span>
-          </div>
-          <div class="recognize-meta-pill recognize-meta-pill-time">
-            <span class="recognize-meta-label"><i class="far fa-clock"></i> Hora:</span>
-            <span class="recognize-meta-value">${registeredTime || '--'}</span>
-          </div>
-        </div>
-      `;
-      ui.recognizeList.appendChild(li);
+      fragment.appendChild(buildRecognizedItemElement(item, term));
     });
+    ui.recognizeList.appendChild(fragment);
 
-    if (ui.searchStatus) {
-      if (!term) {
-        ui.searchStatus.className = 'badge bg-secondary d-none';
-        ui.searchStatus.textContent = 'Encontrado';
-      } else if (list.length > 0) {
-        ui.searchStatus.className = 'badge bg-success';
-        ui.searchStatus.textContent = 'Encontrado';
-      } else {
-        ui.searchStatus.className = 'badge bg-danger';
-        ui.searchStatus.textContent = 'No aparece';
+    setSearchStatus(term, list.length);
+  }
+
+  function renderLatestEvents(items, emptyText = 'Sin registros recientes.') {
+    if (!ui.latestEventsList || !ui.latestEventsEmpty) {
+      return;
+    }
+    ui.latestEventsList.innerHTML = '';
+    if (!Array.isArray(items) || items.length === 0) {
+      ui.latestEventsEmpty.classList.remove('d-none');
+      ui.latestEventsEmpty.textContent = emptyText;
+      return;
+    }
+
+    ui.latestEventsEmpty.classList.add('d-none');
+    const fragment = document.createDocumentFragment();
+    items.forEach((item) => {
+      fragment.appendChild(buildLatestEventItemElement(item));
+    });
+    ui.latestEventsList.appendChild(fragment);
+  }
+
+  function getTodayEventsDocQuery() {
+    if (!ui.todayEventsDocInput) return '';
+    return sanitizeIdentificationInput(ui.todayEventsDocInput.value);
+  }
+
+  async function loadLatestEvents() {
+    if (latestEventsInFlight || !ui.latestEventsList) {
+      return;
+    }
+    latestEventsInFlight = true;
+    setLatestEventsLoading(true);
+    try {
+      const { response, data, aborted } = await fetchJsonWithTimeout(getEndpointUrl('latestEvents'), {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+        credentials: 'same-origin',
+      }, 3500);
+
+      if (aborted || !response || !response.ok || !data?.ok) {
+        setLatestEventsFetchError();
+        return;
       }
+      renderLatestEvents(Array.isArray(data.data) ? data.data : []);
+    } catch (error) {
+      setLatestEventsFetchError();
+    } finally {
+      latestEventsInFlight = false;
+      setLatestEventsLoading(false);
+    }
+  }
+
+  async function loadTodayEventsByDoc() {
+    const identificacion = getTodayEventsDocQuery();
+    if (!identificacion) {
+      setLatestEventsFetchError('Ingresa una identificacion valida.');
+      return;
+    }
+    if (latestEventsInFlight || !ui.latestEventsList) {
+      return;
+    }
+    latestEventsInFlight = true;
+    setLatestEventsLoading(true);
+    try {
+      const url = new URL(getEndpointUrl('todayEvents'));
+      url.searchParams.set('identificacion', identificacion);
+      const { response, data, aborted } = await fetchJsonWithTimeout(url.toString(), {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+        credentials: 'same-origin',
+      }, 3500);
+
+      if (aborted || !response || !response.ok || !data?.ok) {
+        setLatestEventsFetchError('No se pudo consultar los registros de hoy.');
+        return;
+      }
+      const items = Array.isArray(data.data) ? data.data : [];
+      renderLatestEvents(items, 'No hay registros hoy para esta identificacion.');
+    } catch (error) {
+      setLatestEventsFetchError('No se pudo consultar los registros de hoy.');
+    } finally {
+      latestEventsInFlight = false;
+      setLatestEventsLoading(false);
     }
   }
 
@@ -1338,6 +1513,47 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   if (ui.retryBtn) {
     ui.retryBtn.addEventListener('click', startLiveRecognize);
+  }
+
+  if (ui.latestEventsBtn) {
+    ui.latestEventsBtn.addEventListener('click', () => {
+      if (ui.latestEventsModal && window.bootstrap?.Modal) {
+        if (!latestEventsModalInstance) {
+          latestEventsModalInstance = new window.bootstrap.Modal(ui.latestEventsModal);
+        }
+        latestEventsModalInstance.show();
+      }
+      void loadLatestEvents();
+    });
+  }
+
+  if (ui.todayEventsSearchBtn) {
+    ui.todayEventsSearchBtn.addEventListener('click', () => {
+      void loadTodayEventsByDoc();
+    });
+  }
+
+  if (ui.todayEventsDocInput) {
+    ui.todayEventsDocInput.addEventListener('input', () => {
+      const sanitized = sanitizeIdentificationInput(ui.todayEventsDocInput.value);
+      if (ui.todayEventsDocInput.value !== sanitized) {
+        ui.todayEventsDocInput.value = sanitized;
+      }
+    });
+    ui.todayEventsDocInput.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter') return;
+      event.preventDefault();
+      void loadTodayEventsByDoc();
+    });
+  }
+
+  if (ui.todayEventsResetBtn) {
+    ui.todayEventsResetBtn.addEventListener('click', () => {
+      if (ui.todayEventsDocInput) {
+        ui.todayEventsDocInput.value = '';
+      }
+      void loadLatestEvents();
+    });
   }
 
   window.addEventListener('pagehide', () => {

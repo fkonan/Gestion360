@@ -276,7 +276,9 @@
               <button id="startBtn" class="btn btn-success" type="button"
                 data-health-url="{{ route('camera.health') }}"
                 data-keepalive-url="{{ route('camera.session-keepalive') }}"
-                data-recognize-url="{{ route('camera.recognize-live') }}">Iniciar</button>
+                data-recognize-url="{{ route('camera.recognize-live') }}"
+                data-latest-events-url="{{ route('camera.ultimos-eventos') }}"
+                data-today-events-url="{{ route('camera.eventos-hoy') }}">Iniciar</button>
               <button id="stopBtn" class="btn btn-outline-secondary btn-sm" type="button" disabled>Detener</button>
               <button id="retryBtn" class="btn btn-outline-warning btn-sm d-none" type="button">Reintentar camara</button>
             </div>
@@ -289,7 +291,10 @@
       <div class="col-12 col-lg-6">
         <div class="card h-100 recognize-list-panel">
           <div class="card-body d-flex flex-column gap-3">
-            <div class="d-flex align-items-center justify-content-end">
+            <div class="d-flex align-items-center justify-content-end gap-2">
+              <button id="latestEventsBtn" class="btn btn-outline-secondary btn-sm py-1 px-2" type="button" title="Consultar ultimos 10 registros">
+                <i class="fas fa-history me-1"></i>Registros
+              </button>
               <span id="serviceStatusTop" class="badge rounded-pill bg-secondary">Comprobando...</span>
             </div>
 
@@ -297,6 +302,32 @@
             <ul id="recognizeList" class="list-group list-group-flush overflow-auto camara-recognize-list" style="max-height: 680px;"></ul>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="latestEventsModal" tabindex="-1" aria-labelledby="latestEventsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="latestEventsModalLabel">Ultimos 10 registros</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <div class="border rounded p-2 mb-3">
+          <label for="todayEventsDocInput" class="form-label form-label-sm mb-1">Buscar registros de hoy por identificacion</label>
+          <div class="input-group input-group-sm">
+            <input id="todayEventsDocInput" type="text" class="form-control" placeholder="Numero de identificacion" inputmode="numeric" pattern="[0-9]*" maxlength="20" autocomplete="off">
+            <button id="todayEventsSearchBtn" class="btn btn-primary" type="button">Buscar</button>
+            <button id="todayEventsResetBtn" class="btn btn-outline-secondary" type="button">Ultimos 10</button>
+          </div>
+        </div>
+        <div id="latestEventsLoading" class="text-center text-muted py-2 d-none">
+          <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Consultando...
+        </div>
+        <div id="latestEventsEmpty" class="text-muted small">Sin registros recientes.</div>
+        <ul id="latestEventsList" class="list-group list-group-flush"></ul>
       </div>
     </div>
   </div>
