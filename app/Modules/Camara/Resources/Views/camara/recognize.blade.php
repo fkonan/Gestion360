@@ -17,15 +17,6 @@
 
   <div class="p-4" style="margin-top: -30px;">
     <style>
-      #eventModeBanner { border-radius: 12px; }
-      #eventModeBanner .mode-title { letter-spacing: .08em; font-weight: 800; }
-      #eventModeDot { width: 10px; height: 10px; border-radius: 999px; display: inline-block; }
-      .mode-pulse { animation: modePulse 1.4s infinite; }
-      @keyframes modePulse {
-        0% { transform: scale(1); opacity: .9; }
-        50% { transform: scale(1.15); opacity: 1; }
-        100% { transform: scale(1); opacity: .9; }
-      }
       .camara-recognize-list .list-group-item {
         background: #f8fbff;
         border: 1px solid #bccadb;
@@ -212,19 +203,8 @@
 
     <div class="row g-3 mt-3">
       <div class="col-12 col-lg-6">
-        <div id="leftPanel" class="card h-100 border-2">
+        <div class="card h-100">
           <div class="card-body d-flex flex-column gap-3">
-            <div id="eventModeBanner" class="px-3 py-3 text-white d-flex align-items-center justify-content-between gap-3 bg-success">
-              <div class="d-flex align-items-center gap-3">
-                <i id="eventModeIcon" class="fas fa-sign-in-alt fa-2x"></i>
-                <div>
-                  <div class="text-uppercase small opacity-75">Evento actual</div>
-                  <div id="eventModeText" class="mode-title fs-5">MODO: INGRESO</div>
-                </div>
-              </div>
-              <span id="eventModeDot" class="mode-pulse bg-white"></span>
-            </div>
-
             <div class="border rounded px-3 py-2 d-none">
               <div class="fw-semibold mb-2">Estado</div>
               <div class="d-flex flex-wrap align-items-center gap-2">
@@ -253,17 +233,7 @@
             </div>
             <div class="border rounded p-3">
               <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-                <div class="fw-semibold">¿Que desea realizar?</div>
-                <div class="btn-group btn-group-sm" role="group" aria-label="Evento reconocimiento">
-                  <input type="radio" class="btn-check" name="evento" id="eventIngreso" value="2" autocomplete="off">
-                  <label id="eventIngresoLabel" class="btn btn-outline-success" for="eventIngreso">
-                    <i class="fas fa-sign-in-alt me-1"></i>Ingreso (1)
-                  </label>
-                  <input type="radio" class="btn-check" name="evento" id="eventSalida" value="1" autocomplete="off">
-                  <label id="eventSalidaLabel" class="btn btn-outline-danger" for="eventSalida">
-                    <i class="fas fa-sign-out-alt me-1"></i>Salida (2)
-                  </label>
-                </div>
+                <div class="fw-semibold">Reconocimiento automatico activo</div>
               </div>
             </div>
 

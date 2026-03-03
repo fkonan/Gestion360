@@ -52,7 +52,7 @@ class CameraService
   /**
    * @param UploadedFile[] $files
    */
-  public function recognizeBatch(array $files, int $evento = 2, ?string $usrcreacion = null, ?string $identCrea = null): Response
+  public function recognizeBatch(array $files, ?string $usrcreacion = null, ?string $identCrea = null): Response
   {
     $client = $this->client()->asMultipart();
     foreach ($files as $file) {
@@ -62,7 +62,7 @@ class CameraService
         $file->getClientOriginalName() ?: 'frame.jpg'
       );
     }
-    $payload = ['evento' => $evento];
+    $payload = [];
     if ($usrcreacion) {
       $payload['usrcreacion'] = $usrcreacion;
     }

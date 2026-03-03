@@ -116,12 +116,11 @@ class CamaraApiController extends Controller
   public function recognizeLive(RecognizeLiveRequest $request)
   {
     $files = $request->file('images', []);
-    $evento = (int) $request->input('evento', 2);
     $usrcreacion = $request->user()?->persona?->PerNumDoc;
     $identCrea = $usrcreacion;
 
     try {
-      $response = $this->cameraService->recognizeBatch($files, $evento, $usrcreacion, $identCrea);
+      $response = $this->cameraService->recognizeBatch($files, $usrcreacion, $identCrea);
     } catch (\Throwable $e) {
       return response()->json([
         'status' => 'error',

@@ -17,7 +17,6 @@ class RecognizeLiveRequest extends FormRequest
       // Limite defensivo para evitar sobrecarga por envios excesivos.
       'images' => ['required', 'array', 'min:1', 'max:5'],
       'images.*' => ['file', 'mimes:jpg,jpeg', 'max:3072'],
-      'evento' => ['required', 'in:1,2'],
     ];
   }
 }

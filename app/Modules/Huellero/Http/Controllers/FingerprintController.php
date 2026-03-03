@@ -153,9 +153,14 @@ class FingerprintController extends Controller
         $tipo = 2;
       }
 
+      $eventoCodigo = (int) $payload['evento'];
+      $descripcionEvento = $eventoCodigo === 2
+        ? 'entrada personal huellero'
+        : 'ingreso personal huellero';
+
       $evento = new PrsHuellaEventos();
-      $evento->evento = (int) $payload['evento'];
-      $evento->descripcion = $payload['descripcion'];
+      $evento->evento = $eventoCodigo;
+      $evento->descripcion = $descripcionEvento;
       $evento->tipo = $tipo;
       $evento->identificacion = $payload['identificacion'];
       $fecha = isset($payload['fecha']) ? Carbon::parse($payload['fecha']) : now();
@@ -165,7 +170,7 @@ class FingerprintController extends Controller
 
       $this->registrarEventoPerPersonas(
         $payload['identificacion'],
-        $payload['descripcion'],
+        $eventoCodigo,
         $fecha,
         $usuarioPerPersonasId ? (int) $usuarioPerPersonasId : null
       );
@@ -209,7 +214,7 @@ class FingerprintController extends Controller
     }
 
     $personas = PerPersonas::query()
-      ->where('identificacion', 'like', '%' . $query . '%')
+      ->where('identificacion', 'like', $query . '%')
       ->where('tipdocumento', 1)
       ->where('estado', 'ACTIVO')
       ->where('estborrado', 0)
@@ -257,6 +262,7 @@ class FingerprintController extends Controller
         'documento' => $documento,
         'nombre' => $nombre,
         'evento' => $eventoPorPersona[$persona->id] ?? 1,
+        'cargo' => null,
       ];
     });
 
@@ -382,7 +388,7 @@ class FingerprintController extends Controller
 
   private function registrarEventoPerPersonas(
     string $identificacion,
-    string $descripcion,
+    int $eventoCodigo,
     Carbon $fechaEvento,
     ?int $usuarioPerPersonasId
   ): void {
@@ -394,7 +400,7 @@ class FingerprintController extends Controller
       throw new \RuntimeException('No se encontro la persona en PER_PERSONAS para registrar PER_PERSONASEVENTOS.');
     }
 
-    $esEntrada = strtolower(trim($descripcion)) === 'entrada';
+    $esEntrada = $eventoCodigo === 2;
     $codigoEvento = $esEntrada ? 49 : 50;
     $anotacion = $esEntrada ? 'ENTRADA POR HUELLERO' : 'SALIDA POR HUELLERO';
     $fechaSistema = now();
@@ -524,6 +530,92 @@ class FingerprintController extends Controller
     ]);
   }
 
+  public function ultimosEventosEmpleado()
+  {
+    try {
+      $rows = DB::connection('oracle-360')
+        ->table('PRS_EVENTOS as e')
+        ->leftJoin('PRS_PERSONAS as p', 'p.numero_documento', '=', 'e.identificacion')
+        ->whereIn('e.evento', [1, 2])
+        ->orderByDesc('e.fecha_creacion')
+        ->limit(10)
+        ->get([
+          'e.identificacion',
+          'e.evento',
+          'e.descripcion',
+          'e.fecha_creacion',
+          'p.NOMBRES as nombres',
+          'p.PRIMER_APELLIDO as primer_apellido',
+          'p.SEGUNDO_APELLIDO as segundo_apellido',
+        ]);
+    } catch (Throwable $e) {
+      $this->huelleroLogger()->error('Huellero ultimos eventos empleado error', [
+        'message' => $e->getMessage(),
+      ]);
+      return response()->json([
+        'ok' => false,
+        'error' => 'No se pudo consultar los ultimos eventos.',
+      ], 500);
+    }
+
+    return response()->json([
+      'ok' => true,
+      'data' => $this->mapEventoRows($rows),
+    ]);
+  }
+
+  public function eventosHoyEmpleadoPorIdentificacion(Request $request)
+  {
+    $validator = Validator::make($request->all(), [
+      'identificacion' => ['required', 'string', 'max:20', 'regex:/^\d+$/'],
+    ]);
+
+    if ($validator->fails()) {
+      return response()->json([
+        'ok' => false,
+        'error' => 'Identificacion invalida.',
+      ], 422);
+    }
+
+    $identificacion = preg_replace('/\D+/', '', (string) $request->input('identificacion'));
+    $identificacion = trim((string) $identificacion);
+
+    try {
+      $rows = DB::connection('oracle-360')
+        ->table('PRS_EVENTOS as e')
+        ->leftJoin('PRS_PERSONAS as p', 'p.numero_documento', '=', 'e.identificacion')
+        ->where('e.identificacion', $identificacion)
+        ->whereIn('e.evento', [1, 2])
+        ->whereRaw('TRUNC(e.fecha_creacion) = TRUNC(SYSDATE)')
+        ->orderByDesc('e.fecha_creacion')
+        ->limit(30)
+        ->get([
+          'e.identificacion',
+          'e.evento',
+          'e.descripcion',
+          'e.fecha_creacion',
+          'p.NOMBRES as nombres',
+          'p.PRIMER_APELLIDO as primer_apellido',
+          'p.SEGUNDO_APELLIDO as segundo_apellido',
+        ]);
+    } catch (Throwable $e) {
+      $this->huelleroLogger()->error('Huellero eventos hoy empleado error', [
+        'identificacion' => $identificacion,
+        'message' => $e->getMessage(),
+      ]);
+      return response()->json([
+        'ok' => false,
+        'error' => 'No se pudo consultar los registros de hoy.',
+      ], 500);
+    }
+
+    return response()->json([
+      'ok' => true,
+      'identificacion' => $identificacion,
+      'data' => $this->mapEventoRows($rows),
+    ]);
+  }
+
   public function ultimoEventoConductor(Request $request)
   {
     $validator = Validator::make($request->all(), [
@@ -584,5 +676,32 @@ class FingerprintController extends Controller
         'fecha' => $fecha,
       ],
     ]);
+  }
+
+  private function mapEventoRows($rows)
+  {
+    return collect($rows)->map(function ($row) {
+      $nombre = trim(
+        trim((string) ($row->nombres ?? '')) . ' ' .
+          trim((string) ($row->primer_apellido ?? '') . ' ' . (string) ($row->segundo_apellido ?? ''))
+      );
+
+      $horaEvento = null;
+      if (!empty($row->fecha_creacion)) {
+        try {
+          $horaEvento = Carbon::parse($row->fecha_creacion)->format('g:i a');
+        } catch (Throwable $e) {
+          $horaEvento = null;
+        }
+      }
+
+      return [
+        'identificacion' => (string) ($row->identificacion ?? ''),
+        'nombre' => $nombre !== '' ? $nombre : 'Sin nombre',
+        'descripcion' => (string) ($row->descripcion ?? ''),
+        'hora_evento' => $horaEvento,
+        'evento' => (int) ($row->evento ?? 0),
+      ];
+    })->values();
   }
 }

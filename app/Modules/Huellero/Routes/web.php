@@ -41,6 +41,14 @@ Route::middleware('auth')->group(function () {
         ->middleware('permisos:' . Permisos::BIOMETRIA_GESTION_HUELLERO_ACCESO_PERSONAL)
         ->name('fingerprint.eventos.empleados.ultimo');
 
+    Route::get('/fingerprint/eventos/empleados/ultimos', [FingerprintController::class, 'ultimosEventosEmpleado'])
+        ->middleware('permisos:' . Permisos::BIOMETRIA_GESTION_HUELLERO_ACCESO_PERSONAL)
+        ->name('fingerprint.eventos.empleados.ultimos');
+
+    Route::get('/fingerprint/eventos/empleados/hoy', [FingerprintController::class, 'eventosHoyEmpleadoPorIdentificacion'])
+        ->middleware('permisos:' . Permisos::BIOMETRIA_GESTION_HUELLERO_ACCESO_PERSONAL)
+        ->name('fingerprint.eventos.empleados.hoy');
+
     Route::get('/fingerprint/eventos/conductores', [FingerprintController::class, 'eventosConductores'])
         ->middleware('permisos:' . Permisos::BIOMETRIA_GESTION_HUELLERO_DESCANSO_CONDUCTORES)
         ->name('fingerprint.eventos.conductores');

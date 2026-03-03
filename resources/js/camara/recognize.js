@@ -25,15 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
     lastPayloadSize: document.getElementById('lastPayloadSize'),
     video: document.getElementById('cameraVideo'),
     canvas: document.getElementById('captureCanvas'),
-    eventIngreso: document.getElementById('eventIngreso'),
-    eventSalida: document.getElementById('eventSalida'),
-    eventIngresoLabel: document.getElementById('eventIngresoLabel'),
-    eventSalidaLabel: document.getElementById('eventSalidaLabel'),
-    eventModeBanner: document.getElementById('eventModeBanner'),
-    eventModeIcon: document.getElementById('eventModeIcon'),
-    eventModeText: document.getElementById('eventModeText'),
-    eventModeDot: document.getElementById('eventModeDot'),
-    leftPanel: document.getElementById('leftPanel'),
     startBtn: document.getElementById('startBtn'),
     stopBtn: document.getElementById('stopBtn'),
     retryBtn: document.getElementById('retryBtn'),
@@ -69,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
       minScoreEnter: 0.45,
       minScoreExit: 0.40,
       // Evita reconocer rostros lejanos; ajustado para ~1.5m en camaras tipo C920.
-      minFaceRatio: 0.075,
+      minFaceRatio: 0.04,
       stableWindowMs: 500,
       recentMs: 700,
     },
@@ -836,70 +827,6 @@ document.addEventListener('DOMContentLoaded', () => {
     return now >= (lastSendAt + CONFIG.send.globalCooldownMs) && now >= resumeSendAt;
   }
 
-  function setSelectedEvent(value) {
-    const next = value === '1' ? '1' : '2';
-    if (ui.eventIngreso) ui.eventIngreso.checked = next === '2';
-    if (ui.eventSalida) ui.eventSalida.checked = next === '1';
-    localStorage.setItem('camara_evento', next);
-    updateEventUI(next);
-  }
-
-  function getSelectedEvent() {
-    if (ui.eventSalida?.checked) return '1';
-    return '2';
-  }
-
-  function updateEventUI(eventValue) {
-    const isIngreso = eventValue === '2';
-    if (ui.eventModeBanner) {
-      ui.eventModeBanner.classList.toggle('bg-success', isIngreso);
-      ui.eventModeBanner.classList.toggle('bg-danger', !isIngreso);
-    }
-    if (ui.eventModeIcon) {
-      ui.eventModeIcon.className = isIngreso
-        ? 'fas fa-sign-in-alt fa-2x'
-        : 'fas fa-sign-out-alt fa-2x';
-    }
-    if (ui.eventModeText) {
-      ui.eventModeText.textContent = isIngreso ? 'MODO: INGRESO' : 'MODO: SALIDA';
-    }
-    if (ui.eventModeDot) {
-      ui.eventModeDot.classList.toggle('bg-white', true);
-    }
-    if (ui.leftPanel) {
-      ui.leftPanel.classList.toggle('border-success', isIngreso);
-      ui.leftPanel.classList.toggle('border-danger', !isIngreso);
-    }
-    if (ui.eventIngresoLabel) {
-      ui.eventIngresoLabel.classList.toggle('btn-success', isIngreso);
-      ui.eventIngresoLabel.classList.toggle('btn-outline-success', !isIngreso);
-    }
-    if (ui.eventSalidaLabel) {
-      ui.eventSalidaLabel.classList.toggle('btn-danger', !isIngreso);
-      ui.eventSalidaLabel.classList.toggle('btn-outline-danger', isIngreso);
-    }
-  }
-
-  function handleEventKeyboardShortcut(event) {
-    const target = event.target;
-    const tag = target?.tagName;
-    const isEditable = target?.isContentEditable
-      || tag === 'INPUT'
-      || tag === 'TEXTAREA'
-      || tag === 'SELECT';
-    if (isEditable) {
-      return;
-    }
-
-    // Atajo solo visual/UI: tecla 1 => Ingreso, tecla 2 => Salida.
-    // Los valores reales enviados al backend se mantienen (Ingreso=2, Salida=1).
-    if (event.key === '1' || event.code === 'Numpad1') {
-      setSelectedEvent('2');
-    } else if (event.key === '2' || event.code === 'Numpad2') {
-      setSelectedEvent('1');
-    }
-  }
-
   async function captureFrame() {
     if (!stream || ui.video.readyState < 2) {
       return;
@@ -1327,8 +1254,6 @@ document.addEventListener('DOMContentLoaded', () => {
       batch.forEach((blob, index) => {
         formData.append('images[]', blob, `frame_${index + 1}.jpg`);
       });
-      const selectedEvent = getSelectedEvent();
-      formData.append('evento', selectedEvent);
       const response = await fetch(getEndpointUrl('recognize'), {
         method: 'POST',
         headers: {
@@ -1497,14 +1422,6 @@ document.addEventListener('DOMContentLoaded', () => {
     ui.searchInput.addEventListener('input', renderRecognized);
   }
 
-  if (ui.eventIngreso || ui.eventSalida) {
-    const saved = localStorage.getItem('camara_evento');
-    setSelectedEvent(saved === '1' ? '1' : '2');
-    ui.eventIngreso?.addEventListener('change', () => setSelectedEvent('2'));
-    ui.eventSalida?.addEventListener('change', () => setSelectedEvent('1'));
-    document.addEventListener('keydown', handleEventKeyboardShortcut);
-  }
-
   if (ui.startBtn) {
     ui.startBtn.addEventListener('click', startLiveRecognize);
   }
@@ -1559,7 +1476,6 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('pagehide', () => {
     stopLiveRecognize();
     stopSessionKeepalive();
-    document.removeEventListener('keydown', handleEventKeyboardShortcut);
     if (recognizedPruneTimer) {
       clearInterval(recognizedPruneTimer);
       recognizedPruneTimer = null;

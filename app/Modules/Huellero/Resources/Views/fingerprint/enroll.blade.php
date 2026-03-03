@@ -15,7 +15,7 @@
 <div class="container-fluid p-0 border rounded sidebar-dark-primary tableContainer" style="min-height:150px;">
     <x-sectionHeader titulo="Enroll de huellas" rutaVolver="{{ route('fingerprint.gestion') }}" :crear="false" />
 
-    <div class="p-4 mt-5 ">
+    <div class="p-4 mt-2">
 
         <div class="row g-4">
             <div class="col-lg-7">
@@ -269,6 +269,13 @@
             return 1;
         }
 
+        function selectedPersonCargo() {
+            if (selectedPerson && selectedPerson.cargo) {
+                return String(selectedPerson.cargo);
+            }
+            return null;
+        }
+
         function selectedFinger() {
             return ui.fingerSelect.value;
         }
@@ -318,7 +325,8 @@
                   dedo: dedo,
                   huellas: samples.slice(),
                   idCreacion: idCreacion,
-                  tipo: selectedPersonEvento()
+                  tipo: selectedPersonEvento(),
+                  cargo: selectedPersonCargo()
               };
               ui.payloadPreview.textContent = JSON.stringify(payload, null, 2);
           }
@@ -443,7 +451,8 @@
                       id: data.id || '',
                       documento: data.documento || '',
                       nombre: data.nombre || data.text || '',
-                      evento: Number.isFinite(evento) ? evento : 1
+                      evento: Number.isFinite(evento) ? evento : 1,
+                      cargo: data.cargo || null
                   };
                   updateSelectedPerson();
                   resetSamples();
@@ -621,7 +630,8 @@
                   dedo: selectedFinger(),
                   huellas: samples.slice(),
                   idCreacion: idCreacion,
-                  tipo: selectedPersonEvento()
+                  tipo: selectedPersonEvento(),
+                  cargo: selectedPersonCargo()
               };
 
             if (useMockResponse) {

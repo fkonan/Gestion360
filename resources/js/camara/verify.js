@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
       model: 'full',
       minScoreEnter: 0.45,
       minScoreExit: 0.4,
-      minFaceRatio: 0.075,
+      minFaceRatio: 0.04,
       stableWindowMs: 500,
       recentMs: 700,
     },
