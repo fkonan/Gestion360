@@ -1,23 +1,28 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Huellas - Ingreso personal')
+@php
+    $modoAutomatico = (bool) ($modoAutomatico ?? false);
+    $tituloIngresoPersonal = $tituloIngresoPersonal ?? ($modoAutomatico ? 'Ingreso personal automatico' : 'Ingreso personal manual');
+@endphp
+
+@section('title', 'Huellas - ' . $tituloIngresoPersonal)
 
 @section('breadcrumb')
 <x-breadcrumb :items="[
         ['name' => 'Inicio', 'url' => route('home')],
         ['name' => 'Gestion huellero', 'url' => route('fingerprint.gestion')],
-        ['name' => 'Ingreso personal'],
+        ['name' => $tituloIngresoPersonal],
     ]" />
 <br>
 @endsection
 
 @section('content')
 <div class="container-fluid p-0 border rounded sidebar-dark-primary tableContainer" style="min-height:150px;">
-    <x-sectionHeader titulo="Ingreso personal" rutaVolver="{{ route('fingerprint.gestion') }}" :crear="false">
+    <x-sectionHeader :titulo="$tituloIngresoPersonal" rutaVolver="{{ route('fingerprint.gestion') }}" :crear="false">
         <button id="latestEventsTrigger" type="button" class="btn btn-outline-secondary text-nowrap me-2" data-bs-toggle="modal" data-bs-target="#latestEventsModal">
             Registros
         </button>
-        @if(auth()->user()->can(\App\Constants\Permisos::BIOMETRIA_GESTION_HUELLERO_INGRESO_MANUAL))
+        @if(!$modoAutomatico && auth()->user()->can(\App\Constants\Permisos::BIOMETRIA_GESTION_HUELLERO_INGRESO_MANUAL))
         <button id="manualTrigger" type="button" class="btn btn-primary fw-bold text-nowrap text-light" data-bs-toggle="modal" data-bs-target="#manualEventModal">
             Ingreso manual
         </button>
@@ -30,7 +35,7 @@
         <div class="huellero-kiosk">
             <div id="eventPanel" class="card huellero-kiosk-card huellero-event-ingreso">
                 <div class="huellero-kiosk-card-head text-center">
-                    <div id="eventTitle" class="huellero-kiosk-title">REGISTRO DE INGRESO</div>
+                    <div id="eventTitle" class="huellero-kiosk-title">{{ $modoAutomatico ? 'REGISTRO AUTOMATICO' : 'REGISTRO DE INGRESO' }}</div>
                     <div id="eventMessage" class="huellero-kiosk-message"></div>
                 </div>
 
@@ -74,6 +79,7 @@
                 </div>
             </div>
 
+            @if(!$modoAutomatico)
             <div class="huellero-kiosk-shortcuts-bar">
                 <span class="shortcut-key">1</span>
                 <span class="shortcut-text">Ingreso</span>
@@ -81,6 +87,7 @@
                 <span class="shortcut-key">2</span>
                 <span class="shortcut-text">Salida</span>
             </div>
+            @endif
         </div>
     </div>
 </div>
@@ -111,7 +118,7 @@
     </div>
 </div>
 
-@if(auth()->user()->can(\App\Constants\Permisos::BIOMETRIA_GESTION_HUELLERO_INGRESO_MANUAL))
+@if(!$modoAutomatico && auth()->user()->can(\App\Constants\Permisos::BIOMETRIA_GESTION_HUELLERO_INGRESO_MANUAL))
 <div class="modal fade" id="manualEventModal" tabindex="-1" aria-labelledby="manualEventLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -189,6 +196,7 @@
         };
 
         var client = new FingerprintClient();
+        var automaticMode = @json($modoAutomatico);
         var register = false;
         var probe = '';
         var identificacion = '';
@@ -199,6 +207,8 @@
         var displayTimer = null;
         var displayDelayMs = 4000;
         var statusLockUntil = 0;
+        var resolvedEventCode = 2;
+        var hasResolvedEvent = false;
         var isSubmitting = false;
         var duplicateWindowMs = 2500;
         var lastSampleData = '';
@@ -224,6 +234,9 @@
         var readerRefreshing = null;
 
         function isSalidaEvent() {
+            if (automaticMode) {
+                return hasResolvedEvent ? resolvedEventCode === 1 : false;
+            }
             return selectedEventValue() === '1';
         }
 
@@ -234,12 +247,16 @@
                 ui.eventPanel.classList.toggle('huellero-event-salida', salida);
             }
             if (ui.eventTitle) {
-                ui.eventTitle.textContent = salida ? 'REGISTRO DE SALIDA' : 'REGISTRO DE INGRESO';
+                if (automaticMode && !hasResolvedEvent) {
+                    ui.eventTitle.textContent = 'REGISTRO AUTOMATICO';
+                } else {
+                    ui.eventTitle.textContent = salida ? 'REGISTRO DE SALIDA' : 'REGISTRO DE INGRESO';
+                }
             }
             if (ui.eventMessage) {
                 ui.eventMessage.textContent = '';
             }
-            if (ui.manualTrigger) {
+            if (!automaticMode && ui.manualTrigger) {
                 ui.manualTrigger.textContent = salida ? 'Salida manual' : 'Ingreso manual';
             }
         }
@@ -263,7 +280,9 @@
             }
             var salida = isSalidaEvent();
             var badgeClass = 'is-neutral';
-            var badgeText = salida ? 'LISTO PARA SALIDA' : 'LISTO PARA INGRESO';
+            var badgeText = automaticMode
+                ? 'LISTO PARA REGISTRO AUTOMATICO'
+                : (salida ? 'LISTO PARA SALIDA' : 'LISTO PARA INGRESO');
             var hintText = '';
             var messageText = '';
 
@@ -276,10 +295,11 @@
                 badgeText = 'VALIDANDO...';
                 hintText = 'Consultando información.';
             } else if (state === 'completed') {
-                badgeClass = salida ? 'is-danger' : 'is-success';
-                badgeText = salida ? 'SALIDA REGISTRADA' : 'INGRESO REGISTRADO';
+                var salidaRegistrada = salida;
+                badgeClass = salidaRegistrada ? 'is-danger' : 'is-success';
+                badgeText = salidaRegistrada ? 'SALIDA REGISTRADA' : 'INGRESO REGISTRADO';
                 hintText = 'Puede continuar el siguiente empleado.';
-                messageText = salida ? 'HASTA LUEGO' : 'BIENVENIDO';
+                messageText = salidaRegistrada ? 'HASTA LUEGO' : 'BIENVENIDO';
             } else if (state === 'error') {
                 badgeClass = 'is-error';
                 badgeText = 'ERROR DE LECTOR';
@@ -336,6 +356,80 @@
             }, 4000);
         }
 
+        function normalizeText(value) {
+            return String(value || '').trim();
+        }
+
+        function formatSystemDateTime(value) {
+            var raw = normalizeText(value);
+            if (!raw) return '';
+            var normalized = raw.replace(' ', 'T');
+            var parsed = new Date(normalized);
+            if (isNaN(parsed.getTime())) {
+                return raw;
+            }
+            return parsed.toLocaleString('es-CO', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function buildFriendlyEventError(data) {
+            var motivoRaw = normalizeText((data && (data.motivo || data.error)) || '');
+            if (!motivoRaw) {
+                return 'No se pudo registrar el evento. Intenta nuevamente en unos segundos.';
+            }
+
+            var motivo = motivoRaw.toLowerCase();
+
+            if (motivo.indexOf('fuera de horarios') !== -1) {
+                return 'No se pudo registrar porque en este momento estas fuera de tu horario permitido.';
+            }
+            if (motivo.indexOf('aun no puede salir') !== -1) {
+                return 'Tu salida aun no esta habilitada. Debes esperar a la hora de salida de tu jornada.';
+            }
+            if (motivo.indexOf('no puede salir sin haber ingresado hoy') !== -1) {
+                return 'No se puede registrar salida porque no tienes un ingreso registrado hoy.';
+            }
+            if (motivo.indexOf('ya existe ingreso registrado hoy') !== -1) {
+                return 'Ya tienes un ingreso registrado hoy. El siguiente evento debe corresponder a salida segun horario.';
+            }
+            if (motivo.indexOf('ya existe salida registrada hoy') !== -1) {
+                return 'Ya tienes una salida registrada hoy. Si necesitas ajuste, solicita apoyo al area administrativa.';
+            }
+            if (motivo.indexOf('reingreso bloqueado por 7 horas') !== -1) {
+                var match = motivoRaw.match(/habilitado desde ([^)]+)/i);
+                if (match && match[1]) {
+                    var fechaHabilita = formatSystemDateTime(match[1]);
+                    return 'Tu nuevo ingreso esta bloqueado temporalmente. Podras volver a ingresar desde ' + fechaHabilita + '.';
+                }
+                return 'Tu nuevo ingreso esta bloqueado temporalmente. Debes esperar 7 horas despues de la ultima salida.';
+            }
+            if (motivo.indexOf('no puede marcar salida dentro de otra jornada valida') !== -1) {
+                return 'No se pudo registrar salida porque ya estas dentro de otra jornada activa.';
+            }
+            if (motivo.indexOf('no se pudo resolver el cargo') !== -1) {
+                return 'No se pudo validar tu cargo para asignar horario. Comunicate con el administrador del sistema.';
+            }
+            if (motivo.indexOf('la persona no fue encontrada') !== -1) {
+                return 'No se encontro una vinculacion activa para esta identificacion.';
+            }
+            if (motivo.indexOf('identificacion invalida') !== -1) {
+                return 'La identificacion recibida no es valida.';
+            }
+            if (motivo.indexOf('tipo de evento invalido') !== -1) {
+                return 'El tipo de evento enviado no es valido para este proceso.';
+            }
+            if (motivo.indexOf('no se pudo guardar el evento') !== -1) {
+                return 'No fue posible guardar el evento. Intenta nuevamente.';
+            }
+
+            return motivoRaw.endsWith('.') ? motivoRaw : (motivoRaw + '.');
+        }
+
         function getQualityLabel(quality) {
             if (quality === null || typeof quality === 'undefined') return '-';
             if (window.Fingerprint && Fingerprint.QualityCode && typeof Fingerprint.QualityCode[quality] === 'string') {
@@ -377,6 +471,9 @@
         }
 
         function setEventType(value) {
+            if (automaticMode) {
+                return;
+            }
             var entrada = document.getElementById('eventEntrada');
             var salida = document.getElementById('eventSalida');
             var target = value === '1' ? salida : entrada;
@@ -391,6 +488,7 @@
         }
 
         function shouldIgnoreShortcut(event) {
+            if (automaticMode) return true;
             if (!event || event.defaultPrevented) return true;
             if (manualModal && manualModal.classList.contains('show')) return true;
             if (latestEventsModal && latestEventsModal.classList.contains('show')) return true;
@@ -689,11 +787,16 @@
         function clearDisplay() {
             probe = '';
             identificacion = '';
+            if (automaticMode) {
+                resolvedEventCode = 2;
+                hasResolvedEvent = false;
+            }
             updateIdentificacionBox();
             resetEmpleadoInfo();
             setEventTime(null);
             updateProgress();
             unlockStatus();
+            applyEventTheme();
         }
 
         function stopCaptureSafely() {
@@ -733,6 +836,9 @@
         }
 
         function requireEvent() {
+            if (automaticMode) {
+                return true;
+            }
             if (!selectedEventValue()) {
                 showAlert('warning', 'Seleccione el tipo de evento.');
                 return false;
@@ -972,8 +1078,20 @@
                 }
 
                 if (!response.ok || !data || data.ok !== true) {
-                    showAlert('warning', (data && data.error) ? data.error : 'Servicio no disponible.');
+                    showAlert('warning', buildFriendlyEventError(data || {}));
                 } else {
+                    if (automaticMode) {
+                        var eventoRegistrado = Number(data.evento || 0);
+                        if (eventoRegistrado === 1 || eventoRegistrado === 2) {
+                            resolvedEventCode = eventoRegistrado;
+                            hasResolvedEvent = true;
+                            var radio = document.getElementById(eventoRegistrado === 1 ? 'eventSalida' : 'eventEntrada');
+                            if (radio) {
+                                radio.checked = true;
+                            }
+                            applyEventTheme();
+                        }
+                    }
                     if (data.data) {
                         if (data.data.nombre && ui.empleadoNombre) {
                             ui.empleadoNombre.textContent = data.data.nombre;
@@ -1007,10 +1125,12 @@
             }
 
             var payload = {
-                evento: Number(selectedEventValue()),
-                descripcion: selectedEventDescription(),
                 identificacion: identificacion
             };
+            if (!automaticMode) {
+                payload.evento = Number(selectedEventValue());
+                payload.descripcion = selectedEventDescription();
+            }
 
             submitEvent(payload, eventCapturedAt || new Date());
         }
@@ -1109,11 +1229,13 @@
             handleSample(normalized[0]);
         };
 
-        eventInputs.forEach(function(node) {
-            node.addEventListener('change', function() {
-                resetState();
+        if (!automaticMode) {
+            eventInputs.forEach(function(node) {
+                node.addEventListener('change', function() {
+                    resetState();
+                });
             });
-        });
+        }
 
         if (manualModal) {
             manualModal.addEventListener('show.bs.modal', function() {
@@ -1192,7 +1314,9 @@
             });
         }
 
-        document.addEventListener('keydown', handleShortcut);
+        if (!automaticMode) {
+            document.addEventListener('keydown', handleShortcut);
+        }
 
         applyEventTheme();
         setStatus('disconnected');

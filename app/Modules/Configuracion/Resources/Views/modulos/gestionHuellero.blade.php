@@ -38,10 +38,19 @@
     <div class="col">
       <x-card
         color="bg-success"
-        titulo="Ingreso personal"
-        descripcion="Registro"
+        titulo="Ingreso personal automatico"
+        descripcion="Registro automatico"
         icono="fa-clipboard-check"
         ruta="{{ route('fingerprint.eventos.empleados') }}" />
+    </div>
+
+    <div class="col">
+      <x-card
+        color="bg-secondary"
+        titulo="Ingreso personal manual"
+        descripcion="Registro manual"
+        icono="fa-user-edit"
+        ruta="{{ route('fingerprint.eventos.empleados.manual') }}" />
     </div>
     @endif
 

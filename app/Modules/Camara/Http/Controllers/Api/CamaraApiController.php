@@ -8,6 +8,7 @@ use App\Modules\Camara\Http\Requests\RecognizeLiveRequest;
 use App\Modules\Camara\Http\Requests\RecognizeRequest;
 use App\Modules\Camara\Http\Requests\VerifyLiveRequest;
 use App\Modules\GestionRRHH\Models\PerPersonas;
+use App\Modules\Huellero\Services\RegistrarEventoEmpleadoService;
 use Carbon\Carbon;
 use App\Modules\Camara\Services\CameraService;
 use Illuminate\Http\Request;
@@ -16,8 +17,10 @@ use Illuminate\Support\Facades\Validator;
 
 class CamaraApiController extends Controller
 {
-  public function __construct(private readonly CameraService $cameraService)
-  {
+  public function __construct(
+    private readonly CameraService $cameraService,
+    private readonly RegistrarEventoEmpleadoService $registrarEventoEmpleadoService
+  ) {
   }
 
   public function health()
@@ -135,8 +138,80 @@ class CamaraApiController extends Controller
       ], $response->status());
     }
 
-    return response($response->body(), $response->status())
-      ->header('Content-Type', $response->header('Content-Type', 'application/json'));
+    $payload = $response->json();
+    if (!is_array($payload) || !is_array($payload['personas'] ?? null)) {
+      return response($response->body(), $response->status())
+        ->header('Content-Type', $response->header('Content-Type', 'application/json'));
+    }
+
+    $personasProcesadas = [];
+    $rechazados = [];
+    $procesados = [];
+
+    foreach ($payload['personas'] as $persona) {
+      if (!is_array($persona)) {
+        continue;
+      }
+
+      $identificacion = trim((string) ($persona['identificacion'] ?? ''));
+      if ($identificacion === '') {
+        continue;
+      }
+
+      if (isset($procesados[$identificacion])) {
+        continue;
+      }
+      $procesados[$identificacion] = true;
+
+      $resultado = $this->registrarEventoEmpleadoService->registrar(
+        $identificacion,
+        null,
+        now(),
+        $request->user()?->persona?->PerNumDoc,
+        $request->user()?->IdUsuario,
+        'camara'
+      );
+
+      if (($resultado['ok'] ?? false) !== true) {
+        $rechazados[] = [
+          'identificacion' => $identificacion,
+          'motivo' => $resultado['motivo'] ?? 'No se pudo registrar el evento.',
+        ];
+        continue;
+      }
+
+      $fechaRegistro = null;
+      if (!empty($resultado['fecha_evento'])) {
+        try {
+          $fechaRegistro = Carbon::parse($resultado['fecha_evento']);
+        } catch (\Throwable $e) {
+          $fechaRegistro = null;
+        }
+      }
+
+      $persona['evento'] = (int) ($resultado['evento'] ?? 0);
+      $persona['fecha_registro'] = $fechaRegistro
+        ? $fechaRegistro->format('d/m/Y')
+        : (string) ($persona['fecha_registro'] ?? '');
+      $persona['hora_registro'] = $fechaRegistro
+        ? $fechaRegistro->format('g:i a')
+        : (string) ($persona['hora_registro'] ?? '');
+      $persona['horario_cargo_id'] = $resultado['horario_cargo_id'] ?? null;
+      $persona['cargo_id'] = $resultado['cargo_id'] ?? null;
+      $persona['flags'] = $resultado['flags'] ?? [
+        'llegada_tarde' => false,
+        'cargo_especial' => false,
+      ];
+
+      $personasProcesadas[] = $persona;
+    }
+
+    $payload['personas'] = $personasProcesadas;
+    if (!empty($rechazados)) {
+      $payload['rechazados'] = $rechazados;
+    }
+
+    return response()->json($payload, $response->status());
   }
 
   public function verifyLive(VerifyLiveRequest $request)

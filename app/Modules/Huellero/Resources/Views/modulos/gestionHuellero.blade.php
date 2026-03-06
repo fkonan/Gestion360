@@ -20,6 +20,14 @@
         icono="fa-user-clock"
         ruta="{{ route('fingerprint.eventos.empleados') }}" />
     </div>
+
+    <div class="col">
+      <x-card color="bg-secondary"
+        titulo="Ingreso Personal Manual"
+        descripcion="Registro de entrada y salida"
+        icono="fa-user-edit"
+        ruta="{{ route('fingerprint.eventos.empleados.manual') }}" />
+    </div>
     @endif
 
     @if(auth()->user()->can(\App\Constants\Permisos::BIOMETRIA_GESTION_HUELLERO_DESCANSO_CONDUCTORES))
