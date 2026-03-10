@@ -11,8 +11,8 @@ class DecidirEventoService
 {
   private const EVENTO_SALIDA = 1;
   private const EVENTO_INGRESO = 2;
-  private const CARGO_ESPECIAL_ID = 8;
-  private const CARGOS_BLOQUEO_REINGRESO_POST_SALIDA = [8];
+  private const CARGO_ESPECIAL_ID = 3;
+  private const CARGOS_BLOQUEO_REINGRESO_POST_SALIDA = [3];
   private const HORAS_BLOQUEO_REINGRESO_POST_SALIDA = 7;
 
   public function decidir(string $identificacion, int $cargoId, Carbon $now): DecisionEventoDTO

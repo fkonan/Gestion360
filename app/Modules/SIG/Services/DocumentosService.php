@@ -252,8 +252,8 @@ class DocumentosService
             $version->estado = 'EN_REVISION';
             $version->comentario_revision = $data['comentario_revision'] ?? null;
             $version->id_elabora = $data['id_elabora'] ?? null;
-            $version->id_revisa = $data['id_revisa'] ?? null;
-            $version->id_aprueba = $data['id_aprueba'] ?? null;
+            $version->id_revisa = null;
+            $version->id_aprueba = null;
             $version->fecha_elaboracion = now();
             $version->fecha_revision = null;
             $version->fecha_aprobacion = null;

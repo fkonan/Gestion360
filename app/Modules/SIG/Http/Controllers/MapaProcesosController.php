@@ -90,6 +90,13 @@ class MapaProcesosController extends Controller
     public function crearEmision(Request $request, int $documentoId)
     {
         $documento = Documentos::with(['proceso', 'tipoDocumento', 'ubicacion'])->findOrFail($documentoId);
+        if ($documento->estado !== 'ACTIVO') {
+            return response()->json([
+                'error' => true,
+                'message' => 'Solo se permiten crear emisiones para documentos activos.',
+            ], 422);
+        }
+
         $datosEmision = $this->emisionesService->obtenerDatosFormularioNuevaEmision($documentoId);
         $emisionDevuelta = null;
         $versionId = $request->query('version_id');
@@ -223,8 +230,6 @@ class MapaProcesosController extends Controller
             'paginas' => 'nullable|integer|min:1',
             'comentario_revision' => 'nullable|string|max:4000',
             'id_elabora' => 'nullable|integer',
-            'id_revisa' => 'nullable|integer',
-            'id_aprueba' => 'nullable|integer',
             'centros_costos' => 'nullable|array',
             'centros_costos.*' => 'string|max:20',
         ]);
@@ -252,6 +257,7 @@ class MapaProcesosController extends Controller
 
         $version = $this->documentosService->crearDocumentoNuevo($data, $userId);
         $this->notificacionesService->notificarCambioEstado($userId, 'EN_REVISION', $version);
+        $this->notificacionesService->enviarPushSolicitudPendienteRevision($version);
 
         return response()->json([
             'title' => 'Documento registrado',
@@ -264,6 +270,15 @@ class MapaProcesosController extends Controller
     {
         $documento = Documentos::findOrFail($documentoId);
         $userId = Auth::id() ?? $request->user()?->getKey();
+
+        if ($documento->estado !== 'ACTIVO') {
+            return response()->json([
+                'title' => 'Accion no permitida',
+                'message' => 'Solo se permiten crear emisiones para documentos activos.',
+                'type' => 'warning',
+                'redirect' => '#',
+            ], 422);
+        }
 
         $ultimaVersion = DocumentosVersiones::where('documento_id', $documentoId)
             ->orderByDesc('id')
@@ -285,8 +300,6 @@ class MapaProcesosController extends Controller
             'paginas' => 'nullable|integer|min:1',
             'comentario_revision' => 'nullable|string|max:4000',
             'id_elabora' => 'nullable|integer',
-            'id_revisa' => 'nullable|integer',
-            'id_aprueba' => 'nullable|integer',
         ]);
 
         $version = new DocumentosVersiones;
@@ -297,8 +310,8 @@ class MapaProcesosController extends Controller
         $version->estado = 'EN_REVISION';
         $version->comentario_revision = $data['comentario_revision'] ?? null;
         $version->id_elabora = $data['id_elabora'] ?? null;
-        $version->id_revisa = $data['id_revisa'] ?? null;
-        $version->id_aprueba = $data['id_aprueba'] ?? null;
+        $version->id_revisa = $ultimaVersion?->id_revisa;
+        $version->id_aprueba = $ultimaVersion?->id_aprueba;
         $version->fecha_elaboracion = now();
         $version->fecha_revision = null;
         $version->fecha_aprobacion = null;
@@ -307,6 +320,7 @@ class MapaProcesosController extends Controller
         $version->save();
 
         $this->notificacionesService->notificarCambioEstado($userId, 'EN_REVISION', $version);
+        $this->notificacionesService->enviarPushSolicitudPendienteRevision($version);
 
         return response()->json([
             'title' => 'Emision registrada',
@@ -326,6 +340,26 @@ class MapaProcesosController extends Controller
         ]);
     }
 
+    public function revisarEmisionPendiente(int $versionId)
+    {
+        $revision = $this->emisionesService->obtenerPendienteRevision($versionId);
+
+        if (! $revision) {
+            return redirect()
+                ->route('mapa-procesos.emisiones.pendientes')
+                ->with('alert', [
+                    'type' => 'warning',
+                    'title' => 'Solicitud no disponible',
+                    'description' => 'La solicitud ya no se encuentra en revision o no existe.',
+                ]);
+        }
+
+        return view('sig::solicitudes_revision', [
+            'revision' => $revision,
+            ...$this->emisionesService->obtenerUbicacionesFormulario(),
+        ]);
+    }
+
     public function aprobarEmision(Request $request, int $versionId)
     {
         $version = DocumentosVersiones::findOrFail($versionId);
@@ -337,6 +371,8 @@ class MapaProcesosController extends Controller
 
         $request->validate([
             'comentario' => 'required|string|max:500',
+            'id_revisa' => 'required|integer',
+            'id_aprueba' => 'required|integer',
         ]);
 
         try {
@@ -364,8 +400,8 @@ class MapaProcesosController extends Controller
                 $nueva->estado = 'APROBADO';
                 $nueva->comentario_revision = $request->input('comentario');
                 $nueva->id_elabora = $version->id_elabora;
-                $nueva->id_revisa = $version->id_revisa;
-                $nueva->id_aprueba = $version->id_aprueba;
+                $nueva->id_revisa = $request->integer('id_revisa');
+                $nueva->id_aprueba = $request->integer('id_aprueba');
                 $nueva->fecha_elaboracion = $version->fecha_elaboracion;
                 $nueva->fecha_revision = now();
                 $nueva->fecha_aprobacion = now();
@@ -400,6 +436,8 @@ class MapaProcesosController extends Controller
 
         $request->validate([
             'comentario' => 'required|string|max:500',
+            'id_revisa' => 'required|integer',
+            'id_aprueba' => 'required|integer',
         ]);
 
         $nuevo = new DocumentosVersiones;
@@ -410,8 +448,8 @@ class MapaProcesosController extends Controller
         $nuevo->estado = 'RECHAZADO';
         $nuevo->comentario_revision = $request->input('comentario');
         $nuevo->id_elabora = $version->id_elabora;
-        $nuevo->id_revisa = $version->id_revisa;
-        $nuevo->id_aprueba = $version->id_aprueba;
+        $nuevo->id_revisa = $request->integer('id_revisa');
+        $nuevo->id_aprueba = $request->integer('id_aprueba');
         $nuevo->fecha_elaboracion = $version->fecha_elaboracion;
         $nuevo->fecha_revision = now();
         $nuevo->fecha_aprobacion = null;
@@ -446,6 +484,8 @@ class MapaProcesosController extends Controller
 
         $request->validate([
             'comentario' => 'required|string|max:500',
+            'id_revisa' => 'required|integer',
+            'id_aprueba' => 'required|integer',
         ]);
 
         $nuevo = new DocumentosVersiones;
@@ -456,8 +496,8 @@ class MapaProcesosController extends Controller
         $nuevo->estado = 'DEVUELTO';
         $nuevo->comentario_revision = $request->input('comentario');
         $nuevo->id_elabora = $version->id_elabora;
-        $nuevo->id_revisa = $version->id_revisa;
-        $nuevo->id_aprueba = $version->id_aprueba;
+        $nuevo->id_revisa = $request->integer('id_revisa');
+        $nuevo->id_aprueba = $request->integer('id_aprueba');
         $nuevo->fecha_elaboracion = $version->fecha_elaboracion;
         $nuevo->fecha_revision = now();
         $nuevo->fecha_aprobacion = null;
@@ -488,10 +528,35 @@ class MapaProcesosController extends Controller
         ])
             ->where('usrcreacion', $userId)
             ->orderByDesc('id')
-            ->get(['id', 'documento_id', 'version', 'comentario_revision', 'archivo_url', 'paginas', 'fecha_elaboracion', 'estado'])
+            ->get([
+                'id',
+                'documento_id',
+                'version',
+                'comentario_revision',
+                'archivo_url',
+                'paginas',
+                'id_elabora',
+                'id_revisa',
+                'id_aprueba',
+                'fecha_elaboracion',
+                'fecha_revision',
+                'fecha_aprobacion',
+                'estado',
+            ])
             ->unique('documento_id');
 
-        $filas = $versiones->map(function ($version) {
+        $ubicaciones = $this->emisionesService->obtenerUbicacionesEmisiones($versiones);
+
+        $filas = $versiones->map(function ($version) use ($ubicaciones) {
+            $obtenerNombre = function ($id) use ($ubicaciones) {
+                $id = trim((string) $id);
+                if ($id === '') {
+                    return null;
+                }
+
+                return optional($ubicaciones->get($id))->nombre;
+            };
+
             return [
                 'id' => $version->id,
                 'documento_id' => $version->documento_id,
@@ -503,6 +568,12 @@ class MapaProcesosController extends Controller
                 'fecha_elaboracion' => $version->fecha_elaboracion,
                 'estado' => $version->estado,
                 'version' => $version->version,
+                'elaboro' => $obtenerNombre($version->id_elabora),
+                'reviso' => $obtenerNombre($version->id_revisa),
+                'aprueba' => $obtenerNombre($version->id_aprueba),
+                'fecha_revision' => $version->fecha_revision,
+                'fecha_aprobacion' => $version->fecha_aprobacion,
+                'tipo_solicitud' => $version->documento?->codigo ? 'EMISION' : 'NUEVO_DOCUMENTO',
             ];
         })->values();
 

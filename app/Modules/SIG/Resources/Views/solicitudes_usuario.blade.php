@@ -71,7 +71,7 @@
       return texto.charAt(0).toUpperCase() + texto.slice(1);
     };
 
-    const fechaFormatter = (value) => {
+    const fechaTablaFormatter = (value) => {
       if (!value) return '';
       const date = new Date(value);
       if (isNaN(date.getTime())) return value;
@@ -81,10 +81,38 @@
       return `${year}-${month}-${day}`;
     };
 
+    const fechaFormatter = (value) => {
+      if (!value) return '';
+      const date = new Date(value);
+      if (isNaN(date.getTime())) return value;
+      return new Intl.DateTimeFormat('es-CO', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      }).format(date);
+    };
+
+    const obtenerTipoSolicitud = (row) => {
+      return row?.tipo_solicitud === 'NUEVO_DOCUMENTO' ? 'Documento nuevo' : 'Emisi\u00f3n';
+    };
+
+    const obtenerEtiquetaEstado = (value) => {
+      const texto = String(value || 'DEVUELTO');
+      return texto === 'EN_REVISION' ? 'EN REVISI\u00d3N' : texto.replaceAll('_', ' ');
+    };
+
+    const obtenerClaseEstado = (value) => {
+      const texto = String(value || 'DEVUELTO');
+      if (texto === 'DEVUELTO') return 'info';
+      if (texto === 'RECHAZADO') return 'danger';
+      if (texto === 'APROBADO') return 'success';
+      if (texto === 'EN_REVISION') return 'warning';
+      return 'secondary';
+    };
+
     const estadoFormatter = (value) => {
-      const texto = value || 'DEVUELTO';
-      const color = texto === 'DEVUELTO' ? 'info' : (texto === 'RECHAZADO' ? 'danger' : (texto === 'APROBADO' ? 'success' : 'secondary'));
-      return `<span class="badge bg-${color}">${texto}</span>`;
+      const color = obtenerClaseEstado(value);
+      return `<span class="badge bg-${color}">${escapeHtml(obtenerEtiquetaEstado(value))}</span>`;
     };
 
     const observacionFormatter = (value) => {
@@ -103,42 +131,112 @@
         return;
       }
 
-      const detalles = [
-        ['C\u00f3digo', row.codigo],
-        ['Nombre', row.nombre],
-        ['Emisi\u00f3n', row.version || 'Sin asignar'],
-        ['Archivo', row.archivo_url],
-        ['P\u00e1ginas', row.paginas],
-        ['Fecha', row.fecha_elaboracion],
-        ['Estado', row.estado],
-      ];
+      const renderDetailCard = (label, value, extraClass = '') => {
+        if (value === null || value === undefined || String(value).trim() === '') {
+          return '';
+        }
 
-      const detallesHtml = detalles
-        .filter(([, valor]) => valor !== null && valor !== undefined && String(valor).trim() !== '')
-        .map(([label, valor]) => `
-          <div class="d-flex justify-content-between gap-3 py-1 border-bottom">
-            <strong class="text-muted">${escapeHtml(label)}:</strong>
-            <span class="text-end">${escapeHtml(String(valor))}</span>
-          </div>
-        `).join('');
+        return `
+          <article class="sig-detail-card ${extraClass}">
+            <span class="sig-detail-card__label">${escapeHtml(label)}</span>
+            <strong class="sig-detail-card__value">${escapeHtml(String(value))}</strong>
+          </article>
+        `;
+      };
 
+      const codigo = row.codigo || 'Sin c\u00f3digo asignado';
+      const nombre = row.nombre || 'Solicitud sin nombre';
+      const tipoSolicitud = obtenerTipoSolicitud(row);
+      const estadoLabel = obtenerEtiquetaEstado(row.estado);
+      const estadoClase = obtenerClaseEstado(row.estado);
+      const version = row.version ? `Emisi\u00f3n ${row.version}` : 'Sin emisi\u00f3n asignada';
       const observacion = row.comentario_revision
         ? escapeHtml(String(row.comentario_revision))
         : 'Sin observaci\u00f3n registrada.';
 
+      const informacionHtml = [
+        renderDetailCard('Tipo de solicitud', tipoSolicitud),
+        renderDetailCard('Estado actual', estadoLabel),
+        renderDetailCard('Emisi\u00f3n', version),
+        renderDetailCard('Archivo', row.archivo_url || 'Sin archivo asociado'),
+        renderDetailCard('P\u00e1ginas', row.paginas || 'No registradas'),
+        renderDetailCard('C\u00f3digo', codigo),
+      ].join('');
+
+      const fechasHtml = [
+        renderDetailCard('Fecha de elaboraci\u00f3n', fechaFormatter(row.fecha_elaboracion) || 'Sin fecha'),
+        renderDetailCard('Fecha de revisi\u00f3n', fechaFormatter(row.fecha_revision) || 'Pendiente'),
+        renderDetailCard('Fecha de aprobaci\u00f3n', fechaFormatter(row.fecha_aprobacion) || 'Pendiente'),
+      ].join('');
+
+      const responsablesHtml = [
+        renderDetailCard('Elabor\u00f3', row.elaboro || 'No asignado', 'sig-detail-card--person'),
+        renderDetailCard('Revis\u00f3', row.reviso || 'No asignado', 'sig-detail-card--person'),
+        renderDetailCard('Aprueba', row.aprueba || 'No asignado', 'sig-detail-card--person'),
+      ].join('');
+
+      const alertaHtml = row.estado === 'DEVUELTO' && puedeReenviar
+        ? `
+          <div class="sig-detail-alert sig-detail-alert--info">
+            Puedes reenviar esta solicitud desde el bot\u00f3n de reenviar en la tabla.
+          </div>
+        `
+        : '';
+
       const html = `
-        <div class="text-start">
-          <div class="mb-3">
-            <h6 class="mb-2">Observaci\u00f3n</h6>
-            <div class="p-3 rounded border" style="white-space: pre-wrap;">
+        <div class="sig-detail-modal text-start">
+          <section class="sig-detail-header">
+            <div class="sig-detail-header__top">
+              <div>
+                <span class="sig-detail-header__eyebrow">Solicitud SIG</span>
+                <h5 class="sig-detail-title mb-1">${escapeHtml(nombre)}</h5>
+                <p class="sig-detail-subtitle mb-0">${escapeHtml(codigo)}</p>
+              </div>
+              <span class="sig-detail-status sig-detail-status--${estadoClase}">${escapeHtml(estadoLabel)}</span>
+            </div>
+            <div class="sig-detail-header__meta">
+              <span><strong>Solicitud:</strong> #${escapeHtml(String(row.id))}</span>
+              <span><strong>Documento:</strong> ${escapeHtml(String(row.documento_id || 'N/D'))}</span>
+            </div>
+          </section>
+
+          ${alertaHtml}
+
+          <section class="sig-detail-block">
+            <div class="sig-detail-block__header">
+              <h6 class="sig-detail-block__title">Informaci\u00f3n general</h6>
+            </div>
+            <div class="sig-detail-facts sig-detail-facts--general">
+              ${informacionHtml}
+            </div>
+          </section>
+
+          <section class="sig-detail-block">
+            <div class="sig-detail-block__header">
+              <h6 class="sig-detail-block__title">Fechas del proceso</h6>
+            </div>
+            <div class="sig-detail-facts sig-detail-facts--dates">
+              ${fechasHtml}
+            </div>
+          </section>
+
+          <section class="sig-detail-block">
+            <div class="sig-detail-block__header">
+              <h6 class="sig-detail-block__title">Responsables</h6>
+            </div>
+            <div class="sig-detail-people">
+              ${responsablesHtml}
+            </div>
+          </section>
+
+          <section class="sig-detail-block sig-detail-block--wide">
+            <div class="sig-detail-block__header">
+              <h6 class="sig-detail-block__title">Observaci\u00f3n</h6>
+            </div>
+            <div class="sig-detail-note">
               ${observacion}
             </div>
-          </div>
-          <div class="border rounded">
-            <div class="p-3">
-              ${detallesHtml}
-            </div>
-          </div>
+          </section>
         </div>
       `;
 
@@ -207,13 +305,13 @@
         nombre: capitalizarFormatter,
         comentario_revision: observacionFormatter,
         estado: estadoFormatter,
-        fecha_elaboracion: fechaFormatter,
+        fecha_elaboracion: fechaTablaFormatter,
         acciones: accionesSolicitudes
       }
     );
 
     window.capitalizarFormatter = capitalizarFormatter;
-    window.fechaFormatter = fechaFormatter;
+    window.fechaFormatter = fechaTablaFormatter;
     window.estadoFormatter = estadoFormatter;
     window.accionesSolicitudes = accionesSolicitudes;
     window.observacionFormatter = observacionFormatter;

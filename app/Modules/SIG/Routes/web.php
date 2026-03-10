@@ -8,12 +8,12 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('sig')->middleware(['auth', 'permisos:'.Permisos::SIG_ACCEDER, 'modulo.activo:18'])->group(function () {
 
     Route::get('/', function () {
-        return view('home');
-    })->middleware('auth')->name('mapaProcesos.index');
+        return view('sig::mapa_procesos_inicio');
+    })->name('mapaProcesos.index');
 
-    // Entrada al mapa (redirige a una categoria por defecto)
+    // Entrada principal del mapa
     Route::get('/mapa-procesos', function () {
-        return redirect()->route('mapa-procesos.categoria', ['categoria' => 'gerenciales']);
+        return view('sig::mapa_procesos_inicio');
     })->name('mapa-procesos.index');
 
     // Vista principal de mapa (solo consulta)
@@ -60,6 +60,9 @@ Route::prefix('sig')->middleware(['auth', 'permisos:'.Permisos::SIG_ACCEDER, 'mo
     Route::middleware('permisos:'.Permisos::SIG_MAPA_PROCESOS_ACCEDER)->group(function () {
         Route::get('/mapa-procesos/emisiones/pendientes', [MapaProcesosController::class, 'emisionesPendientes'])
             ->name('mapa-procesos.emisiones.pendientes');
+
+        Route::get('/mapa-procesos/emisiones/pendientes/{id}/revision', [MapaProcesosController::class, 'revisarEmisionPendiente'])
+            ->name('mapa-procesos.emisiones.pendientes.revision');
 
         Route::get('/mapa-procesos/emisiones', [MapaProcesosController::class, 'emisionesAdmin'])
             ->name('mapa-procesos.emisiones.admin');

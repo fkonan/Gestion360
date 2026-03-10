@@ -3,8 +3,6 @@
 
   @php
     $seleccionElabora = $emisionDevuelta?->id_elabora ?? $ultimaAprobada?->id_elabora;
-    $seleccionRevisa = $emisionDevuelta?->id_revisa ?? $ultimaAprobada?->id_revisa;
-    $seleccionAprueba = $emisionDevuelta?->id_aprueba ?? $ultimaAprobada?->id_aprueba;
   @endphp
 
   <div class="card shadow-sm">
@@ -82,33 +80,9 @@
             </select>
             <span class="error text-danger fw-bold" id="error-id_elabora"></span>
           </div>
-          <div class="col-12 col-md-4">
-            <label for="id_revisa" class="form-label">Revisa</label>
-            <select name="id_revisa" id="id_revisa" class="form-select">
-              <option value="">Seleccione</option>
-              @foreach($ubicacionesRevisa as $ubic)
-                <option value="{{ $ubic->id }}" @selected($seleccionRevisa == $ubic->id)>
-                  {{ $ubic->nombre }}
-                </option>
-              @endforeach
-            </select>
-            <span class="error text-danger fw-bold" id="error-id_revisa"></span>
-          </div>
-          <div class="col-12 col-md-4">
-            <label for="id_aprueba" class="form-label">Aprueba</label>
-            <select name="id_aprueba" id="id_aprueba" class="form-select">
-              <option value="">Seleccione</option>
-              @foreach($ubicacionesAprueba as $ubic)
-                <option value="{{ $ubic->id }}" @selected($seleccionAprueba == $ubic->id)>
-                  {{ $ubic->nombre }}
-                </option>
-              @endforeach
-            </select>
-            <span class="error text-danger fw-bold" id="error-id_aprueba"></span>
-          </div>
           <div class="col-12">
-            <label for="comentario_revision" class="form-label">Comentario de revisi&oacute;n</label>
-            <textarea name="comentario_revision" id="comentario_revision" class="form-control" rows="5" placeholder="Describe brevemente los ajustes o comentarios"></textarea>
+            <label for="comentario_revision" class="form-label">Comentario de la solicitud</label>
+            <textarea name="comentario_revision" id="comentario_revision" class="form-control" rows="5" placeholder="Describe brevemente el motivo o los ajustes solicitados"></textarea>
             <span class="error text-danger fw-bold" id="error-comentario_revision"></span>
           </div>
           <div class="col-12 col-md-8">

@@ -150,7 +150,7 @@
     const esActivo = row.estado === 'ACTIVO';
     const tieneRevision = !!row.en_revision;
 
-    const btnNueva = (cfg.puedeCrearEmision && !tieneRevision)
+    const btnNueva = (cfg.puedeCrearEmision && esActivo && !tieneRevision)
       ? `<button
           type="button"
           class="btn btn-link p-0 sig-action-btn"
@@ -160,20 +160,61 @@
           <img src="{{ asset('img/nuevaEmision.png') }}" alt="Nueva emisi\u00f3n" style="width: 32px; height: 32px;">
         </button>`
       : (tieneRevision
-        ? `<button type="button" class="btn btn-link p-0 text-muted sig-action-btn" title="Ya existe una emisi\u00f3n en revisi\u00f3n" data-title="Emisi\u00f3n en revisi\u00f3n" aria-label="Emisi\u00f3n en revisi\u00f3n" onclick="avisarEmisionRevision()">
-            <img src="{{ asset('img/nuevaEmision.png') }}" alt="Nueva emisi\u00f3n" style="width: 32px; height: 32px;">
-          </button>`
-        : '');
+        ? `<div class="sig-action-stack sig-action-stack--disabled" title="Ya existe una emisi\u00f3n en revisi\u00f3n" aria-label="Emisi\u00f3n en revisi\u00f3n">
+            <button
+              type="button"
+              class="btn btn-link p-0 sig-action-btn sig-action-btn--disabled"
+              data-title="Emisi\u00f3n en revisi\u00f3n"
+              aria-label="Emisi\u00f3n en revisi\u00f3n"
+              disabled>
+              <img src="{{ asset('img/nuevaEmision.png') }}" alt="Emisi\u00f3n en revisi\u00f3n" style="width: 32px; height: 32px;">
+            </button>
+            <span class="sig-action-stack__label">
+              <span class="sig-action-stack__dot" aria-hidden="true"></span>
+              En revisi\u00f3n
+            </span>
+          </div>`
+        : (!esActivo
+          ? `<div class="sig-action-stack sig-action-stack--disabled" title="No se pueden crear emisiones para documentos inactivos" aria-label="Documento inactivo">
+              <button
+                type="button"
+                class="btn btn-link p-0 sig-action-btn sig-action-btn--disabled"
+                data-title="Documento inactivo"
+                aria-label="Documento inactivo"
+                disabled>
+                <img src="{{ asset('img/nuevaEmision.png') }}" alt="Documento inactivo" style="width: 32px; height: 32px;">
+              </button>
+              <span class="sig-action-stack__label">
+                <span class="sig-action-stack__dot sig-action-stack__dot--muted" aria-hidden="true"></span>
+                Inactivo
+              </span>
+            </div>`
+          : ''));
 
-    const btnEditar = (cfg.puedeEditarDocumento && esActivo)
-      ? `<button
-          type="button"
-          class="btn btn-link p-0 sig-action-btn"
-          data-title="Editar"
-          aria-label="Editar documento"
-          onclick="cargarModal('${urlEditar}', 'Editar documento', '#formEditarDocumento', 'modal-lg')">
-          <img src="{{ asset('img/edit.png') }}" alt="Editar" style="width: 32px; height: 32px;">
-        </button>`
+    const btnEditar = cfg.puedeEditarDocumento
+      ? (esActivo
+        ? `<button
+            type="button"
+            class="btn btn-link p-0 sig-action-btn"
+            data-title="Editar"
+            aria-label="Editar documento"
+            onclick="cargarModal('${urlEditar}', 'Editar documento', '#formEditarDocumento', 'modal-lg')">
+            <img src="{{ asset('img/edit.png') }}" alt="Editar" style="width: 32px; height: 32px;">
+          </button>`
+        : `<div class="sig-action-stack sig-action-stack--disabled" title="No se pueden editar documentos inactivos" aria-label="Documento inactivo">
+            <button
+              type="button"
+              class="btn btn-link p-0 sig-action-btn sig-action-btn--disabled"
+              data-title="Documento inactivo"
+              aria-label="Documento inactivo"
+              disabled>
+              <img src="{{ asset('img/edit.png') }}" alt="Documento inactivo" style="width: 32px; height: 32px;">
+            </button>
+            <span class="sig-action-stack__label">
+              <span class="sig-action-stack__dot sig-action-stack__dot--muted" aria-hidden="true"></span>
+              Inactivo
+            </span>
+          </div>`)
       : '';
 
     const pdfUrl = rutas.pdf || '#';
