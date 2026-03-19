@@ -2,6 +2,7 @@
 
 namespace App\Modules\PagosRecaudos\Services\Cajasan;
 
+use App\Modules\PagosRecaudos\Services\PagosRecaudosLogger;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -11,15 +12,22 @@ class ApiAsopagos
   public function obtenerToken()
   {
     $tokenCacheKey = config('apiAsopagos.token_cache_key');
+    $token = Cache::get($tokenCacheKey);
 
     // Valida si hay token cacheado
-    if (Cache::has($tokenCacheKey)) {
-      return ['token' => Cache::get($tokenCacheKey)];
+    if ($token) {
+      return ['token' => $token];
     }
 
     $response = Http::asForm()
       ->timeout(28)
       ->retry(3, 200, function ($exception, $request) {
+        PagosRecaudosLogger::warning('Reintento al obtener token de Asopagos', [
+          'operation' => 'api_asopagos',
+          'stage' => 'token_retry',
+          'exception_type' => get_class($exception),
+          'timestamp' => now()
+        ]);
         Log::warning('🔄 REINTENTO - Token Asopagos falló', [
           'exception_type' => get_class($exception),
           'timestamp' => now()
@@ -48,9 +56,20 @@ class ApiAsopagos
           return ['token' => $token];
         }
 
+        PagosRecaudosLogger::error('Respuesta de token sin access_token', [
+          'operation' => 'api_asopagos',
+          'stage' => 'token_response',
+          'response' => $data,
+        ]);
         Log::error('Respuesta sin access_token', ['response' => $data]);
         return ['error' => 'Token no recibido'];
       } else {
+        PagosRecaudosLogger::error('No se pudo obtener el token de Asopagos', [
+          'operation' => 'api_asopagos',
+          'stage' => 'token_response',
+          'status'  => $response->status(),
+          'response' => $response->body()
+        ]);
         Log::error('No se pudo obtener el token de Asopagos', [
           'status'  => $response->status(),
           'response' => $response->body()
@@ -252,7 +271,7 @@ class ApiAsopagos
     ], $transactionId, $sequenceId);
 
     // Verifica si el reverso también falló
-    if (empty($resultado) || (isset($resultado['responseCode']) && $resultado['responseCode'] == false) || isset($reverso['error'])) {
+    if (empty($resultado) || (isset($resultado['responseCode']) && $resultado['responseCode'] == false) || isset($resultado['error'])) {
       Log::critical('⚠️ Fallo en reverso. Acción manual requerida.', [
         'reverso'        => $resultado,
         'monto'          => $monto,

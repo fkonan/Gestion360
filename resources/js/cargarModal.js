@@ -166,6 +166,7 @@ function validarFormulario(form, TYPE = "POST") {
         submitHandler: function (form) {
             const $form = $(form);
             const URL = $form.attr("action");
+            const requestedType = String(TYPE || "POST").toUpperCase();
 
             if (!URL) {
                 habilitarSubmit(form);
@@ -174,10 +175,21 @@ function validarFormulario(form, TYPE = "POST") {
             }
 
             const formData = new FormData(form);
+            let ajaxType = requestedType;
+
+            // Con FormData multipart, Laravel procesa mejor el token y _method cuando
+            // la petición real viaja como POST.
+            if (["PUT", "PATCH", "DELETE"].includes(requestedType)) {
+                ajaxType = "POST";
+
+                if (!formData.has("_method")) {
+                    formData.append("_method", requestedType);
+                }
+            }
 
             $.ajax({
                 url: URL,
-                type: TYPE,
+                type: ajaxType,
                 data: formData,
                 processData: false,
                 contentType: false,

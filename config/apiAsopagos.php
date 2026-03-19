@@ -24,4 +24,12 @@ return [
     'token_cache_minutes' => 30,
 
     'test_mode' => env('API_ASOPAGOS_TEST_MODE', false),
+    'provider_mode' => env('API_ASOPAGOS_PROVIDER_MODE', env('API_ASOPAGOS_TEST_MODE', false) ? 'mock' : 'real'),
+    'persistence_mode' => env('API_ASOPAGOS_PERSISTENCE_MODE', 'real'),
+
+    'mock' => [
+        'consulta_saldo_scenario' => env('API_ASOPAGOS_MOCK_CONSULTA_SALDO_SCENARIO', 'success_with_balance'),
+        'pago_scenario' => env('API_ASOPAGOS_MOCK_PAGO_SCENARIO', 'success'),
+        'saldo' => env('API_ASOPAGOS_MOCK_SALDO', 42500),
+    ],
 ];

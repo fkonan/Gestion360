@@ -18,6 +18,14 @@ use Illuminate\Support\Facades\Validator;
 
 class ReportesController extends Controller
 {
+    private const REPORTES_RANGO_MAXIMO_MESES = [
+        99 => 3,
+    ];
+
+    private const REPORTES_SIN_LIMITE_FECHAS = [
+        9,
+    ];
+
     // vista general para el formulario de reportes, aca se genera el formulario en base a los parametros
     public function mostrarFormulario($id)
     {
@@ -33,6 +41,7 @@ class ReportesController extends Controller
         // Hay algún parámetro activo
         $tieneFechaInicio = isset($parametros['paramFechaInicio']);
         $tieneFechaFin = isset($parametros['paramFechaFin']);
+        $limiteMeses = $this->obtenerLimiteMesesReporte((int) $id);
 
         $hayParametros = $parametros->isNotEmpty();
 
@@ -41,6 +50,10 @@ class ReportesController extends Controller
             $mensajeCabecera = $hayParametros
               ? 'Este reporte no requiere de un rango de fechas.'
               : 'Este reporte no requiere parámetros.';
+        } elseif ($limiteMeses === null) {
+            $mensajeCabecera = 'Este reporte no tiene restriccion maxima en el rango de fechas.';
+        } elseif ($limiteMeses > 1) {
+            $mensajeCabecera = "El rango de fechas no puede ser mayor a {$limiteMeses} meses.";
         } else {
             $mensajeCabecera = 'El rango de fechas no puede ser mayor a 30 días.';
         }
@@ -119,18 +132,23 @@ class ReportesController extends Controller
             return sweetAlert($validator->errors()->first(), 'error');
         }
 
-        // Validar rango de máximo 1 mes (el reporte 9 ignora esta condición)
+        // Validar rango de fechas segun la configuracion del reporte
+        $id = $request->input('id');
+        $reporte = Reporteador::findOrFail($id);
+        $limiteMeses = $this->obtenerLimiteMesesReporte((int) $id);
+
         $fechaInicio = Carbon::parse($request->fechaInicio);
         $fechaFin = Carbon::parse($request->fechaFin);
 
-        if ($request->id != 9) {
-            if ($fechaInicio->diffInMonths($fechaFin) > 1 || $fechaFin->gt($fechaInicio->copy()->addMonth())) {
-                return sweetAlert('El rango entre las fechas no puede ser mayor a 1 mes.', 'error');
+        if ($limiteMeses !== null) {
+            $fechaMaxima = $fechaInicio->copy()->addMonthsNoOverflow($limiteMeses);
+
+            if ($fechaInicio->diffInMonths($fechaFin) > $limiteMeses || $fechaFin->gt($fechaMaxima)) {
+                $mensajeRango = $limiteMeses > 1 ? "{$limiteMeses} meses" : '1 mes';
+
+                return sweetAlert("El rango entre las fechas no puede ser mayor a {$mensajeRango}.", 'error');
             }
         }
-
-        $id = $request->input('id');
-        $reporte = Reporteador::findOrFail($id);
 
         $nombreReporte = $reporte->nombre;
         $nombreDocExcel = normalizarNombre($nombreReporte);
@@ -147,6 +165,15 @@ class ReportesController extends Controller
         $ruta = $rutaArea['ruta'] ?? url()->previous();
 
         return view('administration::reportes.tabla', compact('id', 'nombreReporte', 'nombreDocExcel', 'params', 'ruta'));
+    }
+
+    private function obtenerLimiteMesesReporte(int $reporteId): ?int
+    {
+        if (in_array($reporteId, self::REPORTES_SIN_LIMITE_FECHAS, true)) {
+            return null;
+        }
+
+        return self::REPORTES_RANGO_MAXIMO_MESES[$reporteId] ?? 1;
     }
 
     // Cargar datos de los reportes con la API

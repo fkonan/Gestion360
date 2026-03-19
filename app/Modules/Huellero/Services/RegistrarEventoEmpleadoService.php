@@ -20,6 +20,10 @@ use Throwable;
 
 class RegistrarEventoEmpleadoService
 {
+  private array $cargoIdPorNombreCache = [];
+  private ?array $catalogoCargosCache = null;
+  private array $usuariosCreacionCache = [];
+
   public function __construct(private readonly DecidirEventoService $decidirEventoService)
   {
   }
@@ -64,7 +68,7 @@ class RegistrarEventoEmpleadoService
     [$usuarioCreacionId, $usuarioPerPersonasId] = $this->resolverUsuariosCreacion($documentoUsuario);
 
     try {
-      return DB::connection('oracle-360')->transaction(function () use (
+      $resultado = DB::connection('oracle-360')->transaction(function () use (
         $identificacion,
         $eventoManual,
         $cargoId,
@@ -87,21 +91,23 @@ class RegistrarEventoEmpleadoService
         );
 
         if (!$decision->esOk()) {
-          $this->decisionLogger()->warning('Asistencia evento rechazado', [
-            'identificacion' => $identificacion,
-            'motivo' => $decision->motivo,
-            'evento_manual' => $eventoManual,
-            'cargo_id' => $decision->cargoId,
-            'cargo' => $cargoNombre,
-            'horario_cargo_id' => $decision->horarioCargoId,
-            'flags' => [
+          $this->decisionLogger()->warning('Asistencia evento rechazado', $this->contextoDecisionLog(
+            identificacion: $identificacion,
+            fecha: $fecha,
+            origenEvento: $origenEvento,
+            eventoManual: $eventoManual,
+            cargoId: $decision->cargoId,
+            cargoNombre: $cargoNombre,
+            horarioCargoId: $decision->horarioCargoId,
+            flags: [
               'llegada_tarde' => $decision->llegadaTarde,
               'cargo_especial' => $decision->cargoEspecial,
             ],
-            'fecha_evento' => $fecha->format('Y-m-d H:i:s'),
-            'trace' => $decision->trace,
-            'origen' => $origenEvento,
-          ]);
+            evento: $decision->evento,
+            motivo: $decision->motivo,
+            descripcion: null,
+            trace: $decision->trace
+          ));
 
           return $this->respuestaRechazada(
             $decision->motivo ?? 'No se pudo registrar el evento.',
@@ -135,30 +141,23 @@ class RegistrarEventoEmpleadoService
           $usuarioPerPersonasId
         );
 
-        $this->registrarNotificacionEventoEmpleado(
-          $identificacion,
-          $eventoCodigo,
-          $fecha,
-          $usuarioNotificacion,
-          $decision->llegadaTarde
-        );
-
-        $this->decisionLogger()->info('Asistencia evento registrado', [
-          'identificacion' => $identificacion,
-          'evento' => $eventoCodigo,
-          'evento_manual' => $eventoManual,
-          'cargo_id' => $decision->cargoId,
-          'cargo' => $cargoNombre,
-          'horario_cargo_id' => $decision->horarioCargoId,
-          'flags' => [
+        $this->decisionLogger()->info('Asistencia evento registrado', $this->contextoDecisionLog(
+          identificacion: $identificacion,
+          fecha: $fecha,
+          origenEvento: $origenEvento,
+          eventoManual: $eventoManual,
+          cargoId: $decision->cargoId,
+          cargoNombre: $cargoNombre,
+          horarioCargoId: $decision->horarioCargoId,
+          flags: [
             'llegada_tarde' => $decision->llegadaTarde,
             'cargo_especial' => $decision->cargoEspecial,
           ],
-          'descripcion' => $descripcionEvento,
-          'fecha_evento' => $fecha->format('Y-m-d H:i:s'),
-          'trace' => $decision->trace,
-          'origen' => $origenEvento,
-        ]);
+          evento: $eventoCodigo,
+          motivo: null,
+          descripcion: $descripcionEvento,
+          trace: $decision->trace
+        ));
 
         return [
           'ok' => true,
@@ -181,6 +180,19 @@ class RegistrarEventoEmpleadoService
           'origen' => $origenEvento,
         ];
       });
+
+      if (($resultado['ok'] ?? false) === true) {
+        $this->notificarEventoRegistrado(
+          $identificacion,
+          (int) ($resultado['evento'] ?? 0),
+          $fecha,
+          $usuarioNotificacion,
+          (bool) ($resultado['flags']['llegada_tarde'] ?? false),
+          $origenEvento
+        );
+      }
+
+      return $resultado;
     } catch (Throwable $e) {
       $this->huelleroLogger()->warning('Huellero registro evento empleado error', [
         'identificacion' => $identificacion,
@@ -286,24 +298,37 @@ class RegistrarEventoEmpleadoService
       return null;
     }
 
+    if (array_key_exists($normalizado, $this->cargoIdPorNombreCache)) {
+      return $this->cargoIdPorNombreCache[$normalizado];
+    }
+
     $cargo = PrsCargos::query()
       ->whereRaw('UPPER(nombre) = ?', [$normalizado])
       ->orderBy('id')
       ->first(['id', 'nombre']);
 
     if ($cargo) {
-      return (int) $cargo->id;
+      return $this->cargoIdPorNombreCache[$normalizado] = (int) $cargo->id;
     }
 
-    $cargos = PrsCargos::query()
-      ->orderBy('id')
-      ->get(['id', 'nombre']);
+    if ($this->catalogoCargosCache === null) {
+      $this->catalogoCargosCache = PrsCargos::query()
+        ->orderBy('id')
+        ->get(['id', 'nombre'])
+        ->map(function ($item) {
+          return [
+            'id' => (int) $item->id,
+            'nombre_normalizado' => $this->normalizarTexto((string) ($item->nombre ?? '')),
+          ];
+        })
+        ->all();
+    }
 
-    $match = $cargos->first(function ($item) use ($normalizado) {
-      return $this->normalizarTexto((string) ($item->nombre ?? '')) === $normalizado;
+    $match = collect($this->catalogoCargosCache)->first(function (array $item) use ($normalizado) {
+      return $item['nombre_normalizado'] === $normalizado;
     });
 
-    return $match ? (int) $match->id : null;
+    return $this->cargoIdPorNombreCache[$normalizado] = $match ? (int) $match['id'] : null;
   }
 
   private function normalizarTexto(string $valor): string
@@ -319,6 +344,10 @@ class RegistrarEventoEmpleadoService
       return [null, null];
     }
 
+    if (array_key_exists($documentoUsuario, $this->usuariosCreacionCache)) {
+      return $this->usuariosCreacionCache[$documentoUsuario];
+    }
+
     $usuarioCreacionId = PrsPersonas::query()
       ->where('numero_documento', $documentoUsuario)
       ->value('id');
@@ -327,10 +356,47 @@ class RegistrarEventoEmpleadoService
       ->where('identificacion', $documentoUsuario)
       ->value('id');
 
-    return [
+    return $this->usuariosCreacionCache[$documentoUsuario] = [
       $usuarioCreacionId ? (string) $usuarioCreacionId : null,
       $usuarioPerPersonasId ? (int) $usuarioPerPersonasId : null,
     ];
+  }
+
+  private function notificarEventoRegistrado(
+    string $identificacion,
+    int $eventoCodigo,
+    Carbon $fecha,
+    ?int $usuarioNotificacion,
+    bool $llegadaTarde,
+    string $origenEvento
+  ): void {
+    if ($origenEvento === 'api' && !app()->runningInConsole()) {
+      app()->terminating(function () use (
+        $identificacion,
+        $eventoCodigo,
+        $fecha,
+        $usuarioNotificacion,
+        $llegadaTarde
+      ) {
+        $this->registrarNotificacionEventoEmpleado(
+          $identificacion,
+          $eventoCodigo,
+          $fecha,
+          $usuarioNotificacion,
+          $llegadaTarde
+        );
+      });
+
+      return;
+    }
+
+    $this->registrarNotificacionEventoEmpleado(
+      $identificacion,
+      $eventoCodigo,
+      $fecha,
+      $usuarioNotificacion,
+      $llegadaTarde
+    );
   }
 
   private function bloquearEventosDelDia(string $identificacion): void
@@ -468,11 +534,108 @@ class RegistrarEventoEmpleadoService
     ];
   }
 
+  private function contextoDecisionLog(
+    string $identificacion,
+    Carbon $fecha,
+    string $origenEvento,
+    ?int $eventoManual,
+    ?int $cargoId,
+    ?string $cargoNombre,
+    ?int $horarioCargoId,
+    array $flags,
+    ?int $evento,
+    ?string $motivo,
+    ?string $descripcion,
+    array $trace
+  ): array {
+    $contexto = [
+      'identificacion' => $identificacion,
+      'evento' => $evento,
+      'motivo' => $motivo,
+      'evento_manual' => $eventoManual,
+      'cargo_id' => $cargoId,
+      'cargo' => $cargoNombre,
+      'horario_cargo_id' => $horarioCargoId,
+      'flags' => $flags,
+      'descripcion' => $descripcion,
+      'fecha_evento' => $fecha->format('Y-m-d H:i:s'),
+      'origen' => $origenEvento,
+    ];
+
+    $decision = $this->resumirTraceDecision($trace);
+    if ($decision !== []) {
+      $contexto['decision'] = $decision;
+    }
+
+    return $contexto;
+  }
+
+  private function resumirTraceDecision(array $trace): array
+  {
+    if ($trace === []) {
+      return [];
+    }
+
+    $resumen = [];
+
+    foreach ([
+      'modo',
+      'resultado',
+      'detalle_rechazo',
+      'dia_semana',
+      'fecha_hora',
+      'ingreso_hoy_existe',
+      'salida_hoy_existe',
+      'proxima_hora_fin',
+      'horario_seleccionado_id',
+      'horario_ingreso_abierto_id',
+      'hora_fin_horario_abierto',
+      'umbral_llegada_tarde',
+    ] as $campo) {
+      if (array_key_exists($campo, $trace)) {
+        $resumen[$campo] = $trace[$campo];
+      }
+    }
+
+    if (isset($trace['bloqueo_reingreso_post_salida']) && is_array($trace['bloqueo_reingreso_post_salida'])) {
+      $bloqueo = $trace['bloqueo_reingreso_post_salida'];
+      $resumen['bloqueo_reingreso_post_salida'] = [
+        'aplica' => (bool) ($bloqueo['aplica'] ?? false),
+        'activo' => (bool) ($bloqueo['activo'] ?? false),
+        'bloquea_hasta' => $bloqueo['bloquea_hasta'] ?? null,
+      ];
+    }
+
+    $conteos = [];
+    foreach ([
+      'horarios_evaluados' => 'horarios',
+      'eventos_hoy' => 'eventos_hoy',
+      'horarios_ingreso_abierto' => 'ingresos_abiertos',
+      'horarios_ingreso_abierto_obsoletos' => 'ingresos_obsoletos',
+      'jornadas_activas_ahora' => 'jornadas_activas',
+      'candidatos_ingreso_transicion' => 'candidatos_transicion',
+      'rangos_ingreso' => 'rangos_ingreso',
+    ] as $campo => $alias) {
+      if (isset($trace[$campo]) && is_array($trace[$campo])) {
+        $conteos[$alias] = count($trace[$campo]);
+      }
+    }
+
+    if ($conteos !== []) {
+      $resumen['conteos'] = $conteos;
+    }
+
+    return $resumen;
+  }
+
   private function normalizarOrigen(?string $origen): string
   {
     $valor = strtolower(trim((string) $origen));
     if ($valor === 'camara') {
       return 'camara';
+    }
+    if ($valor === 'api') {
+      return 'api';
     }
 
     return 'huella';

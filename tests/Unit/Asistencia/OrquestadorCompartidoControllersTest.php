@@ -5,6 +5,7 @@ namespace Tests\Unit\Asistencia;
 use App\Modules\Camara\Http\Controllers\Api\CamaraApiController;
 use App\Modules\Camara\Http\Requests\RecognizeLiveRequest;
 use App\Modules\Camara\Services\CameraService;
+use App\Modules\Huellero\Http\Controllers\Api\EventoEmpleadoApiController;
 use App\Modules\Huellero\Http\Controllers\FingerprintController;
 use App\Modules\Huellero\Services\RegistrarEventoEmpleadoService;
 use Illuminate\Http\Client\Response;
@@ -82,6 +83,55 @@ class OrquestadorCompartidoControllersTest extends TestCase
     $this->assertTrue($payload['ok']);
     $this->assertSame('OK', $payload['status']);
     $this->assertSame(2, $payload['evento']);
+  }
+
+  public function test_api_externa_store_evento_empleado_llama_orquestador_compartido(): void
+  {
+    $orquestador = $this->createMock(RegistrarEventoEmpleadoService::class);
+    $orquestador->expects($this->once())
+      ->method('registrar')
+      ->with(
+        '123456',
+        null,
+        null,
+        '9001',
+        77,
+        'api'
+      )
+      ->willReturn([
+        'ok' => true,
+        'status' => 'OK',
+        'evento' => 2,
+        'horario_cargo_id' => 10,
+        'cargo_id' => 5,
+        'flags' => [
+          'llegada_tarde' => false,
+          'cargo_especial' => false,
+        ],
+        'fecha_evento' => '2026-03-16T08:00:00-05:00',
+        'data' => [
+          'id' => 555,
+          'nombre' => 'PERSONA TEST',
+          'cargo' => 'CARGO TEST',
+        ],
+        'origen' => 'api',
+      ]);
+
+    $controller = new EventoEmpleadoApiController($orquestador);
+    $request = Request::create('/api/asistencia/eventos/empleados', 'POST', [
+      'identificacion' => '123456',
+      'documento_usuario' => '9001',
+      'usuario_notificacion' => 77,
+    ]);
+
+    $response = $controller->store($request);
+    $payload = $response->getData(true);
+
+    $this->assertSame(200, $response->status());
+    $this->assertTrue($payload['ok']);
+    $this->assertSame('OK', $payload['status']);
+    $this->assertSame(2, $payload['evento']);
+    $this->assertSame('api', $payload['origen']);
   }
 
   public function test_camara_recognize_live_llama_orquestador_compartido(): void

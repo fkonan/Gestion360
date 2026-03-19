@@ -3,6 +3,15 @@ import $ from 'jquery';
 import 'jquery-validation';
 window.$ = window.jQuery = $;
 
+const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+if (csrfToken) {
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': csrfToken
+        }
+    });
+}
+
 // Select2 jQuery
 import select2 from 'select2';
 select2();

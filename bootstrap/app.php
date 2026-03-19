@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\CajaActivaMiddleware;
 use App\Http\Middleware\DenyMobileAccess;
+use App\Http\Middleware\ValidateAttendanceApiKey;
 use App\Http\Middleware\ModuloActivoMiddleware;
 use App\Http\Middleware\SoloAjaxMiddleware;
 use App\Http\Middleware\SubModuloActivoMiddleware;
@@ -27,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'modulo.activo' => ModuloActivoMiddleware::class,
             'submodulo.activo' => SubModuloActivoMiddleware::class,
             'deny.mobile' => DenyMobileAccess::class,
+            'attendance.api' => ValidateAttendanceApiKey::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

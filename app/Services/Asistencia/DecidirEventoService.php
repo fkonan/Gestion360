@@ -38,6 +38,7 @@ class DecidirEventoService
         'salida_requiere_ingreso_abierto' => true,
         'salida_desde_hora_fin' => true,
         'salida_fuera_de_otra_jornada' => 'para cargos por defecto, no permite salida si ahora cae en otra jornada valida',
+        'salida_descarta_jornadas_abiertas_obsoletas' => 'si existe un ingreso posterior en otra jornada, la jornada anterior abierta deja de ser candidata a salida',
         'bloqueo_reingreso_post_salida_cargos' => self::CARGOS_BLOQUEO_REINGRESO_POST_SALIDA,
         'bloqueo_reingreso_post_salida_horas' => self::HORAS_BLOQUEO_REINGRESO_POST_SALIDA,
         'llegada_tarde_desde' => 'ahora >= hora_inicio + 5 minutos',
@@ -58,7 +59,17 @@ class DecidirEventoService
     $trace['ingreso_hoy_existe'] = $ingresoHoyExiste;
     $trace['salida_hoy_existe'] = $salidaHoyExiste;
 
-    $horariosConIngresoAbierto = $this->resolverHorariosConIngresoAbierto($horarios, $eventosHoy);
+    [$horariosConIngresoAbierto, $horariosConIngresoAbiertoObsoletos] = $this->resolverHorariosConIngresoAbierto($horarios, $eventosHoy);
+    if ($horariosConIngresoAbiertoObsoletos->isNotEmpty()) {
+      $trace['horarios_ingreso_abierto_obsoletos'] = $horariosConIngresoAbiertoObsoletos->map(function ($item) {
+        return [
+          'horario_cargo_id' => (int) $item['horario']->id,
+          'ultimo_ingreso' => $item['ultimo_ingreso']->format('Y-m-d H:i:s'),
+          'ingreso_posterior_en_otro_horario' => $item['ingreso_posterior']->format('Y-m-d H:i:s'),
+          'horario_posterior_id' => (int) $item['horario_posterior_id'],
+        ];
+      })->values()->all();
+    }
     if ($horariosConIngresoAbierto->isNotEmpty()) {
       $aplicaBloqueoSalidaPorOtraJornada = $this->aplicaBloqueoSalidaPorOtraJornada($cargoId);
       $jornadasActivasAhora = $this->resolverJornadasActivas($horarios, $now);
@@ -272,13 +283,6 @@ class DecidirEventoService
       return DecisionEventoDTO::rechazado('aun no puede salir', $cargoId, $cargoEspecial, $trace);
     }
 
-    if ($cargoEspecial && $ingresoHoyExiste) {
-      $trace['resultado'] = 'rechazado_cargo_especial_ingreso_duplicado';
-      $trace['detalle_rechazo'] = 'Cargo especial: ya existe un ingreso registrado hoy.';
-
-      return DecisionEventoDTO::rechazado('ya existe ingreso registrado hoy', $cargoId, true, $trace);
-    }
-
     $bloqueoReingreso = $this->resolverBloqueoReingresoPostSalida($cargoId, $eventosHoy, $now);
     $trace['bloqueo_reingreso_post_salida'] = $bloqueoReingreso;
 
@@ -362,11 +366,20 @@ class DecidirEventoService
       );
     }
 
-    if ($cargoEspecial && !$ingresoHoyExiste && $this->estaEnBloqueDeSalida($horarios, $now)) {
-      $trace['resultado'] = 'rechazado_cargo_especial_sin_ingreso_en_bloque_salida';
-      $trace['detalle_rechazo'] = 'Cargo especial: en bloque de salida pero no hay ingreso registrado hoy.';
+    if ($cargoEspecial && $this->estaEnBloqueDeSalida($horarios, $now)) {
+      if (!$ingresoHoyExiste) {
+        $trace['resultado'] = 'rechazado_cargo_especial_sin_ingreso_en_bloque_salida';
+        $trace['detalle_rechazo'] = 'Cargo especial: en bloque de salida pero no hay ingreso registrado hoy.';
 
-      return DecisionEventoDTO::rechazado('no puede salir sin haber ingresado hoy', $cargoId, true, $trace);
+        return DecisionEventoDTO::rechazado('no puede salir sin haber ingresado hoy', $cargoId, true, $trace);
+      }
+
+      if ($salidaHoyExiste) {
+        $trace['resultado'] = 'rechazado_cargo_especial_salida_duplicada';
+        $trace['detalle_rechazo'] = 'Cargo especial: ya existe una salida registrada hoy.';
+
+        return DecisionEventoDTO::rechazado('ya existe salida registrada hoy', $cargoId, true, $trace);
+      }
     }
 
     $trace['resultado'] = 'rechazado_fuera_de_horarios';
@@ -415,24 +428,77 @@ class DecidirEventoService
       ->get(['id', 'evento', 'horario_cargo_id', 'fecha_creacion']);
   }
 
-  private function resolverHorariosConIngresoAbierto(Collection $horarios, Collection $eventosHoy): Collection
+  private function resolverHorariosConIngresoAbierto(Collection $horarios, Collection $eventosHoy): array
   {
-    return $horarios
-      ->filter(function ($horario) use ($eventosHoy) {
+    $horariosAbiertos = $horarios
+      ->map(function ($horario) use ($eventosHoy) {
         $horarioId = (int) $horario->id;
         $ingresos = $eventosHoy
           ->where('horario_cargo_id', $horarioId)
           ->where('evento', self::EVENTO_INGRESO)
-          ->count();
+          ->sortBy(function ($evento) {
+            return $this->timestampEvento($evento);
+          })
+          ->values();
         $salidas = $eventosHoy
           ->where('horario_cargo_id', $horarioId)
           ->where('evento', self::EVENTO_SALIDA)
           ->count();
 
-        return $ingresos > $salidas;
+        if ($ingresos->count() <= $salidas) {
+          return null;
+        }
+
+        $ultimoIngreso = $ingresos->last();
+        $fechaUltimoIngreso = $this->fechaEvento($ultimoIngreso);
+        $ingresoPosterior = null;
+        if ($fechaUltimoIngreso) {
+          $ingresoPosterior = $eventosHoy
+            ->where('evento', self::EVENTO_INGRESO)
+            ->filter(function ($evento) use ($horarioId, $fechaUltimoIngreso) {
+              $otroHorarioId = (int) ($evento->horario_cargo_id ?? 0);
+              $fechaEvento = $this->fechaEvento($evento);
+
+              return $otroHorarioId !== 0
+                && $otroHorarioId !== $horarioId
+                && $fechaEvento
+                && $fechaEvento->gt($fechaUltimoIngreso);
+            })
+            ->sortByDesc(function ($evento) {
+              return $this->timestampEvento($evento);
+            })
+            ->first();
+        }
+
+        return [
+          'horario' => $horario,
+          'ultimo_ingreso' => $fechaUltimoIngreso,
+          'ingreso_posterior' => $ingresoPosterior ? $this->fechaEvento($ingresoPosterior) : null,
+          'horario_posterior_id' => $ingresoPosterior ? (int) ($ingresoPosterior->horario_cargo_id ?? 0) : null,
+          'obsoleto' => $ingresoPosterior !== null,
+        ];
       })
-      ->sortBy('id')
+      ->filter()
+      ->sortBy(function ($item) {
+        return (int) $item['horario']->id;
+      })
       ->values();
+
+    return [
+      $horariosAbiertos
+        ->filter(function ($item) {
+          return $item['obsoleto'] === false;
+        })
+        ->map(function ($item) {
+          return $item['horario'];
+        })
+        ->values(),
+      $horariosAbiertos
+        ->filter(function ($item) {
+          return $item['obsoleto'] === true;
+        })
+        ->values(),
+    ];
   }
 
   private function aplicaBloqueoSalidaPorOtraJornada(int $cargoId): bool
@@ -625,6 +691,7 @@ class DecidirEventoService
    * - Hora Oracle DATE: se ignora su fecha y se combina HH:mm:ss con la fecha de $now.
    * - Jornada/evento:
    *   1) Si hay ingreso abierto hoy por mismo HORARIO_CARGO_ID, decide SALIDA para ese ID solo si cumple HORA_FIN.
+   *      Si una jornada abierta tiene un ingreso posterior en otra jornada, la anterior queda obsoleta y ya no puede cerrar con una salida tardia.
    *      Para cargos por defecto, si now cae en otra jornada valida, prioriza INGRESO para esa nueva jornada.
    *      Si no existe candidato de transicion, bloquea la salida.
    *      Los cargos de la lista especial mantienen su flujo actual.

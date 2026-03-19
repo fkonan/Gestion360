@@ -20,6 +20,13 @@
         icono="fa-bell-slash"
         ruta="{{ route('notificaciones.index') }}" />
     </div>
+    <div class="col">
+      <x-card color="bg-teriary"
+        titulo="Recursos digitales"
+        descripcion="Tipos y recursos"
+        icono="fa-images"
+        ruta="{{ route('recursos-digitales.index') }}" />
+    </div>
   </div>
 </div>
 @endsection

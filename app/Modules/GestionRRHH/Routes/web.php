@@ -19,6 +19,7 @@ Route::prefix('gestionRRHH')->middleware(['auth', 'permisos:'.Permisos::GESTION_
         Route::put('/incapacidades/{id}/datos', [IncapacidadController::class, 'updateIncapacidad'])->name('gestion-empleado.incapacidades.update');
         Route::get('/incapacidades/{id}/gestion', [IncapacidadController::class, 'gestionIncapacidad'])->middleware('soloAJAX')->name('gestion-empleado.incapacidades.gestion');
         Route::put('/incapacidades/{id}/estado', [IncapacidadController::class, 'updateEstadoIncapacidad'])->name('gestion-empleado.incapacidades.estado');
+        Route::get('/incapacidades/documentos/{documento}', [IncapacidadController::class, 'verAdjunto'])->name('gestion-empleado.incapacidades.documentos.ver');
 
         // Esta ruta carga adjuntos para la incapacidad y para el seguimiento
         Route::get('/seguimiento/{id}/adjuntos', [IncapacidadController::class, 'incapacidadAdjuntos'])->middleware('soloAJAX')->name('gestion-empleado.seguimiento.adjuntos');

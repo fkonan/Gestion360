@@ -3,9 +3,9 @@
 namespace App\Modules\PagosRecaudos\Services\Cajasan;
 
 use App\Modules\PagosRecaudos\Models\ConReversoCajasan;
+use App\Modules\PagosRecaudos\Services\PagosRecaudosLogger;
 use Exception;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class ReversoService
 {
@@ -29,7 +29,11 @@ class ReversoService
             $reverso->error_id = $datosReverso['errorID'] ?? null;
             $reverso->save();
         } catch (Exception $e) {
-            Log::error('Error al crear reverso: '.$e->getMessage());
+            PagosRecaudosLogger::exception('Error al crear reverso', $e, [
+                'operation' => 'pago',
+                'codigo' => $codigo,
+                'detalle_id' => $datosReverso['transactionId'] ?? null,
+            ]);
         }
     }
 

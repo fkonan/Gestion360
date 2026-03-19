@@ -217,6 +217,33 @@ class DecidirEventoServiceTest extends TestCase
     $this->assertSame(2, $decision->horarioCargoId);
   }
 
+  public function test_no_permite_salida_tardia_de_jornada_anterior_si_ya_hubo_ingreso_posterior_en_otra_jornada(): void
+  {
+    $service = new DecidirEventoService();
+    $horarios = collect([
+      $this->horario(1, '07:00:00', '12:00:00'),
+      $this->horario(2, '14:00:00', '17:00:00'),
+    ]);
+    $eventos = collect([
+      $this->evento(2, 1, '2026-03-02 07:05:00'),
+      $this->evento(2, 2, '2026-03-02 14:05:00'),
+      $this->evento(1, 2, '2026-03-02 17:01:00'),
+    ]);
+
+    $decision = $service->decidirConDatos(
+      1,
+      Carbon::create(2026, 3, 2, 17, 10, 0),
+      $horarios,
+      $eventos
+    );
+
+    $this->assertSame('RECHAZADO', $decision->status);
+    $this->assertSame('fuera de horarios', $decision->motivo);
+    $this->assertSame('rechazado_fuera_de_horarios', $decision->trace['resultado'] ?? null);
+    $this->assertSame(1, $decision->trace['horarios_ingreso_abierto_obsoletos'][0]['horario_cargo_id'] ?? null);
+    $this->assertSame(2, $decision->trace['horarios_ingreso_abierto_obsoletos'][0]['horario_posterior_id'] ?? null);
+  }
+
   public function test_si_no_hay_ingreso_previo_permite_ingreso_dentro_de_hora_inicio_y_hora_fin(): void
   {
     $service = new DecidirEventoService();

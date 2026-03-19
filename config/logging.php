@@ -73,6 +73,14 @@ return [
             'replace_placeholders' => true,
         ],
 
+        'pagos_recaudos' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/pagos-recaudos/pagos-recaudos.log'),
+            'level' => env('PAGOS_RECAUDOS_LOG_LEVEL', env('LOG_LEVEL', 'debug')),
+            'days' => env('PAGOS_RECAUDOS_LOG_DAYS', 7),
+            'replace_placeholders' => true,
+        ],
+
         'slack' => [
             'driver' => 'slack',
             'url' => env('LOG_SLACK_WEBHOOK_URL'),

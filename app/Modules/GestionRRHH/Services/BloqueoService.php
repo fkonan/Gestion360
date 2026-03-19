@@ -148,8 +148,22 @@ class BloqueoService
         return $estBloqueado;
     }
 
+    public static function levantarBloqueoPreoperacional(string $identificacion): array
+    {
+        /** @var DesbloqueoConductoresApiService $apiService */
+        $apiService = app(DesbloqueoConductoresApiService::class);
+
+        return $apiService->desbloquearIdentificacion($identificacion);
+    }
+
     public static function levantarBloqueoFICS($identificacion, $idBloqueo): bool
     {
+        if ((int) $idBloqueo === self::ID_BLOQUEO_FICS_PREOPERACIONAL) {
+            $resultado = self::levantarBloqueoPreoperacional((string) $identificacion);
+
+            return ($resultado['status'] ?? null) === 'unlocked';
+        }
+
         // Verifica si el conductor tiene el bloqueo
         $estBloqueado = self::tieneBloqueoFICS($identificacion, $idBloqueo);
 

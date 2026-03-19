@@ -8,10 +8,12 @@ use App\Modules\GestionRRHH\Models\Arl;
 use App\Modules\GestionRRHH\Models\Enfermedades;
 use App\Modules\GestionRRHH\Models\Eps;
 use App\Modules\GestionRRHH\Models\Incapacidad;
+use App\Modules\GestionRRHH\Models\IncapacidadesDocumentos;
 use App\Modules\GestionRRHH\Rules\IncapacidadMaxima;
 use App\Modules\GestionRRHH\Services\BloqueoService;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
@@ -67,6 +69,52 @@ class IncapacidadController extends Controller
         }
 
         return view('gestionrrhh::incapacidades.adjuntos', compact('incapacidadDocumentos'));
+    }
+
+    public function verAdjunto(int $documentoId)
+    {
+        $documento = IncapacidadesDocumentos::findOrFail($documentoId);
+        $ruta = trim((string) $documento->Ruta);
+
+        if ($ruta === '') {
+            return response('Adjunto sin ruta configurada.', 404);
+        }
+
+        // Se sirve desde el backend para que el cliente no dependa de DNS del CDN.
+        if (filter_var($ruta, FILTER_VALIDATE_URL)) {
+            try {
+                $response = Http::connectTimeout(10)
+                    ->timeout(30)
+                    ->withoutVerifying()
+                    ->get($ruta);
+
+                if (! $response->successful()) {
+                    Log::error('Error al consultar adjunto remoto de incapacidad: status '.$response->status(), [
+                        'documento_id' => $documento->IdDocumento,
+                        'ruta' => $ruta,
+                    ]);
+
+                    return response('No fue posible cargar el adjunto.', 502);
+                }
+
+                $contentType = $response->header('Content-Type') ?: 'application/octet-stream';
+                $filename = basename(parse_url($ruta, PHP_URL_PATH) ?: 'adjunto');
+
+                return response($response->body(), 200, [
+                    'Content-Type' => $contentType,
+                    'Content-Disposition' => 'inline; filename="'.$filename.'"',
+                ]);
+            } catch (Exception $e) {
+                Log::error('Error al consultar adjunto remoto de incapacidad: '.$e->getMessage(), [
+                    'documento_id' => $documento->IdDocumento,
+                    'ruta' => $ruta,
+                ]);
+
+                return response('No fue posible cargar el adjunto.', 502);
+            }
+        }
+
+        return response('Formato de ruta no soportado para el adjunto.', 404);
     }
 
     public function editIncapacidad($id)

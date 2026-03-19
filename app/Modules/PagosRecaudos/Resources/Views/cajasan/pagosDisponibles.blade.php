@@ -1,4 +1,4 @@
-<!-- Resultado AJAX en index pagos-recaudos  -->
+﻿<!-- Resultado AJAX en index pagos-recaudos  -->
 <br>
 <div class="container-fluid p-0 border rounded sidebar-dark-primary tableContainer pb-2" style="min-height:150px">
   <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-primary-subtle">

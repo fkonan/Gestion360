@@ -11,16 +11,14 @@
 @endsection
 
 @section('headerInfo')
-<div class="row me-3">
-  <div class="col-12">
-    <span>
-      <span class="fw-bold small">CAJA ACTIVA</span>
-      &nbsp;&nbsp;&nbsp;
-      <small>Sucursal:</small> <span class="fw-bold small">{{ $cajaActiva->nomsucursal }}</span>
-      &nbsp;&nbsp;&nbsp;
-      <small>Fecha apertura:</small> <span class="fw-bold small">{{ \Carbon\Carbon::parse($cajaActiva->fecini)->format('d/m/Y H:i:s') }}</span>
-    </span>
-  </div>
+<div class="header-info-pagos-recaudos d-flex flex-wrap justify-content-end align-items-center gap-2 text-end">
+  <span class="fw-bold small">CAJA ACTIVA</span>
+  <span>
+    <small>Sucursal:</small> <span class="fw-bold small">{{ $cajaActiva->nomsucursal }}</span>
+  </span>
+  <span>
+    <small>Fecha apertura:</small> <span class="fw-bold small">{{ \Carbon\Carbon::parse($cajaActiva->fecini)->format('d/m/Y H:i:s') }}</span>
+  </span>
 </div>
 @endsection
 
@@ -36,8 +34,15 @@
           <h5 class="mb-0 text-light">Confirmación de Pago</h5>
         </div>
 
-        <div class="ms-4 mt-3">
+        <div class="d-flex flex-wrap gap-2 ms-4 mt-3">
           <a style="width: 150px;" class="btn btn-success fw-bold" href="{{ route('pagosConvenios.index') }}">Regresar</a>
+          <a
+            style="width: 170px;"
+            class="btn btn-outline-primary fw-bold"
+            href="{{ route('pagosConvenios.historialHoy') }}"
+            onclick="document.getElementById('fullscreen-loader')?.style.setProperty('display', 'flex');">
+            Pagos del dia
+          </a>
         </div>
 
         {{-- Contenido --}}

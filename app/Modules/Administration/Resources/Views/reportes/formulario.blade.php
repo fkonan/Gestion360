@@ -23,7 +23,7 @@ function isOptionalParam($parametros, $key) {
       <strong>Nota:</strong> {{ $mensajeCabecera }}
     </div>
 
-    <div class="row mb-3 mx-1 pb-2">
+    <div class="row gx-4 gy-3 mb-3 mx-1 pb-2">
 
       {{-- Fecha Inicio --}}
       @if(param($parametros,'paramFechaInicio'))
@@ -87,6 +87,31 @@ function isOptionalParam($parametros, $key) {
             @endforeach
           </select>
         </div>
+      </div>
+      @endif
+
+      {{-- Tipo documento --}}
+      @if(param($parametros,'paramTipoDocumento'))
+      <div class="col-md-6 mt-3">
+        <label class="form-label">Tipo de documento @if(req($parametros,'paramTipoDocumento'))* @endif</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-card-heading"></i></span>
+          <select name="tipoDocumento" class="form-select" @if(req($parametros,'paramTipoDocumento')) required @endif>
+            <option value="">Seleccione</option>
+            <option value="CC">CC</option>
+            <option value="NIT">NIT</option>
+            <option value="TI">TI</option>
+            <option value="CE">CE</option>
+            <option value="PEP">PEP</option>
+            <option value="TMF">TMF</option>
+            <option value="RC">RC</option>
+            <option value="PAS">PAS</option>
+          </select>
+        </div>
+
+        @if(isOptionalParam($parametros,'paramTipoDocumento'))
+          <small class="text-muted fst-italic mt-1 d-block">Campo opcional</small>
+        @endif
       </div>
       @endif
 

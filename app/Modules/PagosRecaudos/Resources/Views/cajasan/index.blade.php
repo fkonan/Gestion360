@@ -11,16 +11,14 @@
 @endsection
 
 @section('headerInfo')
-<div class="row me-3">
-  <div class="col-12">
-    <span>
-      <span class="fw-bold small">CAJA ACTIVA</span>
-      &nbsp;&nbsp;&nbsp;
-      <small>Sucursal:</small> <span class="fw-bold small">{{ $cajaActiva[0]->nomsucursal }}</span>
-      &nbsp;&nbsp;&nbsp;
-      <small>Fecha apertura:</small> <span class="fw-bold small">{{ \Carbon\Carbon::parse($cajaActiva[0]->fecini)->format('d/m/Y H:i:s') }}</span>
-    </span>
-  </div>
+<div class="header-info-pagos-recaudos d-flex flex-wrap justify-content-end align-items-center gap-2 text-end">
+  <span class="fw-bold small">CAJA ACTIVA</span>
+  <span>
+    <small>Sucursal:</small> <span class="fw-bold small">{{ $cajaActiva[0]->nomsucursal }}</span>
+  </span>
+  <span>
+    <small>Fecha apertura:</small> <span class="fw-bold small">{{ \Carbon\Carbon::parse($cajaActiva[0]->fecini)->format('d/m/Y H:i:s') }}</span>
+  </span>
 </div>
 @endsection
 
@@ -31,8 +29,15 @@
     <span class="text-left text-light fs-5 fw-medium py-1">Registrar pago o recaudo</span>
   </div>
 
-  <div class="ms-4 mt-3">
+  <div class="d-flex flex-wrap gap-2 ms-4 mt-3">
     <a style="width: 150px;" class="btn btn-success fw-bold" href="{{ route('home') }}">Regresar</a>
+    <a
+      style="width: 170px;"
+      class="btn btn-outline-primary fw-bold"
+      href="{{ route('pagosConvenios.historialHoy') }}"
+      onclick="document.getElementById('fullscreen-loader')?.style.setProperty('display', 'flex');">
+      Pagos del dia
+    </a>
   </div>
 
   <form
@@ -42,8 +47,6 @@
     class="p-4"
     onsubmit="deshabilitarSubmit(this)">
     @csrf
-
-    <input type="hidden" name="caja_activa_id" value="{{ $cajaActiva[0]->id }}">
 
     <div class="row">
       <div class="col-12 col-md-5">

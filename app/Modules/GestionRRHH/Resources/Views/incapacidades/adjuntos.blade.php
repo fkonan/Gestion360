@@ -23,7 +23,7 @@
         <td class="align-middle">{{ $documento->tipoDocumento->ParNom }}</td>
         <td class="align-middle">{{ $documento->DocFecReg }}</td>
         <td class="text-center align-middle">
-          <button type="button" class="btn btn-link m-0 p-0" onclick="abrirArchivo('{{ $documento->Ruta }}')">
+          <button type="button" class="btn btn-link m-0 p-0" onclick="abrirArchivo('{{ route('gestion-empleado.incapacidades.documentos.ver', ['documento' => $documento->IdDocumento]) }}')">
             <img src="{{ asset('img/verPDF.png') }}" alt="Adjunto" style="width: 38px; height: 38px;">
           </button>
         </td>
