@@ -11,6 +11,8 @@ Route::prefix('pagos-recaudos')->middleware(['auth', 'permisos:'.Permisos::PAGOS
 
         Route::get('/', [CajasanController::class, 'index'])->name('pagosConvenios.index');
         Route::get('/pagos-hoy', [CajasanController::class, 'historialHoy'])->name('pagosConvenios.historialHoy');
+        Route::get('/reversos', [CajasanController::class, 'historialReversos'])->name('pagosConvenios.historialReversos');
+        Route::get('/reversos/exportar', [CajasanController::class, 'exportarHistorialReversos'])->name('pagosConvenios.historialReversosExportar');
         Route::post('/consultar', [CajasanController::class, 'consultar'])->name('pagosConvenios.consultar');
         Route::get('/validar-pago/{uuid}', [CajasanController::class, 'validarInformacion'])->name('pagosConvenios.validarInformacion');
         Route::post('/pagar', [CajasanController::class, 'pagar'])->name('pagosConvenios.pagar');

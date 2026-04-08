@@ -9,6 +9,7 @@ use App\Modules\PagosRecaudos\Services\Cajasan\ApiAsopagos;
 use App\Modules\PagosRecaudos\Services\Cajasan\PagoHistorialService;
 use App\Modules\PagosRecaudos\Services\Cajasan\PagoConsultaService;
 use App\Modules\PagosRecaudos\Services\Cajasan\PagoService;
+use App\Modules\PagosRecaudos\Services\Cajasan\ReversoHistorialService;
 use App\Modules\PagosRecaudos\Services\PagosRecaudosLogger;
 use App\Services\UsuarioService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -25,8 +26,9 @@ class CajasanController extends Controller
     {
         try {
             $cajaActiva = $request->attributes->get('caja_activa');
+            $sinCajaPorSuperAdmin = (bool) $request->attributes->get('caja_activa_bypass', false);
 
-            if (! $cajaActiva || ! isset($cajaActiva[0])) {
+            if ((! $cajaActiva || ! isset($cajaActiva[0])) && ! $sinCajaPorSuperAdmin) {
                 PagosRecaudosLogger::error('Caja activa no encontrada al cargar index del modulo', [
                     'operation' => 'index',
                 ]);
@@ -35,33 +37,49 @@ class CajasanController extends Controller
                     'No existe caja activa',
                     'error',
                     null,
-                    'No es posible acceder al módulo sin que el usuario tenga una caja activa asociada.'
+                    'No es posible acceder al modulo sin que el usuario tenga una caja activa asociada.'
                 );
             }
 
-            return view('pagosrecaudos::cajasan.index', compact('cajaActiva'));
+            if ($sinCajaPorSuperAdmin && (! $cajaActiva || ! isset($cajaActiva[0]))) {
+                $cajaActiva = collect();
+            }
+
+            return view('pagosrecaudos::cajasan.index', compact('cajaActiva', 'sinCajaPorSuperAdmin'));
         } catch (Exception $e) {
             PagosRecaudosLogger::exception('Error al cargar index del modulo', $e, [
                 'operation' => 'index',
             ]);
 
-            return redirect()->route('home')->with('error', 'Error al cargar la página');
+            return redirect()->route('home')->with('error', 'Error al cargar la pagina');
         }
     }
 
     public function consultar(Request $request, ApiAsopagos $apiAsopagos, PagoConsultaService $consultaService)
     {
-        $identificacion = trim($request->identificacion);
+        $identificacion = strtoupper(trim((string) $request->identificacion));
+        $cajaActivaRaw = $request->attributes->get('caja_activa');
         $cajaActivaRef = $this->obtenerCajaActiva($request);
 
         PagosRecaudosLogger::info('Inicio de consulta de pago convenio', [
             'operation' => 'consulta',
             'identificacion_cliente' => $identificacion,
+            'caja_activa_raw_type' => is_object($cajaActivaRaw)
+                ? $cajaActivaRaw::class
+                : gettype($cajaActivaRaw),
+            'caja_activa_raw_count' => is_object($cajaActivaRaw) && method_exists($cajaActivaRaw, 'count')
+                ? $cajaActivaRaw->count()
+                : (is_array($cajaActivaRaw) ? count($cajaActivaRaw) : null),
             'caja_activa_ref' => $cajaActivaRef?->id,
+            'host' => gethostname(),
         ]);
 
         if (empty($identificacion)) {
-            return toastModal('La identificación es requerida.', 'danger');
+            return toastModal('La identificacion es requerida.', 'danger');
+        }
+
+        if (! preg_match('/^[A-Z0-9]+$/', $identificacion)) {
+            return toastModal('La identificacion solo puede contener letras y numeros.', 'danger');
         }
 
         if (empty($cajaActivaRef)) {
@@ -87,12 +105,11 @@ class CajasanController extends Controller
 
     public function historialHoy(Request $request, PagoHistorialService $historialService)
     {
-        $startedAt = microtime(true);
-
         try {
             $cajaActiva = $this->obtenerCajaActiva($request);
+            $sinCajaPorSuperAdmin = (bool) $request->attributes->get('caja_activa_bypass', false);
 
-            if (! $cajaActiva) {
+            if (! $cajaActiva && ! $sinCajaPorSuperAdmin) {
                 return sweetAlert(
                     'No existe caja activa',
                     'error',
@@ -106,32 +123,14 @@ class CajasanController extends Controller
                 'estado' => $request->query('estado', 'todos'),
             ];
 
-            $userIdStartedAt = microtime(true);
             $userId = UsuarioService::obtenerUserId();
-            $userIdMs = PagosRecaudosLogger::elapsedMs($userIdStartedAt);
-
-            $historialStartedAt = microtime(true);
-            $pagos = $historialService->obtenerPagosDelDia($cajaActiva, $userId, $filters);
-            $historialMs = PagosRecaudosLogger::elapsedMs($historialStartedAt);
-
-            PagosRecaudosLogger::info('Pantalla de historial de pagos del dia cargada', [
-                'operation' => 'historial_hoy',
-                'usuario_id' => $userId,
-                'caja_activa_id' => $cajaActiva->id ?? null,
-                'duracion_user_id_ms' => $userIdMs,
-                'duracion_historial_ms' => $historialMs,
-                'duracion_total_ms' => PagosRecaudosLogger::elapsedMs($startedAt),
-                'estado' => $filters['estado'],
-                'q' => $filters['q'],
-                'registros_pagina' => $pagos->count(),
-                'pagina_actual' => $pagos->currentPage(),
-                'hay_mas_paginas' => $pagos->hasMorePages(),
-            ]);
+            $pagos = $historialService->obtenerPagosDelDia($cajaActiva, $userId, $filters, $sinCajaPorSuperAdmin);
 
             return view('pagosrecaudos::cajasan.historialHoy', [
                 'cajaActiva' => $cajaActiva,
                 'pagos' => $pagos,
                 'filters' => $filters,
+                'sinCajaPorSuperAdmin' => $sinCajaPorSuperAdmin,
             ]);
         } catch (Exception $e) {
             PagosRecaudosLogger::exception('Error al cargar historial de pagos del dia', $e, [
@@ -142,6 +141,74 @@ class CajasanController extends Controller
         }
     }
 
+    public function historialReversos(Request $request, ReversoHistorialService $reversoHistorialService)
+    {
+        try {
+            $cajaActiva = $this->obtenerCajaActiva($request);
+
+            if (! $cajaActiva) {
+                return sweetAlert(
+                    'No existe caja activa',
+                    'error',
+                    null,
+                    'No es posible consultar los reversos sin una caja activa asociada.'
+                );
+            }
+
+            $filters = [
+                'q' => trim((string) $request->query('q', '')),
+                'resultado' => $request->query('resultado', 'todos'),
+            ];
+
+            $reversos = $reversoHistorialService->obtenerReversos($filters);
+
+            return view('pagosrecaudos::cajasan.historialReversos', [
+                'cajaActiva' => $cajaActiva,
+                'reversos' => $reversos,
+                'filters' => $filters,
+            ]);
+        } catch (Exception $e) {
+            PagosRecaudosLogger::exception('Error al cargar historial de reversos', $e, [
+                'operation' => 'historial_reversos',
+            ]);
+
+            return redirect()->route('pagosConvenios.index')->with('error', 'Error al cargar el historial de reversos.');
+        }
+    }
+
+
+    public function exportarHistorialReversos(Request $request, ReversoHistorialService $reversoHistorialService)
+    {
+        try {
+            $cajaActiva = $this->obtenerCajaActiva($request);
+
+            if (! $cajaActiva) {
+                return response()->json([
+                    'errors' => ['general' => ['No existe una caja activa valida para exportar los reversos.']],
+                ], 422);
+            }
+
+            $filters = [
+                'q' => trim((string) $request->query('q', '')),
+                'resultado' => $request->query('resultado', 'todos'),
+            ];
+
+            $rows = $reversoHistorialService->obtenerReversosExportacion($filters);
+
+            return response()->json([
+                'total' => count($rows),
+                'rows' => $rows,
+            ]);
+        } catch (Exception $e) {
+            PagosRecaudosLogger::exception('Error al exportar historial de reversos', $e, [
+                'operation' => 'historial_reversos_exportar',
+            ]);
+
+            return response()->json([
+                'errors' => ['general' => ['Error al exportar el historial de reversos.']],
+            ], 500);
+        }
+    }
     public function validarInformacion(Request $request, string $uuid)
     {
         $cajaActiva = $this->obtenerCajaActiva($request);
@@ -150,7 +217,7 @@ class CajasanController extends Controller
         if (! $cajaActiva || ! $data) {
             return response()->json([
                 'error' => true,
-                'message' => 'Sesión expirada, consulte nuevamente',
+                'message' => 'La sesion ha expirado. Consulte nuevamente.',
             ]);
         }
 
@@ -165,7 +232,7 @@ class CajasanController extends Controller
 
             return response()->json([
                 'error' => true,
-                'message' => 'La sesiÃ³n de pago no corresponde a la caja activa actual. Consulte nuevamente.',
+                'message' => 'La informacion del pago ya no es valida. Consulte nuevamente.',
             ]);
         }
 
@@ -190,11 +257,10 @@ class CajasanController extends Controller
             switch ($resultado['type']) {
                 case 'rollback-fail':
                     return sweetAlert(
-                        $resultado['message'],
+                        'Error inesperado en el pago',
                         'error',
                         null,
-                        'Ha ocurrido un error crítico en el pago.
-                        Por favor guarde este código y contacte con mesa de ayuda: <b>'.($resultado['extra'] ?? 'N/A').'</b>'
+                        'El pago no se pudo realizar. Por favor comuniquese con mesa de ayuda e informe el numero de detalle: <b>'.($resultado['extra'] ?? 'N/A').'</b>.'
                     );
 
                 case 'rollback-ok':
@@ -211,15 +277,18 @@ class CajasanController extends Controller
                 case 'invalid-context':
                     return sweetAlert($resultado['message'], 'error');
 
+                case 'payment-in-progress':
+                    return sweetAlert($resultado['message'], 'warning');
+
                 case 'readonly-not-supported':
                     return sweetAlert($resultado['message'], 'error');
 
                 default:
-                    return sweetAlert('Ocurrió un error inesperado en el pago.', 'error');
+                    return sweetAlert('Ocurrio un error inesperado en el pago.', 'error');
             }
         }
 
-        // Caso de éxito
+        // Caso de exito
         return view('pagosrecaudos::cajasan.confirmacionPago', [
             'cajaActiva' => $resultado['cajaActiva'],
             'comprobante' => $resultado['comprobante'],
@@ -234,29 +303,38 @@ class CajasanController extends Controller
     {
         try {
             $cajaActiva = $this->obtenerCajaActiva($request);
+            $sinCajaPorSuperAdmin = (bool) $request->attributes->get('caja_activa_bypass', false);
 
-            if (! $cajaActiva) {
-                throw new Exception('No se encontrÃ³ una caja activa valida para generar el recibo.');
+            if (! $cajaActiva && ! $sinCajaPorSuperAdmin) {
+                throw new Exception('No se encontro una caja activa valida para generar el recibo.');
             }
 
             // Datos para generar el recibo
-            $detallePago = ConDetCarguePagRec::where('id', $IdDetallePago)
-                ->where('estborrado', 0)
-                ->where('empcreacion', $cajaActiva->idsucursal)
-                ->firstOrFail();
+            $detallePagoQuery = ConDetCarguePagRec::where('id', $IdDetallePago)
+                ->where('estborrado', 0);
 
-            $detalleComprobante = DB::connection('oracle')
+            if (! $sinCajaPorSuperAdmin) {
+                $detallePagoQuery->where('empcreacion', $cajaActiva->idsucursal);
+            }
+
+            $detallePago = $detallePagoQuery->firstOrFail();
+
+            $detalleComprobanteQuery = DB::connection('oracle')
                 ->table('CON_DETALLEPAGORECAUDO as DPR')
                 ->join('CON_COMPROBANTES as CP', 'DPR.CP_ID', '=', 'CP.ID')
                 ->select('DPR.*')
                 ->where('DPR.ID_DET_CARPAGYREC', $IdDetallePago)
                 ->where('DPR.ESTBORRADO', 0)
-                ->where('CP.ESTBORRADO', 0)
-                ->where('CP.CT_ID', $cajaActiva->id)
-                ->first();
+                ->where('CP.ESTBORRADO', 0);
+
+            if (! $sinCajaPorSuperAdmin) {
+                $detalleComprobanteQuery->where('CP.CT_ID', $cajaActiva->id);
+            }
+
+            $detalleComprobante = $detalleComprobanteQuery->first();
 
             if (! $detalleComprobante) {
-                throw new Exception('No se encontrÃ³ el detalle contable asociado al recibo.');
+                throw new Exception('No se encontro el detalle contable asociado al recibo.');
             }
 
             $agencia = PerPersonas::where('codigo', $detallePago->codagencia)->value('nomsucursal');
@@ -266,7 +344,7 @@ class CajasanController extends Controller
 
             // Validar y separar fecha y hora
             if (! $detallePago->feccreacion) {
-                throw new Exception('Fecha de creación no disponible');
+                throw new Exception('Fecha de creacion no disponible');
             }
 
             $fechaHora = explode(' ', $detallePago->feccreacion);
@@ -274,7 +352,7 @@ class CajasanController extends Controller
             $horaPago = $fechaHora[1] ?? '';
 
             $data = [
-                'linea_atencion' => 'Línea de Atención al Cliente 018000114161-0180006444164',
+                'linea_atencion' => 'Linea de Atencion al Cliente 018000114161-0180006444164',
                 'vigencia' => 'Vigilado por Mintic',
                 'convenio' => 'CONVENIO CAJASAN - PAGOS',
                 'fecha' => $fechaPago,
@@ -295,10 +373,14 @@ class CajasanController extends Controller
                 'hora_impresion' => $horaPago,
             ];
 
+            $mmToPoints = 72 / 25.4;
+            $paperWidthMm = 80;
+            $paperHeightMm = 210;
+
             $pdf = PDF::loadView('pagosrecaudos::cajasan.recibo', $data)
-                ->setPaper([0, 0, 80, 210], 'portrait')
+                ->setPaper([0, 0, $paperWidthMm * $mmToPoints, $paperHeightMm * $mmToPoints], 'portrait')
                 ->setOptions([
-                    'dpi' => 203,
+                    'dpi' => 72,
                     'defaultFont' => 'DejaVu Sans',
                     'isHtml5ParserEnabled' => true,
                     'isRemoteEnabled' => false,

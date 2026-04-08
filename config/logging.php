@@ -76,8 +76,9 @@ return [
         'pagos_recaudos' => [
             'driver' => 'daily',
             'path' => storage_path('logs/pagos-recaudos/pagos-recaudos.log'),
-            'level' => env('PAGOS_RECAUDOS_LOG_LEVEL', env('LOG_LEVEL', 'debug')),
+            'level' => env('PAGOS_RECAUDOS_LOG_LEVEL', 'info'),
             'days' => env('PAGOS_RECAUDOS_LOG_DAYS', 7),
+            'log_sensitive' => env('PAGOS_RECAUDOS_LOG_SENSITIVE', false),
             'replace_placeholders' => true,
         ],
 

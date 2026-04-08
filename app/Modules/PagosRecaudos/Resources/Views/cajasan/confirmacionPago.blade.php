@@ -31,28 +31,21 @@
       <div class="card border sidebar-dark-primary rounded-3">
         {{-- Encabezado --}}
         <div class="card-header d-flex bg-primary-subtle justify-content-between align-items-center">
-          <h5 class="mb-0 text-light">Confirmación de Pago</h5>
+          <h5 class="mb-0 text-light">Confirmacion de Pago</h5>
         </div>
 
         <div class="d-flex flex-wrap gap-2 ms-4 mt-3">
           <a style="width: 150px;" class="btn btn-success fw-bold" href="{{ route('pagosConvenios.index') }}">Regresar</a>
-          <a
-            style="width: 170px;"
-            class="btn btn-outline-primary fw-bold"
-            href="{{ route('pagosConvenios.historialHoy') }}"
-            onclick="document.getElementById('fullscreen-loader')?.style.setProperty('display', 'flex');">
-            Pagos del dia
-          </a>
         </div>
 
         {{-- Contenido --}}
         <div class="card-body text-center py-5">
           <i class="bi bi-check-circle-fill text-success display-3 mb-3"></i>
-          <h4 class="fw-bold text-success">¡Operación realizada con éxito!</h4>
+          <h4 class="fw-bold text-success">Operacion realizada con exito!</h4>
           <p class="text-muted mb-2">El pago se ha procesado correctamente.</p>
 
           <div class="alert alert-light border fw-semibold my-4">
-            Número de comprobante: <span>{{ $comprobante->comprobante }}</span>
+            Numero de comprobante: <span>{{ $comprobante->comprobante }}</span>
           </div>
 
           <a href="{{ route('pagosConvenios.recibo' , ['IdDetallePago' => $idPagoDetalle]) }}"

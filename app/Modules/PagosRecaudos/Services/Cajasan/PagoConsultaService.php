@@ -2,6 +2,7 @@
 
 namespace App\Modules\PagosRecaudos\Services\Cajasan;
 
+use App\Modules\Administration\Models\TipoDocumento;
 use App\Modules\GestionRRHH\Models\PerPersonas;
 use App\Modules\GestionWeb\Models\GenMunicipios;
 use App\Modules\PagosRecaudos\Services\PagosRecaudosLogger;
@@ -14,6 +15,29 @@ use Illuminate\Support\Str;
 
 class PagoConsultaService
 {
+    private const TIPOS_DOCUMENTO_ASOPAGOS = [
+        1 => 'CC',
+        2 => 'TI',
+        3 => 'NT',
+        5 => 'CE',
+        6 => 'PA',
+        43 => 'RC',
+        50 => 'PE',
+    ];
+
+    private const TIPOS_DOCUMENTO_SOPORTADOS = [
+        'RC',
+        'TI',
+        'CC',
+        'CE',
+        'PA',
+        'CD',
+        'NT',
+        'PE',
+        'SV',
+        'PT',
+    ];
+
     /**
      * Consultar saldo disponible y preparar datos de cliente
      */
@@ -60,8 +84,10 @@ class PagoConsultaService
                     'identificacion_cliente' => $identificacion,
                     'duration_ms' => PagosRecaudosLogger::elapsedMs($startedAt),
                 ]);
-                return ['error' => true, 'message' => 'No se encontró una caja activa válida.'];
+                return ['error' => true, 'message' => 'No se encontro una caja activa valida.'];
             }
+
+            $userId = UsuarioService::obtenerUserId();
 
             // 3. Preparar datos cliente
             [$departamento, $municipio] = $this->resolverUbicacionCaja($cajaActiva);
@@ -76,19 +102,9 @@ class PagoConsultaService
                 return ['error' => true, 'message' => 'No fue posible resolver la ubicacion de la caja activa.'];
             }
 
-            // 4. Tipo de identificación
-            $tiposDocumento = [
-                1 => 'CC', // Cédula de Ciudadanía
-                2 => 'TI', // Tarjeta de Identidad
-                3 => 'NT', // NIT
-                5 => 'CE', // Cédula de Extranjería
-                6 => 'PA', // Pasaporte
-                43 => 'RC', // Registro
-                50 => 'PE', // Permiso especial permanencia
-            ];
-
+            // 4. Tipo de identificacion
             if ($cliente) {
-                $sigla = $tiposDocumento[$cliente->tipdocumento] ?? null;
+                $sigla = $this->resolverTipoIdentificacion($cliente);
 
                 if (! $sigla) {
                     PagosRecaudosLogger::warning('Tipo de identificacion no valido para consulta de saldo', [
@@ -100,7 +116,7 @@ class PagoConsultaService
 
                     return [
                         'error' => true,
-                        'message' => 'Tipo de identificación no válido.',
+                        'message' => 'No fue posible validar la identificacion del usuario.',
                     ];
                 }
             }
@@ -116,17 +132,20 @@ class PagoConsultaService
             // 4. Consultar API
             $respuesta = $this->consultarSaldoApi($apiAsopagos, $clienteData, $runtime);
             if ($this->tieneErrorRespuesta($respuesta)) {
+                $mensajeProveedor = $this->extraerMensajeProveedor($respuesta, 'Error en la consulta.');
+
                 PagosRecaudosLogger::warning('Consulta de saldo finalizo con error en proveedor', [
                     'operation' => 'consulta_saldo',
                     'identificacion_cliente' => $identificacion,
                     'provider_response_code' => $respuesta['responseCode'] ?? null,
-                    'provider_error' => $respuesta['error'] ?? ($respuesta['additionalData']['errorMesssage'] ?? null),
+                    'provider_error' => $mensajeProveedor,
+                    'provider_error_id' => $respuesta['errorID'] ?? null,
                     'duration_ms' => PagosRecaudosLogger::elapsedMs($startedAt),
                 ]);
 
                 return [
                     'error' => true,
-                    'message' => $respuesta['additionalData']['errorMesssage'] ?? 'Error en la consulta.',
+                    'message' => $mensajeProveedor,
                 ];
             }
 
@@ -142,13 +161,13 @@ class PagoConsultaService
 
                 return [
                     'error' => true,
-                    'message' => 'Fondos insuficientes: el cliente no tiene saldo disponible para completar la operación.',
+                    'message' => 'El usuario no cuenta con saldo disponible para realizar el pago.',
                 ];
             }
 
             // 6. Guardar en cache
             $uuid = Str::uuid()->toString();
-            $contextoPago = $this->crearContextoPago($cajaActiva);
+            $contextoPago = $this->crearContextoPago($cajaActiva, $userId);
             $datosCifrados = Crypt::encrypt(compact('clienteData', 'respuesta', 'cajaActiva', 'contextoPago'));
             Cache::put("pago:{$uuid}", $datosCifrados, now()->addMinutes(10));
 
@@ -173,7 +192,7 @@ class PagoConsultaService
                 'duration_ms' => PagosRecaudosLogger::elapsedMs($startedAt),
             ]);
 
-            return ['error' => true, 'message' => 'Error en la consulta, inténtelo nuevamente más tarde'];
+            return ['error' => true, 'message' => 'Error en la consulta, intentelo nuevamente mas tarde'];
         }
     }
 
@@ -194,14 +213,25 @@ class PagoConsultaService
 
     private function resolverUbicacionCaja(object $cajaActiva): array
     {
-        $sucursal = PerPersonas::where('id', $cajaActiva->idsucursal)
-            ->where('estado', 'ACTIVO')
-            ->where('estborrado', 0)
-            ->firstOrFail();
+        $ubicacion = Cache::remember(
+            "pagos-recaudos:ubicacion-caja:{$cajaActiva->idsucursal}",
+            now()->addMinutes(30),
+            function () use ($cajaActiva) {
+                $sucursal = PerPersonas::where('id', $cajaActiva->idsucursal)
+                    ->where('estado', 'ACTIVO')
+                    ->where('estborrado', 0)
+                    ->firstOrFail();
 
-        $municipio = GenMunicipios::findOrFail($sucursal->mu_id);
+                $municipio = GenMunicipios::findOrFail($sucursal->mu_id);
 
-        return [(int) $municipio->do_codigo, (int) $municipio->codigo];
+                return [
+                    'departamento' => (int) $municipio->do_codigo,
+                    'municipio' => (int) $municipio->codigo,
+                ];
+            }
+        );
+
+        return [(int) $ubicacion['departamento'], (int) $ubicacion['municipio']];
     }
 
     private function consultarSaldoApi(ApiAsopagos $apiAsopagos, array $clienteData, AsopagosRuntimeConfig $runtime): array
@@ -229,7 +259,7 @@ class PagoConsultaService
                 'identificacion_cliente' => $clienteData['identificacion'] ?? null,
             ]);
 
-            return ['error' => true, 'message' => 'Error de comunicación con la API'];
+            return ['error' => true, 'message' => 'No fue posible consultar el saldo en este momento. Intente nuevamente mas tarde.'];
         }
     }
 
@@ -240,12 +270,60 @@ class PagoConsultaService
           ! isset($respuesta['additionalData']['saldo']);
     }
 
-    private function crearContextoPago(object $cajaActiva): array
+    private function extraerMensajeProveedor(array $respuesta, string $fallback): string
+    {
+        $additionalData = is_array($respuesta['additionalData'] ?? null) ? $respuesta['additionalData'] : [];
+        $candidatos = [
+            $respuesta['message'] ?? null,
+            $respuesta['error'] ?? null,
+            $additionalData['validationError'] ?? null,
+            $additionalData['errorMessage'] ?? null,
+            $additionalData['errorMesssage'] ?? null,
+            $respuesta['errorID'] ?? null,
+            $fallback,
+        ];
+
+        foreach ($candidatos as $valor) {
+            if (is_string($valor) && trim($valor) !== '') {
+                return trim($valor);
+            }
+        }
+
+        return $fallback;
+    }
+
+    private function crearContextoPago(object $cajaActiva, int $userId): array
     {
         return [
-            'usuario_id' => UsuarioService::obtenerUserId(),
+            'usuario_id' => $userId,
             'caja_turno_id' => (int) ($cajaActiva->id ?? 0),
             'sucursal_id' => (int) ($cajaActiva->idsucursal ?? 0),
         ];
     }
+
+    private function resolverTipoIdentificacion(object $cliente): ?string
+    {
+        $sigla = self::TIPOS_DOCUMENTO_ASOPAGOS[$cliente->tipdocumento] ?? null;
+        if ($sigla) {
+            return $sigla;
+        }
+
+        $cacheKey = "pagos-recaudos:tipo-documento:{$cliente->tipdocumento}";
+        $nomenclatura = Cache::remember($cacheKey, now()->addHours(4), function () use ($cliente) {
+            $valor = TipoDocumento::query()
+                ->whereKey($cliente->tipdocumento)
+                ->value('nomenclatura');
+
+            return is_string($valor) ? strtoupper(trim($valor)) : null;
+        });
+
+        if (! is_string($nomenclatura) || $nomenclatura === '') {
+            return null;
+        }
+
+        return in_array($nomenclatura, self::TIPOS_DOCUMENTO_SOPORTADOS, true)
+            ? $nomenclatura
+            : null;
+    }
 }
+

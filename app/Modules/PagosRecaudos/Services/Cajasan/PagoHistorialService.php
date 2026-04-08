@@ -26,9 +26,8 @@ class PagoHistorialService
 
     private const PER_PAGE = 20;
 
-    public function obtenerPagosDelDia(object $cajaActiva, int $userId, array $filters): Paginator
+    public function obtenerPagosDelDia(?object $cajaActiva, int $userId, array $filters, bool $alcanceGlobal = false): Paginator
     {
-        $startedAt = microtime(true);
         $startOfDay = now('America/Bogota')->startOfDay();
         $endOfDay = now('America/Bogota')->endOfDay();
         $estadoFiltro = $this->normalizarEstadoFiltro($filters['estado'] ?? self::FILTRO_TODOS);
@@ -36,11 +35,9 @@ class PagoHistorialService
 
         try {
             $connection = DB::connection('oracle');
-            $connection->flushQueryLog();
-            $connection->enableQueryLog();
 
-            $pagadosQuery = $this->construirConsultaPagados($connection, $cajaActiva, $startOfDay, $endOfDay);
-            $fallidosQuery = $this->construirConsultaFallidos($connection, $cajaActiva, $userId, $startOfDay, $endOfDay);
+            $pagadosQuery = $this->construirConsultaPagados($connection, $cajaActiva, $startOfDay, $endOfDay, $alcanceGlobal);
+            $fallidosQuery = $this->construirConsultaFallidos($connection, $cajaActiva, $userId, $startOfDay, $endOfDay, $alcanceGlobal);
 
             if ($estadoFiltro === self::FILTRO_PAGADO) {
                 $query = $connection->query()->fromSub($pagadosQuery, 'H')->select('H.*');
@@ -72,50 +69,15 @@ class PagoHistorialService
                 ->simplePaginate(self::PER_PAGE)
                 ->withQueryString();
 
-            $queryLog = $connection->getQueryLog();
-            $connection->disableQueryLog();
-
-            $countQuery = null;
-            $pageQuery = null;
-            foreach ($queryLog as $entry) {
-                $sql = strtolower((string) ($entry['query'] ?? ''));
-                if ($countQuery === null && str_contains($sql, 'count(')) {
-                    $countQuery = $entry;
-                    continue;
-                }
-
-                $pageQuery ??= $entry;
-            }
-
-            PagosRecaudosLogger::info('Historial de pagos del dia cargado', [
-                'operation' => 'historial_hoy',
-                'caja_activa_id' => $cajaActiva->id ?? null,
-                'usuario_id' => $userId,
-                'estado' => $estadoFiltro,
-                'q' => $textoBusqueda,
-                'registros_pagina' => $pagos->count(),
-                'pagina_actual' => $pagos->currentPage(),
-                'hay_mas_paginas' => $pagos->hasMorePages(),
-                'duracion_total_ms' => PagosRecaudosLogger::elapsedMs($startedAt),
-                'duracion_count_ms' => isset($countQuery['time']) ? (int) round($countQuery['time']) : null,
-                'duracion_select_ms' => isset($pageQuery['time']) ? (int) round($pageQuery['time']) : null,
-                'cantidad_queries' => count($queryLog),
-                'sql_count' => $this->compactarSql($countQuery['query'] ?? null),
-                'sql_select' => $this->compactarSql($pageQuery['query'] ?? null),
-            ]);
-
             return $pagos;
         } catch (Exception $e) {
-            if (isset($connection)) {
-                $connection->disableQueryLog();
-            }
-
             PagosRecaudosLogger::exception('Error al cargar historial de pagos del dia', $e, [
                 'operation' => 'historial_hoy',
                 'caja_activa_id' => $cajaActiva->id ?? null,
                 'usuario_id' => $userId,
                 'estado' => $estadoFiltro,
                 'q' => $textoBusqueda,
+                'alcance_global' => $alcanceGlobal,
             ]);
 
             throw new Exception('No fue posible cargar el historial de pagos del dia.');
@@ -140,18 +102,9 @@ class PagoHistorialService
         };
     }
 
-    private function compactarSql(?string $sql): ?string
+    private function construirConsultaPagados($connection, ?object $cajaActiva, $startOfDay, $endOfDay, bool $alcanceGlobal = false)
     {
-        if (! $sql) {
-            return null;
-        }
-
-        return preg_replace('/\s+/', ' ', trim($sql));
-    }
-
-    private function construirConsultaPagados($connection, object $cajaActiva, $startOfDay, $endOfDay)
-    {
-        return $connection
+        $query = $connection
             ->table('CON_DETCARGUEPAGOSYRECAUDOS as D')
             ->join('CON_DETALLEPAGORECAUDO as DPR', function ($join) {
                 $join->on('DPR.ID_DET_CARPAGYREC', '=', 'D.ID')
@@ -178,13 +131,18 @@ class PagoHistorialService
             ])
             ->where('D.ESTBORRADO', 0)
             ->where('D.ESTADO', self::ESTADO_PAGADO)
-            ->whereBetween('D.FECCREACION', [$startOfDay, $endOfDay])
-            ->where('CP.CT_ID', $cajaActiva->id);
+            ->whereBetween('D.FECCREACION', [$startOfDay, $endOfDay]);
+
+        if (! $alcanceGlobal) {
+            $query->where('CP.CT_ID', $cajaActiva?->id ?? 0);
+        }
+
+        return $query;
     }
 
-    private function construirConsultaFallidos($connection, object $cajaActiva, int $userId, $startOfDay, $endOfDay)
+    private function construirConsultaFallidos($connection, ?object $cajaActiva, int $userId, $startOfDay, $endOfDay, bool $alcanceGlobal = false)
     {
-        return $connection
+        $query = $connection
             ->table('CON_DETCARGUEPAGOSYRECAUDOS as D')
             ->select([
                 'D.ID as id',
@@ -203,8 +161,13 @@ class PagoHistorialService
             ])
             ->where('D.ESTBORRADO', 0)
             ->where('D.ESTADO', self::ESTADO_ANULADO)
-            ->whereBetween('D.FECCREACION', [$startOfDay, $endOfDay])
-            ->where('D.USRCREACION', $userId)
-            ->where('D.EMPCREACION', $cajaActiva->idsucursal);
+            ->whereBetween('D.FECCREACION', [$startOfDay, $endOfDay]);
+
+        if (! $alcanceGlobal) {
+            $query->where('D.USRCREACION', $userId)
+                ->where('D.EMPCREACION', $cajaActiva?->idsucursal ?? 0);
+        }
+
+        return $query;
     }
 }

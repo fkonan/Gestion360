@@ -13,6 +13,19 @@ class PagosRecaudosLogger
 
     private const REQUEST_ID_ATTRIBUTE = 'pagos_recaudos_request_id';
 
+    private const SENSITIVE_KEYS = [
+        'password',
+        'auth_password',
+        'client_secret',
+        'token',
+        'access_token',
+        'refresh_token',
+        'authorization',
+        'secret',
+        'api_key',
+        'apikey',
+    ];
+
     public static function debug(string $message, array $context = []): void
     {
         self::write('debug', $message, $context);
@@ -60,13 +73,20 @@ class PagosRecaudosLogger
 
     private static function context(array $context = []): array
     {
+        $authDocument = Auth::user()?->persona?->PerNumDoc;
+        if (! self::shouldLogSensitive()) {
+            $authDocument = self::maskDocument($authDocument);
+        }
+
+        $context = self::sanitizeContext($context);
+
         return self::filterNulls(array_merge([
             'module' => 'pagos_recaudos',
             'request_id' => self::requestId(),
             'route' => request()?->route()?->getName(),
             'method' => request()?->method(),
             'auth_user_id' => Auth::id(),
-            'auth_persona_documento' => Auth::user()?->persona?->PerNumDoc,
+            'auth_persona_documento' => $authDocument,
         ], $context));
     }
 
@@ -108,5 +128,80 @@ class PagosRecaudosLogger
         }
 
         return $context;
+    }
+
+    private static function maskDocument(mixed $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $document = trim((string) $value);
+        if ($document === '') {
+            return null;
+        }
+
+        $length = strlen($document);
+        if ($length <= 4) {
+            return str_repeat('*', $length);
+        }
+
+        return str_repeat('*', $length - 4).substr($document, -4);
+    }
+
+    private static function sanitizeContext(array $context): array
+    {
+        if (self::shouldLogSensitive()) {
+            return $context;
+        }
+
+        foreach ($context as $key => $value) {
+            if (is_array($value)) {
+                $context[$key] = self::sanitizeContext($value);
+                continue;
+            }
+
+            if (self::isSensitiveKey((string) $key)) {
+                $context[$key] = self::redactValue($value);
+            }
+        }
+
+        return $context;
+    }
+
+    private static function isSensitiveKey(string $key): bool
+    {
+        $normalized = strtolower(trim($key));
+
+        if (in_array($normalized, self::SENSITIVE_KEYS, true)) {
+            return true;
+        }
+
+        return str_contains($normalized, 'token')
+            || str_contains($normalized, 'password')
+            || str_contains($normalized, 'secret');
+    }
+
+    private static function redactValue(mixed $value): string
+    {
+        if ($value === null) {
+            return '[redacted]';
+        }
+
+        $string = trim((string) $value);
+        if ($string === '') {
+            return '[redacted]';
+        }
+
+        if (strlen($string) <= 6) {
+            return '[redacted]';
+        }
+
+        return substr($string, 0, 3).'...[redacted]...'.substr($string, -3);
+    }
+
+    private static function shouldLogSensitive(): bool
+    {
+        return (bool) config('logging.channels.'.self::CHANNEL.'.log_sensitive', false);
     }
 }

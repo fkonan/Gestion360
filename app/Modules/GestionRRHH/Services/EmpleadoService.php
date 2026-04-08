@@ -15,10 +15,10 @@ class EmpleadoService
         $query = DB::connection('oracle')
             ->table('per_empresapersonas as ep')
             ->join('per_personas as p', 'ep.pe_id_pe', '=', 'p.id')
-            ->join('gen_municipios as m', 'm.id', '=', 'p.MU_NACIMIENTO')
+            ->leftJoin('gen_municipios as m', 'm.id', '=', 'p.MU_NACIMIENTO')
             ->where('ep.activo', 1)
             ->where('ep.estborrado', 0)
-            ->where('ep.tp_id', 1)
+            ->whereIn('ep.tp_id', [1, 6, 12])
             ->where('p.identificacion', $identificacion);
 
         if ($retornarPersona) {
@@ -103,9 +103,9 @@ class EmpleadoService
     }
 
     // Verifica si un empleado tiene un rol específico
-    public static function rolesLogtrans($identificacion)
+    public static function rolesLogtrans($identificacion): array
     {
-        $rolesLogtrans = DB::connection('oracle')
+        return DB::connection('oracle')
             ->table('per_personas as p')
             ->join('per_empresapersonas as ep', 'ep.pe_id_pe', '=', 'p.id')
             ->join('arq_personaroles as pr', 'pr.ep_id', '=', 'ep.id')
@@ -119,9 +119,12 @@ class EmpleadoService
             ->where('pr.activo', 1)
             ->where('pr.estborrado', 0)
             ->orderBy('r.descripcion')
-            ->pluck('pr.ro_id');
-
-        return $rolesLogtrans;
+            ->pluck('pr.ro_id')
+            ->map(fn ($rol) => trim((string) $rol))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
     }
 
     // Asignar roles en autogestion según el rol de Logtrans
@@ -141,11 +144,32 @@ class EmpleadoService
 
         // Solo asignar nuevos roles si rolesLogtrans no está vacío
         if (! empty($rolesLogtrans)) {
-            $rolesParaAsignar = Role::whereIn('idLogtrans', $rolesLogtrans)->get();
+            $rolesParaAsignar = Role::query()
+                ->whereNotNull('idLogtrans')
+                ->get()
+                ->filter(function ($role) use ($rolesLogtrans) {
+                    $idsLogtransRol = self::normalizarIdsLogtrans($role->idLogtrans);
+
+                    return ! empty(array_intersect($rolesLogtrans, $idsLogtransRol));
+                });
 
             if ($rolesParaAsignar->isNotEmpty()) {
-                $user->assignRole($rolesParaAsignar);
+                $user->assignRole($rolesParaAsignar->values());
             }
         }
+    }
+
+    private static function normalizarIdsLogtrans(?string $idsLogtrans): array
+    {
+        if (blank($idsLogtrans)) {
+            return [];
+        }
+
+        return collect(explode(',', $idsLogtrans))
+            ->map(fn ($id) => trim($id))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
     }
 }

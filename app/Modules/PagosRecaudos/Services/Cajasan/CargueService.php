@@ -25,14 +25,19 @@ class CargueService
         $fechaHoy = now()->format('Y-n-d');
         $descripcion = 'CAJASAN '.$fechaHoy;
 
-        $cargue = ConPagosRecaudos::where('descripcion', $descripcion)->first();
-        if ($cargue) {
-            return $cargue;
-        }
+        return app(PagoProcesoLockService::class)->runNamedCriticalSection(
+            'cargue:'.md5($descripcion),
+            function () use ($descripcion, $cajaActiva, $userId) {
+                $cargue = ConPagosRecaudos::where('descripcion', $descripcion)->first();
+                if ($cargue) {
+                    return $cargue;
+                }
 
-        $userId ??= UsuarioService::obtenerUserId();
+                $userId ??= UsuarioService::obtenerUserId();
 
-        return $this->crear($descripcion, $cajaActiva, $userId);
+                return $this->crear($descripcion, $cajaActiva, $userId);
+            }
+        );
     }
 
     private function crear(string $descripcion, object $cajaActiva, int $userId): ConPagosRecaudos
@@ -48,7 +53,7 @@ class CargueService
             $cargue->valortotal = 0;
             $cargue->tipomovimiento = self::TIPOMOVIMIENTO;
             $cargue->estado = self::ESTADO_CREADO;
-            $cargue->fechacargue = $fechaActual;
+            $cargue->fechacargue = \Carbon\Carbon::today('America/Bogota');
             $cargue->usrcargue = self::USRCARGUE;
             $cargue->estborrado = 0;
             $cargue->fecmodifica = $fechaActual;

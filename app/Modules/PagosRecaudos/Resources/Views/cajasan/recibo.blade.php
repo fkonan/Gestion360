@@ -6,12 +6,12 @@
     <style>
         @page {
             size: 80mm auto;
-            margin: 0 3mm 0 0;
+            margin: 0 6mm 0 3mm;
         }
 
         body {
             font-family: 'DejaVu Sans', Arial, sans-serif;
-            font-size: 6px;
+            font-size: 5.5px;
             line-height: 1.2;
             margin: 0;
             padding: 0;
@@ -20,8 +20,9 @@
 
         .header {
             text-align: right;
-            font-size: 6px;
+            font-size: 5.5px;
             margin-bottom: 5px;
+            width: 95%;
         }
 
         .titulo-convenio {
@@ -36,9 +37,9 @@
         }
 
         .info-basica table {
-            width: 100%;
+            width: 95%;
             border-collapse: collapse;
-            font-size: 6px;
+            font-size: 5.5px;
         }
 
         .info-basica td {
@@ -55,9 +56,9 @@
         }
 
         .datos-persona table {
-            width: 100%;
+            width: 95%;
             border-collapse: collapse;
-            font-size: 6px;
+            font-size: 5.5px;
         }
 
         .datos-persona td {
@@ -65,7 +66,7 @@
         }
 
         .tabla-concepto {
-            width: 100%;
+            width: 95%;
             border-collapse: collapse;
             margin: 10px 0;
             font-size: 7px;
@@ -85,19 +86,19 @@
         .valor-total {
             text-align: right;
             font-weight: bold;
-            margin: 8px 0;
+            margin: 8px 8px;
             font-size: 7px;
         }
 
         /* Bloque de firmas */
         .firmas {
-            width: 100%;
+            width: 95%;
             border-collapse: collapse;
             margin: 12px 0;
         }
 
         .firmas td {
-            vertical-align: top;
+            vertical-align: bottom;
             padding: 0 2px;
         }
 
@@ -108,8 +109,12 @@
         }
 
         .firmas .box {
-            height: 11mm; /* altura del recuadro */
+            height: 30mm; /* altura del recuadro */
             position: relative;
+        }
+
+        .firmas .indice .box {
+            height: 30mm;
         }
 
         .firmas .box .cuadro {
@@ -134,12 +139,12 @@
         }
 
         .footer {
-            font-size: 4.5px;
+            font-size: 4px;
             margin-top: 5px;
         }
 
         .footer table {
-            width: 100%;
+            width: 95%;
             border-collapse: collapse;
         }
 
@@ -152,6 +157,7 @@
         }
 
         .mensaje{
+            width: 95%;
             font-size: 4px;
             text-align: justify;
         }

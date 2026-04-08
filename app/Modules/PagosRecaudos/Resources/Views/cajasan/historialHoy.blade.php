@@ -13,17 +13,24 @@
 
 @section('headerInfo')
 <div class="header-info-pagos-recaudos d-flex flex-wrap justify-content-end align-items-center gap-2 text-end">
-  <span class="fw-bold small">CAJA ACTIVA</span>
+  <span class="fw-bold small">{{ ($sinCajaPorSuperAdmin ?? false) ? 'ALCANCE' : 'CAJA ACTIVA' }}</span>
   <span>
-    <small>Sucursal:</small> <span class="fw-bold small">{{ $cajaActiva->nomsucursal }}</span>
+    <small>{{ ($sinCajaPorSuperAdmin ?? false) ? 'Vista:' : 'Sucursal:' }}</small>
+    <span class="fw-bold small">{{ ($sinCajaPorSuperAdmin ?? false) ? 'TODAS LAS CAJAS' : $cajaActiva->nomsucursal }}</span>
   </span>
   <span>
-    <small>Fecha apertura:</small> <span class="fw-bold small">{{ \Carbon\Carbon::parse($cajaActiva->fecini)->format('d/m/Y H:i:s') }}</span>
+    <small>{{ ($sinCajaPorSuperAdmin ?? false) ? 'Fecha:' : 'Fecha apertura:' }}</small>
+    <span class="fw-bold small">
+      {{ ($sinCajaPorSuperAdmin ?? false) ? now('America/Bogota')->format('d/m/Y') : \Carbon\Carbon::parse($cajaActiva->fecini)->format('d/m/Y H:i:s') }}
+    </span>
   </span>
 </div>
 @endsection
 
 @section('content')
+@php
+  $puedeDescargarRecibo = auth()->check() && auth()->user()->hasRole(\App\Models\User::SUPER_ADMIN_ROLE);
+@endphp
 <div class="container-fluid p-0 border rounded sidebar-dark-primary tableContainer" style="min-height:150px;">
   <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-primary-subtle">
     <span class="text-left text-light fs-5 fw-medium py-1">Pagos del dia</span>
@@ -34,6 +41,7 @@
 
   <div class="d-flex flex-wrap gap-2 ms-4 mt-3">
     <a style="width: 160px;" class="btn btn-success fw-bold" href="{{ route('pagosConvenios.index') }}">Nuevo pago</a>
+    <a style="width: 160px;" class="btn btn-outline-warning fw-bold d-none" href="{{ route('pagosConvenios.historialReversos') }}">Reversos</a>
     <a style="width: 160px;" class="btn btn-outline-secondary fw-bold" href="{{ route('home') }}">Inicio</a>
   </div>
 
@@ -81,7 +89,9 @@
                 <th>Estado</th>
                 <th>Numero interno</th>
                 <th>Comprobante</th>
+                @if($puedeDescargarRecibo)
                 <th class="text-center">Accion</th>
+                @endif
               </tr>
             </thead>
             <tbody>
@@ -103,6 +113,7 @@
                 </td>
                 <td>{{ $pago->nro_interno ?: 'N/A' }}</td>
                 <td>{{ $pago->comprobante ?: 'N/A' }}</td>
+                @if($puedeDescargarRecibo)
                 <td class="text-center">
                   @if($esPagado)
                   <a
@@ -115,6 +126,7 @@
                   <span class="text-muted small">No disponible</span>
                   @endif
                 </td>
+                @endif
               </tr>
               @endforeach
             </tbody>

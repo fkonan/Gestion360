@@ -18,7 +18,7 @@ class BloqueoService
     public const ID_BLOQUEO_LOGTRANS_SARLAFT = 77;
 
     // Bloqueos de FICS
-    public const ID_BLOQUEO_FICS_PREOPERACIONAL = 33;
+    public const ID_BLOQUEO_FICS_PREOPERACIONAL = 35;
 
     // Cargos que reciben bloqueos
     public const CARGOS_BLOQUEO = [
@@ -79,6 +79,10 @@ class BloqueoService
 
     public static function tieneBloqueoLogtrans($identificacion, $idBloqueo)
     {
+        if (empty($idBloqueo)) {
+            return false;
+        }
+
         return PerPersonaBloqueo::where('cedula_conductor', $identificacion)
             ->where('tb_id', $idBloqueo)
             ->where('estborrado', 0)
@@ -137,6 +141,9 @@ class BloqueoService
 
     public static function tieneBloqueoFICS($docConductor, $idBloqueo)
     {
+        if (empty($idBloqueo)) {
+            return false;
+        }
 
         $estBloqueado = Tripulantes::where('Documento', $docConductor)
             ->where('Estado', 0)
@@ -146,6 +153,23 @@ class BloqueoService
             })->exists();
 
         return $estBloqueado;
+    }
+
+    public static function obtenerEstadoBloqueo(string $identificacion, $codigoFics = null, $codigoLogtrans = null): array
+    {
+        $bloqueadoFics = ! empty($codigoFics)
+            ? self::tieneBloqueoFICS($identificacion, (int) $codigoFics)
+            : false;
+
+        $bloqueadoLogtrans = ! empty($codigoLogtrans)
+            ? self::tieneBloqueoLogtrans($identificacion, (int) $codigoLogtrans)
+            : false;
+
+        return [
+            'bloqueado_fics' => $bloqueadoFics,
+            'bloqueado_logtrans' => $bloqueadoLogtrans,
+            'bloqueado' => $bloqueadoFics || $bloqueadoLogtrans,
+        ];
     }
 
     public static function levantarBloqueoPreoperacional(string $identificacion): array

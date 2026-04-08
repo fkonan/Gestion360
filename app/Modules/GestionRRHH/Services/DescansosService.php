@@ -81,6 +81,164 @@ class DescansosService
         }
     }
 
+    public function procesarLevantamientoCop(string $identificacion, array $payload, ?int $codigoFics = null, ?int $codigoLogtrans = null): array
+    {
+        $codigoFics = $codigoFics ?: self::BLOQUEO_DESCANSO_FICS;
+        $codigoLogtrans = $codigoLogtrans ?: self::BLOQUEO_DESCANSO_LOGTRANS;
+        $data = array_merge($payload, [
+            'identificacion' => $identificacion,
+        ]);
+
+        $validator = Validator::make($data, [
+            'identificacion' => ['required', 'regex:/^\d{1,15}$/'],
+            'evento' => ['required'],
+            'observacion' => 'required|string|max:500',
+            'fecha' => 'required|date|before_or_equal:now',
+        ], [
+            'identificacion.regex' => 'El campo identificacion no tiene un formato valido.',
+            'identificacion.required' => 'El campo identificacion es obligatorio.',
+            'evento.required' => 'Debe seleccionar el tipo de levantamiento.',
+            'observacion.required' => 'Debe ingresar una observacion.',
+            'observacion.max' => 'La observacion no puede superar 500 caracteres.',
+            'fecha.required' => 'La fecha es obligatoria.',
+            'fecha.date' => 'La fecha debe ser una fecha valida.',
+            'fecha.before_or_equal' => 'La fecha no puede ser futura.',
+        ]);
+
+        if ($validator->fails()) {
+            return [
+                'success' => false,
+                'status' => 'validation_error',
+                'errors' => $validator->errors()->toArray(),
+            ];
+        }
+
+        $conductor = $this->buscarConductorActivo($identificacion);
+        if (! $conductor) {
+            return [
+                'success' => false,
+                'status' => 'failed',
+                'message' => 'El numero de identificacion es incorrecto o no es valido actualmente.',
+            ];
+        }
+
+        $evento = (int) $data['evento'];
+        if (! in_array($evento, [self::REGRESO_DE_DESCANSO, self::REGRESO_ANTICIPADO], true)) {
+            return [
+                'success' => false,
+                'status' => 'failed',
+                'message' => 'Para levantamiento COP de descanso solo aplican REGRESO DE DESCANSO o REGRESO ANTICIPADO.',
+            ];
+        }
+
+        $estadoInicial = BloqueoService::obtenerEstadoBloqueo($identificacion, $codigoFics, $codigoLogtrans);
+        if (! ($estadoInicial['bloqueado'] ?? false)) {
+            return [
+                'success' => false,
+                'status' => 'no_blocks',
+                'message' => 'El conductor no presenta bloqueos activos de descanso en FICS ni en Logtrans.',
+                'estado_inicial' => $estadoInicial,
+            ];
+        }
+
+        if ($evento === self::REGRESO_ANTICIPADO && ! ($estadoInicial['bloqueado_logtrans'] ?? false)) {
+            return [
+                'success' => false,
+                'status' => 'failed',
+                'message' => 'El REGRESO ANTICIPADO solo aplica cuando el bloqueo de descanso sigue activo en Logtrans.',
+                'estado_inicial' => $estadoInicial,
+            ];
+        }
+
+        $eventoDesc = ParametrosPasajes::where('ParNom', $evento)->value('ParDes') ?: 'REGRESO DE DESCANSO';
+        $request = (object) $data;
+        $resultado = $this->novedadDescansoConductor($conductor, $eventoDesc, $request, $codigoLogtrans, $codigoFics);
+
+        if ($resultado !== true) {
+            return [
+                'success' => false,
+                'status' => 'failed',
+                'message' => $resultado,
+                'estado_inicial' => $estadoInicial,
+            ];
+        }
+
+        return $this->evaluarResultadoLevantamientoCop(
+            $identificacion,
+            $estadoInicial,
+            $codigoFics,
+            $codigoLogtrans,
+            'Se registro el evento '.$eventoDesc.'.'
+        );
+    }
+
+    public static function obtenerResumenUltimoEventoDescanso(string $identificacion): array
+    {
+        $persona = PerPersonas::where('identificacion', $identificacion)
+            ->where('estado', 'ACTIVO')
+            ->where('estborrado', 0)
+            ->whereIn('tipdocumento', [1])
+            ->first();
+
+        if (! $persona) {
+            return [
+                'nombre' => null,
+                'evento' => null,
+                'evento_codigo' => null,
+                'fecha' => null,
+            ];
+        }
+
+        $ultimoEvento = PerConductoresEventos::where('pe_id', $persona->id)
+            ->where('estborrado', 0)
+            ->whereIn('evento', [self::REGRESO_DE_DESCANSO, self::SALIDA_A_DESCANSO])
+            ->orderByDesc('id')
+            ->first();
+
+        if (! $ultimoEvento) {
+            return [
+                'nombre' => trim($persona->pnombre.' '.$persona->psnombre.' '.$persona->papellido.' '.$persona->sapellido),
+                'evento' => null,
+                'evento_codigo' => null,
+                'fecha' => null,
+            ];
+        }
+
+        $fechaEvento = Carbon::parse($ultimoEvento->fechaevento);
+        if ($fechaEvento->lte(now()->subMonths(6))) {
+            return [
+                'nombre' => trim($persona->pnombre.' '.$persona->psnombre.' '.$persona->papellido.' '.$persona->sapellido),
+                'evento' => null,
+                'evento_codigo' => null,
+                'fecha' => null,
+            ];
+        }
+
+        return [
+            'nombre' => trim($persona->pnombre.' '.$persona->psnombre.' '.$persona->papellido.' '.$persona->sapellido),
+            'evento' => $ultimoEvento->anotacion,
+            'evento_codigo' => (int) $ultimoEvento->evento,
+            'fecha' => $fechaEvento->format('d/m/Y H:i'),
+        ];
+    }
+
+    public function obtenerOpcionesLevantamientoDescanso(?int $ultimoEventoCodigo = null): array
+    {
+        $permitidos = $ultimoEventoCodigo === self::SALIDA_A_DESCANSO
+            ? [self::REGRESO_DE_DESCANSO, self::REGRESO_ANTICIPADO]
+            : [self::REGRESO_DE_DESCANSO];
+
+        return ParametrosPasajes::getDescansoConductores()
+            ->filter(fn ($parametro) => in_array((int) $parametro->ParNom, $permitidos, true))
+            ->sortBy(fn ($parametro) => (int) $parametro->ParNom === self::REGRESO_DE_DESCANSO ? 1 : 2)
+            ->map(fn ($parametro) => [
+                'value' => (string) $parametro->ParNom,
+                'label' => $parametro->ParDes,
+            ])
+            ->values()
+            ->all();
+    }
+
     private function registrarRegresoAnticipado($conductor, $request)
     {
 
@@ -96,9 +254,6 @@ class DescansosService
         // Manejo de la novedad y bloqueos en logtrans
         $resp = $this->novedadDescansoConductor($conductor, $eventoDesc, $request);
 
-        // Levantar bloqueo en FICS
-        BloqueoService::levantarBloqueoFICS($conductor->identificacion, self::BLOQUEO_DESCANSO_FICS);
-
         if ($resp !== true) {
             return toastModal($resp, 'danger', route('gestion-incapacidades.index'));
         }
@@ -106,8 +261,10 @@ class DescansosService
         return toastModal('Se registró el evento REGRESO ANTICIPADO', 'success', route('gestion-incapacidades.index'));
     }
 
-    private function novedadDescansoConductor($conductor, $eventoDesc, $request)
+    private function novedadDescansoConductor($conductor, $eventoDesc, $request, ?int $codigoLogtrans = null, ?int $codigoFics = null)
     {
+        $codigoLogtrans = $codigoLogtrans ?: self::BLOQUEO_DESCANSO_LOGTRANS;
+        $codigoFics = $codigoFics ?: self::BLOQUEO_DESCANSO_FICS;
 
         /* DB::beginTransaction(); */
         try {
@@ -149,7 +306,7 @@ class DescansosService
             // CASO 1 - ACTUALIZAR FECHA FIN DEL BLOQUEO
             if ($request->evento == self::REGRESO_DE_DESCANSO || $request->evento == self::REGRESO_ANTICIPADO) {
                 $bloqueo = PerPersonaBloqueo::where('cedula_conductor', $request->identificacion)
-                    ->where('tb_id', self::BLOQUEO_DESCANSO_LOGTRANS)
+                    ->where('tb_id', $codigoLogtrans)
                     ->where('activo', 1)
                     ->where('estborrado', 0)
                     ->orderByDesc('feccreacion')
@@ -171,7 +328,7 @@ class DescansosService
                 $bloqueo = new PerPersonaBloqueo;
                 $bloqueo->id = DB::connection('oracle')->select('SELECT SEC_PER_PERSONASBLOQUEO.NEXTVAL as id FROM DUAL')[0]->id;
                 $bloqueo->cedula_conductor = $request->identificacion;
-                $bloqueo->tb_id = self::BLOQUEO_DESCANSO_LOGTRANS;
+                $bloqueo->tb_id = $codigoLogtrans;
                 $bloqueo->descripcion = 'SALIDA A DESCANSO. NOVEDAD REGISTRADA AUTOGESTION.';
                 $bloqueo->pe_id_bloqueo = $persona->id;
                 $bloqueo->fecbloqueo = $fecha;
@@ -195,7 +352,7 @@ class DescansosService
 
             if ($request->evento == self::REGRESO_DE_DESCANSO) {
                 // Levantar bloqueo en FICS
-                BloqueoService::levantarBloqueoFICS($conductor->identificacion, self::BLOQUEO_DESCANSO_FICS);
+                BloqueoService::levantarBloqueoFICS($conductor->identificacion, $codigoFics);
             }
 
             return true;
@@ -217,47 +374,92 @@ class DescansosService
 
     public static function obtenerUltimoEventoDescanso($identificacion)
     {
-        $persona = PerPersonas::where('identificacion', $identificacion)
-            ->where('estado', 'ACTIVO')
-            ->where('estborrado', 0)
-            ->whereIn('tipdocumento', [1])
-            ->first();
-
-        if (! $persona) {
-            return response()->json([
-                'evento' => null,
-                'fecha' => null,
-            ]);
-        }
-
-        $ultimoEvento = PerConductoresEventos::where('pe_id', $persona->id)
-            ->where('estborrado', 0)
-            ->whereIn('evento', [49, 50]) // Eventos relacionados con descanso
-            ->orderBy('id', 'desc')
-            ->first();
-
-        if ($ultimoEvento) {
-            $fechaEvento = Carbon::parse($ultimoEvento->fechaevento);
-            $haceSeisMeses = now()->subMonths(6);
-
-            /* solo se tendran en cuenta los eventos en los ultimos 6 meses */
-            if ($fechaEvento->lte($haceSeisMeses)) {
-                return response()->json([
-                    'evento' => null,
-                    'fecha' => null,
-                ]);
-            }
-
-            return response()->json([
-                'nombre' => trim($persona->pnombre.' '.$persona->psnombre.' '.$persona->papellido.' '.$persona->sapellido),
-                'evento' => $ultimoEvento->anotacion,
-                'fecha' => $fechaEvento->format('d/m/Y H:i'),
-            ]);
-        }
+        $data = self::obtenerResumenUltimoEventoDescanso($identificacion);
 
         return response()->json([
-            'evento' => null,
-            'fecha' => null,
+            'nombre' => $data['nombre'],
+            'evento' => $data['evento'],
+            'fecha' => $data['fecha'],
         ]);
+    }
+
+    private function buscarConductorActivo(string $identificacion)
+    {
+        return PerPersonas::where('identificacion', $identificacion)
+            ->where('estborrado', 0)
+            ->where('estado', 'ACTIVO')
+            ->whereIn('tipdocumento', [1])
+            ->first();
+    }
+
+    private function evaluarResultadoLevantamientoCop(
+        string $identificacion,
+        array $estadoInicial,
+        int $codigoFics,
+        int $codigoLogtrans,
+        string $mensajeBase
+    ): array {
+        $estadoFinal = BloqueoService::obtenerEstadoBloqueo($identificacion, $codigoFics, $codigoLogtrans);
+
+        $ficsOk = ! ($estadoInicial['bloqueado_fics'] ?? false) || ! ($estadoFinal['bloqueado_fics'] ?? false);
+        $logtransOk = ! ($estadoInicial['bloqueado_logtrans'] ?? false) || ! ($estadoFinal['bloqueado_logtrans'] ?? false);
+
+        if ($ficsOk && $logtransOk) {
+            return [
+                'success' => true,
+                'status' => 'success',
+                'message' => $mensajeBase,
+                'estado_inicial' => $estadoInicial,
+                'estado_final' => $estadoFinal,
+            ];
+        }
+
+        if (! $ficsOk && ! $logtransOk) {
+            return [
+                'success' => false,
+                'status' => 'failed',
+                'message' => $mensajeBase.' No se logro levantar el bloqueo en FICS ni en Logtrans.',
+                'estado_inicial' => $estadoInicial,
+                'estado_final' => $estadoFinal,
+            ];
+        }
+
+        $levantados = [];
+        $pendientes = [];
+
+        if ($estadoInicial['bloqueado_fics'] ?? false) {
+            if ($ficsOk) {
+                $levantados[] = 'FICS';
+            } else {
+                $pendientes[] = 'FICS';
+            }
+        }
+
+        if ($estadoInicial['bloqueado_logtrans'] ?? false) {
+            if ($logtransOk) {
+                $levantados[] = 'Logtrans';
+            } else {
+                $pendientes[] = 'Logtrans';
+            }
+        }
+
+        return [
+            'success' => true,
+            'status' => 'partial',
+            'message' => $mensajeBase.' Se libero en '.$this->formatearOrigenes($levantados).', pero continua activo en '.$this->formatearOrigenes($pendientes).'.',
+            'estado_inicial' => $estadoInicial,
+            'estado_final' => $estadoFinal,
+        ];
+    }
+
+    private function formatearOrigenes(array $origenes): string
+    {
+        if (count($origenes) <= 1) {
+            return $origenes[0] ?? 'ningun origen';
+        }
+
+        $ultimo = array_pop($origenes);
+
+        return implode(', ', $origenes).' y '.$ultimo;
     }
 }

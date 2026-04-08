@@ -6,6 +6,7 @@ use App\Modules\GestionRRHH\Http\Controllers\ConductorController;
 use App\Modules\GestionRRHH\Http\Controllers\EmpleadoController;
 use App\Modules\GestionRRHH\Http\Controllers\Incapacidades\IncapacidadController;
 use App\Modules\GestionRRHH\Http\Controllers\Incapacidades\SeguimientoIncapacidadController;
+use App\Modules\GestionRRHH\Http\Controllers\CopLevantamientoController;
 use App\Modules\GestionRRHH\Http\Controllers\PoliticasController;
 use Illuminate\Support\Facades\Route;
 
@@ -32,6 +33,10 @@ Route::prefix('gestionRRHH')->middleware(['auth', 'permisos:'.Permisos::GESTION_
         // Registrar descanso conductores
         Route::get('/formDescansoConductores', [ConductorController::class, 'formDescansoConductores'])->name('conductor.descanso');
         Route::post('/descansoConductores', [ConductorController::class, 'registrarEvento'])->name('registrar.evento');
+
+        // Levantamiento global COP de bloqueos
+        Route::get('/levantamiento-cop', [CopLevantamientoController::class, 'index'])->name('conductor.levantamiento-cop.index');
+        Route::post('/levantamiento-cop/{tipoBloqueo}', [CopLevantamientoController::class, 'ejecutar'])->name('conductor.levantamiento-cop.ejecutar');
 
         // Consulta firmas politicas conductores
         Route::get('/firma-politicas', [PoliticasController::class, 'index'])->name('politicas.index');
