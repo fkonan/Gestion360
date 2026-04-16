@@ -8,4 +8,13 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Schedule::command('listas:sincronizar')->daily()->at('02:00');
+Schedule::command('listas:sincronizar')->daily()->at('02:00')->withoutOverlapping();
+Schedule::command('sarlaft:archivar-consultas')
+    ->daily()
+    ->at('03:00')
+    ->withoutOverlapping()
+    ->appendOutputTo(storage_path('logs/laravel.log'));
+Schedule::command('sarlaft:procesar-alertas-vencidas')
+    ->hourly()
+    ->withoutOverlapping()
+    ->appendOutputTo(storage_path('logs/laravel.log'));

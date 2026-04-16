@@ -210,6 +210,11 @@ class SimulacionController extends Controller
             return false;
         }
 
+        $contextoOperacion = is_array($consulta->contexto_operacion) ? $consulta->contexto_operacion : [];
+        if (($contextoOperacion['alerta_suprimida'] ?? false) === true) {
+            return false;
+        }
+
         return ! $consulta->presta_servicio || $consulta->nivel_riesgo === 'alto';
     }
 

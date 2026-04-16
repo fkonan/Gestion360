@@ -28,7 +28,7 @@
                         <input type="number" name="limite_requests_minuto" id="limite_requests_minuto" class="form-control @error('limite_requests_minuto') is-invalid @enderror" value="{{ old('limite_requests_minuto', 100) }}" min="1" max="10000" required>
                         @error('limite_requests_minuto') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
-                    <button type="submit" class="btn btn-primary w-100">
+                    <button type="submit" class="btn btn-success w-100">
                         <i class="bi bi-plus-lg"></i> Crear Sistema
                     </button>
                 </form>
@@ -69,7 +69,7 @@
                                 <td>
                                     <form action="{{ route('sarlaft.sistemas-consumidores.destroy', $sistema) }}" method="POST" class="d-inline" onsubmit="return confirm('Eliminar sistema {{ $sistema->nombre }}?')">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                        <button type="submit" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
                                     </form>
                                 </td>
                             </tr>

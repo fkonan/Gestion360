@@ -114,7 +114,7 @@
                     </div>
 
                     <div class="mt-4 d-flex justify-content-end">
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-success">
                             <i class="fas fa-check-circle"></i> Validar y Guardar Tiquete
                         </button>
                     </div>
@@ -212,7 +212,7 @@
                     </div>
 
                     <div class="mt-4 d-flex justify-content-end">
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-success">
                             <i class="fas fa-check-circle"></i> Validar y Guardar Remesa
                         </button>
                     </div>

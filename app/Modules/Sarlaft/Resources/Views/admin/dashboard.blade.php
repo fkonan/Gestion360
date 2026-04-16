@@ -48,16 +48,22 @@
     <div class="col-md-4 col-lg-2">
         <div class="card stat-card border-success shadow-sm">
             <div class="card-body">
-                <div class="text-muted small">Lista Negra</div>
+                <div class="text-muted small">Lista Restrictiva</div>
                 <div class="fs-3 fw-bold">{{ $stats['lista_negra_total'] }}</div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="d-flex justify-content-end mb-3">
-    <a href="{{ route('sarlaft.simulaciones.index') }}" class="btn btn-outline-primary">
+<div class="d-flex justify-content-end gap-2 mb-3">
+    <a href="{{ route('sarlaft.politicas.edit') }}" class="btn btn-dark">
+        <i class="fas fa-cogs"></i> Politicas SARLAFT
+    </a>
+    <a href="{{ route('sarlaft.simulaciones.index') }}" class="btn btn-success">
         <i class="fas fa-vial"></i> Simulaciones Operativas
+    </a>
+    <a href="{{ route('sarlaft.reportes.operaciones.index') }}" class="btn btn-outline-dark">
+        <i class="fas fa-chart-bar"></i> Reporte Operativo
     </a>
 </div>
 
@@ -67,7 +73,7 @@
         <div class="card shadow-sm">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h6 class="mb-0"><i class="bi bi-exclamation-triangle text-danger"></i> Alertas Pendientes</h6>
-                <a href="{{ route('sarlaft.alertas.index') }}" class="btn btn-sm btn-outline-primary">Ver todas</a>
+                <a href="{{ route('sarlaft.alertas.index') }}" class="btn btn-sm btn-dark">Ver todas</a>
             </div>
             <div class="card-body p-0">
                 @if($ultimasAlertas->isEmpty())
@@ -96,7 +102,7 @@
                                     <td>{{ $alerta->datos_persona['nombre'] ?? $alerta->datos_persona['numero_documento'] ?? '-' }}</td>
                                     <td>{{ $alerta->created_at->format('d/m/Y H:i') }}</td>
                                     <td>
-                                        <a href="{{ route('sarlaft.alertas.show', $alerta) }}" class="btn btn-sm btn-outline-secondary">
+                                        <a href="{{ route('sarlaft.alertas.show', $alerta) }}" class="btn btn-sm btn-dark">
                                             <i class="bi bi-eye"></i>
                                         </a>
                                     </td>
@@ -115,7 +121,7 @@
         <div class="card shadow-sm">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h6 class="mb-0"><i class="bi bi-arrow-repeat text-primary"></i> Sincronizaciones</h6>
-                <a href="{{ route('sarlaft.sincronizacion.index') }}" class="btn btn-sm btn-outline-primary">Ver todas</a>
+                <a href="{{ route('sarlaft.sincronizacion.index') }}" class="btn btn-sm btn-dark">Ver todas</a>
             </div>
             <div class="card-body p-0">
                 @if($ultimasSincronizaciones->isEmpty())

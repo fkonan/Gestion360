@@ -4,8 +4,8 @@
 
 @section('actions')
 <div class="btn-group btn-group-sm">
-    <a href="{{ route('sarlaft.lista-negra.index') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Volver</a>
-    <a href="{{ route('sarlaft.lista-negra.edit', $listaNegra) }}" class="btn btn-outline-primary"><i class="bi bi-pencil"></i> Editar</a>
+    <a href="{{ route('sarlaft.lista-negra.index') }}" class="btn btn-dark"><i class="fas fa-arrow-left"></i> Volver</a>
+    <a href="{{ route('sarlaft.lista-negra.edit', $listaNegra) }}" class="btn btn-success"><i class="fas fa-edit"></i> Editar</a>
 </div>
 @endsection
 

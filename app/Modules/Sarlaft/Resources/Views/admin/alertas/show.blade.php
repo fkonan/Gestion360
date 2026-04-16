@@ -2,15 +2,32 @@
 
 @section('title', 'Alerta #' . $alerta->id)
 
-@section('actions')
-<a href="{{ route('sarlaft.alertas.index') }}" class="btn btn-sm btn-outline-secondary">
-    <i class="fas fa-arrow-left"></i> Volver
-</a>
-@endsection
-
 @section('content')
+@php
+    $consulta = $alerta->consulta;
+    $simulacionPasaje = $consulta?->simulacionPasaje;
+    $simulacionRemesa = $consulta?->simulacionRemesa;
+    $evidencias = is_array($alerta->evidencias) ? $alerta->evidencias : [];
+    $contextoOperacion = is_array($alerta->contexto_operacion) ? $alerta->contexto_operacion : [];
+    $origenAtencion = $contextoOperacion['origen_atencion'] ?? null;
+
+    if ($origenAtencion === null && $alerta->escalada_automatica) {
+        $origenAtencion = 'auto_sla';
+    }
+@endphp
+
+<div class="d-flex justify-content-end gap-2 mb-3">
+    <a href="{{ route('sarlaft.alertas.index') }}" class="btn btn-sm btn-outline-dark">
+        <i class="fas fa-arrow-left"></i> Volver
+    </a>
+    @if($alerta->numero_documento)
+    <a href="{{ route('sarlaft.reportes.operaciones.index', ['tipo_documento' => $alerta->tipo_documento, 'numero_documento' => $alerta->numero_documento]) }}" class="btn btn-sm btn-dark">
+        <i class="fas fa-chart-line"></i> Historial Operativo
+    </a>
+    @endif
+</div>
+
 <div class="row g-4">
-    {{-- Info de la alerta --}}
     <div class="col-lg-8">
         <div class="card shadow-sm">
             <div class="card-header">
@@ -35,6 +52,7 @@
                         {{ $alerta->created_at->format('d/m/Y H:i:s') }}
                     </div>
                 </div>
+
                 <div class="row mb-3">
                     <div class="col-md-4">
                         <strong>Decision de servicio:</strong><br>
@@ -57,6 +75,34 @@
                         @endif
                     </div>
                 </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <strong>Escalada automatica:</strong><br>
+                        {{ $alerta->escalada_automatica ? 'Si' : 'No' }}
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Fecha escalamiento:</strong><br>
+                        {{ $alerta->escalada_automatica_at?->format('d/m/Y H:i') ?? 'N/A' }}
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Tipo atencion:</strong><br>
+                        @if($origenAtencion === 'auto_lista_negra_interna')
+                            Auto Lista Negra Interna
+                        @elseif($origenAtencion === 'auto_sla')
+                            Auto SLA
+                        @else
+                            Manual
+                        @endif
+                    </div>
+                </div>
+
+                @if(($contextoOperacion['alerta_suprimida'] ?? false) === true)
+                <div class="alert alert-dark py-2">
+                    Esta alerta fue marcada con contexto de supresion:
+                    {{ str_replace('_', ' ', (string) ($contextoOperacion['motivo_suprimir_alerta'] ?? 'sin motivo')) }}.
+                </div>
+                @endif
 
                 <h6 class="mt-4">Datos de la Persona</h6>
                 <div class="table-responsive">
@@ -113,6 +159,40 @@
                 <p class="bg-light p-3 rounded">{{ $alerta->notas }}</p>
                 @endif
 
+                <h6 class="mt-4">Evidencias Adjuntas</h6>
+                @if($evidencias === [])
+                <div class="alert alert-light border mb-0">
+                    No hay evidencias adjuntas para esta alerta.
+                </div>
+                @else
+                <div class="list-group">
+                    @foreach($evidencias as $evidencia)
+                    @php
+                        $sizeBytes = isset($evidencia['size_bytes']) ? (int) $evidencia['size_bytes'] : 0;
+                        $sizeLabel = $sizeBytes >= 1048576
+                            ? number_format($sizeBytes / 1048576, 2).' MB'
+                            : number_format($sizeBytes / 1024, 1).' KB';
+                    @endphp
+                    <div class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <div class="fw-semibold">{{ $evidencia['original_name'] ?? 'Documento de soporte' }}</div>
+                            <div class="text-muted small">
+                                Cargado {{ isset($evidencia['uploaded_at']) ? \Illuminate\Support\Carbon::parse((string) $evidencia['uploaded_at'])->format('d/m/Y H:i') : 'N/A' }}
+                                @if($sizeBytes > 0)
+                                - {{ $sizeLabel }}
+                                @endif
+                            </div>
+                        </div>
+                        @if(!empty($evidencia['id']))
+                        <a href="{{ route('sarlaft.alertas.evidencias.download', [$alerta, $evidencia['id']]) }}" class="btn btn-sm btn-outline-dark">
+                            <i class="fas fa-download"></i> Descargar
+                        </a>
+                        @endif
+                    </div>
+                    @endforeach
+                </div>
+                @endif
+
                 @if($alerta->atendidaPor)
                 <div class="mt-3 text-muted small">
                     Atendida por <strong>{{ trim(($alerta->atendidaPor->persona?->PerNombres ?? '') . ' ' . ($alerta->atendidaPor->persona?->PerApellidos ?? '')) ?: '-' }}</strong>
@@ -123,14 +203,13 @@
         </div>
     </div>
 
-    {{-- Acciones --}}
     <div class="col-lg-4">
         <div class="card shadow-sm">
             <div class="card-header">
                 <h6 class="mb-0">Atender Alerta</h6>
             </div>
             <div class="card-body">
-                <form action="{{ route('sarlaft.alertas.atender', $alerta) }}" method="POST">
+                <form action="{{ route('sarlaft.alertas.atender', $alerta) }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     @method('PATCH')
                     @php
@@ -175,27 +254,72 @@
                         <textarea name="notas" id="notas" rows="4" class="form-control" placeholder="Observaciones...">{{ old('notas', $alerta->notas) }}</textarea>
                         @error('notas') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                     </div>
-                    <button type="submit" class="btn btn-primary w-100">
+                    <div class="mb-3">
+                        <label for="evidencias" class="form-label">Adjuntar evidencias</label>
+                        <input
+                            type="file"
+                            name="evidencias[]"
+                            id="evidencias"
+                            class="form-control @error('evidencias') is-invalid @enderror @error('evidencias.*') is-invalid @enderror"
+                            accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
+                            multiple
+                        >
+                        <small class="text-muted d-block mt-2">
+                            Adjunta soportes de la decision: PDF, imagen o documentos Office. Maximo 5 archivos por actualizacion.
+                        </small>
+                        @error('evidencias') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                        @error('evidencias.*') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">
                         <i class="fas fa-check"></i> Guardar
                     </button>
                 </form>
             </div>
         </div>
 
-        {{-- Consulta asociada --}}
-        @if($alerta->consulta)
+        @if($consulta)
         <div class="card shadow-sm mt-3">
             <div class="card-header">
-                <h6 class="mb-0">Consulta Asociada #{{ $alerta->consulta->id }}</h6>
+                <h6 class="mb-0">Consulta Asociada #{{ $consulta->id }}</h6>
             </div>
             <div class="card-body small">
-                <p><strong>Sistema:</strong> {{ $alerta->consulta->sistema_origen }}</p>
-                <p><strong>Documento:</strong> {{ $alerta->consulta->tipo_documento }} {{ $alerta->consulta->numero_documento }}</p>
-                <p><strong>Resultado:</strong> {{ $alerta->consulta->encontrado ? 'Encontrado' : 'No encontrado' }}</p>
-                <p><strong>Presta servicio:</strong> {{ $alerta->consulta->presta_servicio ? 'Si' : 'No' }}</p>
-                <p class="mb-0"><strong>IP:</strong> {{ $alerta->consulta->ip_origen }}</p>
+                <p><strong>Sistema:</strong> {{ $consulta->sistema_origen }}</p>
+                <p><strong>Documento:</strong> {{ $consulta->tipo_documento }} {{ $consulta->numero_documento }}</p>
+                <p><strong>Resultado:</strong> {{ $consulta->encontrado ? 'Encontrado' : 'No encontrado' }}</p>
+                <p><strong>Presta servicio:</strong> {{ $consulta->presta_servicio ? 'Si' : 'No' }}</p>
+                <p class="mb-0"><strong>IP:</strong> {{ $consulta->ip_origen }}</p>
             </div>
         </div>
+
+        @if($simulacionPasaje || $simulacionRemesa)
+        <div class="card shadow-sm mt-3">
+            <div class="card-header">
+                <h6 class="mb-0">Detalle Operativo Asociado</h6>
+            </div>
+            <div class="card-body small">
+                @if($simulacionPasaje)
+                <p><strong>Operacion:</strong> Compra de tiquete</p>
+                <p><strong>Ruta:</strong> {{ $simulacionPasaje->ciudad_origen_nombre }} -> {{ $simulacionPasaje->ciudad_destino_nombre }}</p>
+                <p><strong>Fecha viaje:</strong> {{ $simulacionPasaje->fecha_viaje?->format('d/m/Y') ?? '-' }}</p>
+                <p><strong>Persona:</strong> {{ trim($simulacionPasaje->nombres.' '.$simulacionPasaje->apellidos) }}</p>
+                <p><strong>Direccion:</strong> {{ $simulacionPasaje->direccion }}</p>
+                <p><strong>Telefono:</strong> {{ $simulacionPasaje->telefono }}</p>
+                <p class="mb-0"><strong>Correo:</strong> {{ $simulacionPasaje->correo }}</p>
+                @endif
+
+                @if($simulacionRemesa)
+                <p><strong>Operacion:</strong> Mensajeria / remesa</p>
+                <p><strong>Ruta:</strong> {{ $simulacionRemesa->ciudad_origen_nombre }} -> {{ $simulacionRemesa->ciudad_destino_nombre }}</p>
+                <p><strong>Fecha envio:</strong> {{ $simulacionRemesa->fecha_envio?->format('d/m/Y') ?? '-' }}</p>
+                <p><strong>Remitente:</strong> {{ trim($simulacionRemesa->nombres_remitente.' '.$simulacionRemesa->apellidos_remitente) }}</p>
+                <p><strong>Telefono remitente:</strong> {{ $simulacionRemesa->telefono_remitente }}</p>
+                <p><strong>Destinatario:</strong> {{ $simulacionRemesa->nombre_destinatario }} ({{ $simulacionRemesa->documento_destinatario }})</p>
+                <p><strong>Monto:</strong> ${{ number_format((float) $simulacionRemesa->monto, 2, ',', '.') }}</p>
+                <p class="mb-0"><strong>Concepto:</strong> {{ $simulacionRemesa->concepto }}</p>
+                @endif
+            </div>
+        </div>
+        @endif
         @endif
     </div>
 </div>

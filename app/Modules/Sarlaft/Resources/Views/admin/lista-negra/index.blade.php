@@ -1,12 +1,12 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Lista Negra Interna')
+@section('title', 'Lista Restictiva Interna')
 
 @section('content')
 <div class="card shadow-sm">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <h6 class="mb-0"><i class="fas fa-user-slash"></i> Registros Lista Negra</h6>
-        <a href="{{ route('sarlaft.lista-negra.create') }}" class="btn btn-sm btn-primary">
+        <h6 class="mb-0"><i class="fas fa-user-slash"></i> Registros Lista Restrictiva</h6>
+        <a href="{{ route('sarlaft.lista-negra.create') }}" class="btn btn-sm btn-success">
             <i class="fas fa-plus"></i> Agregar Persona
         </a>
     </div>
@@ -41,11 +41,11 @@
                         <td>{{ $registro->created_at->format('d/m/Y') }}</td>
                         <td>
                             <div class="btn-group btn-group-sm">
-                                <a href="{{ route('sarlaft.lista-negra.show', $registro) }}" class="btn btn-outline-primary"><i class="bi bi-eye"></i></a>
-                                <a href="{{ route('sarlaft.lista-negra.edit', $registro) }}" class="btn btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+                                <a href="{{ route('sarlaft.lista-negra.show', $registro) }}" class="btn btn-dark"><i class="fas fa-eye"></i></a>
+                                <a href="{{ route('sarlaft.lista-negra.edit', $registro) }}" class="btn btn-success"><i class="fas fa-edit"></i></a>
                                 <form action="{{ route('sarlaft.lista-negra.destroy', $registro) }}" method="POST" class="d-inline" onsubmit="return confirm('Eliminar este registro?')">
                                     @csrf @method('DELETE')
-                                    <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i></button>
+                                    <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
                                 </form>
                             </div>
                         </td>

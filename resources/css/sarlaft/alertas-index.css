@@ -1,0 +1,649 @@
+.sarlaft-alerts-breadcrumb {
+    margin-bottom: 1rem;
+}
+
+.sarlaft-alerts-breadcrumb .breadcrumb {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.8rem 1rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(194, 198, 212, 0.3);
+    box-shadow: 0 10px 24px rgba(0, 26, 64, 0.06);
+    backdrop-filter: blur(10px);
+}
+
+.sarlaft-alerts-breadcrumb .breadcrumb-item,
+.sarlaft-alerts-breadcrumb .breadcrumb-item.active {
+    color: #667085;
+    font-size: 0.85rem;
+}
+
+.sarlaft-alerts-breadcrumb .breadcrumb-item + .breadcrumb-item::before {
+    color: #9aa4b2;
+    float: none;
+}
+
+.sarlaft-alerts-breadcrumb a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #003f87;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.sarlaft-alerts-breadcrumb .breadcrumb-item.active {
+    color: #111827;
+    font-weight: 700;
+}
+
+.sarlaft-alerts-page {
+    --sarlaft-primary: #003f87;
+    --sarlaft-primary-strong: #0056b3;
+    --sarlaft-success: #006d41;
+    --sarlaft-warning: #725400;
+    --sarlaft-danger: #ba1a1a;
+    --sarlaft-text: #191c1d;
+    --sarlaft-muted: #5b6472;
+    --sarlaft-surface: #ffffff;
+    --sarlaft-surface-soft: #f3f4f5;
+    --sarlaft-surface-muted: #eef2f6;
+    --sarlaft-border: rgba(194, 198, 212, 0.45);
+    --sarlaft-shadow: 0 18px 38px rgba(0, 26, 64, 0.08);
+    --sarlaft-shadow-soft: 0 12px 28px rgba(0, 26, 64, 0.05);
+    color: var(--sarlaft-text);
+}
+
+.sarlaft-alerts-hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.35rem;
+}
+
+.sarlaft-alerts-kicker {
+    display: inline-flex;
+    align-items: center;
+    margin-bottom: 0.35rem;
+    color: #64748b;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.sarlaft-alerts-title {
+    margin-bottom: 0.4rem;
+    color: var(--sarlaft-primary);
+    font-size: clamp(1.45rem, 1.7vw, 2.1rem);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1.08;
+}
+
+.sarlaft-alerts-description {
+    max-width: 46rem;
+    margin-bottom: 0;
+    color: #334155;
+    font-size: 0.92rem;
+}
+
+.sarlaft-alerts-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+.sarlaft-alerts-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.45rem;
+    padding-inline: 0.9rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 8px 18px rgba(0, 26, 64, 0.05);
+}
+
+.sarlaft-kpi-card {
+    position: relative;
+    height: 100%;
+    padding: 0.95rem 1rem 0.9rem;
+    border-radius: 0.95rem;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, #fdfefe 100%);
+    box-shadow: 0 10px 24px rgba(0, 26, 64, 0.06);
+    overflow: hidden;
+}
+
+.sarlaft-kpi-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 0.35rem;
+    border-radius: 999px;
+}
+
+.sarlaft-kpi-card-critical::before {
+    background: linear-gradient(180deg, #d92d20 0%, #ba1a1a 100%);
+}
+
+.sarlaft-kpi-card-success::before {
+    background: linear-gradient(180deg, #128a55 0%, #006d41 100%);
+}
+
+.sarlaft-kpi-card-warning::before {
+    background: linear-gradient(180deg, #8c5b00 0%, #553e00 100%);
+}
+
+.sarlaft-kpi-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.35rem;
+    height: 2.35rem;
+    margin-bottom: 0.7rem;
+    border-radius: 0.7rem;
+    font-size: 0.92rem;
+}
+
+.sarlaft-kpi-card-critical .sarlaft-kpi-icon {
+    background: #fbe2df;
+    color: #ba1a1a;
+}
+
+.sarlaft-kpi-card-success .sarlaft-kpi-icon {
+    background: #d8f8e6;
+    color: #006d41;
+}
+
+.sarlaft-kpi-card-warning .sarlaft-kpi-icon {
+    background: #ffe4a8;
+    color: #553e00;
+}
+
+.sarlaft-kpi-label {
+    margin-bottom: 0.5rem;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.sarlaft-kpi-card-critical .sarlaft-kpi-label {
+    color: #b42318;
+}
+
+.sarlaft-kpi-card-success .sarlaft-kpi-label {
+    color: #0d7a49;
+}
+
+.sarlaft-kpi-card-warning .sarlaft-kpi-label {
+    color: #6a4d00;
+}
+
+.sarlaft-kpi-value {
+    margin-bottom: 0.15rem;
+    font-size: clamp(1.4rem, 1.6vw, 1.85rem);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.05em;
+}
+
+.sarlaft-kpi-copy {
+    color: var(--sarlaft-muted);
+    font-size: 0.82rem;
+    line-height: 1.3;
+}
+
+.sarlaft-alerts-card {
+    border: 1px solid rgba(0, 94, 184, 0.12);
+    border-radius: 0.65rem;
+    overflow: hidden;
+    background: var(--sarlaft-surface);
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+}
+
+.sarlaft-filter-shell {
+    padding: 1rem 1.25rem;
+    background: linear-gradient(180deg, rgba(248, 249, 250, 0.96) 0%, rgba(255, 255, 255, 0.98) 100%);
+    border-bottom: 1px solid rgba(0, 94, 184, 0.08);
+}
+
+.sarlaft-filter-shell .form-label {
+    margin-bottom: 0.45rem;
+    color: #455062;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.sarlaft-search-control {
+    position: relative;
+}
+
+.sarlaft-search-control i {
+    position: absolute;
+    top: 50%;
+    left: 1rem;
+    transform: translateY(-50%);
+    color: #98a2b3;
+}
+
+.sarlaft-search-control .form-control,
+.sarlaft-filter-shell .form-select {
+    min-height: 2.55rem;
+    border-color: rgba(194, 198, 212, 0.6);
+    border-radius: 0.55rem;
+    background-color: #fff;
+    box-shadow: none;
+    font-size: 0.88rem;
+}
+
+.sarlaft-search-control .form-control {
+    padding-left: 2.8rem;
+}
+
+.sarlaft-search-control .form-control:focus,
+.sarlaft-filter-shell .form-select:focus {
+    border-color: rgba(0, 63, 135, 0.45);
+    box-shadow: 0 0 0 0.2rem rgba(0, 63, 135, 0.12);
+}
+
+.sarlaft-filter-actions {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.sarlaft-filter-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.55rem;
+    padding-inline: 0.9rem;
+    border-radius: 0.55rem;
+    font-size: 0.88rem;
+}
+
+.sarlaft-results-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.7rem 1.25rem;
+    background: #f8fbff;
+    color: #344054;
+    font-size: 0.82rem;
+    border-bottom: 1px solid rgba(0, 94, 184, 0.08);
+}
+
+.sarlaft-results-filters {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+.sarlaft-results-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0.55rem;
+    border-radius: 999px;
+    background: rgba(0, 63, 135, 0.1);
+    color: var(--sarlaft-primary);
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.sarlaft-empty-state {
+    display: grid;
+    justify-items: center;
+    gap: 0.85rem;
+    padding: 3.5rem 1.5rem;
+    text-align: center;
+}
+
+.sarlaft-empty-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 4.5rem;
+    height: 4.5rem;
+    border-radius: 1.4rem;
+    background: rgba(0, 63, 135, 0.08);
+    color: var(--sarlaft-primary);
+    font-size: 1.4rem;
+}
+
+.sarlaft-empty-state h3 {
+    margin-bottom: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.sarlaft-alerts-table {
+    margin-bottom: 0;
+}
+
+.sarlaft-alerts-table thead th {
+    padding: 0.7rem 0.85rem;
+    border-bottom: 0;
+    color: #fff;
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.sarlaft-alerts-table tbody td {
+    padding: 0.72rem 0.85rem;
+    border-top: 1px solid rgba(13, 110, 253, 0.05);
+    vertical-align: middle;
+}
+
+.sarlaft-alerts-table tbody tr:hover {
+    background: #eef5ff;
+}
+
+.sarlaft-row-id {
+    color: var(--sarlaft-primary);
+    font-size: 0.84rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+.sarlaft-date-block {
+    display: grid;
+    gap: 0.05rem;
+    min-width: 4.8rem;
+}
+
+.sarlaft-date-block span {
+    font-weight: 700;
+}
+
+.sarlaft-date-block small,
+.sarlaft-cell-meta,
+.sarlaft-cell-note {
+    color: var(--sarlaft-muted);
+    font-size: 0.72rem;
+}
+
+.sarlaft-person-name {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.sarlaft-operation-pill,
+.sarlaft-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 4.35rem;
+    padding: 0.22rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.sarlaft-operation-pill.is-default {
+    background: rgba(0, 63, 135, 0.12);
+    color: var(--sarlaft-primary);
+}
+
+.sarlaft-operation-pill.is-pasaje {
+    background: rgba(0, 109, 65, 0.12);
+    color: #006d41;
+}
+
+.sarlaft-operation-pill.is-remesa {
+    background: rgba(114, 84, 0, 0.15);
+    color: #725400;
+}
+
+.sarlaft-result {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.38rem;
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.sarlaft-result.is-danger {
+    color: #c21c1c;
+}
+
+.sarlaft-result.is-success {
+    color: #0f7a4b;
+}
+
+.sarlaft-result.is-muted {
+    color: #667085;
+}
+
+.sarlaft-pill-risk.is-critical {
+    background: #fbe2df;
+    color: #93000a;
+}
+
+.sarlaft-pill-risk.is-high {
+    background: #ffd6d1;
+    color: #b42318;
+}
+
+.sarlaft-pill-risk.is-medium {
+    background: #ffe4a8;
+    color: #6a4d00;
+}
+
+.sarlaft-pill-risk.is-low {
+    background: #d8f8e6;
+    color: #006d41;
+}
+
+.sarlaft-pill-state.is-pending {
+    background: #ffe2a5;
+    color: #6f5000;
+}
+
+.sarlaft-pill-state.is-review {
+    background: #d7e8ff;
+    color: #0b4ea3;
+}
+
+.sarlaft-pill-state.is-attended {
+    background: #d8f8e6;
+    color: #006d41;
+}
+
+.sarlaft-pill-state.is-dismissed {
+    background: #e5e7eb;
+    color: #4b5563;
+}
+
+.sarlaft-link-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.sarlaft-link-group a {
+    color: var(--sarlaft-primary);
+    font-size: 0.76rem;
+    font-weight: 700;
+    text-decoration: underline;
+    text-decoration-thickness: 0.08rem;
+    text-underline-offset: 0.18rem;
+}
+
+.sarlaft-meta-separator {
+    display: inline-block;
+    width: 0.28rem;
+    height: 0.28rem;
+    margin-inline: 0.45rem;
+    border-radius: 999px;
+    background: rgba(91, 100, 114, 0.6);
+}
+
+.sarlaft-action-btn {
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border-radius: 0.55rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sarlaft-pagination-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.8rem 1.25rem;
+    background: #fff;
+    border-top: 1px solid rgba(0, 94, 184, 0.08);
+}
+
+.sarlaft-pagination-meta {
+    color: var(--sarlaft-muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.sarlaft-pagination-bar .pagination {
+    margin-bottom: 0;
+    gap: 0.35rem;
+}
+
+.sarlaft-pagination-bar .page-link {
+    border: 0;
+    border-radius: 0.75rem;
+    color: #475467;
+    box-shadow: none;
+}
+
+.sarlaft-pagination-bar .page-item.active .page-link {
+    background: var(--sarlaft-primary);
+    color: #fff;
+}
+
+[data-bs-theme="dark"] .sarlaft-alerts-breadcrumb .breadcrumb {
+    background: rgba(17, 27, 45, 0.92);
+    border-color: rgba(36, 54, 82, 0.7);
+    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.35);
+}
+
+[data-bs-theme="dark"] .sarlaft-alerts-breadcrumb .breadcrumb-item,
+[data-bs-theme="dark"] .sarlaft-alerts-breadcrumb .breadcrumb-item.active {
+    color: #b9c4d4;
+}
+
+[data-bs-theme="dark"] .sarlaft-alerts-breadcrumb a {
+    color: #8fc1ff;
+}
+
+[data-bs-theme="dark"] .sarlaft-alerts-page {
+    --sarlaft-text: #f5f8ff;
+    --sarlaft-muted: #9fb3c9;
+    --sarlaft-surface: #111b2d;
+    --sarlaft-surface-soft: #16233b;
+    --sarlaft-surface-muted: #132033;
+    --sarlaft-border: rgba(36, 54, 82, 0.8);
+    --sarlaft-shadow: 0 24px 40px rgba(0, 0, 0, 0.35);
+    --sarlaft-shadow-soft: 0 14px 28px rgba(0, 0, 0, 0.28);
+}
+
+[data-bs-theme="dark"] .sarlaft-alerts-description,
+[data-bs-theme="dark"] .sarlaft-kpi-copy,
+[data-bs-theme="dark"] .sarlaft-results-bar,
+[data-bs-theme="dark"] .sarlaft-date-block small,
+[data-bs-theme="dark"] .sarlaft-cell-meta,
+[data-bs-theme="dark"] .sarlaft-cell-note,
+[data-bs-theme="dark"] .sarlaft-pagination-meta {
+    color: #9fb3c9;
+}
+
+[data-bs-theme="dark"] .sarlaft-kpi-card {
+    background: linear-gradient(180deg, rgba(17, 27, 45, 0.98) 0%, rgba(15, 23, 42, 0.98) 100%);
+}
+
+[data-bs-theme="dark"] .sarlaft-filter-shell,
+[data-bs-theme="dark"] .sarlaft-pagination-bar {
+    background: linear-gradient(180deg, rgba(22, 35, 59, 0.95) 0%, rgba(17, 27, 45, 0.98) 100%);
+}
+
+[data-bs-theme="dark"] .sarlaft-results-bar {
+    background: #0f1929;
+}
+
+[data-bs-theme="dark"] .sarlaft-alerts-card {
+    border-color: rgba(79, 163, 255, 0.18);
+}
+
+[data-bs-theme="dark"] .sarlaft-search-control .form-control,
+[data-bs-theme="dark"] .sarlaft-filter-shell .form-select {
+    background: #0f172a;
+    border-color: rgba(36, 54, 82, 0.95);
+    color: #f5f8ff;
+}
+
+[data-bs-theme="dark"] .sarlaft-alerts-table tbody tr:hover {
+    background: #16233b;
+}
+
+[data-bs-theme="dark"] .sarlaft-person-name,
+[data-bs-theme="dark"] .sarlaft-empty-state h3 {
+    color: #f5f8ff;
+}
+
+[data-bs-theme="dark"] .sarlaft-pagination-bar .page-link {
+    background: #16233b;
+    color: #d7deea;
+}
+
+@media (max-width: 991.98px) {
+    .sarlaft-alerts-hero,
+    .sarlaft-results-bar,
+    .sarlaft-pagination-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .sarlaft-alerts-actions,
+    .sarlaft-filter-actions,
+    .sarlaft-results-filters {
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .sarlaft-alerts-breadcrumb .breadcrumb {
+        display: flex;
+        flex-wrap: wrap;
+        border-radius: 1rem;
+    }
+
+    .sarlaft-alerts-title {
+        font-size: 2rem;
+    }
+
+    .sarlaft-filter-shell,
+    .sarlaft-results-bar,
+    .sarlaft-pagination-bar {
+        padding-inline: 1rem;
+    }
+
+    .sarlaft-alerts-table thead th,
+    .sarlaft-alerts-table tbody td {
+        padding-inline: 0.85rem;
+    }
+}

@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="d-flex justify-content-end mb-3">
-    <a href="{{ route('sarlaft.bloqueos.index') }}" class="btn btn-sm btn-outline-secondary">
+    <a href="{{ route('sarlaft.bloqueos.index') }}" class="btn btn-sm btn-dark">
         <i class="fas fa-arrow-left"></i> Volver
     </a>
 </div>

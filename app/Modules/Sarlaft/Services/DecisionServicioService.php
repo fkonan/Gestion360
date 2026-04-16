@@ -10,6 +10,10 @@ use Illuminate\Support\Facades\DB;
 
 class DecisionServicioService
 {
+    public function __construct(
+        private readonly PoliticaSarlaftService $politicaSarlaftService,
+    ) {}
+
     public function resolverDecisionActiva(string $tipoDocumento, string $numeroDocumento): ?Alerta
     {
         return Alerta::query()
@@ -25,16 +29,23 @@ class DecisionServicioService
     /**
      * @param  array<string, mixed>  $datos
      */
-    public function aplicarDecisionEnAtencion(Alerta $alerta, array $datos, int $userId): void
-    {
+    public function aplicarDecisionEnAtencion(
+        Alerta $alerta,
+        array $datos,
+        ?int $userId,
+        bool $esAutomatica = false,
+    ): void {
         $decisionServicio = (string) $datos['decision_servicio'];
         $decisionActiva = $decisionServicio !== 'sin_decision';
         $documento = $this->resolverDocumentoAlerta($alerta);
+        $momentoAtencion = now();
 
         DB::connection('mysql-sarlaft')->transaction(function () use (
             $alerta,
             $datos,
             $userId,
+            $esAutomatica,
+            $momentoAtencion,
             $decisionServicio,
             $decisionActiva,
             $documento,
@@ -55,17 +66,36 @@ class DecisionServicioService
             $payload = [
                 'estado' => $datos['estado'],
                 'notas' => $datos['notas'] ?? $alerta->notas,
-                'atendida_por' => $userId,
-                'fecha_atencion' => now(),
+                'atendida_por' => $userId ?? $alerta->atendida_por,
+                'fecha_atencion' => $momentoAtencion,
                 'tipo_documento' => $documento['tipo_documento'],
                 'numero_documento' => $documento['numero_documento'],
                 'decision_servicio' => $decisionServicio,
                 'decision_activa' => $decisionActiva,
             ];
 
+            $evidenciasActuales = is_array($alerta->evidencias) ? $alerta->evidencias : [];
+            $evidenciasNuevas = isset($datos['evidencias']) && is_array($datos['evidencias'])
+                ? array_values($datos['evidencias'])
+                : [];
+
+            if ($evidenciasNuevas !== []) {
+                $payload['evidencias'] = array_merge($evidenciasActuales, $evidenciasNuevas);
+            }
+
             if (in_array($decisionServicio, ['sin_decision', 'permitir_una_operacion'], true)) {
                 $payload['decision_consumida_at'] = null;
                 $payload['decision_consumida_consulta_id'] = null;
+            }
+
+            if ($esAutomatica) {
+                $contextoOperacion = is_array($alerta->contexto_operacion) ? $alerta->contexto_operacion : [];
+                $contextoOperacion['escalada_automatica'] = true;
+                $contextoOperacion['escalada_automatica_at'] = $momentoAtencion->toIso8601String();
+
+                $payload['escalada_automatica'] = true;
+                $payload['escalada_automatica_at'] = $momentoAtencion;
+                $payload['contexto_operacion'] = $contextoOperacion;
             }
 
             $alerta->update($payload);
@@ -112,6 +142,14 @@ class DecisionServicioService
         }
 
         $datosPersona = is_array($alerta->datos_persona) ? $alerta->datos_persona : [];
+        $politica = $this->politicaSarlaftService->obtener();
+        $creadoPor = $alerta->atendida_por !== null
+            ? (int) $alerta->atendida_por
+            : (int) ($politica['auto_user_id'] ?? config('sarlaft.auto_user_id', 1));
+
+        if ($creadoPor <= 0) {
+            $creadoPor = 1;
+        }
 
         Bloqueo::create([
             'tipo_documento' => $alerta->tipo_documento,
@@ -120,7 +158,7 @@ class DecisionServicioService
             'tipo_bloqueo' => 'automatico',
             'estado' => 'bloqueado',
             'motivo_bloqueo' => 'Alerta #'.$alerta->id.' - decision de cumplimiento: bloquear.',
-            'creado_por' => (int) ($alerta->atendida_por ?? 0),
+            'creado_por' => $creadoPor,
         ]);
     }
 

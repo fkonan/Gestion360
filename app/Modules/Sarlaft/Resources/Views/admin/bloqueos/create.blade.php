@@ -7,7 +7,7 @@
         <div class="card shadow-sm">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h6 class="mb-0"><i class="fas fa-user-lock"></i> Crear Bloqueo</h6>
-                <a href="{{ route('sarlaft.bloqueos.index') }}" class="btn btn-sm btn-outline-secondary">
+                <a href="{{ route('sarlaft.bloqueos.index') }}" class="btn btn-sm btn-dark">
                     <i class="fas fa-arrow-left"></i> Volver
                 </a>
             </div>
@@ -52,7 +52,7 @@
                             <input type="text" class="form-control" value="Bloqueado" readonly>
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-danger">
+                    <button type="submit" class="btn btn-success">
                         <i class="fas fa-lock"></i> Crear Bloqueo
                     </button>
                 </form>

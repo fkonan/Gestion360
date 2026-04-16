@@ -5,7 +5,7 @@
 <div class="card shadow-sm">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h6 class="mb-0"><i class="fas fa-lock"></i> Bloqueos Registrados</h6>
-        <a href="{{ route('sarlaft.bloqueos.create') }}" class="btn btn-sm btn-primary">
+        <a href="{{ route('sarlaft.bloqueos.create') }}" class="btn btn-sm btn-success">
             <i class="fas fa-plus"></i> Nuevo Bloqueo
         </a>
     </div>
@@ -39,7 +39,7 @@
                         <td>{{ trim(($bloqueo->creadoPor->persona?->PerNombres ?? '') . ' ' . ($bloqueo->creadoPor->persona?->PerApellidos ?? '')) ?: '-' }}</td>
                         <td>{{ $bloqueo->created_at->format('d/m/Y H:i') }}</td>
                         <td>
-                            <a href="{{ route('sarlaft.bloqueos.show', $bloqueo) }}" class="btn btn-sm btn-outline-primary">
+                            <a href="{{ route('sarlaft.bloqueos.show', $bloqueo) }}" class="btn btn-sm btn-dark">
                                 <i class="fas fa-eye"></i>
                             </a>
                         </td>

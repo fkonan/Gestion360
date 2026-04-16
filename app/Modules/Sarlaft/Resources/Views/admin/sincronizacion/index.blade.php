@@ -23,7 +23,6 @@
                         <label for="tipo" class="form-label">Tipo <span class="text-danger">*</span></label>
                         <select name="tipo" id="tipo" class="form-select @error('tipo') is-invalid @enderror" required>
                             <option value="vinculante" @selected(old('tipo') === 'vinculante')>Vinculante</option>
-                            <option value="recomendada" @selected(old('tipo') === 'recomendada')>Recomendada</option>
                             <option value="interna" @selected(old('tipo') === 'interna')>Interna</option>
                         </select>
                         @error('tipo') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -46,7 +45,7 @@
                         <label class="form-check-label" for="activa">Lista activa</label>
                     </div>
 
-                    <button type="submit" class="btn btn-primary w-100">
+                    <button type="submit" class="btn btn-success w-100">
                         <i class="bi bi-save"></i> Guardar Lista
                     </button>
                 </form>
@@ -58,14 +57,44 @@
         <div class="card shadow-sm">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h6 class="mb-0"><i class="bi bi-list-check"></i> Listas Registradas</h6>
-                <form action="{{ route('sarlaft.sincronizacion.listas.sincronizar-config') }}" method="POST">
-                    @csrf
-                    <button type="submit" class="btn btn-sm btn-outline-primary">
-                        <i class="bi bi-arrow-repeat"></i> Cargar desde config/listas.php
-                    </button>
-                </form>
+                <div class="d-flex align-items-center gap-2">
+                    @if($isDev)
+                    <form
+                        action="{{ route('sarlaft.sincronizacion.sincronizar-ahora') }}"
+                        method="POST"
+                        onsubmit="this.querySelector('[data-sync-text]').classList.add('d-none'); this.querySelector('[data-sync-loader]').classList.remove('d-none'); this.querySelector('button[type=submit]').setAttribute('disabled','disabled');"
+                    >
+                        @csrf
+                        <button
+                            type="submit"
+                            class="btn btn-sm btn-success"
+                            @disabled(! $puedeSincronizarAhora)
+                            title="{{ $puedeSincronizarAhora ? 'Sincronizar ahora' : 'Ya ejecutada hoy' }}"
+                        >
+                            <span data-sync-text>
+                                <i class="fas fa-sync-alt"></i> Sincronizar ahora (dev)
+                            </span>
+                            <span data-sync-loader class="d-none">
+                                <i class="fas fa-spinner fa-spin"></i> Encolando...
+                            </span>
+                        </button>
+                    </form>
+                    @endif
+
+                    <form action="{{ route('sarlaft.sincronizacion.listas.sincronizar-config') }}" method="POST">
+                        @csrf
+                        <button type="submit" class="btn btn-sm btn-dark">
+                            <i class="bi bi-arrow-repeat"></i> Cargar desde config/listas.php
+                        </button>
+                    </form>
+                </div>
             </div>
             <div class="card-body p-0">
+                @if($isDev && ! $puedeSincronizarAhora)
+                <div class="alert alert-warning mb-0 rounded-0 border-0">
+                    La sincronizacion manual de hoy ya fue ejecutada. Se habilita nuevamente manana.
+                </div>
+                @endif
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
