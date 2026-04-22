@@ -438,7 +438,7 @@ class PagoService
                 return $mock->pago($idPagoDetalle, $clienteData, $runtime);
             }
 
-            return $apiAsopagos->retirar(
+           /*  return $apiAsopagos->retirar(
                 $clienteData['tipoIdentificacion'],
                 $clienteData['identificacion'],
                 $respuesta['additionalData']['saldo'],
@@ -446,9 +446,9 @@ class PagoService
                 68001, // Municipio fijo para Cajasan
                 $idPagoDetalle,
                 $idPagoDetalle
-            );
+            ); */
 
-           /*  return $apiAsopagos->retirar(
+            return $apiAsopagos->retirar(
                 $clienteData['tipoIdentificacion'],
                 $clienteData['identificacion'],
                 $respuesta['additionalData']['saldo'],
@@ -456,7 +456,7 @@ class PagoService
                 $clienteData['municipio'],
                 $idPagoDetalle,
                 $idPagoDetalle
-            ); */
+            );
         } catch (Exception $e) {
             PagosRecaudosLogger::exception('Error al retirar en proveedor', $e, [
                 'operation' => 'pago',
@@ -514,8 +514,8 @@ class PagoService
             'identification_type' => $clienteData['tipoIdentificacion'] ?? null,
             'identification' => isset($clienteData['identificacion']) ? (string) $clienteData['identificacion'] : null,
             'amount_tran' => isset($respuesta['additionalData']['saldo']) ? (string) $respuesta['additionalData']['saldo'] : null,
-            'state_code' => isset($clienteData['departamento']) ? (int) $clienteData['departamento'] : null,
-            'city_code' => isset($clienteData['municipio']) ? (int) $clienteData['municipio'] : null,
+            'state_code' => isset($clienteData['departamento']) ? (string) $clienteData['departamento'] : null,
+            'city_code' => isset($clienteData['municipio']) ? (string) $clienteData['municipio'] : null,
         ];
     }
 }

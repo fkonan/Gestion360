@@ -30,7 +30,8 @@ class EventoEmpleadoApiController extends Controller
 
     if ($validator->fails()) {
       return response()->json([
-        'ok' => false,
+        'ok' => true,
+        'status' => 'INVALIDO',
         'error' => $validator->errors()->first(),
       ], 422);
     }
@@ -56,8 +57,12 @@ class EventoEmpleadoApiController extends Controller
       );
 
       if (($resultado['ok'] ?? false) !== true) {
+        $status = strtoupper((string) ($resultado['status'] ?? ''));
+        $httpStatus = (int) ($resultado['http_status'] ?? 422);
+        $esErrorTecnico = $status === 'ERROR' || $httpStatus >= 500;
+
         return response()->json([
-          'ok' => false,
+          'ok' => !$esErrorTecnico,
           'error' => $resultado['error'] ?? 'No se pudo guardar el evento.',
           'status' => $resultado['status'] ?? null,
           'evento' => $resultado['evento'] ?? null,
@@ -70,7 +75,7 @@ class EventoEmpleadoApiController extends Controller
           ],
           'origen' => $resultado['origen'] ?? 'api',
           'data' => $resultado['data'] ?? null,
-        ], (int) ($resultado['http_status'] ?? 422));
+        ], $esErrorTecnico ? max($httpStatus, 500) : 200);
       }
 
       return response()->json([
@@ -86,6 +91,7 @@ class EventoEmpleadoApiController extends Controller
         ],
         'fecha_evento' => $resultado['fecha_evento'] ?? null,
         'data' => $resultado['data'] ?? null,
+        'notificacion' => $resultado['notificacion'] ?? null,
         'origen' => $resultado['origen'] ?? 'api',
       ]);
     }
@@ -93,6 +99,7 @@ class EventoEmpleadoApiController extends Controller
     $total = count($identificaciones);
     $exitosos = 0;
     $fallidos = 0;
+    $erroresTecnicos = 0;
 
     foreach ($identificaciones as $identificacion) {
       $resultado = $this->registrarEventoEmpleadoService->registrar(
@@ -110,18 +117,26 @@ class EventoEmpleadoApiController extends Controller
       }
 
       $fallidos++;
+      $status = strtoupper((string) ($resultado['status'] ?? ''));
+      $httpStatus = (int) ($resultado['http_status'] ?? 422);
+      if ($status === 'ERROR' || $httpStatus >= 500) {
+        $erroresTecnicos++;
+      }
     }
 
     return response()->json([
-      'ok' => $fallidos === 0,
-      'status' => $fallidos === 0 ? 'OK' : ($exitosos > 0 ? 'PARCIAL' : 'RECHAZADO'),
+      'ok' => $erroresTecnicos === 0,
+      'status' => $erroresTecnicos > 0
+        ? 'ERROR'
+        : ($fallidos === 0 ? 'OK' : ($exitosos > 0 ? 'PARCIAL' : 'RECHAZADO')),
       'resumen' => [
         'total' => $total,
         'exitosos' => $exitosos,
         'fallidos' => $fallidos,
+        'errores_tecnicos' => $erroresTecnicos,
       ],
       'origen' => $origen,
-    ]);
+    ], $erroresTecnicos > 0 ? 500 : 200);
   }
 
   private function normalizarIdentificaciones(array $payload): array

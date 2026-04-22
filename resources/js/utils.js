@@ -65,12 +65,32 @@ export function handleMenuActive() {
 
     $('ul.nav-sidebar a').filter(function() {
         let href = this.href;
-        return href !== window.location.origin + "/" && url.startsWith(href);
+        let activeMatch = this.dataset.activeMatch || 'prefix';
+
+        if (href === window.location.origin + "/") {
+            return false;
+        }
+
+        if (activeMatch === 'exact') {
+            return url === href;
+        }
+
+        return url.startsWith(href);
     }).addClass('active');
 
     $('ul.nav-treeview a').filter(function() {
         let href = this.href;
-        return href !== window.location.origin + "/" && url.startsWith(href);
+        let activeMatch = this.dataset.activeMatch || 'prefix';
+
+        if (href === window.location.origin + "/") {
+            return false;
+        }
+
+        if (activeMatch === 'exact') {
+            return url === href;
+        }
+
+        return url.startsWith(href);
     }).parentsUntil(".nav-sidebar > .nav-treeview").addClass('menu-open').prev('a').addClass('active');
 }
 

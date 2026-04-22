@@ -244,7 +244,7 @@ class ApiAsopagos
     }
   }
 
-  public function consultarSaldo(string $tipoDoc, string $documento, int $departamento, int $ciudad): array
+  public function consultarSaldo(string $tipoDoc, string $documento, int|string $departamento, int|string $ciudad): array
   {
     return $this->ejecutarTransaccion([
       'transactionType' => self::TRANSACTION_TYPE_CONSULTA,
@@ -256,7 +256,7 @@ class ApiAsopagos
     ]);
   }
 
-  public function retirar(string $tipoDoc, string $documento, string $monto, int $departamento, int $ciudad, int $transactionId, int $sequenceId): array
+  public function retirar(string $tipoDoc, string $documento, string $monto, int|string $departamento, int|string $ciudad, int $transactionId, int $sequenceId): array
   {
     $resultado = $this->ejecutarTransaccion([
       'transactionType' => self::TRANSACTION_TYPE_RETIRO,
@@ -337,7 +337,7 @@ class ApiAsopagos
     return $resultado;
   }
 
-  public function reversoRetiro(string $tipoDoc, string $documento, string $monto, int $departamento, int $ciudad, int $transactionId, int $sequenceId): array
+  public function reversoRetiro(string $tipoDoc, string $documento, string $monto, int|string $departamento, int|string $ciudad, int $transactionId, int $sequenceId): array
   {
     return $this->ejecutarTransaccion([
       'transactionType' => self::TRANSACTION_TYPE_REVERSO,
@@ -349,7 +349,7 @@ class ApiAsopagos
     ], $transactionId, $sequenceId);
   }
 
-  public function reversoRetiroFalloLocal(string $tipoDoc, string $documento, string $monto, int $departamento, int $ciudad, int $transactionId, int $sequenceId): array
+  public function reversoRetiroFalloLocal(string $tipoDoc, string $documento, string $monto, int|string $departamento, int|string $ciudad, int $transactionId, int $sequenceId): array
   {
     $resultado = $this->ejecutarTransaccion([
       'transactionType' => self::TRANSACTION_TYPE_REVERSO,

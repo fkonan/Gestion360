@@ -222,16 +222,43 @@ class PagoConsultaService
                     ->where('estborrado', 0)
                     ->firstOrFail();
 
-                $municipio = GenMunicipios::findOrFail($sucursal->mu_id);
+                $municipio = $this->buscarMunicipioConFallback($sucursal->mu_id);
 
                 return [
-                    'departamento' => (int) $municipio->do_codigo,
-                    'municipio' => (int) $municipio->codigo,
+                    'departamento' => $this->normalizarCodigoUbicacion($municipio->do_codigo, 2),
+                    'municipio' => $this->normalizarCodigoUbicacion($municipio->codigo, 5),
                 ];
             }
         );
 
-        return [(int) $ubicacion['departamento'], (int) $ubicacion['municipio']];
+        return [(string) $ubicacion['departamento'], (string) $ubicacion['municipio']];
+    }
+
+    private function buscarMunicipioConFallback(int|string|null $codigoMunicipio): GenMunicipios
+    {
+        $codigoOriginal = trim((string) $codigoMunicipio);
+        $municipio = GenMunicipios::where('codigo', $codigoOriginal)->first();
+
+        if (! $municipio && preg_match('/^\d{4}$/', $codigoOriginal) === 1) {
+            $municipio = GenMunicipios::where('codigo', '0'.$codigoOriginal)->first();
+        }
+
+        if (! $municipio) {
+            $municipio = GenMunicipios::where('codigo', $codigoOriginal)->firstOrFail();
+        }
+
+        return $municipio;
+    }
+
+    private function normalizarCodigoUbicacion(mixed $codigo, int $longitud): string
+    {
+        $valor = trim((string) $codigo);
+
+        if ($valor !== '' && ctype_digit($valor)) {
+            return str_pad($valor, $longitud, '0', STR_PAD_LEFT);
+        }
+
+        return $valor;
     }
 
     private function consultarSaldoApi(ApiAsopagos $apiAsopagos, array $clienteData, AsopagosRuntimeConfig $runtime): array
@@ -326,4 +353,3 @@ class PagoConsultaService
             : null;
     }
 }
-

@@ -35,12 +35,22 @@
 
     <div class="col">
       <x-card
+        color="bg-warning"
+        titulo="Camara IP"
+        descripcion="Vista de video RTSP"
+        icono="fa-video"
+        ruta="{{ route('camera.ip.preview') }}" />
+    </div>
+
+    <div class="col">
+      <x-card
         color="bg-secondary"
         titulo="Validar persona"
         descripcion="Verificacion informativa"
         icono="fa-user-shield"
         ruta="{{ route('face.verify') }}" />
     </div>
+
     @endif
   </div>
 </div>

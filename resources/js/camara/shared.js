@@ -12,6 +12,26 @@ export function clampNumber(value, min, max, fallback) {
   return parsed;
 }
 
+export function getSourceDimensions(sourceEl) {
+  if (!sourceEl) {
+    return { width: 0, height: 0 };
+  }
+
+  const width =
+    Number(sourceEl.videoWidth) ||
+    Number(sourceEl.naturalWidth) ||
+    Number(sourceEl.clientWidth) ||
+    0;
+
+  const height =
+    Number(sourceEl.videoHeight) ||
+    Number(sourceEl.naturalHeight) ||
+    Number(sourceEl.clientHeight) ||
+    0;
+
+  return { width, height };
+}
+
 export function getCsrfToken() {
   const meta = document.querySelector('meta[name="csrf-token"]');
   return meta ? meta.getAttribute('content') : '';
@@ -161,8 +181,9 @@ function normalizeBox(box, videoEl) {
     return null;
   }
   if (w > 1.5 || h > 1.5 || cx > 1.5 || cy > 1.5) {
-    const vw = videoEl?.videoWidth || videoEl?.clientWidth || 1;
-    const vh = videoEl?.videoHeight || videoEl?.clientHeight || 1;
+    const dims = getSourceDimensions(videoEl);
+    const vw = dims.width || 1;
+    const vh = dims.height || 1;
     cx = cx / vw;
     cy = cy / vh;
     w = w / vw;
@@ -259,8 +280,9 @@ export async function cropFacesToBlobs(videoEl, canvasEl, faces, {
   quality = 0.8,
 } = {}) {
   if (!videoEl || !canvasEl || !faces.length) return [];
-  const vw = videoEl.videoWidth || videoEl.clientWidth;
-  const vh = videoEl.videoHeight || videoEl.clientHeight;
+  const dims = getSourceDimensions(videoEl);
+  const vw = dims.width;
+  const vh = dims.height;
   if (!vw || !vh) return [];
   const ctx = canvasEl.getContext('2d');
   if (canvasEl.width !== size) canvasEl.width = size;
@@ -290,8 +312,9 @@ export async function cropFaceToBlob(videoEl, canvasEl, face, {
   quality = 0.8,
 } = {}) {
   if (!videoEl || !canvasEl || !face?.box) return null;
-  const vw = videoEl.videoWidth || videoEl.clientWidth;
-  const vh = videoEl.videoHeight || videoEl.clientHeight;
+  const dims = getSourceDimensions(videoEl);
+  const vw = dims.width;
+  const vh = dims.height;
   if (!vw || !vh) return null;
   const { xCenter, yCenter, width, height } = face.box;
   const pad = padding;
@@ -316,8 +339,9 @@ export async function captureFullFrameBlob(videoEl, canvasEl, {
   quality = 0.75,
 } = {}) {
   if (!videoEl || !canvasEl) return null;
-  const vw = videoEl.videoWidth || videoEl.clientWidth;
-  const vh = videoEl.videoHeight || videoEl.clientHeight;
+  const dims = getSourceDimensions(videoEl);
+  const vw = dims.width;
+  const vh = dims.height;
   if (!vw || !vh) return null;
   const ctx = canvasEl.getContext('2d');
   if (canvasEl.width !== width) canvasEl.width = width;

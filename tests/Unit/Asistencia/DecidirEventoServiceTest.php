@@ -11,7 +11,7 @@ class DecidirEventoServiceTest extends TestCase
 {
   public function test_permite_ingreso_en_rango_jornada_y_marca_llegada_tarde(): void
   {
-    $service = new DecidirEventoService();
+    $service = $this->crearService();
     $horarios = collect([
       $this->horario(10, '08:00:00', '17:00:00'),
     ]);
@@ -41,7 +41,7 @@ class DecidirEventoServiceTest extends TestCase
 
   public function test_llegada_tarde_solo_despues_de_5_minutos_de_hora_inicio(): void
   {
-    $service = new DecidirEventoService();
+    $service = $this->crearService();
     $horarios = collect([
       $this->horario(10, '08:00:00', '17:00:00'),
     ]);
@@ -68,7 +68,7 @@ class DecidirEventoServiceTest extends TestCase
 
   public function test_ingreso_se_habilita_desde_15_minutos_antes_de_hora_inicio(): void
   {
-    $service = new DecidirEventoService();
+    $service = $this->crearService();
     $horarios = collect([
       $this->horario(10, '07:00:00', '17:00:00'),
     ]);
@@ -96,7 +96,7 @@ class DecidirEventoServiceTest extends TestCase
 
   public function test_salida_solo_desde_hora_fin(): void
   {
-    $service = new DecidirEventoService();
+    $service = $this->crearService();
     $horarios = collect([
       $this->horario(10, '08:00:00', '17:00:00'),
     ]);
@@ -126,7 +126,7 @@ class DecidirEventoServiceTest extends TestCase
 
   public function test_salida_empareja_por_horario_cargo_id(): void
   {
-    $service = new DecidirEventoService();
+    $service = $this->crearService();
     $horarios = collect([
       $this->horario(10, '08:00:00', '12:00:00'),
       $this->horario(20, '09:00:00', '18:00:00'),
@@ -147,9 +147,120 @@ class DecidirEventoServiceTest extends TestCase
     $this->assertSame(20, $decision->horarioCargoId);
   }
 
+  public function test_jornada_nocturna_habilita_ingreso_desde_15_minutos_antes_y_en_madrugada(): void
+  {
+    $service = $this->crearService();
+    $horarios = collect([
+      $this->horario(10, '22:00:00', '06:00:00'),
+    ]);
+
+    $decisionAntesVentana = $service->decidirConDatos(
+      1,
+      Carbon::create(2026, 3, 2, 21, 44, 0),
+      $horarios,
+      collect()
+    );
+    $this->assertSame('RECHAZADO', $decisionAntesVentana->status);
+    $this->assertSame('fuera de horarios', $decisionAntesVentana->motivo);
+
+    $decisionInicioVentana = $service->decidirConDatos(
+      1,
+      Carbon::create(2026, 3, 2, 21, 45, 0),
+      $horarios,
+      collect()
+    );
+    $this->assertSame('OK', $decisionInicioVentana->status);
+    $this->assertSame(2, $decisionInicioVentana->evento);
+    $this->assertSame(10, $decisionInicioVentana->horarioCargoId);
+
+    $decisionMadrugada = $service->decidirConDatos(
+      1,
+      Carbon::create(2026, 3, 3, 1, 0, 0),
+      $horarios,
+      collect()
+    );
+    $this->assertSame('OK', $decisionMadrugada->status);
+    $this->assertSame(2, $decisionMadrugada->evento);
+    $this->assertSame(10, $decisionMadrugada->horarioCargoId);
+  }
+
+  public function test_jornada_nocturna_no_permite_salida_antes_de_hora_fin_y_si_despues(): void
+  {
+    $service = $this->crearService();
+    $horarios = collect([
+      $this->horario(10, '22:00:00', '06:00:00'),
+    ]);
+    $eventosAbiertos = collect([
+      $this->evento(2, 10, '2026-03-02 22:05:00'),
+    ]);
+
+    $decisionAntes = $service->decidirConDatos(
+      1,
+      Carbon::create(2026, 3, 2, 23, 0, 0),
+      $horarios,
+      $eventosAbiertos
+    );
+    $this->assertSame('RECHAZADO', $decisionAntes->status);
+    $this->assertSame('aun no puede salir', $decisionAntes->motivo);
+
+    $decisionDespues = $service->decidirConDatos(
+      1,
+      Carbon::create(2026, 3, 3, 6, 1, 0),
+      $horarios,
+      $eventosAbiertos
+    );
+    $this->assertSame('OK', $decisionDespues->status);
+    $this->assertSame(1, $decisionDespues->evento);
+    $this->assertSame(10, $decisionDespues->horarioCargoId);
+  }
+
+  public function test_jornada_nocturna_olvido_salida_en_ciclo_anterior_no_bloquea_nuevo_ingreso(): void
+  {
+    $service = $this->crearService();
+    $horarios = collect([
+      $this->horario(10, '22:00:00', '02:00:00'),
+    ]);
+    $eventos = collect([
+      $this->evento(2, 10, '2026-03-02 22:05:00'),
+    ]);
+
+    $decision = $service->decidirConDatos(
+      1,
+      Carbon::create(2026, 3, 3, 22, 0, 0),
+      $horarios,
+      $eventos
+    );
+
+    $this->assertSame('OK', $decision->status);
+    $this->assertSame(2, $decision->evento);
+    $this->assertSame(10, $decision->horarioCargoId);
+  }
+
+  public function test_jornada_nocturna_cargo_especial_olvido_salida_ciclo_anterior_permite_nuevo_ingreso(): void
+  {
+    $service = $this->crearService([3, 8]);
+    $horarios = collect([
+      $this->horarioConJornada(10, 8, 1, '22:00:00', '04:00:00'),
+    ]);
+    $eventos = collect([
+      $this->evento(2, 10, '2026-03-02 22:05:00'),
+    ]);
+
+    $decision = $service->decidirConDatos(
+      8,
+      Carbon::create(2026, 3, 3, 22, 0, 0),
+      $horarios,
+      $eventos
+    );
+
+    $this->assertSame('OK', $decision->status);
+    $this->assertSame(2, $decision->evento);
+    $this->assertSame(10, $decision->horarioCargoId);
+  }
+
   public function test_cargo_regular_convierte_salida_bloqueada_en_ingreso_de_jornada_activa(): void
   {
-    $service = new DecidirEventoService();
+    $service = $this->crearService();
     $horarios = collect([
       $this->horario(1, '07:00:00', '10:27:00'),
       $this->horario(2, '10:20:00', '17:30:00'),
@@ -172,7 +283,7 @@ class DecidirEventoServiceTest extends TestCase
 
   public function test_cargo_8_mantiene_salida_aunque_este_en_otra_jornada_valida(): void
   {
-    $service = new DecidirEventoService();
+    $service = $this->crearService([3, 8]);
     $horarios = collect([
       $this->horario(1, '07:00:00', '10:27:00'),
       $this->horario(2, '10:20:00', '17:30:00'),
@@ -195,7 +306,7 @@ class DecidirEventoServiceTest extends TestCase
 
   public function test_si_hay_varios_ingresos_abiertos_evalua_todos_antes_de_rechazar(): void
   {
-    $service = new DecidirEventoService();
+    $service = $this->crearService();
     $horarios = collect([
       $this->horario(1, '08:00:00', '16:30:00'),
       $this->horario(2, '12:00:00', '17:00:00'),
@@ -219,7 +330,7 @@ class DecidirEventoServiceTest extends TestCase
 
   public function test_no_permite_salida_tardia_de_jornada_anterior_si_ya_hubo_ingreso_posterior_en_otra_jornada(): void
   {
-    $service = new DecidirEventoService();
+    $service = $this->crearService();
     $horarios = collect([
       $this->horario(1, '07:00:00', '12:00:00'),
       $this->horario(2, '14:00:00', '17:00:00'),
@@ -246,7 +357,7 @@ class DecidirEventoServiceTest extends TestCase
 
   public function test_si_no_hay_ingreso_previo_permite_ingreso_dentro_de_hora_inicio_y_hora_fin(): void
   {
-    $service = new DecidirEventoService();
+    $service = $this->crearService();
     $horarios = collect([
       $this->horario(1, '07:00:00', '12:00:00'),
       $this->horario(2, '12:00:00', '17:30:00'),
@@ -266,13 +377,13 @@ class DecidirEventoServiceTest extends TestCase
 
   public function test_cargo_8_no_permite_reingreso_despues_de_salida_del_dia(): void
   {
-    $service = new DecidirEventoService();
+    $this->forzarHorasBloqueoReingreso(7);
+    $service = $this->crearService([3, 8]);
     $horarios = collect([
       $this->horarioConJornada(1, 8, 1, '07:00:00', '12:00:00'),
       $this->horarioConJornada(2, 8, 1, '12:00:00', '17:30:00'),
     ]);
     $eventos = collect([
-      $this->evento(2, 1, '2026-03-03 07:30:00'),
       $this->evento(1, 1, '2026-03-03 12:30:00'),
     ]);
 
@@ -289,13 +400,13 @@ class DecidirEventoServiceTest extends TestCase
 
   public function test_cargo_8_permite_reingreso_despues_de_7_horas(): void
   {
-    $service = new DecidirEventoService();
+    $this->forzarHorasBloqueoReingreso(7);
+    $service = $this->crearService([3, 8]);
     $horarios = collect([
       $this->horarioConJornada(1, 8, 1, '07:00:00', '12:00:00'),
       $this->horarioConJornada(2, 8, 1, '12:00:00', '17:30:00'),
     ]);
     $eventos = collect([
-      $this->evento(2, 1, '2026-03-03 07:10:00'),
       $this->evento(1, 1, '2026-03-03 07:20:00'),
     ]);
 
@@ -313,7 +424,7 @@ class DecidirEventoServiceTest extends TestCase
 
   public function test_cargo_tres_aplica_unicidad_diaria_de_ingreso_y_salida(): void
   {
-    $service = new DecidirEventoService();
+    $service = $this->crearService();
     $horarios = collect([
       $this->horario(10, '08:00:00', '17:00:00'),
     ]);
@@ -343,6 +454,25 @@ class DecidirEventoServiceTest extends TestCase
     );
     $this->assertSame('RECHAZADO', $decisionSalidaDuplicada->status);
     $this->assertSame('ya existe salida registrada hoy', $decisionSalidaDuplicada->motivo);
+  }
+
+  private function crearService(array $cargosEspeciales = [3]): DecidirEventoService
+  {
+    $service = new DecidirEventoService();
+    $reflection = new \ReflectionClass($service);
+    $property = $reflection->getProperty('cargosEspecialesCache');
+    $property->setAccessible(true);
+    $property->setValue($service, $cargosEspeciales);
+
+    return $service;
+  }
+
+  private function forzarHorasBloqueoReingreso(int $horas): void
+  {
+    $valor = (string) $horas;
+    putenv('ASISTENCIA_HORAS_BLOQUEO_REINGRESO_POST_SALIDA=' . $valor);
+    $_ENV['ASISTENCIA_HORAS_BLOQUEO_REINGRESO_POST_SALIDA'] = $valor;
+    $_SERVER['ASISTENCIA_HORAS_BLOQUEO_REINGRESO_POST_SALIDA'] = $valor;
   }
 
   private function horario(int $id, string $horaInicio, string $horaFin): object

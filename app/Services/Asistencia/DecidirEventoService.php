@@ -11,14 +11,14 @@ class DecidirEventoService
 {
   private const EVENTO_SALIDA = 1;
   private const EVENTO_INGRESO = 2;
-  private const CARGO_ESPECIAL_ID = 3;
-  private const CARGOS_BLOQUEO_REINGRESO_POST_SALIDA = [3];
-  private const HORAS_BLOQUEO_REINGRESO_POST_SALIDA = 7;
+  private const HORAS_BLOQUEO_REINGRESO_POST_SALIDA_DEFAULT = 3;
+
+  private ?array $cargosEspecialesCache = null;
 
   public function decidir(string $identificacion, int $cargoId, Carbon $now): DecisionEventoDTO
   {
     $horarios = $this->obtenerHorariosAplicables($cargoId, $now);
-    $eventosHoy = $this->obtenerEventosHoy($identificacion);
+    $eventosHoy = $this->obtenerEventosParaDecision($identificacion, $horarios);
 
     return $this->decidirConDatos($cargoId, $now, $horarios, $eventosHoy);
   }
@@ -29,7 +29,9 @@ class DecidirEventoService
     Collection $horarios,
     Collection $eventosHoy
   ): DecisionEventoDTO {
-    $cargoEspecial = $cargoId === self::CARGO_ESPECIAL_ID;
+    $cargosEspeciales = $this->obtenerCargosEspecialesIds();
+    $cargoEspecial = in_array($cargoId, $cargosEspeciales, true);
+    $horasBloqueo = $this->obtenerHorasBloqueoReingresoPostSalida();
     $trace = [
       'dia_semana' => $this->diaSemanaIso($now),
       'fecha_hora' => $now->format('Y-m-d H:i:s'),
@@ -39,8 +41,8 @@ class DecidirEventoService
         'salida_desde_hora_fin' => true,
         'salida_fuera_de_otra_jornada' => 'para cargos por defecto, no permite salida si ahora cae en otra jornada valida',
         'salida_descarta_jornadas_abiertas_obsoletas' => 'si existe un ingreso posterior en otra jornada, la jornada anterior abierta deja de ser candidata a salida',
-        'bloqueo_reingreso_post_salida_cargos' => self::CARGOS_BLOQUEO_REINGRESO_POST_SALIDA,
-        'bloqueo_reingreso_post_salida_horas' => self::HORAS_BLOQUEO_REINGRESO_POST_SALIDA,
+        'bloqueo_reingreso_post_salida_cargos' => $cargosEspeciales,
+        'bloqueo_reingreso_post_salida_horas' => $horasBloqueo,
         'llegada_tarde_desde' => 'ahora >= hora_inicio + 5 minutos',
       ],
       'horarios_evaluados' => $this->mapHorarios($horarios),
@@ -56,17 +58,22 @@ class DecidirEventoService
 
     $ingresoHoyExiste = $eventosHoy->where('evento', self::EVENTO_INGRESO)->isNotEmpty();
     $salidaHoyExiste = $eventosHoy->where('evento', self::EVENTO_SALIDA)->isNotEmpty();
+    $ingresoMismoDiaExiste = $this->existeEventoMismoDiaOIndeterminado($eventosHoy, self::EVENTO_INGRESO, $now);
+    $salidaMismoDiaExiste = $this->existeEventoMismoDiaOIndeterminado($eventosHoy, self::EVENTO_SALIDA, $now);
     $trace['ingreso_hoy_existe'] = $ingresoHoyExiste;
     $trace['salida_hoy_existe'] = $salidaHoyExiste;
+    $trace['ingreso_mismo_dia_existe'] = $ingresoMismoDiaExiste;
+    $trace['salida_mismo_dia_existe'] = $salidaMismoDiaExiste;
 
-    [$horariosConIngresoAbierto, $horariosConIngresoAbiertoObsoletos] = $this->resolverHorariosConIngresoAbierto($horarios, $eventosHoy);
+    [$horariosConIngresoAbierto, $horariosConIngresoAbiertoObsoletos] = $this->resolverHorariosConIngresoAbierto($horarios, $eventosHoy, $now);
     if ($horariosConIngresoAbiertoObsoletos->isNotEmpty()) {
       $trace['horarios_ingreso_abierto_obsoletos'] = $horariosConIngresoAbiertoObsoletos->map(function ($item) {
         return [
           'horario_cargo_id' => (int) $item['horario']->id,
-          'ultimo_ingreso' => $item['ultimo_ingreso']->format('Y-m-d H:i:s'),
-          'ingreso_posterior_en_otro_horario' => $item['ingreso_posterior']->format('Y-m-d H:i:s'),
-          'horario_posterior_id' => (int) $item['horario_posterior_id'],
+          'ultimo_ingreso' => $item['ultimo_ingreso'] ? $item['ultimo_ingreso']->format('Y-m-d H:i:s') : null,
+          'ingreso_posterior_en_otro_horario' => $item['ingreso_posterior'] ? $item['ingreso_posterior']->format('Y-m-d H:i:s') : null,
+          'horario_posterior_id' => $item['horario_posterior_id'] !== null ? (int) $item['horario_posterior_id'] : null,
+          'obsoleto_por_ciclo' => (bool) ($item['obsoleto_por_ciclo'] ?? false),
         ];
       })->values()->all();
     }
@@ -87,10 +94,11 @@ class DecidirEventoService
 
       $evaluacionesSalida = $horariosConIngresoAbierto
         ->map(function ($horario) use ($now, $jornadasActivasAhora, $aplicaBloqueoSalidaPorOtraJornada) {
-          $horaFin = $this->combinarFechaYHora($now, $horario->hora_fin);
-          if (!$horaFin) {
+          $ventanaHorario = $this->resolverVentanaHorario($now, $horario);
+          if (!$ventanaHorario) {
             return null;
           }
+          $horaFin = $ventanaHorario['hora_fin'];
 
           $horarioId = (int) $horario->id;
           $jornadasConflicto = $jornadasActivasAhora
@@ -161,7 +169,7 @@ class DecidirEventoService
             return DecisionEventoDTO::rechazado('no puede salir sin haber ingresado hoy', $cargoId, true, $trace);
           }
 
-          if ($salidaHoyExiste) {
+          if ($salidaMismoDiaExiste) {
             $trace['resultado'] = 'rechazado_cargo_especial_salida_duplicada';
 
             return DecisionEventoDTO::rechazado('ya existe salida registrada hoy', $cargoId, true, $trace);
@@ -304,13 +312,14 @@ class DecidirEventoService
 
     $candidatosIngreso = collect();
     foreach ($horarios as $horario) {
-      $horaInicio = $this->combinarFechaYHora($now, $horario->hora_inicio);
-      $horaFin = $this->combinarFechaYHora($now, $horario->hora_fin);
-      if (!$horaInicio || !$horaFin) {
+      $ventanaHorario = $this->resolverVentanaHorario($now, $horario);
+      if (!$ventanaHorario) {
         continue;
       }
+      $horaInicio = $ventanaHorario['hora_inicio'];
+      $horaFin = $ventanaHorario['hora_fin'];
 
-      $ventanaDesdeIngreso = $horaInicio->copy()->subMinutes(15);
+      $ventanaDesdeIngreso = $ventanaHorario['ventana_desde_ingreso'];
       $dentroRango = !$now->lt($ventanaDesdeIngreso) && !$now->gt($horaFin);
       $trace['rangos_ingreso'][] = [
         'horario_cargo_id' => (int) $horario->id,
@@ -334,7 +343,7 @@ class DecidirEventoService
     }
 
     if ($candidatosIngreso->isNotEmpty()) {
-      if ($cargoEspecial && $ingresoHoyExiste) {
+      if ($cargoEspecial && $ingresoMismoDiaExiste) {
         $trace['resultado'] = 'rechazado_cargo_especial_ingreso_duplicado';
 
         return DecisionEventoDTO::rechazado('ya existe ingreso registrado hoy', $cargoId, true, $trace);
@@ -374,7 +383,7 @@ class DecidirEventoService
         return DecisionEventoDTO::rechazado('no puede salir sin haber ingresado hoy', $cargoId, true, $trace);
       }
 
-      if ($salidaHoyExiste) {
+      if ($salidaMismoDiaExiste) {
         $trace['resultado'] = 'rechazado_cargo_especial_salida_duplicada';
         $trace['detalle_rechazo'] = 'Cargo especial: ya existe una salida registrada hoy.';
 
@@ -388,10 +397,160 @@ class DecidirEventoService
     return DecisionEventoDTO::rechazado('fuera de horarios', $cargoId, $cargoEspecial, $trace);
   }
 
+  public function resolverHorarioParaSalidaPorNovedad(
+    string $identificacion,
+    int $cargoId,
+    Carbon $now
+  ): array {
+    $horarios = $this->obtenerHorariosAplicables($cargoId, $now);
+    if ($horarios->isEmpty()) {
+      return [
+        'ok' => false,
+        'motivo' => 'sin_horarios',
+      ];
+    }
+
+    $eventosHoy = $this->obtenerEventosParaDecision($identificacion, $horarios);
+    [$horariosConIngresoAbierto] = $this->resolverHorariosConIngresoAbierto($horarios, $eventosHoy, $now);
+
+    if ($horariosConIngresoAbierto->isEmpty()) {
+      return [
+        'ok' => false,
+        'motivo' => 'sin_ingreso_abierto',
+      ];
+    }
+
+    $seleccionado = $horariosConIngresoAbierto
+      ->map(function ($horario) use ($eventosHoy) {
+        $horarioId = (int) ($horario->id ?? 0);
+        $ultimoIngreso = $eventosHoy
+          ->where('horario_cargo_id', $horarioId)
+          ->where('evento', self::EVENTO_INGRESO)
+          ->sortByDesc(function ($evento) {
+            return $this->timestampEvento($evento);
+          })
+          ->first();
+
+        return [
+          'horario' => $horario,
+          'ultimo_ingreso' => $this->fechaEvento($ultimoIngreso),
+        ];
+      })
+      ->sortByDesc(function ($item) {
+        return $item['ultimo_ingreso'] ? $item['ultimo_ingreso']->timestamp : 0;
+      })
+      ->first();
+
+    if (!$seleccionado || !isset($seleccionado['horario'])) {
+      return [
+        'ok' => false,
+        'motivo' => 'sin_horario_para_salida',
+      ];
+    }
+
+    return [
+      'ok' => true,
+      'horario_cargo_id' => (int) $seleccionado['horario']->id,
+      'ultimo_ingreso' => $seleccionado['ultimo_ingreso']
+        ? $seleccionado['ultimo_ingreso']->format('Y-m-d H:i:s')
+        : null,
+    ];
+  }
+
+  public function resolverHorarioParaIngresoPorNovedad(int $cargoId, Carbon $now): array
+  {
+    $horarios = $this->obtenerHorariosAplicables($cargoId, $now);
+    if ($horarios->isEmpty()) {
+      return [
+        'ok' => false,
+        'motivo' => 'sin_horarios',
+      ];
+    }
+
+    $evaluaciones = $horarios
+      ->map(function ($horario) use ($now) {
+        $ventanaHorario = $this->resolverVentanaHorario($now, $horario);
+        if (!$ventanaHorario) {
+          return null;
+        }
+
+        $horaInicio = $ventanaHorario['hora_inicio'];
+        $horaFin = $ventanaHorario['hora_fin'];
+        $ventanaDesdeIngreso = $ventanaHorario['ventana_desde_ingreso'];
+        $dentroRango = !$now->lt($ventanaDesdeIngreso) && !$now->gt($horaFin);
+
+        return [
+          'horario' => $horario,
+          'hora_inicio' => $horaInicio,
+          'hora_fin' => $horaFin,
+          'ventana_desde_ingreso' => $ventanaDesdeIngreso,
+          'dentro_rango' => $dentroRango,
+        ];
+      })
+      ->filter()
+      ->values();
+
+    if ($evaluaciones->isEmpty()) {
+      return [
+        'ok' => false,
+        'motivo' => 'sin_horarios_validos',
+      ];
+    }
+
+    $seleccionadoEnRango = $evaluaciones
+      ->filter(function ($item) {
+        return $item['dentro_rango'] === true;
+      })
+      ->sortByDesc(function ($item) {
+        return $item['hora_inicio']->timestamp;
+      })
+      ->first();
+
+    if ($seleccionadoEnRango) {
+      return [
+        'ok' => true,
+        'horario_cargo_id' => (int) $seleccionadoEnRango['horario']->id,
+        'criterio' => 'dentro_rango_ingreso',
+      ];
+    }
+
+    $candidatosConDelta = $evaluaciones
+      ->map(function ($item) use ($now) {
+        $deltaSegundos = $item['hora_inicio']->timestamp - $now->timestamp;
+        $item['delta_segundos'] = $deltaSegundos;
+
+        return $item;
+      })
+      ->values();
+
+    $seleccionadoFuturo = $candidatosConDelta
+      ->filter(function ($item) {
+        return $item['delta_segundos'] >= 0;
+      })
+      ->sortBy(function ($item) {
+        return $item['delta_segundos'];
+      })
+      ->first();
+
+    if ($seleccionadoFuturo) {
+      return [
+        'ok' => true,
+        'horario_cargo_id' => (int) $seleccionadoFuturo['horario']->id,
+        'criterio' => 'hora_inicio_mas_cercana_hacia_adelante',
+      ];
+    }
+
+    return [
+      'ok' => false,
+      'motivo' => 'sin_horario_para_ingreso',
+    ];
+  }
+
   private function obtenerHorariosAplicables(int $cargoId, Carbon $now): Collection
   {
     $horariosCargo = PrsHorariosCargos::query()
       ->where('cargo_id', $cargoId)
+      ->where('estado', 1)
       ->orderBy('id')
       ->get();
 
@@ -399,6 +558,7 @@ class DecidirEventoService
       ? $horariosCargo
       : PrsHorariosCargos::query()
         ->whereNull('cargo_id')
+        ->where('estado', 1)
         ->orderBy('id')
         ->get();
 
@@ -428,10 +588,27 @@ class DecidirEventoService
       ->get(['id', 'evento', 'horario_cargo_id', 'fecha_creacion']);
   }
 
-  private function resolverHorariosConIngresoAbierto(Collection $horarios, Collection $eventosHoy): array
+  private function obtenerEventosHoyMasAyer(string $identificacion): Collection
+  {
+    return PrsHuellaEventos::query()
+      ->where('identificacion', $identificacion)
+      ->whereIn('evento', [self::EVENTO_SALIDA, self::EVENTO_INGRESO])
+      ->whereRaw('fecha_creacion >= TRUNC(SYSDATE) - 1 AND fecha_creacion < TRUNC(SYSDATE) + 1')
+      ->orderBy('fecha_creacion')
+      ->get(['id', 'evento', 'horario_cargo_id', 'fecha_creacion']);
+  }
+
+  private function obtenerEventosParaDecision(string $identificacion, Collection $horarios): Collection
+  {
+    return $this->tieneHorariosQueCruzanMedianoche($horarios)
+      ? $this->obtenerEventosHoyMasAyer($identificacion)
+      : $this->obtenerEventosHoy($identificacion);
+  }
+
+  private function resolverHorariosConIngresoAbierto(Collection $horarios, Collection $eventosHoy, Carbon $now): array
   {
     $horariosAbiertos = $horarios
-      ->map(function ($horario) use ($eventosHoy) {
+      ->map(function ($horario) use ($eventosHoy, $now) {
         $horarioId = (int) $horario->id;
         $ingresos = $eventosHoy
           ->where('horario_cargo_id', $horarioId)
@@ -470,12 +647,30 @@ class DecidirEventoService
             ->first();
         }
 
+        $obsoletoPorCiclo = false;
+        if ($fechaUltimoIngreso) {
+          $ventanaHorario = $this->resolverVentanaHorario($now, $horario);
+          if ($ventanaHorario) {
+            $ventanaDesdeIngreso = $ventanaHorario['ventana_desde_ingreso'] ?? null;
+            $horaFinVentana = $ventanaHorario['hora_fin'] ?? null;
+            $enVentanaActual = $ventanaDesdeIngreso
+              && $horaFinVentana
+              && !$now->lt($ventanaDesdeIngreso)
+              && !$now->gt($horaFinVentana);
+
+            // Si ya inicio una nueva ventana del mismo horario y el ultimo ingreso
+            // pertenece a un ciclo anterior, no debe bloquear un nuevo ingreso.
+            $obsoletoPorCiclo = $enVentanaActual && $fechaUltimoIngreso->lt($ventanaDesdeIngreso);
+          }
+        }
+
         return [
           'horario' => $horario,
           'ultimo_ingreso' => $fechaUltimoIngreso,
           'ingreso_posterior' => $ingresoPosterior ? $this->fechaEvento($ingresoPosterior) : null,
           'horario_posterior_id' => $ingresoPosterior ? (int) ($ingresoPosterior->horario_cargo_id ?? 0) : null,
-          'obsoleto' => $ingresoPosterior !== null,
+          'obsoleto_por_ciclo' => $obsoletoPorCiclo,
+          'obsoleto' => $ingresoPosterior !== null || $obsoletoPorCiclo,
         ];
       })
       ->filter()
@@ -503,20 +698,21 @@ class DecidirEventoService
 
   private function aplicaBloqueoSalidaPorOtraJornada(int $cargoId): bool
   {
-    return !in_array($cargoId, self::CARGOS_BLOQUEO_REINGRESO_POST_SALIDA, true);
+    return !in_array($cargoId, $this->obtenerCargosEspecialesIds(), true);
   }
 
   private function resolverJornadasActivas(Collection $horarios, Carbon $now): Collection
   {
     return $horarios
       ->map(function ($horario) use ($now) {
-        $horaInicio = $this->combinarFechaYHora($now, $horario->hora_inicio);
-        $horaFin = $this->combinarFechaYHora($now, $horario->hora_fin);
-        if (!$horaInicio || !$horaFin) {
+        $ventanaHorario = $this->resolverVentanaHorario($now, $horario);
+        if (!$ventanaHorario) {
           return null;
         }
+        $horaInicio = $ventanaHorario['hora_inicio'];
+        $horaFin = $ventanaHorario['hora_fin'];
 
-        $ventanaDesdeIngreso = $horaInicio->copy()->subMinutes(15);
+        $ventanaDesdeIngreso = $ventanaHorario['ventana_desde_ingreso'];
         $dentroRango = !$now->lt($ventanaDesdeIngreso) && !$now->gt($horaFin);
         if (!$dentroRango) {
           return null;
@@ -539,7 +735,7 @@ class DecidirEventoService
     Carbon $now
   ): array
   {
-    if (!in_array($cargoId, self::CARGOS_BLOQUEO_REINGRESO_POST_SALIDA, true)) {
+    if (!in_array($cargoId, $this->obtenerCargosEspecialesIds(), true)) {
       return [
         'aplica' => false,
         'activo' => false,
@@ -570,7 +766,7 @@ class DecidirEventoService
       ];
     }
 
-    $bloqueaHasta = $fechaSalida->copy()->addHours(self::HORAS_BLOQUEO_REINGRESO_POST_SALIDA);
+    $bloqueaHasta = $fechaSalida->copy()->addHours($this->obtenerHorasBloqueoReingresoPostSalida());
     $activo = $now->lt($bloqueaHasta);
 
     return [
@@ -580,6 +776,33 @@ class DecidirEventoService
       'bloquea_hasta' => $bloqueaHasta->format('Y-m-d H:i:s'),
       'minutos_restantes' => $activo ? max(0, $now->diffInMinutes($bloqueaHasta, false)) : 0,
     ];
+  }
+
+  private function obtenerCargosEspecialesIds(): array
+  {
+    if ($this->cargosEspecialesCache !== null) {
+      return $this->cargosEspecialesCache;
+    }
+
+    return $this->cargosEspecialesCache = PrsHorariosCargos::query()
+      ->whereNotNull('cargo_id')
+      ->pluck('cargo_id')
+      ->map(function ($cargoId) {
+        return (int) $cargoId;
+      })
+      ->filter(function (int $cargoId) {
+        return $cargoId > 0;
+      })
+      ->unique()
+      ->values()
+      ->all();
+  }
+
+  private function obtenerHorasBloqueoReingresoPostSalida(): int
+  {
+    $horas = (int) env('ASISTENCIA_HORAS_BLOQUEO_REINGRESO_POST_SALIDA', self::HORAS_BLOQUEO_REINGRESO_POST_SALIDA_DEFAULT);
+
+    return $horas > 0 ? $horas : self::HORAS_BLOQUEO_REINGRESO_POST_SALIDA_DEFAULT;
   }
 
   private function timestampEvento(mixed $evento): int
@@ -602,13 +825,155 @@ class DecidirEventoService
     }
   }
 
+  private function existeEventoMismoDiaOIndeterminado(Collection $eventos, int $tipoEvento, Carbon $now): bool
+  {
+    return $eventos->contains(function ($evento) use ($tipoEvento, $now) {
+      if ((int) ($evento->evento ?? 0) !== $tipoEvento) {
+        return false;
+      }
+
+      $fecha = $this->fechaEvento($evento);
+      if (!$fecha) {
+        return true;
+      }
+
+      return $fecha->isSameDay($now);
+    });
+  }
+
   private function estaEnBloqueDeSalida(Collection $horarios, Carbon $now): bool
   {
     return $horarios->contains(function ($horario) use ($now) {
-      $horaFin = $this->combinarFechaYHora($now, $horario->hora_fin);
+      $ventanaHorario = $this->resolverVentanaHorario($now, $horario);
+      if (!$ventanaHorario) {
+        return false;
+      }
+      $horaFin = $ventanaHorario['hora_fin'];
 
       return $horaFin && $now->greaterThanOrEqualTo($horaFin);
     });
+  }
+
+  private function resolverVentanaHorario(Carbon $now, object $horario): ?array
+  {
+    $horaInicio = $this->horaSolo($horario->hora_inicio ?? null);
+    $horaFin = $this->horaSolo($horario->hora_fin ?? null);
+    if (!$horaInicio || !$horaFin) {
+      return null;
+    }
+
+    $inicioMinutos = ((int) $horaInicio->format('H') * 60) + (int) $horaInicio->format('i');
+    $finMinutos = ((int) $horaFin->format('H') * 60) + (int) $horaFin->format('i');
+    $cruzaMedianoche = $inicioMinutos > $finMinutos;
+
+    if (!$cruzaMedianoche) {
+      $inicio = $this->combinarFechaYHora($now, $horaInicio);
+      $fin = $this->combinarFechaYHora($now, $horaFin);
+      if (!$inicio || !$fin) {
+        return null;
+      }
+
+      return [
+        'hora_inicio' => $inicio,
+        'hora_fin' => $fin,
+        'ventana_desde_ingreso' => $inicio->copy()->subMinutes(15),
+      ];
+    }
+
+    $inicioAyer = $this->combinarFechaYHora($now->copy()->subDay(), $horaInicio);
+    $finHoy = $this->combinarFechaYHora($now, $horaFin);
+    $inicioHoy = $this->combinarFechaYHora($now, $horaInicio);
+    $finManana = $this->combinarFechaYHora($now->copy()->addDay(), $horaFin);
+    if (!$inicioAyer || !$finHoy || !$inicioHoy || !$finManana) {
+      return null;
+    }
+
+    $candidatos = collect([
+      [
+        'hora_inicio' => $inicioAyer,
+        'hora_fin' => $finHoy,
+      ],
+      [
+        'hora_inicio' => $inicioHoy,
+        'hora_fin' => $finManana,
+      ],
+    ])->map(function ($item) {
+      $item['ventana_desde_ingreso'] = $item['hora_inicio']->copy()->subMinutes(15);
+
+      return $item;
+    });
+
+    $contieneAhora = $candidatos
+      ->filter(function ($item) use ($now) {
+        return !$now->lt($item['ventana_desde_ingreso']) && !$now->gt($item['hora_fin']);
+      })
+      ->sortByDesc(function ($item) {
+        return $item['hora_inicio']->timestamp;
+      })
+      ->first();
+    if ($contieneAhora) {
+      return $contieneAhora;
+    }
+
+    $pasadoMasReciente = $candidatos
+      ->filter(function ($item) use ($now) {
+        return $item['hora_fin']->lessThanOrEqualTo($now);
+      })
+      ->sortByDesc(function ($item) {
+        return $item['hora_fin']->timestamp;
+      })
+      ->first();
+    if ($pasadoMasReciente) {
+      return $pasadoMasReciente;
+    }
+
+    return $candidatos
+      ->sortBy(function ($item) {
+        return $item['hora_fin']->timestamp;
+      })
+      ->first();
+  }
+
+  private function tieneHorariosQueCruzanMedianoche(Collection $horarios): bool
+  {
+    return $horarios->contains(function ($horario) {
+      return $this->horarioCruzaMedianoche($horario);
+    });
+  }
+
+  private function horarioCruzaMedianoche(object $horario): bool
+  {
+    $horaInicio = $this->horaSolo($horario->hora_inicio ?? null);
+    $horaFin = $this->horaSolo($horario->hora_fin ?? null);
+    if (!$horaInicio || !$horaFin) {
+      return false;
+    }
+
+    $inicioMinutos = ((int) $horaInicio->format('H') * 60) + (int) $horaInicio->format('i');
+    $finMinutos = ((int) $horaFin->format('H') * 60) + (int) $horaFin->format('i');
+
+    return $inicioMinutos > $finMinutos;
+  }
+
+  private function horaSolo(mixed $horaOracle): ?Carbon
+  {
+    if (!$horaOracle) {
+      return null;
+    }
+
+    try {
+      $hora = $horaOracle instanceof Carbon
+        ? $horaOracle->copy()
+        : Carbon::parse((string) $horaOracle);
+    } catch (\Throwable $e) {
+      return null;
+    }
+
+    return Carbon::createFromTime(
+      (int) $hora->format('H'),
+      (int) $hora->format('i'),
+      (int) $hora->format('s')
+    );
   }
 
   private function combinarFechaYHora(Carbon $fecha, mixed $horaOracle): ?Carbon

@@ -2,6 +2,7 @@
 
 use App\Constants\Permisos;
 use App\Modules\Administration\Http\Controllers\GestionPasajesController;
+use App\Modules\Administration\Http\Controllers\EmpleadosController;
 use App\Modules\Administration\Http\Controllers\PermisosController;
 use App\Modules\Administration\Http\Controllers\PersonaController;
 use App\Modules\Administration\Http\Controllers\ReportesController;
@@ -35,6 +36,13 @@ Route::prefix('administracion')->middleware(['auth', 'permisos:'.Permisos::ADMIN
         Route::put('/{id}', [PersonaController::class, 'update'])->name('personas.update');
         Route::get('cargarDatos', [PersonaController::class, 'cargarDatos'])->middleware('soloAJAX')->name('personas.cargarDatos');
         Route::post('/{id}/cambiar-estado', [PersonaController::class, 'cambiarEstado'])->middleware('soloAJAX')->name('personas.cambiarEstado');
+    });
+
+    // Submodulo Empleados
+    Route::prefix('empleados')->middleware(['permisos:'.Permisos::ADMINISTRACION_EMPLEADOS_ACCEDER, 'submodulo.activo:25'])->group(function () {
+        Route::get('/', [EmpleadosController::class, 'index'])->name('empleados.index');
+        Route::get('/novedades', [EmpleadosController::class, 'novedades'])->name('empleados.novedades');
+        Route::put('/novedades/{id}/horas', [EmpleadosController::class, 'actualizarHoras'])->name('empleados.novedades.horas.update');
     });
 
     // Submodulo Usuarios

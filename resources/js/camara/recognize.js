@@ -4,13 +4,14 @@ import {
   getCsrfToken,
   showInlineAlert,
   isUnknown,
-  hasValidFace,
   normalizeDetections,
+  getDetectionScore,
   pickTopFaces,
   cropFaceToBlob,
   captureFullFrameBlob,
   iouBoxes,
   faceUtilityScore,
+  getSourceDimensions,
 } from './shared';
 import { createFaceDetector } from './mediapipe';
 
@@ -41,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
     todayEventsDocInput: document.getElementById('todayEventsDocInput'),
     todayEventsSearchBtn: document.getElementById('todayEventsSearchBtn'),
     todayEventsResetBtn: document.getElementById('todayEventsResetBtn'),
+    cameraSelect: document.getElementById('ipCameraSelect'),
   };
 
   if (!ui.video || !ui.canvas) {
@@ -119,6 +121,20 @@ document.addEventListener('DOMContentLoaded', () => {
     listTtlMs: 7000,
     debug: false,
   };
+
+  const SOURCE_MODE = String(ui.startBtn?.dataset?.sourceMode || 'webcam').toLowerCase() === 'ip'
+    ? 'ip'
+    : 'webcam';
+  const IS_IP_SOURCE = SOURCE_MODE === 'ip';
+  const SERVER_SAPI = String(ui.startBtn?.dataset?.serverSapi || '').toLowerCase();
+  const IP_FORCE_MJPEG_ON_CLI = String(ui.startBtn?.dataset?.forceMjpegOnCli || '0') === '1';
+  const IP_CAPTURE_CROP_ONLY = String(
+    ui.startBtn?.dataset?.captureCropOnly || (IS_IP_SOURCE ? '1' : '0')
+  ) === '1';
+  const IP_USE_SNAPSHOT_FALLBACK = IS_IP_SOURCE && SERVER_SAPI === 'cli-server' && !IP_FORCE_MJPEG_ON_CLI;
+  const FACE_CONSOLE_LOG = String(
+    ui.startBtn?.dataset?.faceConsoleLog || (IS_IP_SOURCE ? '1' : '0')
+  ) === '1';
   const CAMERA_CONSTRAINTS_FALLBACK = [
     {
       width: { ideal: 1920, min: 640 },
@@ -149,12 +165,44 @@ document.addEventListener('DOMContentLoaded', () => {
   // - Mas lejos: bajar minFaceRatio/minScore, subir width/quality.
   // - Menos CPU/red: subir cooldowns o bajar maxFramesPerSend/quality.
 
+  if (IS_IP_SOURCE) {
+    // En modo IP priorizamos estabilidad, pero con suficiente detalle para detectar rostro.
+    CONFIG.detection.intervalMs = 220;
+    CONFIG.detection.slowIntervalMs = 320;
+    CONFIG.detection.processWidth = 960;
+    CONFIG.detection.processHeight = 540;
+    CONFIG.detection.model = 'full';
+    CONFIG.detection.minScoreEnter = 0.28;
+    CONFIG.detection.minScoreExit = 0.22;
+    CONFIG.detection.minFaceRatio = 0.008;
+    CONFIG.capture.intervalMs = 550;
+    CONFIG.capture.maxFaces = 3;
+    CONFIG.capture.cropBase = 352;
+    CONFIG.capture.cropBig = 416;
+    CONFIG.send.intervalMs = 1300;
+    CONFIG.send.minIntervalMs = 1100;
+    CONFIG.send.maxIntervalMs = 1800;
+    CONFIG.send.maxFramesPerSend = 2;
+    CONFIG.send.maxBufferImages = 4;
+    CONFIG.send.maxPayloadBytes = 650 * 1024;
+    if (IP_CAPTURE_CROP_ONLY) {
+      // En reconocimiento IP enviar solo recortes de rostro, nunca frame completo.
+      CONFIG.capture.crowdThreshold = 999;
+      CONFIG.capture.maxFaces = 1;
+    }
+  }
+
   let stream = null;
+  let sourceReady = false;
+  let ipStreamUrl = '';
+  let ipSnapshotTimer = null;
+  let ipSnapshotLoopActive = false;
   let detectionCanvas = null;
   let detectionCtx = null;
   let faceDetector = null;
   let detectionTimer = null;
   let detectionInFlight = false;
+  let detectionInFlightAt = 0;
   let detectionNextAt = 0;
   let noFaceSinceAt = 0;
   let currentDetectionIntervalMs = CONFIG.detection.intervalMs;
@@ -186,6 +234,14 @@ document.addEventListener('DOMContentLoaded', () => {
   let latestEventsModalInstance = null;
   let latestEventsInFlight = false;
   const recentCapturedFaces = [];
+  let lastFaceLogState = null;
+  let lastFaceLogAt = 0;
+  let lastFaceMetricsLogAt = 0;
+  let lastNoSourceLogAt = 0;
+  let detectorSendCount = 0;
+  let detectorResultCount = 0;
+  let lastDetectorResultAt = 0;
+  let lastDetectorHeartbeatAt = 0;
   let cycleStats = {
     captured: 0,
     discardedDedupe: 0,
@@ -272,30 +328,63 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function getRequestedCameraSummary() {
+    if (IS_IP_SOURCE) {
+      const selected = ui.cameraSelect?.selectedOptions?.[0];
+      const label = selected ? selected.textContent.trim() : 'camara-ip';
+      return `${label} (${IP_USE_SNAPSHOT_FALLBACK ? 'snapshot' : 'mjpeg'})`;
+    }
     return '1920x1080@30';
   }
 
-  async function waitForVideoMetadata(videoEl) {
-    if (videoEl.videoWidth && videoEl.videoHeight) {
+  function hasRenderableSource() {
+    if (!ui.video) {
+      return false;
+    }
+    const tagName = String(ui.video.tagName || '').toLowerCase();
+    if (tagName === 'img') {
+      return Number(ui.video.naturalWidth) > 0 &&
+        Number(ui.video.naturalHeight) > 0;
+    }
+    if (tagName === 'video') {
+      return Number(ui.video.videoWidth) > 0 && Number(ui.video.videoHeight) > 0;
+    }
+    const dims = getSourceDimensions(ui.video);
+    return dims.width > 0 && dims.height > 0;
+  }
+
+  async function waitForSourceReady(videoEl) {
+    if (hasRenderableSource()) {
       return;
     }
     await new Promise((resolve) => {
       const onLoaded = () => {
         clearTimeout(timeoutId);
         videoEl.removeEventListener('loadedmetadata', onLoaded);
+        videoEl.removeEventListener('load', onLoaded);
         resolve();
       };
       const timeoutId = window.setTimeout(() => {
         videoEl.removeEventListener('loadedmetadata', onLoaded);
+        videoEl.removeEventListener('load', onLoaded);
         resolve();
       }, 1500);
       videoEl.addEventListener('loadedmetadata', onLoaded, { once: true });
+      videoEl.addEventListener('load', onLoaded, { once: true });
     });
   }
 
+  function isSourceReady() {
+    if (IS_IP_SOURCE) {
+      return sourceReady && hasRenderableSource();
+    }
+
+    return !!(stream && ui.video.readyState >= 2);
+  }
+
   function syncProcessingCanvases() {
-    const vw = ui.video.videoWidth || CONFIG.capture.fullWidth;
-    const vh = ui.video.videoHeight || CONFIG.capture.fullHeight;
+    const sourceDims = getSourceDimensions(ui.video);
+    const vw = sourceDims.width || CONFIG.capture.fullWidth;
+    const vh = sourceDims.height || CONFIG.capture.fullHeight;
     if (!vw || !vh) {
       return { width: CONFIG.capture.fullWidth, height: CONFIG.capture.fullHeight };
     }
@@ -691,21 +780,47 @@ document.addEventListener('DOMContentLoaded', () => {
         onResults: handleFaceResults,
         debug: CONFIG.debug,
       });
+      if (FACE_CONSOLE_LOG) {
+        console.info('[camara][face] detector inicializado', {
+          sourceMode: SOURCE_MODE,
+          model: CONFIG.detection.model,
+          minScoreEnter: CONFIG.detection.minScoreEnter,
+          minFaceRatio: CONFIG.detection.minFaceRatio,
+        });
+      }
       return true;
     } catch (error) {
       inlineAlert('danger', 'No se pudo inicializar la deteccion facial.');
+      if (FACE_CONSOLE_LOG || CONFIG.debug) {
+        console.error('[camara][face] fallo inicializando detector', {
+          sourceMode: SOURCE_MODE,
+          message: error?.message || null,
+        });
+      }
       return false;
     }
   }
 
   function handleFaceResults(results) {
     const now = Date.now();
+    detectorResultCount += 1;
+    lastDetectorResultAt = now;
     const detections = results?.detections ?? [];
     const minScore = lastFaceDetected ? CONFIG.detection.minScoreExit : CONFIG.detection.minScoreEnter;
-    const foundNow = hasValidFace(detections, {
+    const detectionRef = detectionCanvas || ui.video;
+    const normalizedFaces = normalizeDetections(detections, detectionRef, {
       minScore,
       minFaceRatio: CONFIG.detection.minFaceRatio,
     });
+    const foundNow = normalizedFaces.length > 0;
+
+    const topRawScore = detections.length
+      ? Math.max(...detections.map((item) => Number(getDetectionScore(item) || 0)))
+      : 0;
+    const topNorm = normalizedFaces.reduce((best, face) => {
+      if (!best) return face;
+      return Number(face.score || 0) > Number(best.score || 0) ? face : best;
+    }, null);
 
     if (foundNow) {
       lastFaceSeenAt = now;
@@ -716,6 +831,49 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!window.__mpLastSeenAt) window.__mpLastSeenAt = 0;
     if (foundNow) window.__mpLastSeenAt = now;
     const stable = (now - window.__mpLastSeenAt) <= CONFIG.detection.stableWindowMs;
+
+    if (FACE_CONSOLE_LOG) {
+      if (lastFaceLogState !== stable) {
+        if (stable) {
+          console.info('[camara][face] detectada', {
+            sourceMode: SOURCE_MODE,
+            faces: normalizedFaces.length,
+            score: topNorm ? Number(topNorm.score || 0).toFixed(3) : null,
+            widthRatio: topNorm ? Number(topNorm.box?.width || 0).toFixed(3) : null,
+          });
+        } else {
+          console.info('[camara][face] perdida', {
+            sourceMode: SOURCE_MODE,
+            stableWindowMs: CONFIG.detection.stableWindowMs,
+          });
+        }
+        lastFaceLogState = stable;
+        lastFaceLogAt = now;
+      } else if (stable && (now - lastFaceLogAt) >= 5000) {
+        console.debug('[camara][face] estable', {
+          sourceMode: SOURCE_MODE,
+          faces: normalizedFaces.length,
+          score: topNorm ? Number(topNorm.score || 0).toFixed(3) : null,
+        });
+        lastFaceLogAt = now;
+      }
+
+      if ((now - lastFaceMetricsLogAt) >= 2500) {
+        const metricLogger = IS_IP_SOURCE ? console.info : console.debug;
+        metricLogger('[camara][face] metricas', {
+          sourceMode: SOURCE_MODE,
+          rawDetections: detections.length,
+          topRawScore: Number(topRawScore || 0).toFixed(3),
+          normalizedFaces: normalizedFaces.length,
+          topNormScore: topNorm ? Number(topNorm.score || 0).toFixed(3) : null,
+          topNormWidth: topNorm ? Number(topNorm.box?.width || 0).toFixed(3) : null,
+          minScore,
+          minFaceRatio: CONFIG.detection.minFaceRatio,
+          stable,
+        });
+        lastFaceMetricsLogAt = now;
+      }
+    }
 
     lastFaceDetected = stable;
     setFaceStatus(stable);
@@ -738,31 +896,98 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!faceDetector || detectionTimer) {
       return;
     }
+    if (FACE_CONSOLE_LOG) {
+      console.info('[camara][face] loop deteccion iniciado', {
+        sourceMode: SOURCE_MODE,
+        intervalMs: CONFIG.detection.intervalMs,
+      });
+    }
     detectionTimer = window.setInterval(() => {
-      if (!stream || ui.video.readyState < 2) {
+      const now = Date.now();
+      if (!isSourceReady()) {
+        if (FACE_CONSOLE_LOG) {
+          if ((now - lastNoSourceLogAt) >= 3000) {
+            const dims = getSourceDimensions(ui.video);
+            console.debug('[camara][face] esperando frames', {
+              sourceMode: SOURCE_MODE,
+              sourceReady,
+              width: dims.width,
+              height: dims.height,
+            });
+            lastNoSourceLogAt = now;
+          }
+        }
         return;
+      }
+      if (FACE_CONSOLE_LOG && (now - lastDetectorHeartbeatAt) >= 3000) {
+        console.info('[camara][face] heartbeat', {
+          sourceMode: SOURCE_MODE,
+          sends: detectorSendCount,
+          results: detectorResultCount,
+          lastResultMsAgo: lastDetectorResultAt ? (now - lastDetectorResultAt) : null,
+          inFlight: detectionInFlight,
+          intervalMs: currentDetectionIntervalMs,
+        });
+        lastDetectorHeartbeatAt = now;
       }
       if (detectionInFlight) {
+        if (now - detectionInFlightAt > 2500) {
+          if (FACE_CONSOLE_LOG || CONFIG.debug) {
+            console.warn('[camara][face] watchdog: reset inFlight', {
+              sourceMode: SOURCE_MODE,
+              pendingMs: now - detectionInFlightAt,
+            });
+          }
+          detectionInFlight = false;
+          detectionInFlightAt = 0;
+        }
         return;
       }
-      const now = Date.now();
       if (now < detectionNextAt) {
         return;
       }
       detectionNextAt = now + currentDetectionIntervalMs;
       detectionInFlight = true;
+      detectionInFlightAt = now;
       syncProcessingCanvases();
       if (!detectionCanvas || !detectionCtx) {
         detectionInFlight = false;
+        detectionInFlightAt = 0;
         return;
       }
-      detectionCtx.drawImage(ui.video, 0, 0, detectionCanvas.width, detectionCanvas.height);
-      faceDetector.send({ image: detectionCanvas })
-        .catch(() => {
-          /* inlineAlert('warning', 'No se pudo ejecutar la deteccion facial.'); */
+      if (IS_IP_SOURCE && !hasRenderableSource()) {
+        detectionInFlight = false;
+        detectionInFlightAt = 0;
+        return;
+      }
+      try {
+        detectionCtx.drawImage(ui.video, 0, 0, detectionCanvas.width, detectionCanvas.height);
+      } catch (error) {
+        detectionInFlight = false;
+        detectionInFlightAt = 0;
+        if (FACE_CONSOLE_LOG || CONFIG.debug) {
+          console.debug('[camara][face] draw error', {
+            sourceMode: SOURCE_MODE,
+            message: error?.message || null,
+          });
+        }
+        return;
+      }
+      const detectorInput = detectionCanvas;
+      detectorSendCount += 1;
+
+      faceDetector.send({ image: detectorInput })
+        .catch((error) => {
+          if (FACE_CONSOLE_LOG || CONFIG.debug) {
+            console.debug('[camara][face] detector error', {
+              sourceMode: SOURCE_MODE,
+              message: error?.message || null,
+            });
+          }
         })
         .finally(() => {
           detectionInFlight = false;
+          detectionInFlightAt = 0;
         });
     }, CONFIG.detection.intervalMs);
   }
@@ -773,12 +998,171 @@ document.addEventListener('DOMContentLoaded', () => {
       detectionTimer = null;
     }
     detectionInFlight = false;
+    detectionInFlightAt = 0;
     detectionNextAt = 0;
     noFaceSinceAt = 0;
     currentDetectionIntervalMs = CONFIG.detection.intervalMs;
+    detectorSendCount = 0;
+    detectorResultCount = 0;
+    lastDetectorResultAt = 0;
+    lastDetectorHeartbeatAt = 0;
+  }
+
+  function getSelectedIpCameraId() {
+    const selected = ui.cameraSelect?.value ? String(ui.cameraSelect.value).trim() : '';
+    if (selected) {
+      return selected;
+    }
+
+    const fallback = ui.startBtn?.dataset?.defaultCamera || ui.startBtn?.dataset?.cameraId || '';
+    return String(fallback).trim();
+  }
+
+  function buildIpStreamUrl() {
+    const base = ui.startBtn?.dataset?.streamUrl || '';
+    if (!base) {
+      return null;
+    }
+
+    const cameraId = getSelectedIpCameraId();
+    if (!cameraId) {
+      return null;
+    }
+
+    const url = new URL(base, window.location.href);
+    url.searchParams.set('camera_id', cameraId);
+    url.searchParams.set('_', Date.now().toString());
+    return url.toString();
+  }
+
+  function buildIpSnapshotUrl() {
+    const base = ui.startBtn?.dataset?.snapshotUrl || '';
+    if (!base) {
+      return null;
+    }
+
+    const cameraId = getSelectedIpCameraId();
+    if (!cameraId) {
+      return null;
+    }
+
+    const url = new URL(base, window.location.href);
+    url.searchParams.set('camera_id', cameraId);
+    url.searchParams.set('_', Date.now().toString());
+    return url.toString();
+  }
+
+  function clearIpSnapshotLoop() {
+    ipSnapshotLoopActive = false;
+    if (ipSnapshotTimer) {
+      clearTimeout(ipSnapshotTimer);
+      ipSnapshotTimer = null;
+    }
   }
 
   async function startCamera() {
+    if (IS_IP_SOURCE) {
+      if (sourceReady && ipStreamUrl && hasRenderableSource()) {
+        return true;
+      }
+      const streamUrl = IP_USE_SNAPSHOT_FALLBACK ? buildIpSnapshotUrl() : buildIpStreamUrl();
+      if (!streamUrl) {
+        inlineAlert('warning', 'Selecciona una camara IP para continuar.');
+        setCameraStatus('error');
+        setControls(false, true);
+        return false;
+      }
+
+      setCameraStatus('off');
+      setControls(false, false);
+      sourceReady = false;
+      ipStreamUrl = streamUrl;
+      clearIpSnapshotLoop();
+
+      const snapshotIntervalMs = Math.max(220, CONFIG.detection.intervalMs);
+      const scheduleNextSnapshot = (delayMs = snapshotIntervalMs) => {
+        if (!ipSnapshotLoopActive) {
+          return;
+        }
+        if (ipSnapshotTimer) {
+          clearTimeout(ipSnapshotTimer);
+        }
+        ipSnapshotTimer = window.setTimeout(() => {
+          ipSnapshotTimer = null;
+          if (!ipSnapshotLoopActive || !ui.video) {
+            return;
+          }
+          const nextUrl = buildIpSnapshotUrl();
+          if (!nextUrl) {
+            sourceReady = false;
+            scheduleNextSnapshot(900);
+            return;
+          }
+          ipStreamUrl = nextUrl;
+          ui.video.src = nextUrl;
+        }, Math.max(80, Number(delayMs) || snapshotIntervalMs));
+      };
+
+      ui.video.onload = () => {
+        sourceReady = true;
+        const dims = syncProcessingCanvases();
+        if (FACE_CONSOLE_LOG || CONFIG.debug) {
+          console.info('[camera-ip] frame recibido', {
+            width: dims.width,
+            height: dims.height,
+          });
+        }
+        if (IP_USE_SNAPSHOT_FALLBACK) {
+          scheduleNextSnapshot(snapshotIntervalMs);
+        }
+      };
+
+      ui.video.onerror = () => {
+        sourceReady = false;
+        if (FACE_CONSOLE_LOG || CONFIG.debug) {
+          console.warn('[camera-ip] error cargando stream', {
+            mode: IP_USE_SNAPSHOT_FALLBACK ? 'snapshot' : 'mjpeg',
+          });
+        }
+        if (IP_USE_SNAPSHOT_FALLBACK) {
+          scheduleNextSnapshot(Math.max(900, snapshotIntervalMs * 2));
+        }
+      };
+
+      ui.video.src = '';
+      ui.video.removeAttribute('srcset');
+      if (IP_USE_SNAPSHOT_FALLBACK) {
+        ipSnapshotLoopActive = true;
+        ui.video.src = streamUrl;
+      } else {
+        ui.video.src = streamUrl;
+        // En MJPEG el primer onload puede demorarse; iniciamos loop y dejamos
+        // que la deteccion arranque cuando haya dimensiones renderizables.
+        sourceReady = true;
+      }
+      setCameraStatus('on');
+      setControls(true, false);
+      if (IP_USE_SNAPSHOT_FALLBACK) {
+        inlineAlert(
+          'warning',
+          'Modo desarrollo detectado (php artisan serve): se usa snapshot para evitar bloqueo del stream continuo.'
+        );
+      } else if (IS_IP_SOURCE && SERVER_SAPI === 'cli-server' && IP_FORCE_MJPEG_ON_CLI) {
+        inlineAlert(
+          'warning',
+          'MJPEG continuo forzado en php artisan serve; puede bloquear peticiones concurrentes.'
+        );
+      }
+      if (FACE_CONSOLE_LOG || CONFIG.debug) {
+        console.info('[camera-ip] stream solicitado', {
+          url: streamUrl,
+          mode: IP_USE_SNAPSHOT_FALLBACK ? 'snapshot' : 'mjpeg',
+        });
+      }
+      startDetectionLoop();
+      return true;
+    }
+
     if (stream) {
       return true;
     }
@@ -799,7 +1183,8 @@ document.addEventListener('DOMContentLoaded', () => {
       return false;
     }
     stream = result.stream;
-    await waitForVideoMetadata(ui.video);
+    sourceReady = true;
+    await waitForSourceReady(ui.video);
     const dims = syncProcessingCanvases();
     const track = stream.getVideoTracks?.()[0];
     const settings = track?.getSettings ? track.getSettings() : {};
@@ -816,6 +1201,22 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function stopCamera() {
+    if (IS_IP_SOURCE) {
+      sourceReady = false;
+      ipStreamUrl = '';
+      clearIpSnapshotLoop();
+      if (ui.video) {
+        ui.video.onload = null;
+        ui.video.onerror = null;
+        ui.video.src = '';
+      }
+      setCameraStatus('off');
+      setControls(false, false);
+      stopDetectionLoop();
+      return;
+    }
+
+    sourceReady = false;
     stream = stopStream(stream, ui.video);
     setCameraStatus('off');
     setControls(false, false);
@@ -828,7 +1229,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function captureFrame() {
-    if (!stream || ui.video.readyState < 2) {
+    if (!isSourceReady()) {
       return;
     }
     if (captureInFlight) {
@@ -854,7 +1255,7 @@ document.addEventListener('DOMContentLoaded', () => {
     captureInFlight = true;
     try {
       const dims = syncProcessingCanvases();
-      if (faces.length >= CONFIG.capture.crowdThreshold) {
+      if (!IP_CAPTURE_CROP_ONLY && faces.length >= CONFIG.capture.crowdThreshold) {
         // Modo CROWD: enviar 1 frame completo cuando hay muchas caras.
         const refFace = pickTopFaces(faces, 1)[0] || null;
         const blob = await captureFullFrameBlob(ui.video, ui.canvas, {
@@ -1238,6 +1639,14 @@ document.addEventListener('DOMContentLoaded', () => {
       liveInFlight = false;
       return;
     }
+    if (FACE_CONSOLE_LOG && IS_IP_SOURCE) {
+      const modes = Array.from(new Set(batchCandidates.map((item) => String(item?.mode || 'unknown'))));
+      console.info('[camara][send] lote', {
+        sourceMode: SOURCE_MODE,
+        count: batch.length,
+        modes,
+      });
+    }
     const batchSizeBytes = batchCandidates.reduce((sum, item) => sum + (item?.bytes || 0), 0);
     setLastPayloadSize(batchSizeBytes);
 
@@ -1342,6 +1751,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function startLiveRecognize() {
     if (liveActive) return;
+
+    serviceOnline = null;
+    setServiceStatus('loading');
+
+    let healthOk = false;
+    if (IS_IP_SOURCE) {
+      // En IP validamos antes de abrir el stream para evitar falsos offline
+      // cuando el servidor tiene pocos workers.
+      healthOk = await checkHealth({
+        timeoutMs: Math.max(CONFIG.health.timeoutMs, 4500),
+        strict: false,
+      });
+    }
+
     const ok = await startCamera();
     if (!ok) {
       return;
@@ -1351,12 +1774,19 @@ document.addEventListener('DOMContentLoaded', () => {
     resetCycleStats();
     sendFailureStreak = 0;
     dynamicSendIntervalMs = CONFIG.send.intervalMs;
-    const healthOk = await checkHealth();
-    if (!healthOk) {
-      startHealthPolling();
+
+    if (!IS_IP_SOURCE) {
+      healthOk = await checkHealth();
+      if (!healthOk) {
+        startHealthPolling();
+      }
+    } else if (!healthOk) {
+      setServiceMessage('No se pudo confirmar salud del servicio al inicio. Se validara con el envio en vivo.', 'text-warning');
+      window.setTimeout(() => setServiceMessage(''), 3500);
     }
+
     startCaptureLoop();
-    if (serviceOnline !== false) {
+    if (IS_IP_SOURCE || serviceOnline !== false) {
       startSendLoop();
     }
     setControls(true, false);
@@ -1380,7 +1810,12 @@ document.addEventListener('DOMContentLoaded', () => {
     stopCamera();
   }
 
-  async function checkHealth() {
+  async function checkHealth(options = {}) {
+    const timeoutMs = Number.isFinite(Number(options.timeoutMs))
+      ? Math.max(500, Number(options.timeoutMs))
+      : CONFIG.health.timeoutMs;
+    const strict = options.strict !== false;
+
     if (healthInFlight) {
       return serviceOnline === true;
     }
@@ -1395,23 +1830,39 @@ document.addEventListener('DOMContentLoaded', () => {
           'Accept': 'application/json',
         },
         credentials: 'same-origin',
-      }, CONFIG.health.timeoutMs);
+      }, timeoutMs);
       if (aborted || !response) {
-        markServiceOffline();
+        if (strict) {
+          markServiceOffline();
+        } else {
+          setServiceStatus('loading');
+        }
         return false;
       }
       if (!response.ok) {
-        markServiceOffline();
+        if (strict) {
+          markServiceOffline();
+        } else {
+          setServiceStatus('loading');
+        }
         return false;
       }
       if (data && data.status && data.status !== 'error') {
         markServiceOnline();
         return true;
       }
-      markServiceOffline();
+      if (strict) {
+        markServiceOffline();
+      } else {
+        setServiceStatus('loading');
+      }
       return false;
     } catch (error) {
-      markServiceOffline();
+      if (strict) {
+        markServiceOffline();
+      } else {
+        setServiceStatus('loading');
+      }
       return false;
     } finally {
       healthInFlight = false;
@@ -1430,6 +1881,24 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   if (ui.retryBtn) {
     ui.retryBtn.addEventListener('click', startLiveRecognize);
+  }
+
+  if (ui.cameraSelect) {
+    const defaultCamera = String(ui.startBtn?.dataset?.defaultCamera || '').trim();
+    if (defaultCamera) {
+      ui.cameraSelect.value = defaultCamera;
+    }
+
+    ui.cameraSelect.addEventListener('change', () => {
+      if (!IS_IP_SOURCE) {
+        return;
+      }
+      if (!liveActive) {
+        return;
+      }
+      stopLiveRecognize();
+      void startLiveRecognize();
+    });
   }
 
   if (ui.latestEventsBtn) {

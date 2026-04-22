@@ -17,9 +17,17 @@ Route::middleware(['auth', 'deny.mobile'])->group(function () {
         ->middleware('permisos:' . Permisos::BIOMETRIA_GESTION_CAMARA_RECONOCER)
         ->name('face.recognize');
 
+    Route::get('/face-recognize-ip', [CamaraController::class, 'recognizeIp'])
+        ->middleware('permisos:' . Permisos::BIOMETRIA_GESTION_CAMARA_RECONOCER)
+        ->name('face.recognize-ip');
+
     Route::get('/face-verify', [CamaraController::class, 'verify'])
         ->middleware('permisos:' . Permisos::BIOMETRIA_GESTION_CAMARA_RECONOCER)
         ->name('face.verify');
+
+    Route::get('/camera/ip-preview', [CamaraController::class, 'ipPreview'])
+        ->middleware('permisos:' . Permisos::BIOMETRIA_GESTION_CAMARA_RECONOCER)
+        ->name('camera.ip.preview');
 
     Route::get('/health', [CamaraApiController::class, 'health'])
         ->name('face-api.health');
@@ -60,4 +68,16 @@ Route::middleware(['auth', 'deny.mobile'])->group(function () {
     Route::post('/camera/verify-live', [CamaraApiController::class, 'verifyLive'])
         ->middleware('permisos:' . Permisos::BIOMETRIA_GESTION_CAMARA_RECONOCER)
         ->name('camera.verify-live');
+
+    Route::get('/camera/ip/snapshot', [CamaraApiController::class, 'ipSnapshot'])
+        ->middleware('permisos:' . Permisos::BIOMETRIA_GESTION_CAMARA_RECONOCER)
+        ->name('camera.ip.snapshot');
+
+    Route::get('/camera/ip/mjpeg', [CamaraApiController::class, 'ipMjpegStream'])
+        ->middleware('permisos:' . Permisos::BIOMETRIA_GESTION_CAMARA_RECONOCER)
+        ->name('camera.ip.mjpeg');
+
+    Route::get('/camera/ip/diagnostic', [CamaraApiController::class, 'ipDiagnostic'])
+        ->middleware('permisos:' . Permisos::BIOMETRIA_GESTION_CAMARA_RECONOCER)
+        ->name('camera.ip.diagnostic');
 });

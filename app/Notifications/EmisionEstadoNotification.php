@@ -45,7 +45,7 @@ class EmisionEstadoNotification extends Notification implements AutogestionNotif
         'nombre' => $nombre,
         'version' => $this->version->version,
         'tipo_solicitud' => $this->tipoSolicitud,
-        'url_destino' => route('mapa-procesos.emisiones.devueltas'),
+        'url_destino' => route('sig.mis-solicitudes.index'),
       ],
     ]);
   }

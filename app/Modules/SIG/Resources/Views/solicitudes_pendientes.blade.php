@@ -1,12 +1,12 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Solicitudes pendientes')
+@section('title', 'Gestion de solicitudes')
 
 @section('breadcrumb')
 <x-breadcrumb :items="[
         ['name' => 'Inicio', 'url' => route('home')],
-        ['name' => 'SIG', 'url' => route('home')],
-        ['name' => 'Solicitudes pendientes']
+        ['name' => 'SIG', 'url' => route('mapa-procesos.index')],
+        ['name' => 'Gestion de solicitudes']
     ]" />
 <br>
 @endsection
@@ -15,8 +15,8 @@
 <div class="container-fluid p-0 border rounded sidebar-dark-primary tableContainer" style="min-height:150px;">
 
   <x-sectionHeader
-    titulo="Solicitudes pendientes"
-    rutaVolver="javascript:history.back()" />
+    titulo="Gestion de solicitudes"
+    :rutaVolver="route('mapa-procesos.index')" />
 
   <div id="no-more-tables" class="table-responsive" style="padding:1em 1.25em">
     <table
@@ -100,7 +100,7 @@
       return `<span title="${escapeHtml(texto)}">${escapeHtml(resumen)}</span>`;
     };
 
-    const rutaRevision = "{{ route('mapa-procesos.emisiones.pendientes.revision', ['id' => ':id']) }}";
+    const rutaRevision = "{{ route('gestion-solicitudes.revision', ['id' => ':id']) }}";
 
     const accionesPendientes = (value, row) => {
       const url = rutaRevision.replace(':id', row.id);

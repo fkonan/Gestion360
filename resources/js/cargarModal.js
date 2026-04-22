@@ -16,6 +16,7 @@ function cargarModal(url, titulo = "", formularioId = null, size = null, type = 
     const $modalContent = $("#globalModalContent");
     const $modalTitle = $("#globalModalTitle");
     const $modalDialog = $modal.find(".modal-dialog");
+    const dialogSize = size || "modal-xl";
 
     if (!$modal.length || !$modalContent.length || !$modalTitle.length) {
         console.error("No se encontraron los elementos del modal requeridos en el DOM.");
@@ -30,6 +31,11 @@ function cargarModal(url, titulo = "", formularioId = null, size = null, type = 
         return;
     }
 
+    // Normalizar el estado visual del modal compartido antes de reutilizarlo.
+    $modalDialog
+        .removeClass("modal-xl modal-lg modal-sm modal-dialog-scrollable")
+        .addClass(dialogSize);
+
     // Mostrar un loader mientras se carga el contenido
     $modalContent.html(`
         <div class="d-flex flex-column align-items-center justify-content-center p-4">
@@ -38,11 +44,6 @@ function cargarModal(url, titulo = "", formularioId = null, size = null, type = 
         </div>
     `);
     $modal.modal("show");
-
-    // Asignar tamaño del modal
-    if (size) {
-        $modalDialog.removeClass("modal-xl modal-lg modal-sm").addClass(size);
-    }
 
     $modalTitle.text(titulo);
 
@@ -96,7 +97,9 @@ function cargarModal(url, titulo = "", formularioId = null, size = null, type = 
     $modal.off('hidden.bs.modal.cargarModal').on('hidden.bs.modal.cargarModal', function () {
         $modalContent.html('');
         $modalContent.removeData("loaded");
-        $modalDialog.removeClass("modal-xl modal-lg modal-sm"); // Resetear tamaño
+        $modalDialog
+            .removeClass("modal-xl modal-lg modal-sm modal-dialog-scrollable")
+            .addClass("modal-xl");
     });
 }
 
@@ -264,9 +267,9 @@ function abrirPdfModal(url, titulo = "Documento PDF", size = "modal-xl") {
     const separator = url.includes("#") ? "&" : "#";
     const iframeUrl = `${url}${separator}toolbar=0&navpanes=0&scrollbar=1`;
 
-    if (size) {
-        $modalDialog.removeClass("modal-xl modal-lg modal-sm").addClass(size);
-    }
+    $modalDialog
+        .removeClass("modal-xl modal-lg modal-sm modal-dialog-scrollable")
+        .addClass(size || "modal-xl");
 
     $modalTitle.text(titulo);
     $modalContent.html(`
@@ -295,7 +298,9 @@ function abrirPdfModal(url, titulo = "Documento PDF", size = "modal-xl") {
     $modal.off("hidden.bs.modal.pdfModal").on("hidden.bs.modal.pdfModal", function () {
         document.removeEventListener("keydown", bloquearTeclas, true);
         $modalContent.off("contextmenu.sigpdf", bloquearMenu);
-        $modalDialog.removeClass("modal-xl modal-lg modal-sm");
+        $modalDialog
+            .removeClass("modal-xl modal-lg modal-sm modal-dialog-scrollable")
+            .addClass("modal-xl");
     });
 }
 

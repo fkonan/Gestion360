@@ -60,11 +60,6 @@
             <input type="text" class="form-control" readonly value="{{ $documento->ubicacion?->nombre }}">
           </div>
           <div class="col-12 col-md-4">
-            <label for="paginas" class="form-label">P&aacute;ginas</label>
-            <input type="number" name="paginas" id="paginas" class="form-control" min="1" value="{{ $emisionDevuelta?->paginas }}">
-            <span class="error text-danger fw-bold" id="error-paginas"></span>
-          </div>
-          <div class="col-12 col-md-4">
             <label class="form-label">Fecha elaboraci&oacute;n</label>
             <input type="text" class="form-control" readonly value="{{ now()->toDateString() }}">
           </div>
@@ -85,13 +80,32 @@
             <textarea name="comentario_revision" id="comentario_revision" class="form-control" rows="5" placeholder="Describe brevemente el motivo o los ajustes solicitados"></textarea>
             <span class="error text-danger fw-bold" id="error-comentario_revision"></span>
           </div>
-          <div class="col-12 col-md-8">
-            <label for="archivo" class="form-label">Archivo (PDF o Word)</label>
-            <input type="file" name="archivo" id="archivo" class="form-control" accept=".pdf,.doc,.docx" required>
-            @if($emisionDevuelta?->archivo_url)
-              <small class="text-muted">Archivo anterior: {{ $emisionDevuelta->archivo_url }}</small>
-            @endif
-            <span class="error text-danger fw-bold" id="error-archivo"></span>
+          <div class="col-12">
+            <div class="sig-upload-panel">
+              <div class="sig-upload-panel__grid">
+                <div class="sig-upload-panel__field">
+                  <div class="sig-upload-panel__field-head">
+                    <label for="archivo" class="form-label mb-0">Archivo (PDF o Word)</label>
+                  </div>
+                  <input type="file" name="archivo" id="archivo" class="form-control" accept=".pdf,.doc,.docx" required>
+                  <div class="sig-upload-panel__meta">
+                    @if($emisionDevuelta?->archivo_url)
+                      <small class="text-muted">Archivo anterior: {{ $emisionDevuelta->archivo_url }}</small>
+                    @endif
+                  </div>
+                  <span class="error text-danger fw-bold" id="error-archivo"></span>
+                </div>
+                <div class="sig-upload-panel__field sig-upload-panel__field--pages">
+                  <div class="sig-upload-panel__field-head">
+                    <label for="paginas" class="form-label mb-0">P&aacute;ginas</label>
+                    <span class="sig-upload-panel__status sig-upload-panel__status--pending" id="paginas-estado">Auto</span>
+                  </div>
+                  <input type="number" name="paginas" id="paginas" class="form-control sig-upload-panel__input" min="1" value="{{ $emisionDevuelta?->paginas }}" placeholder="Se completa al cargar" readonly>
+                  <div class="form-text" id="paginas-ayuda">Se completa al cargar.</div>
+                  <span class="error text-danger fw-bold" id="error-paginas"></span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -103,3 +117,5 @@
     </div>
   </div>
 </div>
+
+@include('sig::_paginas_automaticas')

@@ -30,6 +30,14 @@
     </div>
     @endif
 
+    <div class="col">
+      <x-card color="bg-dark"
+        titulo="Horarios por Cargo"
+        descripcion="Configurar horarios por cargo"
+        icono="fa-business-time"
+        ruta="{{ route('fingerprint.cargos-horarios.index') }}" />
+    </div>
+
     @if(auth()->user()->can(\App\Constants\Permisos::BIOMETRIA_GESTION_HUELLERO_DESCANSO_CONDUCTORES))
     <div class="col">
       <x-card color="bg-success"
@@ -60,16 +68,5 @@
     </div>
     @endif
   </div>
-
-  @if(
-    !auth()->user()->can(\App\Constants\Permisos::BIOMETRIA_GESTION_HUELLERO_ACCESO_PERSONAL) &&
-    !auth()->user()->can(\App\Constants\Permisos::BIOMETRIA_GESTION_HUELLERO_DESCANSO_CONDUCTORES) &&
-    !auth()->user()->can(\App\Constants\Permisos::BIOMETRIA_GESTION_HUELLERO_ENROLL) &&
-    !auth()->user()->can(\App\Constants\Permisos::BIOMETRIA_GESTION_HUELLERO_VERIFICAR)
-  )
-  <div class="alert alert-info mt-3 mb-0">
-    No tienes opciones disponibles en Gestion Huellero.
-  </div>
-  @endif
 </div>
 @endsection

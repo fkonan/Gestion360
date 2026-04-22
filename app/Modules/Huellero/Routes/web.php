@@ -1,6 +1,7 @@
 <?php
 
 use App\Constants\Permisos;
+use App\Modules\Huellero\Http\Controllers\CargoHorarioController;
 use App\Modules\Huellero\Http\Controllers\DashboardController;
 use App\Modules\Huellero\Http\Controllers\FingerprintController;
 use App\Modules\Huellero\Http\Controllers\VerificacionController;
@@ -67,6 +68,15 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/fingerprint/personas', [FingerprintController::class, 'personas'])
         ->name('fingerprint.personas');
+
+    Route::get('/fingerprint/cargos-horarios', [CargoHorarioController::class, 'index'])
+        ->name('fingerprint.cargos-horarios.index');
+
+    Route::post('/fingerprint/cargos-horarios/guardar', [CargoHorarioController::class, 'guardarHorario'])
+        ->name('fingerprint.cargos-horarios.guardar');
+
+    Route::post('/fingerprint/cargos-horarios/{id}/estado', [CargoHorarioController::class, 'cambiarEstadoHorario'])
+        ->name('fingerprint.cargos-horarios.estado');
 });
 
 // API Routes (sin middleware web para uso con dispositivos externos)

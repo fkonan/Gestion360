@@ -19,19 +19,6 @@
     rutaVolver="{{ route('home') }}" />
 
   <div id="no-more-tables" class="table-responsive" style="padding:1em 1.25em">
-    <div class="d-flex justify-content-end mb-2 gap-2">
-      @permite(\App\Constants\Permisos::SIG_MAPA_PROCESOS_VER_EMISION)
-        <a href="{{ route('mapa-procesos.emisiones.devueltas') }}" class="btn btn-info btn-sm">
-          Mis solicitudes
-        </a>
-      @endpermite
-      @permite(\App\Constants\Permisos::SIG_MAPA_PROCESOS_ACCEDER)
-      <a href="{{ route('mapa-procesos.emisiones.pendientes') }}" class="btn btn-warning btn-sm">
-        Solicitudes pendientes
-      </a>
-      @endpermite
-    </div>
-
     <div class="row g-3 mt-5">
       <div class="col-12 col-md-4 col-lg-3">
         <label for="filtroProceso" class="form-label mb-1 text-muted small">Filtrar por proceso</label>
@@ -271,6 +258,7 @@
     const cfg = window.sigDocumentosConfig || {};
     const datosOriginales = cfg.datosOriginales || [];
     const puedeVerInactivos = cfg.puedeVerInactivos || false;
+    const urlActual = new URL(window.location.href);
 
     initTablaBootstrapTable(
       '#tablaDocumentos',
@@ -292,8 +280,43 @@
     const $filtroProceso = $('#filtroProceso');
     const $filtroTipo = $('#filtroTipo');
     const $filtroEstado = $('#filtroEstado');
+    const pageSizeBase = Number(tablaDocumentos?.getAttribute('data-page-size') || 25);
+    const procesoInicial = urlActual.searchParams.get('proceso') || '';
+    const tipoInicial = urlActual.searchParams.get('tipo') || '';
+
+    if (procesoInicial && $filtroProceso.find(`option[value="${procesoInicial}"]`).length) {
+      $filtroProceso.val(procesoInicial);
+    }
+
+    if (tipoInicial && $filtroTipo.find(`option[value="${tipoInicial}"]`).length) {
+      $filtroTipo.val(tipoInicial);
+    }
+
+    const sincronizarFiltrosEnUrl = () => {
+      const url = new URL(window.location.href);
+      const procesoSeleccionado = $filtroProceso.val();
+      const tipoSeleccionado = $filtroTipo.val();
+
+      if (procesoSeleccionado) {
+        url.searchParams.set('proceso', procesoSeleccionado);
+      } else {
+        url.searchParams.delete('proceso');
+      }
+
+      if (tipoSeleccionado) {
+        url.searchParams.set('tipo', tipoSeleccionado);
+      } else {
+        url.searchParams.delete('tipo');
+      }
+
+      window.history.replaceState({}, '', url.toString());
+    };
 
     const aplicarFiltros = () => {
+      if (!$tabla.data('bootstrap.table')) {
+        return false;
+      }
+
       const procesoSeleccionado = $filtroProceso.val();
       const tipoSeleccionado = $filtroTipo.val();
       const estadoSeleccionado = $filtroEstado.val();
@@ -307,11 +330,49 @@
         return coincideProceso && coincideTipo && coincideEstado;
       });
 
-      $tabla.bootstrapTable('load', filtrados);
+      const pageSize = procesoSeleccionado
+        ? Math.max(filtrados.length, 1)
+        : pageSizeBase;
+
+      $tabla.bootstrapTable('refreshOptions', {
+        pageNumber: 1,
+        pageSize,
+        data: filtrados
+      });
+
+      return true;
     };
 
-    $filtroProceso.on('change', aplicarFiltros);
-    $filtroTipo.on('change', aplicarFiltros);
+    const aplicarFiltrosCuandoTablaEsteLista = (intento = 0) => {
+      if (aplicarFiltros()) {
+        return;
+      }
+
+      if (intento >= 12) {
+        return;
+      }
+
+      window.setTimeout(() => aplicarFiltrosCuandoTablaEsteLista(intento + 1), 120);
+    };
+
+    const reAplicarFiltroInicial = () => {
+      if (!procesoInicial && !tipoInicial) {
+        return;
+      }
+
+      window.setTimeout(() => {
+        aplicarFiltros();
+      }, 700);
+    };
+
+    $filtroProceso.on('change', () => {
+      sincronizarFiltrosEnUrl();
+      aplicarFiltrosCuandoTablaEsteLista();
+    });
+    $filtroTipo.on('change', () => {
+      sincronizarFiltrosEnUrl();
+      aplicarFiltrosCuandoTablaEsteLista();
+    });
     $filtroEstado.on('change', () => {
       const estado = $filtroEstado.val();
       if (!puedeVerInactivos && estado !== 'activos') {
@@ -322,6 +383,9 @@
       url.searchParams.set('estado', estado);
       window.location.href = url.toString();
     });
+
+    aplicarFiltrosCuandoTablaEsteLista();
+    reAplicarFiltroInicial();
 
     window.actualizarEstadoDocumento = (el, url, estado, id) => {
       const confirmarCambio = () => {
