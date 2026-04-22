@@ -3,49 +3,147 @@ import {
    clampNumber,
    requestCamera,
    stopStream,
-   captureJpegFromVideo,
+   cropFaceToBlob,
+   captureFullFrameBlob,
    getCsrfToken,
    showInlineAlert,
-   showSwal,
    hasValidFace,
 } from './shared';
 import { createFaceDetector } from './mediapipe';
 
-const DETECTION_INTERVAL_MS = 150;
-const DETECTION_W = 640;
-const DETECTION_H = 480;
-const MIN_DETECTION_SCORE = 0.6;
-const ALIGN_ENTER_DIST = 0.90;
-const ALIGN_EXIT_DIST = 1.05;
-const SCORE_ENTER = 0.6;
-const SCORE_EXIT = 0.5;
-const SIZE_ENTER_MIN = 0.74;
-const SIZE_ENTER_MAX = 1.15;
-const SIZE_EXIT_MIN = 0.65;
-const SIZE_EXIT_MAX = 1.30;
-const DX_ENTER_MAX = 0.24;
-const DY_ENTER_MAX = 0.30;
-const DX_EXIT_MAX = 0.30;
-const DY_EXIT_MAX = 0.38;
-const OVAL_TARGET = { cx: 0.5, cy: 0.52, rx: 0.23, ry: 0.32 };
-const AUTO_STABLE_FRAMES = 4;
-const AUTO_COOLDOWN_MS = 2500;
-const HOLD_MS = 750;
-const CAPTURE_DELAY_MS = 220;
-const EMA_ALPHA = 0.35;
-const UI_STABLE_FRAMES = 3;
-const UI_EXIT_FRAMES = 4;
+const CONFIG = {
+   detection: {
+      intervalMs: 150,
+      width: 1920,
+      height: 1080,
+      modelMinScore: 0.52,
+   },
+   wizard: {
+      stableFrames: 2,
+      transitionCooldownMs: 450,
+      captureDelayMs: 80,
+   },
+   stepRules: {
+      front: {
+         minScoreEnter: 0.60,
+         minScoreExit: 0.53,
+         minFaceRatio: 0.10,
+         enterDist: 1.02,
+         exitDist: 1.16,
+         sizeEnterMin: 0.66,
+         sizeEnterMax: 1.28,
+         sizeExitMin: 0.56,
+         sizeExitMax: 1.42,
+         dxEnterMax: 0.32,
+         dyEnterMax: 0.38,
+         dxExitMax: 0.40,
+         dyExitMax: 0.46,
+         holdMs: 320,
+         countdownSec: 1,
+      },
+      left: {
+         minScoreEnter: 0.52,
+         minScoreExit: 0.46,
+         minFaceRatio: 0.095,
+         enterDist: 1.20,
+         exitDist: 1.38,
+         sizeEnterMin: 0.56,
+         sizeEnterMax: 1.50,
+         sizeExitMin: 0.46,
+         sizeExitMax: 1.62,
+         dxEnterMax: 0.44,
+         dyEnterMax: 0.46,
+         dxExitMax: 0.54,
+         dyExitMax: 0.54,
+         holdMs: 420,
+         countdownSec: 1,
+         preferredOffsetX: -0.02,
+      },
+      right: {
+         minScoreEnter: 0.52,
+         minScoreExit: 0.46,
+         minFaceRatio: 0.095,
+         enterDist: 1.20,
+         exitDist: 1.38,
+         sizeEnterMin: 0.56,
+         sizeEnterMax: 1.50,
+         sizeExitMin: 0.46,
+         sizeExitMax: 1.62,
+         dxEnterMax: 0.44,
+         dyEnterMax: 0.46,
+         dxExitMax: 0.54,
+         dyExitMax: 0.54,
+         holdMs: 420,
+         countdownSec: 1,
+         preferredOffsetX: 0.02,
+      },
+   },
+   crop: {
+      baseSize: 384,
+      bigSize: 448,
+      padding: 0.30,
+      paddingSmall: 0.45,
+      smallFaceW: 0.09,
+      quality: 0.84,
+      qualitySmall: 0.88,
+   },
+   ovalTarget: { cx: 0.5, cy: 0.52, rx: 0.27, ry: 0.38 },
+   emaAlpha: 0.35,
+};
+
+const DETECTION_W = CONFIG.detection.width;
+const DETECTION_H = CONFIG.detection.height;
+const OVAL_TARGET = CONFIG.ovalTarget;
+const CAMERA_CONSTRAINTS_FALLBACK = [
+   {
+      width: { ideal: 1920, min: 640 },
+      height: { ideal: 1080, min: 480 },
+      frameRate: { ideal: 30, max: 30 },
+      facingMode: 'user',
+   },
+   {
+      width: { ideal: 1280, min: 640 },
+      height: { ideal: 720, min: 480 },
+      frameRate: { ideal: 30, max: 30 },
+      facingMode: 'user',
+   },
+   {
+      width: { ideal: 960, min: 640 },
+      height: { ideal: 540, min: 480 },
+      frameRate: { ideal: 30, max: 30 },
+      facingMode: 'user',
+   },
+   {
+      width: { ideal: 640, min: 640 },
+      height: { ideal: 480, min: 480 },
+      frameRate: { ideal: 30, max: 30 },
+      facingMode: 'user',
+   },
+];
+const ENROLL_STEPS = ['front', 'left', 'right'];
+const STEP_LABELS = {
+   front: 'Frente',
+   left: 'Perfil izquierdo',
+   right: 'Perfil derecho',
+};
+const STEP_HINTS = {
+   front: 'Mira al frente y centra tu rostro en el ovalo.',
+   left: 'Gira ligeramente tu rostro hacia la izquierda.',
+   right: 'Gira ligeramente tu rostro hacia la derecha.',
+};
+const UI_STABLE_FRAMES = 4;
+const UI_EXIT_FRAMES = 5;
 const UI_MIN_MS = {
    idle: 500,
    need_id: 700,
-   no_face: 700,
-   bad: 700,
-   near: 600,
-   hold: 900,
+   no_face: 800,
+   bad: 800,
+   near: 700,
+   hold: 1000,
    capture: 600,
    sending: 0,
-   searching: 600,
-   adjusting: 600,
+   searching: 800,
+   adjusting: 700,
 };
 const UI_PRIORITY = {
    idle: 0,
@@ -115,7 +213,7 @@ function ellipseDistance(face, oval) {
    return (dx * dx) + (dy * dy);
 }
 
-function validateAlignment(face, oval, wasAligned) {
+function validateAlignment(face, oval, wasAligned, rule, stepKey) {
    if (!face || !oval) {
       return {
          aligned: false,
@@ -132,6 +230,7 @@ function validateAlignment(face, oval, wasAligned) {
          dxN: null,
          dyN: null,
          centerOk: false,
+         profileHintOk: false,
       };
    }
 
@@ -148,23 +247,28 @@ function validateAlignment(face, oval, wasAligned) {
    const sizeRelY = face.h / (oval.ry * 2);
    const sizeRel = Math.min(sizeRelX, sizeRelY);
 
-   const scoreOk = face.score >= SCORE_ENTER;
-   const inside = dist <= ALIGN_ENTER_DIST;
-   const sizeOk = sizeRel >= SIZE_ENTER_MIN && sizeRel <= SIZE_ENTER_MAX;
+   const scoreOk = face.score >= rule.minScoreEnter;
+   const inside = dist <= rule.enterDist;
+   const sizeOk = sizeRel >= rule.sizeEnterMin && sizeRel <= rule.sizeEnterMax;
 
-   const centerOkEnter = dxN <= DX_ENTER_MAX && dyN <= DY_ENTER_MAX;
-   const centerOkExit = dxN <= DX_EXIT_MAX && dyN <= DY_EXIT_MAX;
+   const centerOkEnter = dxN <= rule.dxEnterMax && dyN <= rule.dyEnterMax;
+   const centerOkExit = dxN <= rule.dxExitMax && dyN <= rule.dyExitMax;
+
+   const profileHintOk = stepKey === 'left'
+      ? (dx <= (rule.preferredOffsetX ?? -0.01))
+      : stepKey === 'right'
+         ? (dx >= (rule.preferredOffsetX ?? 0.01))
+         : true;
 
    const nearOk =
-      (face.score >= SCORE_EXIT) &&
-      (dist <= ALIGN_EXIT_DIST) &&
-      (sizeRel >= SIZE_EXIT_MIN && sizeRel <= SIZE_EXIT_MAX) &&
+      (face.score >= rule.minScoreExit) &&
+      (dist <= rule.exitDist) &&
+      (sizeRel >= rule.sizeExitMin && sizeRel <= rule.sizeExitMax) &&
       centerOkExit;
 
    let ok = scoreOk && inside && sizeOk && centerOkEnter;
-
    if (wasAligned && !ok) {
-      ok = nearOk; // mantiene histeresis completa
+      ok = nearOk;
    }
 
    const level = ok ? 'ok' : (nearOk ? 'near' : 'bad');
@@ -184,14 +288,15 @@ function validateAlignment(face, oval, wasAligned) {
       dxN,
       dyN,
       centerOk: ok ? true : centerOkExit, // informativo
+      profileHintOk,
    };
 }
 
-function pickBestFace(detections, oval) {
+function pickBestFace(detections, oval, rule) {
    if (!detections.length || !oval) return null;
    const candidates = detections
       .map((d) => normalizeBBox(d))
-      .filter((face) => face && face.score >= MIN_DETECTION_SCORE);
+      .filter((face) => face && face.score >= rule.minScoreExit && face.w >= rule.minFaceRatio);
 
    if (!candidates.length) return null;
 
@@ -213,6 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
       alertContainer: document.getElementById('alertContainer'),
       cameraStatus: document.getElementById('cameraStatus'),
       faceStatus: document.getElementById('faceStatus'),
+      serviceStatus: document.getElementById('serviceStatus'),
       video: document.getElementById('cameraVideo'),
       canvas: document.getElementById('captureCanvas'),
       detectionCanvas: document.getElementById('detectionCanvas'),
@@ -221,6 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
       stopBtn: document.getElementById('stopBtn'),
       enrollBtn: document.getElementById('enrollBtn'),
       enrollEndpoint: document.getElementById('enrollEndpoint'),
+      healthEndpoint: document.getElementById('healthEndpoint'),
       personSelect: document.getElementById('personSelect'),
       faceDetectionToggle: document.getElementById('faceDetectionToggle'),
       autoCaptureToggle: document.getElementById('autoCaptureToggle'),
@@ -237,10 +344,32 @@ document.addEventListener('DOMContentLoaded', () => {
       enrollStatusTitle: document.getElementById('enrollStatusTitle'),
       enrollStatusMessage: document.getElementById('enrollStatusMessage'),
       enrollProgressBar: document.getElementById('enrollProgressBar'),
+      enrollStepTitle: document.getElementById('enrollStepTitle'),
+      enrollStepInstruction: document.getElementById('enrollStepInstruction'),
+      enrollStepMeta: document.getElementById('enrollStepMeta'),
+      enrollCountdown: document.getElementById('enrollCountdown'),
+      stepFrontBadge: document.getElementById('stepFrontBadge'),
+      stepLeftBadge: document.getElementById('stepLeftBadge'),
+      stepRightBadge: document.getElementById('stepRightBadge'),
+      checkPose: document.getElementById('checkPose'),
+      checkDistance: document.getElementById('checkDistance'),
+      checkLight: document.getElementById('checkLight'),
+      thumbFront: document.getElementById('thumbFront'),
+      thumbLeft: document.getElementById('thumbLeft'),
+      thumbRight: document.getElementById('thumbRight'),
+      continueStepBtn: document.getElementById('continueStepBtn'),
+      sendEnrollBtn: document.getElementById('sendEnrollBtn'),
+      repeatStepBtn: document.getElementById('repeatStepBtn'),
    };
 
    if (!ui.video || !ui.canvas) {
       return;
+   }
+
+   // Corrige textos fijos del panel para evitar ruido visual por codificacion.
+   const identificationTitle = ui.personSelect?.closest('.border')?.querySelector('.fw-semibold');
+   if (identificationTitle) {
+      identificationTitle.textContent = 'Identificacion';
    }
 
    if (ui.autoCaptureToggle) {
@@ -260,8 +389,8 @@ document.addEventListener('DOMContentLoaded', () => {
    let isAligned = false;
    let alignedState = false;
    let faceEma = null;
+   let lastFaceForCapture = null;
    let ovalTarget = null;
-   let lastDetectionLogAt = 0;
    let stableOkFrames = 0;
    let holdStartTs = null;
    let holdProgress = 0;
@@ -269,6 +398,17 @@ document.addEventListener('DOMContentLoaded', () => {
    let captureQueued = false;
    let selectedIdentificacion = '';
    let autoCaptureTimer = null;
+   let serviceOnline = null;
+   let healthInFlight = false;
+   let healthTimer = null;
+   let currentStepIndex = 0;
+   let stepState = 'idle';
+   let transitionBlockedUntil = 0;
+   let stepCaptureInFlight = false;
+   let countdownStartTs = null;
+   let countdownNumber = null;
+   let stepThumbUrls = { front: '', left: '', right: '' };
+   const enrollShots = { front: null, left: null, right: null };
    let uiState = 'idle';
    let uiLastChangeAt = 0;
    let uiOkFrames = 0;
@@ -277,8 +417,8 @@ document.addEventListener('DOMContentLoaded', () => {
    let uiNoFaceFrames = 0;
 
    function readConfig() {
-      const width = clampNumber(ui.widthInput?.value, 80, 1280, 640);
-      const height = clampNumber(ui.heightInput?.value, 60, 720, 480);
+      const width = clampNumber(ui.widthInput?.value, 80, 1920, 1920);
+      const height = clampNumber(ui.heightInput?.value, 60, 1080, 1080);
       const quality = clampNumber(ui.qualityInput?.value, 0.1, 1, 1);
       return {
          width: Math.round(width),
@@ -288,9 +428,11 @@ document.addEventListener('DOMContentLoaded', () => {
    }
 
    function readDetectionConfig() {
+      const rule = getCurrentRule();
       const minFacePercent = clampNumber(ui.minFaceSizeInput?.value, 5, 80, 20);
+      const debugOverride = !!(ui.debugToggle?.checked && ui.minFaceSizeInput);
       return {
-         minFaceRatio: minFacePercent / 100,
+         minFaceRatio: debugOverride ? (minFacePercent / 100) : rule.minFaceRatio,
       };
    }
 
@@ -340,11 +482,11 @@ document.addEventListener('DOMContentLoaded', () => {
             loadingMore: () => 'Cargando mas resultados...',
          },
          placeholder: ui.personSelect.dataset.placeholder || 'Selecciona una identificacion...',
-         minimumInputLength: 4,
+         minimumInputLength: 3,
          ajax: {
             url,
             dataType: 'json',
-            delay: 250,
+            delay: 120,
             data: function (params) {
                return {
                   query: params.term
@@ -370,19 +512,13 @@ document.addEventListener('DOMContentLoaded', () => {
       $('#personSelect').on('select2:select', function (event) {
          const data = event.params.data || {};
          selectedIdentificacion = String(data.documento || data.id || '').trim();
-         stableOkFrames = 0;
-         holdStartTs = null;
-         holdProgress = 0;
-         captureQueued = false;
+         resetWizardState();
          setUiState('searching', 'Buscando rostro...', 'Coloca tu cara dentro del ovalo.', 0);
       });
 
       $('#personSelect').on('select2:clear', function () {
          selectedIdentificacion = '';
-         stableOkFrames = 0;
-         holdStartTs = null;
-         holdProgress = 0;
-         captureQueued = false;
+         resetWizardState();
          setUiState('need_id', 'Selecciona identificacion', 'Selecciona una identificacion para continuar.', 0);
       });
    }
@@ -418,6 +554,67 @@ document.addEventListener('DOMContentLoaded', () => {
       }
    }
 
+   function setServiceStatus(state) {
+      if (!ui.serviceStatus) return;
+      const map = {
+         loading: { text: 'Comprobando...', cls: 'bg-secondary' },
+         ok: { text: 'Online', cls: 'bg-success' },
+         error: { text: 'Offline', cls: 'bg-danger' },
+      };
+      const cfg = map[state] || map.loading;
+      ui.serviceStatus.className = `badge ${cfg.cls}`;
+      ui.serviceStatus.textContent = cfg.text;
+   }
+
+   function getHealthUrl() {
+      const fallback = new URL('camera/health', window.location.href).toString();
+      const raw = ui.healthEndpoint?.value || '';
+      if (!raw) return fallback;
+      try {
+         return new URL(raw, window.location.href).toString();
+      } catch (error) {
+         return fallback;
+      }
+   }
+
+   async function checkHealth() {
+      if (healthInFlight) return serviceOnline === true;
+      healthInFlight = true;
+      setServiceStatus(serviceOnline === null ? 'loading' : (serviceOnline ? 'ok' : 'error'));
+      try {
+         const response = await fetch(getHealthUrl(), {
+            method: 'GET',
+            headers: { Accept: 'application/json' },
+            credentials: 'same-origin',
+         });
+         serviceOnline = response.ok;
+      } catch (error) {
+         serviceOnline = false;
+      } finally {
+         healthInFlight = false;
+      }
+      setServiceStatus(serviceOnline ? 'ok' : 'error');
+      return serviceOnline;
+   }
+
+   function startHealthPolling() {
+      if (healthTimer) return;
+      healthTimer = window.setInterval(async () => {
+         const ok = await checkHealth();
+         if (ok && healthTimer) {
+            clearInterval(healthTimer);
+            healthTimer = null;
+         }
+      }, 4000);
+   }
+
+   function stopHealthPolling() {
+      if (healthTimer) {
+         clearInterval(healthTimer);
+         healthTimer = null;
+      }
+   }
+
    function updateAlignUI(state, stableCount) {
       if (ui.alignStatus) {
          const map = {
@@ -431,7 +628,7 @@ document.addEventListener('DOMContentLoaded', () => {
          ui.alignStatus.textContent = cfg.text;
       }
       if (ui.stabilityCounter) {
-         ui.stabilityCounter.textContent = `${Math.min(stableCount, AUTO_STABLE_FRAMES)}/${AUTO_STABLE_FRAMES}`;
+         ui.stabilityCounter.textContent = `${Math.min(stableCount, CONFIG.wizard.stableFrames)}/${CONFIG.wizard.stableFrames}`;
       }
       if (ui.alignBadge) {
          const map = {
@@ -460,9 +657,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (ui.enrollStateBadge) {
          ui.enrollStateBadge.classList.remove('bg-success', 'bg-warning', 'bg-info', 'bg-primary', 'bg-danger', 'bg-secondary');
          if (state === 'holding') ui.enrollStateBadge.classList.add('bg-primary');
-         else if (state === 'capturing' || state === 'uploading') ui.enrollStateBadge.classList.add('bg-warning');
+         else if (state === 'capture' || state === 'capturing' || state === 'uploading' || state === 'sending') ui.enrollStateBadge.classList.add('bg-warning');
          else if (state === 'adjusting') ui.enrollStateBadge.classList.add('bg-info');
-         else if (state === 'searching') ui.enrollStateBadge.classList.add('bg-secondary');
+         else if (state === 'searching' || state === 'need_id' || state === 'no_face' || state === 'idle') ui.enrollStateBadge.classList.add('bg-secondary');
          else if (state === 'error') ui.enrollStateBadge.classList.add('bg-danger');
          else ui.enrollStateBadge.classList.add('bg-success');
       }
@@ -471,9 +668,205 @@ document.addEventListener('DOMContentLoaded', () => {
          ui.enrollProgressBar.style.width = `${pct}%`;
          ui.enrollProgressBar.classList.remove('bg-success', 'bg-info', 'bg-warning', 'bg-primary');
          if (state === 'holding') ui.enrollProgressBar.classList.add('bg-primary');
-         else if (state === 'capturing' || state === 'uploading') ui.enrollProgressBar.classList.add('bg-warning');
+         else if (state === 'capture' || state === 'capturing' || state === 'uploading' || state === 'sending') ui.enrollProgressBar.classList.add('bg-warning');
          else if (state === 'adjusting') ui.enrollProgressBar.classList.add('bg-info');
          else ui.enrollProgressBar.classList.add('bg-primary');
+      }
+   }
+
+   function getCurrentStepKey() {
+      return ENROLL_STEPS[Math.max(0, Math.min(currentStepIndex, ENROLL_STEPS.length - 1))];
+   }
+
+   function getCurrentRule() {
+      const stepKey = getCurrentStepKey();
+      return CONFIG.stepRules[stepKey] || CONFIG.stepRules.front;
+   }
+
+   function setStepState(nextState) {
+      stepState = nextState;
+      const stepKey = getCurrentStepKey();
+      if (ui.enrollStepInstruction) {
+         if (nextState === 'awaitContinue') {
+            ui.enrollStepInstruction.textContent = 'Paso capturado. Revisa la miniatura y pulsa \"Continuar al siguiente paso\".';
+         } else if (nextState === 'readyToSend') {
+            ui.enrollStepInstruction.textContent = 'Ya tienes 3/3 capturas. Revisa y pulsa \"Enviar enrolamiento\".';
+         } else if (nextState === 'aligning' || nextState === 'holding' || nextState === 'countdown') {
+            ui.enrollStepInstruction.textContent = STEP_HINTS[stepKey];
+         }
+      }
+      updateWizardActions();
+   }
+
+   function setStepTransitionCooldown() {
+      setStepState('awaitContinue');
+   }
+
+   function updateChecklist(level = 'bad') {
+      const stepKey = getCurrentStepKey();
+      if (ui.checkPose) {
+         const poseText = stepKey === 'front'
+            ? 'Mira al frente y mantiene la cabeza estable.'
+            : `Gira la cabeza ~45 grados hacia ${stepKey === 'left' ? 'la izquierda' : 'la derecha'}.`;
+         ui.checkPose.textContent = poseText;
+      }
+      if (ui.checkDistance) {
+         ui.checkDistance.textContent = 'Acerca el rostro al ovalo sin salirte del marco.';
+      }
+      if (ui.checkLight) {
+         ui.checkLight.textContent = 'Evita contraluz y sombras fuertes en la cara.';
+      }
+
+      [ui.checkPose, ui.checkDistance, ui.checkLight].forEach((el) => {
+         if (!el) return;
+         el.classList.remove('is-ok');
+      });
+      if (level === 'ok') {
+         ui.checkPose?.classList.add('is-ok');
+         ui.checkDistance?.classList.add('is-ok');
+      } else if (level === 'near') {
+         ui.checkDistance?.classList.add('is-ok');
+      }
+   }
+
+   function renderShotPreview(stepKey) {
+      const map = {
+         front: ui.thumbFront,
+         left: ui.thumbLeft,
+         right: ui.thumbRight,
+      };
+      const target = map[stepKey];
+      if (!target) return;
+      if (stepThumbUrls[stepKey]) {
+         URL.revokeObjectURL(stepThumbUrls[stepKey]);
+         stepThumbUrls[stepKey] = '';
+      }
+      const blob = enrollShots[stepKey];
+      if (!blob) {
+         target.classList.add('d-none');
+         target.removeAttribute('src');
+         return;
+      }
+      const previewUrl = URL.createObjectURL(blob);
+      stepThumbUrls[stepKey] = previewUrl;
+      target.src = previewUrl;
+      target.classList.remove('d-none');
+   }
+
+   function releasePreviewUrls() {
+      Object.keys(stepThumbUrls).forEach((key) => {
+         if (stepThumbUrls[key]) {
+            URL.revokeObjectURL(stepThumbUrls[key]);
+            stepThumbUrls[key] = '';
+         }
+      });
+   }
+
+   function updateWizardActions() {
+      const hasAllShots = ENROLL_STEPS.every((key) => !!enrollShots[key]);
+      if (ui.continueStepBtn) {
+         const showContinue = stepState === 'awaitContinue' && currentStepIndex < ENROLL_STEPS.length - 1;
+         ui.continueStepBtn.classList.toggle('d-none', !showContinue);
+         ui.continueStepBtn.disabled = requestInFlight || !selectedIdentificacion;
+      }
+      if (ui.sendEnrollBtn) {
+         const showSend = hasAllShots && (stepState === 'readyToSend' || stepState === 'awaitContinue');
+         ui.sendEnrollBtn.classList.toggle('d-none', !showSend);
+         ui.sendEnrollBtn.disabled = requestInFlight || !selectedIdentificacion || serviceOnline === false;
+      }
+      if (ui.repeatStepBtn) {
+         ui.repeatStepBtn.disabled = requestInFlight || !selectedIdentificacion;
+      }
+   }
+
+   function updateWizardBadges() {
+      const badges = [
+         { key: 'front', el: ui.stepFrontBadge },
+         { key: 'left', el: ui.stepLeftBadge },
+         { key: 'right', el: ui.stepRightBadge },
+      ];
+      badges.forEach(({ key, el }, index) => {
+         if (!el) return;
+         const done = !!enrollShots[key];
+         const isCurrent = index === currentStepIndex;
+         el.className = 'badge';
+         if (done) {
+            el.classList.add('bg-success-subtle', 'text-success-emphasis');
+            el.textContent = `${index + 1}. ${STEP_LABELS[key]} \u2713`;
+         } else if (isCurrent) {
+            el.classList.add('bg-primary-subtle', 'text-primary-emphasis');
+            el.textContent = `${index + 1}. ${STEP_LABELS[key]}`;
+         } else {
+            el.classList.add('bg-secondary-subtle', 'text-secondary-emphasis');
+            el.textContent = `${index + 1}. ${STEP_LABELS[key]}`;
+         }
+         if (isCurrent) {
+            el.classList.add('enroll-step-active');
+         }
+      });
+   }
+
+   function updateWizardUI() {
+      const stepKey = getCurrentStepKey();
+      const completed = Object.values(enrollShots).filter(Boolean).length;
+      if (ui.enrollStepTitle) {
+         ui.enrollStepTitle.textContent = `Paso ${currentStepIndex + 1}/3: ${STEP_LABELS[stepKey]}`;
+      }
+      if (ui.enrollStepInstruction) {
+         ui.enrollStepInstruction.textContent = STEP_HINTS[stepKey];
+      }
+      if (ui.enrollStepMeta) {
+         ui.enrollStepMeta.textContent = `Completado: ${completed}/3`;
+      }
+      updateWizardBadges();
+      updateChecklist();
+      updateWizardActions();
+   }
+
+   function clearCountdown() {
+      countdownNumber = null;
+      countdownStartTs = null;
+      if (ui.enrollCountdown) {
+         ui.enrollCountdown.textContent = '';
+      }
+   }
+
+   function updateCountdown(remainingMs, countdownMs) {
+      if (!ui.enrollCountdown) return;
+      const maxSec = Math.max(1, Math.round(countdownMs / 1000));
+      const next = Math.max(1, Math.min(maxSec, Math.ceil(remainingMs / 1000)));
+      if (countdownNumber !== next) {
+         countdownNumber = next;
+      }
+      ui.enrollCountdown.textContent = `Capturando en ${next}...`;
+   }
+
+   function clearStepCapture(stepKey) {
+      if (!stepKey || !Object.prototype.hasOwnProperty.call(enrollShots, stepKey)) return;
+      enrollShots[stepKey] = null;
+      holdStartTs = null;
+      holdProgress = 0;
+      stableOkFrames = 0;
+      captureQueued = false;
+      clearCountdown();
+      renderShotPreview(stepKey);
+      updateWizardUI();
+      updateWizardActions();
+   }
+
+   function resetWizardState() {
+      ENROLL_STEPS.forEach((stepKey) => {
+         enrollShots[stepKey] = null;
+         renderShotPreview(stepKey);
+      });
+      currentStepIndex = 0;
+      transitionBlockedUntil = 0;
+      resetAlignmentForNextStep();
+      setStepState('aligning');
+      updateWizardUI();
+      if (selectedIdentificacion) {
+         const stepKey = getCurrentStepKey();
+         setUiState('searching', `Paso ${currentStepIndex + 1}/3: ${STEP_LABELS[stepKey]}`, STEP_HINTS[stepKey], 0);
       }
    }
 
@@ -521,16 +914,37 @@ document.addEventListener('DOMContentLoaded', () => {
    }
 
    function updateUiFromDetection(level, hasFace) {
-      const now = Date.now();
       updateUiCounters(level, hasFace);
+      const stepKey = getCurrentStepKey();
+      const stepLabel = STEP_LABELS[stepKey];
+      updateChecklist(level);
 
       if (!selectedIdentificacion) {
          setUiState('need_id', 'Selecciona identificacion', 'Selecciona una identificacion para continuar.', 0);
          return;
       }
 
+      if (serviceOnline === false) {
+         setUiState('error', 'Servicio fuera de linea', 'Esperando reconexion del servicio para enrolar.', 0);
+         return;
+      }
+
       if (requestInFlight) {
          setUiState('sending', 'Enrolando...', 'Validando registro...', 1);
+         return;
+      }
+
+      if (stepState === 'awaitContinue') {
+         setUiState('capture', `Paso ${currentStepIndex + 1}/3: ${stepLabel}`, 'Capturado ✓. Pulsa continuar para seguir.', 1);
+         return;
+      }
+      if (stepState === 'readyToSend') {
+         setUiState('capture', 'Capturas listas', 'Pulsa "Enviar enrolamiento" para finalizar.', 1);
+         return;
+      }
+
+      if (stepCaptureInFlight) {
+         setUiState('capture', `Paso ${currentStepIndex + 1}/3: ${STEP_LABELS[stepKey]}`, 'Capturando...', 1);
          return;
       }
 
@@ -541,21 +955,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (!hasFace) {
          if (uiNoFaceFrames >= UI_EXIT_FRAMES || uiState === 'idle') {
-            setUiState('no_face', 'Buscando rostro...', 'Coloca tu cara dentro del ovalo.', 0);
+            setUiState('no_face', `Paso ${currentStepIndex + 1}/3: ${stepLabel}`, 'Coloca tu rostro dentro del ovalo.', 0);
          }
          return;
       }
 
       if (level === 'bad') {
          if (uiBadFrames >= UI_EXIT_FRAMES) {
-            setUiState('bad', 'Ajusta tu posicion', 'Centra tu rostro y mira a la camara.', 0);
+            setUiState('bad', `Paso ${currentStepIndex + 1}/3: ${stepLabel}`, 'Ajusta tu posicion y centra el rostro.', 0);
          }
          return;
       }
 
       if (level === 'near') {
          if (uiNearFrames >= UI_STABLE_FRAMES) {
-            setUiState('near', 'Casi listo', 'Centrate y mira a la camara.', holdProgress);
+            setUiState('near', `Paso ${currentStepIndex + 1}/3: ${stepLabel}`, 'Casi listo, mantén la posición.', holdProgress);
          }
          return;
       }
@@ -563,8 +977,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (level === 'ok') {
          if (holdProgress > 0 || uiOkFrames >= UI_STABLE_FRAMES) {
             const pct = Math.round(holdProgress * 100);
-            const remaining = Math.max(0, (HOLD_MS - (holdProgress * HOLD_MS)) / 1000).toFixed(1);
-            setUiState('hold', 'Perfecto, no te muevas', `Manten la posicion... ${remaining}s (${pct}%)`, holdProgress);
+            setUiState('hold', `Paso ${currentStepIndex + 1}/3: ${stepLabel}`, `Perfecto, manten la posicion... (${pct}%)`, holdProgress);
          }
       }
    }
@@ -577,6 +990,8 @@ document.addEventListener('DOMContentLoaded', () => {
    function setApiBusy(isBusy) {
       requestInFlight = isBusy;
       if (ui.enrollBtn) ui.enrollBtn.disabled = isBusy;
+      if (ui.repeatStepBtn) ui.repeatStepBtn.disabled = isBusy || !selectedIdentificacion;
+      updateWizardActions();
    }
 
    function getEndpointUrl() {
@@ -594,42 +1009,57 @@ document.addEventListener('DOMContentLoaded', () => {
       lastAlert = showInlineAlert(ui.alertContainer, type, message, lastAlert);
    }
 
-   function showSuccess(message) {
-      const shown = showSwal('success', message, 'Enrolado');
-      if (!shown) {
-         inlineAlert('success', message);
-      }
-   }
-
    function showError(message) {
-      const shown = showSwal('error', message, 'Error');
-      if (!shown) {
+      if (window.Swal) {
+         window.Swal.fire({
+            title: 'Error',
+            text: message || '',
+            icon: 'error',
+            customClass: { popup: 'swalAlert' },
+            confirmButtonText: 'Aceptar',
+         });
+      } else {
          inlineAlert('danger', message);
       }
    }
 
    function finishSuccess(message) {
-      stopDetectionLoop();
-      stream = stopStream(stream, ui.video);
-      setCameraStatus('off');
-      setButtons(false);
-      stableOkFrames = 0;
-      holdStartTs = null;
-      holdProgress = 0;
-      captureQueued = false;
-      autoCaptureCooldownUntil = 0;
-      if (autoCaptureTimer) {
-         clearTimeout(autoCaptureTimer);
-         autoCaptureTimer = null;
-      }
-      setEnrollStatus('searching', 'Proceso finalizado', 'Recargando...', 0);
-      const shown = showSwal('success', message, 'Enrolado');
-      if (shown && typeof shown.then === 'function') {
-         shown.then((result) => {
-            if (result && result.isConfirmed) {
+      const finalize = () => {
+         stopDetectionLoop();
+         stream = stopStream(stream, ui.video);
+         setCameraStatus('off');
+         setButtons(false);
+         stableOkFrames = 0;
+         holdStartTs = null;
+         holdProgress = 0;
+         captureQueued = false;
+         autoCaptureCooldownUntil = 0;
+         if (autoCaptureTimer) {
+            clearTimeout(autoCaptureTimer);
+            autoCaptureTimer = null;
+         }
+         stopHealthPolling();
+         releasePreviewUrls();
+      };
+      setEnrollStatus('searching', 'Proceso finalizado', 'Presiona aceptar para cerrar.', 0);
+      if (window.Swal) {
+         window.Swal.fire({
+            title: 'Enrolado',
+            text: message || '',
+            icon: 'success',
+            customClass: { popup: 'swalAlert' },
+            confirmButtonText: 'Aceptar',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+         }).then((result) => {
+            if (result?.isConfirmed) {
+               finalize();
                window.location.reload();
             }
          });
+      } else {
+         inlineAlert('success', message);
+         finalize();
       }
    }
 
@@ -637,7 +1067,7 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
          faceDetector = createFaceDetector({
             model: 'full',
-            minDetectionConfidence: MIN_DETECTION_SCORE,
+            minDetectionConfidence: CONFIG.detection.modelMinScore,
             onResults: handleFaceResults,
             debug: !!(ui.debugToggle && ui.debugToggle.checked),
          });
@@ -662,11 +1092,11 @@ document.addEventListener('DOMContentLoaded', () => {
          return faceEma;
       }
       faceEma = {
-         score: (faceEma.score * (1 - EMA_ALPHA)) + (nextFace.score * EMA_ALPHA),
-         cx: (faceEma.cx * (1 - EMA_ALPHA)) + (nextFace.cx * EMA_ALPHA),
-         cy: (faceEma.cy * (1 - EMA_ALPHA)) + (nextFace.cy * EMA_ALPHA),
-         w: (faceEma.w * (1 - EMA_ALPHA)) + (nextFace.w * EMA_ALPHA),
-         h: (faceEma.h * (1 - EMA_ALPHA)) + (nextFace.h * EMA_ALPHA),
+         score: (faceEma.score * (1 - CONFIG.emaAlpha)) + (nextFace.score * CONFIG.emaAlpha),
+         cx: (faceEma.cx * (1 - CONFIG.emaAlpha)) + (nextFace.cx * CONFIG.emaAlpha),
+         cy: (faceEma.cy * (1 - CONFIG.emaAlpha)) + (nextFace.cy * CONFIG.emaAlpha),
+         w: (faceEma.w * (1 - CONFIG.emaAlpha)) + (nextFace.w * CONFIG.emaAlpha),
+         h: (faceEma.h * (1 - CONFIG.emaAlpha)) + (nextFace.h * CONFIG.emaAlpha),
       };
       return faceEma;
    }
@@ -700,8 +1130,8 @@ document.addEventListener('DOMContentLoaded', () => {
                : 'rgba(220, 53, 69, 0.95)';
          const guideCx = oval.cx * vw;
          const guideCy = oval.cy * vh;
-         let guideRy = vh * 0.45;
-         let guideRx = guideRy * 0.62;
+         let guideRy = vh * 0.48;
+         let guideRx = guideRy * 0.72;
          const margin = 10;
          guideRy = Math.min(guideRy, (vh / 2) - margin);
          guideRx = Math.min(guideRx, (vw / 2) - margin);
@@ -757,7 +1187,9 @@ document.addEventListener('DOMContentLoaded', () => {
    }
 
    async function updateEnrollState(level, hasDetection) {
-      const autoEnabled = true;
+      const stepKey = getCurrentStepKey();
+      const stepLabel = STEP_LABELS[stepKey];
+      const stepRule = getCurrentRule();
       if (ui.enrollBtn) {
          ui.enrollBtn.disabled = !ui.debugToggle?.checked || requestInFlight;
          ui.enrollBtn.classList.toggle('d-none', !ui.debugToggle?.checked);
@@ -767,15 +1199,47 @@ document.addEventListener('DOMContentLoaded', () => {
          holdStartTs = null;
          holdProgress = 0;
          captureQueued = false;
+         clearCountdown();
+         setStepState('idle');
          updateUiFromDetection('bad', false);
          return;
       }
-      if (!autoEnabled || !detectionEnabled) {
+      if (serviceOnline === false) {
          stableOkFrames = 0;
          holdStartTs = null;
          holdProgress = 0;
+         captureQueued = false;
+         clearCountdown();
+         setStepState('idle');
+         setUiState('error', 'Servicio fuera de linea', 'Esperando reconexion del servicio para enrolar.', 0);
+         startHealthPolling();
+         return;
+      }
+      if (!detectionEnabled) {
+         stableOkFrames = 0;
+         holdStartTs = null;
+         holdProgress = 0;
+         clearCountdown();
+         setStepState('idle');
          updateAlignUI(detectionEnabled ? (hasDetection ? 'near' : 'bad') : 'off', 0);
          updateUiFromDetection(level, hasDetection);
+         return;
+      }
+
+      if (stepState === 'awaitContinue') {
+         setUiState('capture', `Paso ${currentStepIndex + 1}/3: ${stepLabel}`, 'Capturado ✓. Pulsa continuar para seguir.', 1);
+         return;
+      }
+      if (stepState === 'readyToSend') {
+         setUiState('capture', 'Capturas listas', 'Revisa las 3 miniaturas y pulsa "Enviar enrolamiento".', 1);
+         return;
+      }
+      if (stepState === 'sending') {
+         setUiState('sending', 'Enrolando...', 'Enviando capturas para validar...', 1);
+         return;
+      }
+      if (Date.now() < transitionBlockedUntil) {
+         setUiState('adjusting', `Prep\u00e1rate para ${stepLabel.toLowerCase()}`, STEP_HINTS[stepKey], 0);
          return;
       }
 
@@ -784,68 +1248,96 @@ document.addEventListener('DOMContentLoaded', () => {
          holdStartTs = null;
          holdProgress = 0;
          captureQueued = false;
+         clearCountdown();
+         setStepState('aligning');
          updateAlignUI('bad', 0);
-         updateUiFromDetection(level, false);
+         setUiState('no_face', `Paso ${currentStepIndex + 1}/3: ${stepLabel}`, 'Coloca tu rostro dentro del ovalo.', 0);
          return;
       }
 
-      if (level === 'bad') {
+      const isAcceptedLevel = level === 'ok' || level === 'near';
+      if (!isAcceptedLevel) {
          stableOkFrames = 0;
          holdStartTs = null;
          holdProgress = 0;
          captureQueued = false;
+         clearCountdown();
+          setStepState('aligning');
          updateAlignUI('bad', 0);
-         updateUiFromDetection(level, true);
-         return;
-      }
-
-      if (level === 'near') {
-         stableOkFrames = Math.max(0, stableOkFrames - 1);
-         holdProgress = Math.max(0, holdProgress - 0.08);
-         if (holdProgress === 0) {
-            holdStartTs = null;
-         }
-         captureQueued = false;
-         updateAlignUI('near', 0);
-         updateUiFromDetection(level, true);
+         setUiState('bad', `Paso ${currentStepIndex + 1}/3: ${stepLabel}`, STEP_HINTS[stepKey], 0);
          return;
       }
 
       stableOkFrames += 1;
-      if (stableOkFrames < AUTO_STABLE_FRAMES) {
-         updateAlignUI('near', stableOkFrames);
-         updateUiFromDetection('near', true);
+      if (stableOkFrames < CONFIG.wizard.stableFrames) {
+         setStepState('aligning');
+         updateAlignUI(level, stableOkFrames);
+         setUiState('near', `Paso ${currentStepIndex + 1}/3: ${stepLabel}`, 'Casi listo. Mant\u00e9n la posici\u00f3n.', holdProgress);
          return;
       }
 
+      if (stepState !== 'holding' && stepState !== 'countdown') {
+         setStepState('holding');
+         holdStartTs = performance.now();
+         countdownStartTs = null;
+      }
       if (!holdStartTs) holdStartTs = performance.now();
       const elapsed = performance.now() - holdStartTs;
-      holdProgress = Math.min(1, elapsed / HOLD_MS);
-      updateUiFromDetection('ok', true);
+      holdProgress = Math.min(1, elapsed / stepRule.holdMs);
+      if (stepState === 'holding') {
+         if (ui.enrollCountdown) ui.enrollCountdown.textContent = 'Alineado \u2713 Mant\u00e9n la posici\u00f3n';
+         setUiState('hold', `Paso ${currentStepIndex + 1}/3: ${stepLabel}`, 'Perfecto, no te muevas.', holdProgress);
+      }
 
-      if (holdProgress >= 1 && !requestInFlight && Date.now() >= autoCaptureCooldownUntil && !captureQueued) {
+      if (
+         stepState === 'holding' &&
+         holdProgress >= 1 &&
+         !requestInFlight &&
+         !stepCaptureInFlight &&
+         Date.now() >= autoCaptureCooldownUntil &&
+         !captureQueued
+      ) {
+         autoCaptureCooldownUntil = Date.now() + CONFIG.wizard.transitionCooldownMs;
+         countdownStartTs = performance.now();
+         setStepState('countdown');
+      }
+
+      if (stepState === 'countdown' && !requestInFlight && !stepCaptureInFlight && !captureQueued) {
+         const countdownMs = stepRule.countdownSec * 1000;
+         const countdownElapsed = performance.now() - (countdownStartTs || performance.now());
+         const remainingMs = Math.max(0, countdownMs - countdownElapsed);
+         updateCountdown(remainingMs, countdownMs);
+         setUiState('hold', `Paso ${currentStepIndex + 1}/3: ${stepLabel}`, 'Listo para capturar...', holdProgress);
+         if (remainingMs > 0) {
+            return;
+         }
          captureQueued = true;
-         updateUiFromDetection('ok', true);
-         autoCaptureCooldownUntil = Date.now() + AUTO_COOLDOWN_MS;
+         autoCaptureCooldownUntil = Date.now() + CONFIG.wizard.transitionCooldownMs;
          holdStartTs = null;
+         countdownStartTs = null;
          stableOkFrames = 0;
+         clearCountdown();
          if (autoCaptureTimer) {
             clearTimeout(autoCaptureTimer);
             autoCaptureTimer = null;
          }
          autoCaptureTimer = window.setTimeout(async () => {
-            await enrollFace();
+            await captureCurrentStep();
             autoCaptureTimer = null;
-         }, CAPTURE_DELAY_MS);
+         }, CONFIG.wizard.captureDelayMs);
       }
    }
 
    function handleFaceResults(results) {
       if (!detectionEnabled) return;
+      if (stepState === 'awaitContinue' || stepState === 'readyToSend' || stepState === 'sending') {
+         return;
+      }
       const detections = results?.detections ?? [];
+      const rule = getCurrentRule();
       const { minFaceRatio } = readDetectionConfig();
       const foundNow = hasValidFace(detections, {
-         minScore: MIN_DETECTION_SCORE,
+         minScore: rule.minScoreExit,
          minFaceRatio,
       });
 
@@ -856,27 +1348,23 @@ document.addEventListener('DOMContentLoaded', () => {
       lastFaceDetected = stable;
       setFaceStatus(stable);
 
-      if (ui.debugToggle && ui.debugToggle.checked && detections.length) {
-         const now = Date.now();
-         if (now - lastDetectionLogAt > 1000) {
-            console.log('[MP raw detection sample]', detections[0]);
-            lastDetectionLogAt = now;
-         }
-      }
-
       if (!detections.length) {
          isAligned = false;
          alignedState = false;
+         lastFaceForCapture = null;
+         setStepState('aligning');
          updateEnrollState('bad', false);
          holdProgress = 0;
          renderDebug(null, ovalTarget, { level: 'bad', score: 0, dist: 0, sizeRel: 0, sizeRelX: 0, sizeRelY: 0, inside: false, sizeOk: false, scoreOk: false, dx: 0, dy: 0, progress: 0 }, 0);
          return;
       }
 
-      const bestFace = pickBestFace(detections, ovalTarget);
+      const bestFace = pickBestFace(detections, ovalTarget, rule);
       if (!bestFace) {
          isAligned = false;
          alignedState = false;
+         lastFaceForCapture = null;
+         setStepState('aligning');
          updateAlignUI('bad', 0);
          holdProgress = 0;
          updateEnrollState('bad', true);
@@ -885,10 +1373,23 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const smoothedFace = smoothFace(bestFace);
-      const validation = validateAlignment(smoothedFace, ovalTarget, alignedState);
-      alignedState = validation.aligned;
+      lastFaceForCapture = {
+         score: bestFace.score,
+         box: {
+            xCenter: smoothedFace.cx,
+            yCenter: smoothedFace.cy,
+            width: smoothedFace.w,
+            height: smoothedFace.h,
+         },
+      };
+      const validation = validateAlignment(smoothedFace, ovalTarget, alignedState, rule, getCurrentStepKey());
+      const isAcceptedLevel = validation.level === 'ok' || validation.level === 'near';
+      alignedState = validation.aligned || isAcceptedLevel;
       isAligned = alignedState;
-      updateAlignUI(validation.level, validation.level === 'ok' ? AUTO_STABLE_FRAMES : 0);
+      if (isAcceptedLevel && stepState === 'aligning') {
+         setStepState('holding');
+      }
+      updateAlignUI(validation.level, isAcceptedLevel ? CONFIG.wizard.stableFrames : 0);
       updateEnrollState(validation.level, true);
       renderDebug(
          smoothedFace,
@@ -906,28 +1407,11 @@ document.addEventListener('DOMContentLoaded', () => {
             dy: validation.dy,
             progress: holdProgress,
             level: validation.level,
+            profileHintOk: validation.profileHintOk,
          },
          detections.length
       );
 
-      if (ui.debugToggle && ui.debugToggle.checked) {
-         console.log('[debug] face', {
-            score: smoothedFace.score,
-            cx: smoothedFace.cx,
-            cy: smoothedFace.cy,
-            w: smoothedFace.w,
-            h: smoothedFace.h,
-            dist: validation.dist,
-            sizeRel: validation.sizeRel,
-            inside: validation.inside,
-            sizeOk: validation.sizeOk,
-            scoreOk: validation.scoreOk,
-            dx: validation.dx,
-            dy: validation.dy,
-            level: validation.level,
-            detections: detections.length,
-         });
-      }
    }
 
    function startDetectionLoop() {
@@ -951,7 +1435,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .finally(() => {
                detectionInFlight = false;
             });
-      }, DETECTION_INTERVAL_MS);
+      }, CONFIG.detection.intervalMs);
    }
 
    function stopDetectionLoop() {
@@ -962,9 +1446,12 @@ document.addEventListener('DOMContentLoaded', () => {
       detectionInFlight = false;
       stableOkFrames = 0;
       holdStartTs = null;
+      countdownStartTs = null;
       holdProgress = 0;
       captureQueued = false;
       isAligned = false;
+      clearCountdown();
+      setStepState('idle');
       updateAlignUI('off', 0);
       setUiState('idle', 'Camara detenida', 'Inicia la camara para continuar.', 0);
       renderDebug(null, ovalTarget);
@@ -974,7 +1461,18 @@ document.addEventListener('DOMContentLoaded', () => {
       if (stream) {
          return true;
       }
-      const result = await requestCamera(ui.video);
+      if (!selectedIdentificacion) {
+         setUiState('need_id', 'Selecciona identificacion', 'Selecciona una identificacion para continuar.', 0);
+         inlineAlert('warning', 'Selecciona una identificacion antes de iniciar la camara.');
+         return false;
+      }
+      let result = { stream: null, error: null };
+      for (const constraints of CAMERA_CONSTRAINTS_FALLBACK) {
+         result = await requestCamera(ui.video, constraints);
+         if (result.stream) {
+            break;
+         }
+      }
       if (!result.stream) {
          inlineAlert('danger', result.error || 'No se pudo acceder a la camara.');
          setCameraStatus('error');
@@ -992,8 +1490,17 @@ document.addEventListener('DOMContentLoaded', () => {
       ovalTarget = getOvalTargetFromDOM();
       setCameraStatus('on');
       setButtons(true);
-      setUiState('searching', 'Buscando rostro...', 'Coloca tu cara dentro del ovalo.', 0);
+      transitionBlockedUntil = 0;
+      setStepState('aligning');
+      updateWizardUI();
+      const stepKey = getCurrentStepKey();
+      setUiState('searching', `Paso ${currentStepIndex + 1}/3: ${STEP_LABELS[stepKey]}`, STEP_HINTS[stepKey], 0);
       startDetectionLoop();
+      const ok = await checkHealth();
+      if (!ok) {
+         inlineAlert('warning', 'Servicio fuera de linea. Esperando reconexion...');
+         startHealthPolling();
+      }
       return true;
    }
 
@@ -1002,40 +1509,52 @@ document.addEventListener('DOMContentLoaded', () => {
       setCameraStatus('off');
       setButtons(false);
       stopDetectionLoop();
+      stopHealthPolling();
    }
 
-   async function captureBlobForApi() {
-      if (detectionEnabled && !lastFaceDetected) {
-         inlineAlert('warning', 'No hay cara para capturar.');
-         return null;
-      }
-      const autoEnabled = !!(ui.autoCaptureToggle && ui.autoCaptureToggle.checked);
-      if (!autoEnabled && detectionEnabled && !isAligned) {
-         const shown = showSwal('warning', 'Coloca tu rostro dentro del ovalo para enrolar.', 'Atencion');
-         if (!shown) {
-            inlineAlert('warning', 'Coloca tu rostro dentro del ovalo para enrolar.');
-         }
+   async function captureBlobForStep() {
+      if (detectionEnabled && (!lastFaceDetected || !isAligned)) {
+         inlineAlert('warning', 'Alinea tu rostro antes de capturar este paso.');
          return null;
       }
       const ok = await startCamera();
-      if (!ok) {
-         return null;
-      }
-      if (ui.video.readyState < 2) {
+      if (!ok || ui.video.readyState < 2) {
          inlineAlert('warning', 'La camara no esta lista para capturar.');
          return null;
       }
-      const config = readConfig();
-      const blob = await captureJpegFromVideo(ui.video, ui.canvas, config);
-      if (!blob) {
-         inlineAlert('warning', 'No se pudo capturar la imagen.');
-         return null;
+
+      if (lastFaceForCapture?.box) {
+         const isSmallFace = (lastFaceForCapture.box.width || 0) < CONFIG.crop.smallFaceW;
+         const blob = await cropFaceToBlob(ui.video, ui.canvas, lastFaceForCapture, {
+            size: isSmallFace ? CONFIG.crop.bigSize : CONFIG.crop.baseSize,
+            padding: isSmallFace ? CONFIG.crop.paddingSmall : CONFIG.crop.padding,
+            quality: isSmallFace ? CONFIG.crop.qualitySmall : CONFIG.crop.quality,
+         });
+         if (blob) return blob;
       }
-      return blob;
+
+      const config = readConfig();
+      return captureFullFrameBlob(ui.video, ui.canvas, {
+         width: config.width,
+         height: config.height,
+         quality: config.quality,
+      });
    }
 
-   async function enrollFace() {
-      if (requestInFlight) return;
+   function resetAlignmentForNextStep() {
+      stableOkFrames = 0;
+      holdStartTs = null;
+      countdownStartTs = null;
+      holdProgress = 0;
+      captureQueued = false;
+      autoCaptureCooldownUntil = 0;
+      alignedState = false;
+      isAligned = false;
+      clearCountdown();
+   }
+
+   async function captureCurrentStep() {
+      if (requestInFlight || stepCaptureInFlight) return;
       const identificacion = selectedIdentificacion || '';
       if (!identificacion) {
          setUiState('need_id', 'Selecciona identificacion', 'Selecciona una identificacion para continuar.', 0);
@@ -1043,52 +1562,143 @@ document.addEventListener('DOMContentLoaded', () => {
          captureQueued = false;
          return;
       }
-      const blob = await captureBlobForApi();
-      if (!blob) {
+      const stepKey = getCurrentStepKey();
+      stepCaptureInFlight = true;
+      setUiState('capture', `Paso ${currentStepIndex + 1}/3: ${STEP_LABELS[stepKey]}`, 'Capturando...', 1);
+
+      try {
+         const blob = await captureBlobForStep();
+         if (!blob) {
+            setUiState('error', 'Captura no valida', 'No se pudo capturar este paso. Intenta de nuevo.', 0);
+            setStepState('aligning');
+            return;
+         }
+         enrollShots[stepKey] = blob;
+         renderShotPreview(stepKey);
+         updateWizardUI();
+         setUiState('capture', `Paso ${currentStepIndex + 1}/3: ${STEP_LABELS[stepKey]}`, 'Capturado \u2713', 1);
+         resetAlignmentForNextStep();
+         if (currentStepIndex < ENROLL_STEPS.length - 1) {
+            setStepTransitionCooldown();
+            setUiState('capture', `Paso ${currentStepIndex + 1}/3: ${STEP_LABELS[stepKey]}`, 'Capturado ✓. Pulsa continuar para seguir.', 1);
+         } else {
+            setStepState('readyToSend');
+            setUiState('capture', 'Capturas listas', 'Revisa las 3 fotos y pulsa "Enviar enrolamiento".', 1);
+         }
+      } finally {
+         stepCaptureInFlight = false;
          captureQueued = false;
+      }
+   }
+
+   function goToNextStep() {
+      if (currentStepIndex >= ENROLL_STEPS.length - 1) {
+         setStepState('readyToSend');
+         updateWizardActions();
+         return;
+      }
+      currentStepIndex += 1;
+      resetAlignmentForNextStep();
+      setStepState('aligning');
+      transitionBlockedUntil = Date.now() + CONFIG.wizard.transitionCooldownMs;
+      updateWizardUI();
+      const stepKey = getCurrentStepKey();
+      setUiState('searching', `Prep\u00e1rate para paso ${currentStepIndex + 1}/3`, STEP_HINTS[stepKey], 0);
+   }
+
+   function buildEnrollFormData(identificacion) {
+      const formData = new FormData();
+      ENROLL_STEPS.forEach((stepKey, index) => {
+         const blob = enrollShots[stepKey];
+         if (blob) {
+            formData.append('images[]', blob, `${stepKey}.jpg`);
+            formData.append(stepKey, blob, `${stepKey}.jpg`);
+         }
+      });
+      formData.append('identificacion', identificacion);
+      return formData;
+   }
+
+   async function submitEnroll() {
+      if (requestInFlight) return;
+      const identificacion = selectedIdentificacion || '';
+      if (!identificacion) {
+         inlineAlert('warning', 'Selecciona una identificacion para continuar.');
+         return;
+      }
+      const missing = ENROLL_STEPS.filter((key) => !enrollShots[key]);
+      if (missing.length) {
+         setUiState('error', 'Captura incompleta', 'Debes completar los 3 pasos antes de enviar.', 0);
+         return;
+      }
+      const healthOk = await checkHealth();
+      if (!healthOk) {
+         setUiState('error', 'Servicio fuera de linea', 'No es posible enrolar en este momento.', 0);
+         inlineAlert('warning', 'Servicio fuera de linea. Esperando reconexion...');
+         startHealthPolling();
          return;
       }
 
       setApiBusy(true);
-      setUiState('sending', 'Enrolando...', 'Validando registro...', 1);
+      setStepState('sending');
+      setUiState('sending', 'Enrolando...', 'Enviando capturas para validar...', 1);
       try {
-         const formData = new FormData();
-         formData.append('image', blob, 'frame.jpg');
-         formData.append('identificacion', identificacion);
-
          const response = await fetch(getEndpointUrl(), {
             method: 'POST',
             headers: {
-               'Accept': 'application/json',
+               Accept: 'application/json',
                'X-CSRF-TOKEN': getCsrfToken(),
             },
-            body: formData,
+            body: buildEnrollFormData(identificacion),
             credentials: 'same-origin',
          });
          const data = await response.json().catch(() => null);
          if (!response.ok || !data) {
             showError('No se pudo enrolar. Intentalo de nuevo.');
+            setUiState('error', 'Error al enrolar', 'Reintenta el envio o repite el paso.', 0);
+            setStepState('readyToSend');
             return;
          }
          const ok = data.status === 'ok' || data.ok === true;
          if (!ok) {
             showError(data.message || 'No se pudo enrolar. Intentalo de nuevo.');
-            setUiState('error', 'Error al enrolar', 'Intenta de nuevo.', 0);
+            setUiState('error', 'Error al enrolar', 'Reintenta el envio o repite el paso.', 0);
+            setStepState('readyToSend');
             return;
          }
          finishSuccess(`Enrolado correctamente. Identificacion: ${identificacion}`);
       } catch (error) {
+         serviceOnline = false;
+         setServiceStatus('error');
+         startHealthPolling();
          showError('No se pudo enrolar. Intentalo de nuevo.');
-         setUiState('error', 'Error al enrolar', 'Intenta de nuevo.', 0);
+         setUiState('error', 'Error al enrolar', 'Reintenta el envio o repite el paso.', 0);
+         setStepState('readyToSend');
       } finally {
          setApiBusy(false);
-         captureQueued = false;
       }
    }
 
    if (ui.startBtn) ui.startBtn.addEventListener('click', startCamera);
    if (ui.stopBtn) ui.stopBtn.addEventListener('click', stopCamera);
-   if (ui.enrollBtn) ui.enrollBtn.addEventListener('click', enrollFace);
+   if (ui.enrollBtn) ui.enrollBtn.addEventListener('click', submitEnroll);
+   if (ui.continueStepBtn) {
+      ui.continueStepBtn.addEventListener('click', () => {
+         if (stepState !== 'awaitContinue') return;
+         goToNextStep();
+      });
+   }
+   if (ui.sendEnrollBtn) {
+      ui.sendEnrollBtn.addEventListener('click', submitEnroll);
+   }
+   if (ui.repeatStepBtn) {
+      ui.repeatStepBtn.addEventListener('click', () => {
+         const stepKey = getCurrentStepKey();
+         clearStepCapture(stepKey);
+         setStepState('aligning');
+         setUiState('adjusting', `Paso ${currentStepIndex + 1}/3: ${STEP_LABELS[stepKey]}`, STEP_HINTS[stepKey], 0);
+      });
+   }
 
    if (ui.faceDetectionToggle) {
       ui.faceDetectionToggle.addEventListener('change', () => {
@@ -1097,7 +1707,8 @@ document.addEventListener('DOMContentLoaded', () => {
          setFaceStatus(false);
          stableOkFrames = 0;
          updateAlignUI(detectionEnabled ? 'bad' : 'off', 0);
-         setUiState('searching', 'Buscando rostro...', 'Coloca tu cara dentro del ovalo.', 0);
+         const stepKey = getCurrentStepKey();
+         setUiState('searching', `Paso ${currentStepIndex + 1}/3: ${STEP_LABELS[stepKey]}`, STEP_HINTS[stepKey], 0);
          if (detectionEnabled) {
             startDetectionLoop();
          } else {
@@ -1124,6 +1735,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
    window.addEventListener('pagehide', () => {
       stopCamera();
+      stopHealthPolling();
+      releasePreviewUrls();
    });
 
    window.addEventListener('resize', () => {
@@ -1135,9 +1748,16 @@ document.addEventListener('DOMContentLoaded', () => {
    initPersonSelect();
    setCameraStatus('off');
    setFaceStatus(false);
+   setServiceStatus('loading');
    updateAlignUI(detectionEnabled ? 'bad' : 'off', 0);
    setUiState('need_id', 'Selecciona identificacion', 'Selecciona una identificacion para continuar.', 0);
    setButtons(false);
+   resetWizardState();
+   void checkHealth().then((ok) => {
+      if (!ok) {
+         startHealthPolling();
+      }
+   });
    if (ui.enrollBtn) {
       ui.enrollBtn.disabled = !ui.debugToggle?.checked;
       ui.enrollBtn.classList.toggle('d-none', !ui.debugToggle?.checked);

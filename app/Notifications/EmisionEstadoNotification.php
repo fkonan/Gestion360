@@ -2,12 +2,12 @@
 
 namespace App\Notifications;
 
-use App\Models\GESTIONADMIN\SIG\Documentos;
-use App\Models\GESTIONADMIN\SIG\DocumentosVersiones;
+use App\Modules\SIG\Models\Documentos;
+use App\Modules\SIG\Models\DocumentosVersiones;
 use App\Notifications\Channels\AutogestionDatabaseChannel;
 use App\Notifications\Concerns\AutogestionPayload;
-use Illuminate\Notifications\Notification;
 use App\Notifications\Contracts\AutogestionNotification;
+use Illuminate\Notifications\Notification;
 
 class EmisionEstadoNotification extends Notification implements AutogestionNotification
 {
@@ -45,7 +45,7 @@ class EmisionEstadoNotification extends Notification implements AutogestionNotif
         'nombre' => $nombre,
         'version' => $this->version->version,
         'tipo_solicitud' => $this->tipoSolicitud,
-        'url_destino' => route('mapa-procesos.emisiones.devueltas'),
+        'url_destino' => route('sig.mis-solicitudes.index'),
       ],
     ]);
   }

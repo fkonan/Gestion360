@@ -6,7 +6,7 @@ use App\Models\GESTIONADMIN\Persona;
 use App\Models\GESTIONADMIN\PersonaDatos;
 use App\Models\User;
 use App\Modules\GestionRRHH\Services\EmpleadoService;
-use App\Shared\Services\UsuarioService;
+use App\Services\UsuarioService;
 use Auth;
 use Illuminate\Support\Facades\DB;
 use Exception;
@@ -41,6 +41,8 @@ class LoginValidatorService
       return ['message' => 'Solo los empleados activos pueden iniciar sesión.', 'type' => 'danger'];
     }
 
+    //$this->checkSHA1Password($password, $persona->clave)
+
     if ($this->checkSHA1Password($password, $persona->clave)) {
       //crear el registro en autogestion trayendo los campos de logtrans
       $rh = $persona->rh == '0' ? '+' : '-';
@@ -71,7 +73,7 @@ class LoginValidatorService
         $personas->PerNombres = $persona->pnombre . ' ' . $persona->snombre;
         $personas->PerGenero = $persona->sexo == 'M' ? 'MASCULINO' : 'FEMENINO';
         $personas->PerFecNac = $persona->fecnacimiento;
-        $personas->PerLugNac = $persona->codigo;
+        $personas->PerLugNac = $persona->codigo ?? 0;
         $personas->PerFecExp = now()->format('Y-m-d');
         $personas->PerLugExp = '0';
         $personas->PerGruRh = $tipo_sangre;
@@ -85,7 +87,7 @@ class LoginValidatorService
         $personas_datos->PerEmail = $persona->dirweb;
         $personas_datos->PerDir = $persona->direccion;
         $personas_datos->PerMunRes = $persona->mu_id;
-        $personas_datos->PerTelefono = $persona->celular;
+        $personas_datos->PerTelefono = $persona->celular ?? '0';
         $personas_datos->PerFecReg = now()->format('Y-m-d');
         $personas_datos->PerHorReg = now()->format('H:i:s');
         $personas_datos->PerAutTra = "SI";

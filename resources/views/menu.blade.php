@@ -28,6 +28,7 @@
         <li class="nav-item">
           <a
             class="nav-link submodule"
+            data-active-match="{{ $submodulo->ModRuta === 'mapaProcesos.index' ? 'exact' : 'prefix' }}"
             href="{{ $submodulo->ModRuta && Route::has($submodulo->ModRuta) ? route($submodulo->ModRuta) : '#' }}">
             <i class="nav-icon fas {{ $submodulo->ModIcono }} "></i>
             <p>{{ Str::title($submodulo->ModNom) }}</p>

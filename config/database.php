@@ -114,7 +114,7 @@ return [
             'port' => env('DB_PORT_4', '1521'),
             'database' => env('DB_DATABASE_4', 'PRUEBAS'),
             'username' => env('DB_USERNAME_4', 'LOGTRANSPRO'),
-            'password' => env('DB_PASSWORD_4', 'Copetran2024'),
+            'password' => env('DB_PASSWORD_4'),
             'charset' => 'AL32UTF8',
             'prefix' => '',
             'prefix_schema' => '',
@@ -123,7 +123,7 @@ return [
             ]
         ],
 
-         //CONEXION SQLSERVER GESTION PASAJES PRUEBAS
+         //CONEXION SQLSERVER GESTION PASAJES
          'sqlsrv' => [
             'driver' => 'sqlsrv',
             'url' => env('DB_URL_5'),
@@ -131,8 +131,24 @@ return [
             'port' => env('DB_PORT_5', '1433'),
             'database' => env('DB_DATABASE_5', 'WF_COPE_TEST'),
             'username' => env('DB_USERNAME_5', 'Gestion_Pasajes'),
-            'password' => env('DB_PASSWORD_5', 'Cope202301*'),
+            'password' => env('DB_PASSWORD_5'),
             'charset' => env('DB_CHARSET_5', 'utf8'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            // 'encrypt' => env('DB_ENCRYPT', 'yes'),
+            // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
+        ],
+
+        //CONEXION SQLSERVER GESTION PASAJES (SOLO LECTURA)
+         'sqlsrv-lectura' => [
+            'driver' => 'sqlsrv',
+            'url' => env('DB_URL_7'),
+            'host' => env('DB_HOST_7', '172.16.48.108'),
+            'port' => env('DB_PORT_7', '1433'),
+            'database' => env('DB_DATABASE_7', 'WF_COPE_TEST'),
+            'username' => env('DB_USERNAME_7', 'Gestion_Pasajes'),
+            'password' => env('DB_PASSWORD_7'),
+            'charset' => env('DB_CHARSET_7', 'utf8'),
             'prefix' => '',
             'prefix_indexes' => true,
             // 'encrypt' => env('DB_ENCRYPT', 'yes'),
@@ -149,6 +165,23 @@ return [
             'username' => env('DB_USERNAME_6'),
             'password' => env('DB_PASSWORD_6'),
             'service_name' => env('DB_SERVICE_NAME_6'),
+            'charset' => 'AL32UTF8',
+            'prefix' => '',
+            'prefix_schema' => '',
+            'options' => [
+                PDO::ATTR_AUTOCOMMIT => false,
+            ]
+        ],
+
+        //ORACLE-LOGTRANS PRUEBAS  (esta conexion es exclusiva de pruebas)
+        'oracle-pruebas' => [
+            'driver' => 'oracle',
+            'tns' => '',
+            'host' => env('DB_HOST_8', '172.16.50.51'),
+            'port' => env('DB_PORT_8', '1521'),
+            'database' => env('DB_DATABASE_8', 'PRUEBAS'),
+            'username' => env('DB_USERNAME_8'),
+            'password' => env('DB_PASSWORD_8'),
             'charset' => 'AL32UTF8',
             'prefix' => '',
             'prefix_schema' => '',

@@ -78,6 +78,7 @@ class Permisos
     const SIG_MAPA_PROCESOS_VER_EMISION = 'sig.mapa_procesos.ver_emision';
     const SIG_MAPA_PROCESOS_EDITAR = 'sig.mapa_procesos.editar';
     const SIG_MAPA_PROCESOS_VER_TODOS = 'sig.mapa_procesos.ver_todos';
+    const SIG_MAPA_PROCESOS_LISTADO_MAESTRO = 'sig.mapa_procesos.listado_maestro';
 
     // BIOMETRIA
     const BIOMETRIA_GESTION_HUELLERO_ACCESO_PERSONAL = 'biometria.gestion_huellero.acceso_personal';
@@ -85,4 +86,8 @@ class Permisos
     const BIOMETRIA_GESTION_HUELLERO_ENROLL = 'biometria.gestion_huellero.enroll';
     const BIOMETRIA_GESTION_HUELLERO_VERIFICAR = 'biometria.gestion_huellero.verificar';
     const BIOMETRIA_GESTION_HUELLERO_DESCANSO_CONDUCTORES = 'biometria.gestion_huellero.descanso_conductores';
+
+    // BIOMETRIA - CAMARA
+    const BIOMETRIA_GESTION_CAMARA_ENROLL = 'biometria.reconocimiento_facial.enroll';
+    const BIOMETRIA_GESTION_CAMARA_RECONOCER = 'biometria.reconocimiento_facial.reconocer';
 }

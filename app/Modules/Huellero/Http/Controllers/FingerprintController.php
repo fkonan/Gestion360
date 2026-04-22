@@ -3,14 +3,12 @@
 namespace App\Modules\Huellero\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\GESTIONADMIN\Notificaciones;
-use App\Models\GESTIONADMIN\Persona;
-use App\Models\HUELLERO\PrsHuellaEventos;
-use App\Models\HUELLERO\PrsPersonas;
-use App\Models\User;
-use App\Models\LOGTRANS\PerContratoPersona;
-use App\Models\LOGTRANS\PerPersonas;
-use App\Models\ODIN\PerIdentHuella;
+use App\Modules\GestionRRHH\Models\PerContratoPersona;
+use App\Modules\GestionRRHH\Models\PerPersonas;
+use App\Modules\Huellero\Models\PerIdentHuella;
+use App\Modules\Huellero\Models\PrsHuellaEventos;
+use App\Modules\Huellero\Models\PrsPersonas;
+use App\Modules\Huellero\Services\RegistrarEventoEmpleadoService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -20,6 +18,11 @@ use Throwable;
 
 class FingerprintController extends Controller
 {
+  public function __construct(
+    private readonly RegistrarEventoEmpleadoService $registrarEventoEmpleadoService
+  ) {
+  }
+
   public function enroll(Request $request)
   {
     $idCreacion = null;
@@ -30,7 +33,7 @@ class FingerprintController extends Controller
         ->value('id');
     }
 
-    return view('fingerprint.enroll', [
+    return view('huellero::fingerprint.enroll', [
       'dedos' => PerIdentHuella::dedosDisponibles(),
       'idCreacion' => $idCreacion,
     ]);
@@ -38,31 +41,46 @@ class FingerprintController extends Controller
 
   public function gestionHuellero()
   {
-    return view('modulos.gestionHuellero');
+    return view('huellero::modulos.gestionHuellero');
   }
 
   public function verify(Request $request)
   {
-    return view('fingerprint.verify', [
+    return view('huellero::fingerprint.verify', [
       'dedos' => PerIdentHuella::dedosDisponibles(),
     ]);
   }
 
   public function eventosEmpleados(Request $request)
   {
-    return view('fingerprint.ingreso_personal');
+    return $this->vistaEventosEmpleados(true);
+  }
+
+  public function eventosEmpleadosManual(Request $request)
+  {
+    return $this->vistaEventosEmpleados(false);
   }
 
   public function eventosConductores(Request $request)
   {
-    return view('fingerprint.descanso_conductores');
+    return view('huellero::fingerprint.descanso_conductores');
+  }
+
+  private function vistaEventosEmpleados(bool $automatico)
+  {
+    return view('huellero::fingerprint.ingreso_personal', [
+      'modoAutomatico' => $automatico,
+      'tituloIngresoPersonal' => $automatico
+        ? 'Ingreso personal automatico'
+        : 'Ingreso personal manual',
+    ]);
   }
 
   public function storeEventoEmpleado(Request $request)
   {
     $validator = Validator::make($request->all(), [
-      'evento' => ['required', 'in:1,2'],
-      'descripcion' => ['required', 'in:entrada,salida'],
+      'evento' => ['nullable', 'in:1,2'],
+      'descripcion' => ['nullable', 'in:entrada,salida'],
       'identificacion' => ['required', 'string', 'max:50'],
       'fecha' => ['nullable', 'date'],
     ]);
@@ -79,98 +97,48 @@ class FingerprintController extends Controller
     }
 
     $payload = $validator->validated();
-      $nombre = null;
-      $cargo = null;
-      $usuarioCreacionId = null;
-      $documentoUsuario = $request->user()?->persona?->PerNumDoc;
-      if ($documentoUsuario) {
-        $usuarioCreacionId = PrsPersonas::query()
-          ->where('numero_documento', $documentoUsuario)
-          ->value('id');
-      }
+    $eventoManual = array_key_exists('evento', $payload) && $payload['evento'] !== null
+      ? (int) $payload['evento']
+      : null;
+    $fecha = isset($payload['fecha']) ? Carbon::parse($payload['fecha']) : null;
 
-    try {
-      $limiteDuplicado = now()->subMinutes(5);
-      $eventoReciente = PrsHuellaEventos::query()
-        ->where('identificacion', $payload['identificacion'])
-        ->where('evento', (int) $payload['evento'])
-        ->where('tipo', 1)
-        ->where('fecha_creacion', '>=', $limiteDuplicado)
-        ->orderByDesc('fecha_creacion')
-        ->first();
+    $resultado = $this->registrarEventoEmpleadoService->registrar(
+      (string) $payload['identificacion'],
+      $eventoManual,
+      $fecha,
+      $request->user()?->persona?->PerNumDoc,
+      $request->user()?->IdUsuario,
+      'huella'
+    );
 
-      if ($eventoReciente) {
-        return response()->json([
-          'ok' => false,
-          'error' => 'Ya existe un registro reciente para este evento. Intenta nuevamente en unos minutos.',
-        ], 422);
-      }
-
-      $contratoPersona = PerContratoPersona::query()
-        ->where('identificacion', $payload['identificacion'])
-        ->where('estborrado', 0)
-        ->whereHas('perEmpresaPersonas', function ($query) {
-          $query->where('activo', 1)
-            ->where('estborrado', 0)
-            ->whereNull('fecfin')
-            ->whereIn('tp_id', [1, 11]);
-        })
-        ->first();
-
-      if (!$contratoPersona) {
-        $this->huelleroLogger()->warning('Huellero evento empleado contrato no encontrado', [
-          'identificacion' => $payload['identificacion'],
-        ]);
-        return response()->json([
-          'ok' => false,
-          'error' => 'La persona no fue encontrada o no esta disponible.',
-        ], 422);
-      }
-
-      $nombre = $contratoPersona->nombreCompleto();
-      $cargoDetalle = $contratoPersona->cargoDetallado();
-      if ($cargoDetalle) {
-        $cargo = $cargoDetalle->descripcion
-          ?? $cargoDetalle->nombre
-          ?? $cargoDetalle->cargo
-          ?? $cargoDetalle->codigo
-          ?? null;
-      }
-      $tipo = 1;
-      $tpId = (int) ($contratoPersona->perEmpresaPersonas?->tp_id ?? 0);
-      if ($tpId === 11) {
-        $tipo = 2;
-      }
-
-      $evento = new PrsHuellaEventos();
-      $evento->evento = (int) $payload['evento'];
-      $evento->descripcion = $payload['descripcion'];
-      $evento->tipo = $tipo;
-      $evento->identificacion = $payload['identificacion'];
-      $fecha = isset($payload['fecha']) ? Carbon::parse($payload['fecha']) : now();
-      $evento->fecha_creacion = $fecha;
-      $evento->usuario_creacion = $usuarioCreacionId;
-      $evento->save();
-
-      $this->registrarNotificacionEventoEmpleado($payload['identificacion'], (int) $payload['evento'], $fecha);
-    } catch (Throwable $e) {
-      $this->huelleroLogger()->warning('Huellero evento empleado error', [
-        'identificacion' => $payload['identificacion'] ?? null,
-        'message' => $e->getMessage(),
-      ]);
+    if (($resultado['ok'] ?? false) !== true) {
       return response()->json([
         'ok' => false,
-        'error' => 'No se pudo guardar el evento.',
-      ], 500);
+        'error' => $resultado['error'] ?? 'No se pudo guardar el evento.',
+        'status' => $resultado['status'] ?? null,
+        'evento' => $resultado['evento'] ?? null,
+        'motivo' => $resultado['motivo'] ?? null,
+        'horario_cargo_id' => $resultado['horario_cargo_id'] ?? null,
+        'cargo_id' => $resultado['cargo_id'] ?? null,
+        'flags' => $resultado['flags'] ?? [
+          'llegada_tarde' => false,
+          'cargo_especial' => false,
+        ],
+      ], (int) ($resultado['http_status'] ?? 422));
     }
 
     return response()->json([
       'ok' => true,
-      'data' => [
-        'id' => $evento->getKey(),
-        'nombre' => $nombre,
-        'cargo' => $cargo,
+      'status' => $resultado['status'] ?? 'OK',
+      'evento' => $resultado['evento'] ?? null,
+      'motivo' => null,
+      'horario_cargo_id' => $resultado['horario_cargo_id'] ?? null,
+      'cargo_id' => $resultado['cargo_id'] ?? null,
+      'flags' => $resultado['flags'] ?? [
+        'llegada_tarde' => false,
+        'cargo_especial' => false,
       ],
+      'data' => $resultado['data'] ?? null,
     ]);
   }
 
@@ -191,7 +159,7 @@ class FingerprintController extends Controller
     }
 
     $personas = PerPersonas::query()
-      ->where('identificacion', 'like', '%' . $query . '%')
+      ->where('identificacion', 'like', $query . '%')
       ->where('tipdocumento', 1)
       ->where('estado', 'ACTIVO')
       ->where('estborrado', 0)
@@ -239,6 +207,7 @@ class FingerprintController extends Controller
         'documento' => $documento,
         'nombre' => $nombre,
         'evento' => $eventoPorPersona[$persona->id] ?? 1,
+        'cargo' => null,
       ];
     });
 
@@ -278,15 +247,21 @@ class FingerprintController extends Controller
 
     try {
       $limiteDuplicado = now()->subMinutes(5);
-      $eventoReciente = PrsHuellaEventos::query()
+      $ultimoEvento = PrsHuellaEventos::query()
         ->where('identificacion', $payload['identificacion'])
-        ->where('evento', (int) $payload['evento'])
         ->where('tipo', 2)
-        ->where('fecha_creacion', '>=', $limiteDuplicado)
         ->orderByDesc('fecha_creacion')
         ->first();
 
-      if ($eventoReciente) {
+      $fechaUltimoEvento = $ultimoEvento?->fecha_creacion
+        ? Carbon::parse($ultimoEvento->fecha_creacion)
+        : null;
+      $esEventoRepetidoEnVentana = $ultimoEvento
+        && (int) $ultimoEvento->evento === (int) $payload['evento']
+        && $fechaUltimoEvento
+        && $fechaUltimoEvento->greaterThanOrEqualTo($limiteDuplicado);
+
+      if ($esEventoRepetidoEnVentana) {
         return response()->json([
           'ok' => false,
           'error' => 'Ya existe un registro reciente para este evento. Intenta nuevamente en unos minutos.',
@@ -334,6 +309,7 @@ class FingerprintController extends Controller
       $fecha = isset($payload['fecha']) ? Carbon::parse($payload['fecha']) : now();
       $evento->fecha_creacion = $fecha;
       $evento->usuario_creacion = $usuarioCreacionId;
+      $evento->llegada_tarde = 0;
       $evento->save();
     } catch (Throwable $e) {
       $this->huelleroLogger()->warning('Huellero evento conductor error', [
@@ -354,52 +330,6 @@ class FingerprintController extends Controller
         'cargo' => $cargo,
       ],
     ]);
-  }
-
-  private function registrarNotificacionEventoEmpleado(string $identificacion, int $evento, ?Carbon $fecha = null): bool
-  {
-    try {
-      $persona = Persona::query()
-        ->where('PerNumDoc', $identificacion)
-        ->first();
-
-      if (!$persona) {
-        return false;
-      }
-
-      $usuario = null;
-      $usuario = User::query()
-        ->where('idPersona', $persona->IdPersona)
-        ->first();
-
-      if (!$usuario) {
-        return false;
-      }
-
-      $isSalida = $evento === 1;
-      $titulo = $isSalida ? 'Salida registrada' : 'Ingreso registrado';
-      $fechaEvento = $fecha ? $fecha->format('h:i A d/m/Y') : now()->format('h:i A d/m/Y');
-      $bodyPush = $isSalida
-        ? 'Hasta luego. Tu salida se registró a las ' . $fechaEvento . '.'
-        : 'Bienvenido. Tu ingreso se registró a las ' . $fechaEvento . '.';
-      $destino = json_encode(['usuarios' => [(int) $usuario->IdUsuario]]);
-
-      Notificaciones::create([
-        'titulo' => $titulo,
-        'bodyPush' => $bodyPush,
-        'usuarioCrea' => auth()->user()?->IdUsuario ?? null,
-        'destino' => $destino,
-        'privacidad' => 'privada',
-        'createdBy' => 'Gestion360',
-      ]);
-      return true;
-    } catch (Throwable $e) {
-      $this->huelleroLogger()->error('Huellero notificacion evento empleado error', [
-        'identificacion' => $identificacion,
-        'message' => $e->getMessage(),
-      ]);
-      return false;
-    }
   }
 
   public function ultimoEventoEmpleado(Request $request)
@@ -464,6 +394,92 @@ class FingerprintController extends Controller
     ]);
   }
 
+  public function ultimosEventosEmpleado()
+  {
+    try {
+      $rows = DB::connection('oracle-360')
+        ->table('PRS_EVENTOS as e')
+        ->leftJoin('PRS_PERSONAS as p', 'p.numero_documento', '=', 'e.identificacion')
+        ->whereIn('e.evento', [1, 2])
+        ->orderByDesc('e.fecha_creacion')
+        ->limit(10)
+        ->get([
+          'e.identificacion',
+          'e.evento',
+          'e.descripcion',
+          'e.fecha_creacion',
+          'p.NOMBRES as nombres',
+          'p.PRIMER_APELLIDO as primer_apellido',
+          'p.SEGUNDO_APELLIDO as segundo_apellido',
+        ]);
+    } catch (Throwable $e) {
+      $this->huelleroLogger()->error('Huellero ultimos eventos empleado error', [
+        'message' => $e->getMessage(),
+      ]);
+      return response()->json([
+        'ok' => false,
+        'error' => 'No se pudo consultar los ultimos eventos.',
+      ], 500);
+    }
+
+    return response()->json([
+      'ok' => true,
+      'data' => $this->mapEventoRows($rows),
+    ]);
+  }
+
+  public function eventosHoyEmpleadoPorIdentificacion(Request $request)
+  {
+    $validator = Validator::make($request->all(), [
+      'identificacion' => ['required', 'string', 'max:20', 'regex:/^\d+$/'],
+    ]);
+
+    if ($validator->fails()) {
+      return response()->json([
+        'ok' => false,
+        'error' => 'Identificacion invalida.',
+      ], 422);
+    }
+
+    $identificacion = preg_replace('/\D+/', '', (string) $request->input('identificacion'));
+    $identificacion = trim((string) $identificacion);
+
+    try {
+      $rows = DB::connection('oracle-360')
+        ->table('PRS_EVENTOS as e')
+        ->leftJoin('PRS_PERSONAS as p', 'p.numero_documento', '=', 'e.identificacion')
+        ->where('e.identificacion', $identificacion)
+        ->whereIn('e.evento', [1, 2])
+        ->whereRaw('TRUNC(e.fecha_creacion) = TRUNC(SYSDATE)')
+        ->orderByDesc('e.fecha_creacion')
+        ->limit(30)
+        ->get([
+          'e.identificacion',
+          'e.evento',
+          'e.descripcion',
+          'e.fecha_creacion',
+          'p.NOMBRES as nombres',
+          'p.PRIMER_APELLIDO as primer_apellido',
+          'p.SEGUNDO_APELLIDO as segundo_apellido',
+        ]);
+    } catch (Throwable $e) {
+      $this->huelleroLogger()->error('Huellero eventos hoy empleado error', [
+        'identificacion' => $identificacion,
+        'message' => $e->getMessage(),
+      ]);
+      return response()->json([
+        'ok' => false,
+        'error' => 'No se pudo consultar los registros de hoy.',
+      ], 500);
+    }
+
+    return response()->json([
+      'ok' => true,
+      'identificacion' => $identificacion,
+      'data' => $this->mapEventoRows($rows),
+    ]);
+  }
+
   public function ultimoEventoConductor(Request $request)
   {
     $validator = Validator::make($request->all(), [
@@ -524,5 +540,32 @@ class FingerprintController extends Controller
         'fecha' => $fecha,
       ],
     ]);
+  }
+
+  private function mapEventoRows($rows)
+  {
+    return collect($rows)->map(function ($row) {
+      $nombre = trim(
+        trim((string) ($row->nombres ?? '')) . ' ' .
+          trim((string) ($row->primer_apellido ?? '') . ' ' . (string) ($row->segundo_apellido ?? ''))
+      );
+
+      $horaEvento = null;
+      if (!empty($row->fecha_creacion)) {
+        try {
+          $horaEvento = Carbon::parse($row->fecha_creacion)->format('g:i a');
+        } catch (Throwable $e) {
+          $horaEvento = null;
+        }
+      }
+
+      return [
+        'identificacion' => (string) ($row->identificacion ?? ''),
+        'nombre' => $nombre !== '' ? $nombre : 'Sin nombre',
+        'descripcion' => (string) ($row->descripcion ?? ''),
+        'hora_evento' => $horaEvento,
+        'evento' => (int) ($row->evento ?? 0),
+      ];
+    })->values();
   }
 }

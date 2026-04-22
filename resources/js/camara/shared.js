@@ -12,6 +12,26 @@ export function clampNumber(value, min, max, fallback) {
   return parsed;
 }
 
+export function getSourceDimensions(sourceEl) {
+  if (!sourceEl) {
+    return { width: 0, height: 0 };
+  }
+
+  const width =
+    Number(sourceEl.videoWidth) ||
+    Number(sourceEl.naturalWidth) ||
+    Number(sourceEl.clientWidth) ||
+    0;
+
+  const height =
+    Number(sourceEl.videoHeight) ||
+    Number(sourceEl.naturalHeight) ||
+    Number(sourceEl.clientHeight) ||
+    0;
+
+  return { width, height };
+}
+
 export function getCsrfToken() {
   const meta = document.querySelector('meta[name="csrf-token"]');
   return meta ? meta.getAttribute('content') : '';
@@ -30,12 +50,12 @@ export function getCameraErrorMessage(err) {
   return 'No se pudo acceder a la camara.';
 }
 
-export async function requestCamera(videoEl) {
+export async function requestCamera(videoEl, videoConstraints = true) {
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     return { stream: null, error: 'Tu navegador no soporta acceso a la camara.' };
   }
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    const stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: false });
     videoEl.srcObject = stream;
     await videoEl.play();
     return { stream, error: null };
@@ -84,8 +104,8 @@ export function showSwal(type, message, title) {
 
 export function captureJpegFromVideo(videoEl, canvasEl, { width, height, quality }) {
   return new Promise((resolve) => {
-    canvasEl.width = width;
-    canvasEl.height = height;
+    if (canvasEl.width !== width) canvasEl.width = width;
+    if (canvasEl.height !== height) canvasEl.height = height;
     const ctx = canvasEl.getContext('2d');
     ctx.drawImage(videoEl, 0, 0, width, height);
     canvasEl.toBlob((blob) => {
@@ -161,8 +181,9 @@ function normalizeBox(box, videoEl) {
     return null;
   }
   if (w > 1.5 || h > 1.5 || cx > 1.5 || cy > 1.5) {
-    const vw = videoEl?.videoWidth || videoEl?.clientWidth || 1;
-    const vh = videoEl?.videoHeight || videoEl?.clientHeight || 1;
+    const dims = getSourceDimensions(videoEl);
+    const vw = dims.width || 1;
+    const vh = dims.height || 1;
     cx = cx / vw;
     cy = cy / vh;
     w = w / vw;
@@ -213,16 +234,59 @@ export function pickTopFaces(faces, maxFaces, rotationIndex = 0) {
   return rotated.slice(0, maxFaces);
 }
 
+export function iouBoxes(boxA, boxB) {
+  if (!boxA || !boxB) return 0;
+  const ax1 = boxA.xCenter - (boxA.width / 2);
+  const ay1 = boxA.yCenter - (boxA.height / 2);
+  const ax2 = boxA.xCenter + (boxA.width / 2);
+  const ay2 = boxA.yCenter + (boxA.height / 2);
+
+  const bx1 = boxB.xCenter - (boxB.width / 2);
+  const by1 = boxB.yCenter - (boxB.height / 2);
+  const bx2 = boxB.xCenter + (boxB.width / 2);
+  const by2 = boxB.yCenter + (boxB.height / 2);
+
+  const ix1 = Math.max(ax1, bx1);
+  const iy1 = Math.max(ay1, by1);
+  const ix2 = Math.min(ax2, bx2);
+  const iy2 = Math.min(ay2, by2);
+
+  const iw = Math.max(0, ix2 - ix1);
+  const ih = Math.max(0, iy2 - iy1);
+  const inter = iw * ih;
+  if (inter <= 0) return 0;
+
+  const areaA = Math.max(0, ax2 - ax1) * Math.max(0, ay2 - ay1);
+  const areaB = Math.max(0, bx2 - bx1) * Math.max(0, by2 - by1);
+  const union = areaA + areaB - inter;
+  return union > 0 ? (inter / union) : 0;
+}
+
+export function faceUtilityScore(face, {
+  scoreWeight = 0.5,
+  sizeWeight = 0.35,
+  centerWeight = 0.15,
+} = {}) {
+  if (!face?.box) return 0;
+  const detScore = Math.max(0, Math.min(1, face.score || 0));
+  const sizeScore = Math.max(0, Math.min(1, face.box.width || 0));
+  const centerScore = Math.max(0, Math.min(1, 1 - Math.min(1, face.centerDist || 1)));
+  return (detScore * scoreWeight) + (sizeScore * sizeWeight) + (centerScore * centerWeight);
+}
+
 export async function cropFacesToBlobs(videoEl, canvasEl, faces, {
   size = 320,
   padding = 0.25,
   quality = 0.8,
 } = {}) {
   if (!videoEl || !canvasEl || !faces.length) return [];
-  const vw = videoEl.videoWidth || videoEl.clientWidth;
-  const vh = videoEl.videoHeight || videoEl.clientHeight;
+  const dims = getSourceDimensions(videoEl);
+  const vw = dims.width;
+  const vh = dims.height;
   if (!vw || !vh) return [];
   const ctx = canvasEl.getContext('2d');
+  if (canvasEl.width !== size) canvasEl.width = size;
+  if (canvasEl.height !== size) canvasEl.height = size;
   const results = [];
   for (const face of faces) {
     const { xCenter, yCenter, width, height } = face.box;
@@ -233,8 +297,6 @@ export async function cropFacesToBlobs(videoEl, canvasEl, faces, {
     const sy = Math.max(0, (yCenter - h / 2) * vh);
     const sw = Math.min(vw, w * vw);
     const sh = Math.min(vh, h * vh);
-    canvasEl.width = size;
-    canvasEl.height = size;
     ctx.drawImage(videoEl, sx, sy, sw, sh, 0, 0, size, size);
     const blob = await new Promise((resolve) => {
       canvasEl.toBlob((b) => resolve(b || null), 'image/jpeg', quality);
@@ -250,8 +312,9 @@ export async function cropFaceToBlob(videoEl, canvasEl, face, {
   quality = 0.8,
 } = {}) {
   if (!videoEl || !canvasEl || !face?.box) return null;
-  const vw = videoEl.videoWidth || videoEl.clientWidth;
-  const vh = videoEl.videoHeight || videoEl.clientHeight;
+  const dims = getSourceDimensions(videoEl);
+  const vw = dims.width;
+  const vh = dims.height;
   if (!vw || !vh) return null;
   const { xCenter, yCenter, width, height } = face.box;
   const pad = padding;
@@ -262,8 +325,8 @@ export async function cropFaceToBlob(videoEl, canvasEl, face, {
   const sw = Math.min(vw, w * vw);
   const sh = Math.min(vh, h * vh);
   const ctx = canvasEl.getContext('2d');
-  canvasEl.width = size;
-  canvasEl.height = size;
+  if (canvasEl.width !== size) canvasEl.width = size;
+  if (canvasEl.height !== size) canvasEl.height = size;
   ctx.drawImage(videoEl, sx, sy, sw, sh, 0, 0, size, size);
   return new Promise((resolve) => {
     canvasEl.toBlob((b) => resolve(b || null), 'image/jpeg', quality);
@@ -276,12 +339,13 @@ export async function captureFullFrameBlob(videoEl, canvasEl, {
   quality = 0.75,
 } = {}) {
   if (!videoEl || !canvasEl) return null;
-  const vw = videoEl.videoWidth || videoEl.clientWidth;
-  const vh = videoEl.videoHeight || videoEl.clientHeight;
+  const dims = getSourceDimensions(videoEl);
+  const vw = dims.width;
+  const vh = dims.height;
   if (!vw || !vh) return null;
   const ctx = canvasEl.getContext('2d');
-  canvasEl.width = width;
-  canvasEl.height = height;
+  if (canvasEl.width !== width) canvasEl.width = width;
+  if (canvasEl.height !== height) canvasEl.height = height;
   ctx.drawImage(videoEl, 0, 0, width, height);
   return new Promise((resolve) => {
     canvasEl.toBlob((b) => resolve(b || null), 'image/jpeg', quality);

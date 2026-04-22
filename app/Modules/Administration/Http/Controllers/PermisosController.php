@@ -2,56 +2,56 @@
 
 namespace App\Modules\Administration\Http\Controllers;
 
-use App\Models\User;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Exception;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Spatie\Permission\Models\Permission;
 
 class PermisosController extends Controller
 {
-  public function edit($id)
-  {
-    $usuario = User::findOrFail($id);
-    $permisosDisponibles = Permission::all();
+    public function edit($id)
+    {
+        $usuario = User::findOrFail($id);
+        $permisosDisponibles = Permission::all();
+        $permisosDirectos = $usuario->permissions->pluck('id')->toArray();
+        $permisosHeredadosConRol = [];
+        $roles = $usuario->roles()->with('permissions')->get();
 
-    $permisosDirectos = $usuario->permissions->pluck('id')->toArray();
-    $permisosHeredadosConRol = [];
-    $roles = $usuario->roles()->with('permissions')->get();
-
-    // Obtener permisos heredados a través de los roles
-    // y almacenarlos en un array asociativo con el nombre del rol
-    foreach ($roles as $rol) {
-      foreach ($rol->permissions as $permiso) {
-        if (!in_array($permiso->id, $permisosDirectos)) {
-          $permisosHeredadosConRol[$permiso->id] = $rol->name;
+        // Obtener permisos heredados a través de los roles
+        // y almacenarlos en un array asociativo con el nombre del rol
+        foreach ($roles as $rol) {
+            foreach ($rol->permissions as $permiso) {
+                if (! in_array($permiso->id, $permisosDirectos)) {
+                    $permisosHeredadosConRol[$permiso->id] = $rol->name;
+                }
+            }
         }
-      }
+
+        $permisosHeredados = array_keys($permisosHeredadosConRol);
+
+        return view('administration::usuarios.permisosUsuario', compact(
+            'usuario',
+            'permisosDirectos',
+            'permisosHeredados',
+            'permisosHeredadosConRol',
+            'permisosDisponibles'
+        ));
     }
 
-    $permisosHeredados = array_keys($permisosHeredadosConRol);
+    // Actulizar permisos del usuario
+    public function update(Request $request, $id)
+    {
+        try {
+            $usuario = User::findOrFail($id);
+            $usuario->syncPermissions($request->permissions);
 
-    return view("usuarios.permisosUsuario", compact(
-      "usuario",
-      "permisosDirectos",
-      "permisosHeredados",
-      "permisosHeredadosConRol",
-      "permisosDisponibles"
-    ));
-  }
+            return toastModal('Permisos actualizados correctamente para el usuario '.$usuario->persona->nombreCompleto(), 'success', route('usuarios.index'));
+        } catch (Exception $e) {
+            Log::error('Error al actualizar permisos: '.$e->getMessage());
 
-  //Actulizar permisos del usuario
-  public function update(Request $request, $id)
-  {
-    try {
-      $usuario = User::findOrFail($id);
-      $usuario->syncPermissions($request->permissions);
-
-      return toastModal('Permisos actualizados correctamente para el usuario ' . $usuario->persona->nombreCompleto(), 'success', route('usuarios.index'));
-    } catch (Exception $e) {
-      Log::error('Error al actualizar permisos: ' . $e->getMessage());
-      return toastModal("Error al actualizar los permisos", "error", route('usuarios.index'));
+            return toastModal('Error al actualizar los permisos', 'error', route('usuarios.index'));
+        }
     }
-  }
 }

@@ -32,10 +32,10 @@ ensureMediapipeAssets();
 export default defineConfig({
 
     /* Pruebas */
-    base: '/gestion/autogestion2/public/build/',
+    /* base: '/gestion/autogestion2/public/build/', */
 
     /* Produccion */
-    /* base: '/gestion/public/build/', */
+    base: '/gestion360/public/build/',
 
     plugins: [
         laravel({
@@ -46,9 +46,9 @@ export default defineConfig({
                     'resources/css/mobile.css',
                     'resources/js/app.js',
                     'resources/js/cargarModal.js',
-                    'resources/js/faceDetection.js',
                     'resources/js/camara/enroll.js',
                     'resources/js/camara/recognize.js',
+                    'resources/js/camara/verify.js',
                 ],
             refresh: true,
         }),

@@ -98,11 +98,20 @@
       this.onErrorOccurred = null;
     }
 
+    resetWebSdkSessionCache() {
+      try {
+        global.sessionStorage.removeItem("websdk");
+        global.sessionStorage.removeItem("websdk.sessionId");
+      } catch (err) {}
+    }
+
     init() {
       if (!global.Fingerprint || !global.Fingerprint.WebApi) {
         throw new Error("Fingerprint SDK not loaded");
       }
 
+      // Avoid stale SRP/session data after local WebSDK service restarts.
+      this.resetWebSdkSessionCache();
       this.sdk = new global.Fingerprint.WebApi();
 
       this.sdk.onDeviceConnected = (e) => {
