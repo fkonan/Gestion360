@@ -11,6 +11,9 @@ use App\Modules\Sarlaft\Http\Requests\Admin\DesbloquearRequest;
 use App\Modules\Sarlaft\Models\Bloqueo;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class BloqueoController extends Controller
 {
@@ -56,12 +59,32 @@ class BloqueoController extends Controller
     public function update(DesbloquearRequest $request, Bloqueo $bloqueo): RedirectResponse
     {
         $datos = $request->validated();
-        $documentosSoporte = $this->normalizarDocumentosSoporte($datos['documentos_soporte'] ?? []);
+
+        $archivoSoporte = null;
+
+        if ($request->hasFile('archivo_soporte')) {
+            $archivo = $request->file('archivo_soporte');
+            $archivoId = (string) Str::uuid();
+            $extension = strtolower($archivo->getClientOriginalExtension());
+            $nombreAlmacenado = $archivoId.($extension !== '' ? '.'.$extension : '');
+            $ruta = $archivo->storeAs('sarlaft/bloqueos/'.$bloqueo->id.'/soporte', $nombreAlmacenado, 'local');
+
+            $archivoSoporte = [
+                'id' => $archivoId,
+                'disk' => 'local',
+                'path' => $ruta,
+                'original_name' => $archivo->getClientOriginalName(),
+                'mime_type' => $archivo->getClientMimeType(),
+                'size_bytes' => (int) ($archivo->getSize() ?? 0),
+                'uploaded_by' => (int) auth()->id(),
+                'uploaded_at' => now()->toIso8601String(),
+            ];
+        }
 
         $bloqueo->update([
             'estado' => 'desbloqueado',
             'justificacion_desbloqueo' => $datos['justificacion_desbloqueo'],
-            'documentos_soporte' => $documentosSoporte !== [] ? $documentosSoporte : $bloqueo->documentos_soporte,
+            'archivo_soporte' => $archivoSoporte ?? $bloqueo->archivo_soporte,
         ]);
 
         return redirect()
@@ -69,16 +92,21 @@ class BloqueoController extends Controller
             ->with('success', 'Bloqueo levantado correctamente.');
     }
 
-    /**
-     * @param  array<int, mixed>  $documentosSoporte
-     * @return array<int, string>
-     */
-    private function normalizarDocumentosSoporte(array $documentosSoporte): array
+    public function descargarArchivo(Bloqueo $bloqueo): StreamedResponse
     {
-        return array_values(array_filter(array_map(static function (mixed $documento): string {
-            return trim((string) $documento);
-        }, $documentosSoporte), static function (string $documento): bool {
-            return $documento !== '';
-        }));
+        $archivo = $bloqueo->archivo_soporte;
+
+        abort_if($archivo === null || ! is_array($archivo), 404);
+
+        $disk = isset($archivo['disk']) && is_string($archivo['disk']) ? $archivo['disk'] : 'local';
+        $ruta = isset($archivo['path']) && is_string($archivo['path']) ? $archivo['path'] : null;
+
+        abort_if($ruta === null || ! Storage::disk($disk)->exists($ruta), 404);
+
+        $nombreDescarga = isset($archivo['original_name']) && is_string($archivo['original_name'])
+            ? $archivo['original_name']
+            : basename($ruta);
+
+        return Storage::disk($disk)->download($ruta, $nombreDescarga);
     }
 }

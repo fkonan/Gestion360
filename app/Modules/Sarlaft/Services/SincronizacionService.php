@@ -16,7 +16,7 @@ class SincronizacionService
     public function sincronizar(ListaVinculante $lista): SincronizacionLog
     {
         $inicio = microtime(true);
-        $stats = ['procesados' => 0, 'nuevos' => 0, 'actualizados' => 0];
+        $stats = ['procesados' => 0, 'nuevos' => 0, 'actualizados' => 0, 'eliminados' => 0];
 
         try {
             $config = $this->obtenerConfigLista($lista);
@@ -36,19 +36,82 @@ class SincronizacionService
             $registros = $this->parsearXml($response->body(), $config);
             $stats['procesados'] = count($registros);
 
+            // Crear el log primero para tener el ID disponible
+            $estado = ($stats['procesados'] > 0) ? 'exitoso' : 'parcial';
+            $log = $this->registrarLog($lista, $estado, $stats, $inicio);
+
+            // Obtener referencias actuales activas de esta lista
+            $referenciasActuales = RegistroLista::where('lista_id', $lista->id)
+                ->whereNull('deleted_at')
+                ->pluck('referencia_externa')
+                ->filter()
+                ->toArray();
+
+            $referenciasEntrantes = collect($registros)
+                ->pluck('referencia_externa')
+                ->filter()
+                ->toArray();
+
+            // Detectar eliminados: estaban activos pero ya no vienen en la fuente
+            $referenciasEliminadas = array_diff($referenciasActuales, $referenciasEntrantes);
+
+            if (count($referenciasEliminadas) > 0) {
+                RegistroLista::where('lista_id', $lista->id)
+                    ->whereIn('referencia_externa', $referenciasEliminadas)
+                    ->whereNull('deleted_at')
+                    ->update([
+                        'estado' => 'removido',
+                        'novedad' => 'salida',
+                        'sincronizacion_log_id' => $log->id,
+                        'deleted_at' => now(),
+                    ]);
+
+                $stats['eliminados'] = count($referenciasEliminadas);
+            }
+
             // Upsert por lotes para mejor rendimiento con listas grandes
             $chunks = array_chunk($registros, 500);
             foreach ($chunks as $chunk) {
                 foreach ($chunk as $registro) {
-                    $existente = RegistroLista::where('lista_id', $lista->id)
+                    $existente = RegistroLista::withTrashed()
+                        ->where('lista_id', $lista->id)
                         ->where('referencia_externa', $registro['referencia_externa'])
                         ->first();
 
                     if ($existente) {
-                        $existente->update($registro);
-                        $stats['actualizados']++;
+                        $cambio = $this->detectarCambios($existente, $registro);
+
+                        if ($existente->trashed()) {
+                            // Re-ingreso: estaba eliminado y vuelve a aparecer
+                            $existente->restore();
+                            $existente->update([
+                                ...$registro,
+                                'estado' => 'activo',
+                                'novedad' => 'ingreso',
+                                'sincronizacion_log_id' => $log->id,
+                            ]);
+                            $stats['nuevos']++;
+                        } elseif ($cambio) {
+                            $existente->update([
+                                ...$registro,
+                                'novedad' => 'actualizado',
+                                'sincronizacion_log_id' => $log->id,
+                            ]);
+                            $stats['actualizados']++;
+                        } else {
+                            // Sin cambios, solo marcar como procesado
+                            $existente->update([
+                                'novedad' => 'sin_cambio',
+                                'sincronizacion_log_id' => $log->id,
+                            ]);
+                        }
                     } else {
-                        RegistroLista::create([...$registro, 'lista_id' => $lista->id]);
+                        RegistroLista::create([
+                            ...$registro,
+                            'lista_id' => $lista->id,
+                            'novedad' => 'ingreso',
+                            'sincronizacion_log_id' => $log->id,
+                        ]);
                         $stats['nuevos']++;
                     }
                 }
@@ -56,9 +119,15 @@ class SincronizacionService
 
             $lista->update(['ultima_sincronizacion' => now()]);
 
-            $estado = ($stats['procesados'] > 0) ? 'exitoso' : 'parcial';
+            // Actualizar el log con las estadísticas finales
+            $log->update([
+                'registros_nuevos' => $stats['nuevos'],
+                'registros_actualizados' => $stats['actualizados'],
+                'registros_eliminados' => $stats['eliminados'],
+                'duracion_segundos' => (int) (microtime(true) - $inicio),
+            ]);
 
-            return $this->registrarLog($lista, $estado, $stats, $inicio);
+            return $log->fresh();
         } catch (\Throwable $e) {
             Log::error("Sincronización fallida para lista {$lista->id}: {$e->getMessage()}");
 
@@ -608,9 +677,45 @@ class SincronizacionService
             'registros_procesados' => $stats['procesados'],
             'registros_nuevos' => $stats['nuevos'],
             'registros_actualizados' => $stats['actualizados'],
+            'registros_eliminados' => $stats['eliminados'] ?? 0,
             'error_mensaje' => $error,
             'duracion_segundos' => (int) (microtime(true) - $inicio),
             'created_at' => now(),
         ]);
+    }
+
+    /**
+     * Compara campos relevantes para detectar si un registro cambió.
+     *
+     * @param  array<string, mixed>  $nuevos
+     */
+    private function detectarCambios(RegistroLista $existente, array $nuevos): bool
+    {
+        $camposComparar = ['nombres', 'identificacion', 'tipo_identificacion', 'pais', 'motivo', 'tipo_entidad'];
+
+        foreach ($camposComparar as $campo) {
+            if (! array_key_exists($campo, $nuevos)) {
+                continue;
+            }
+
+            $valorExistente = $existente->getAttribute($campo);
+            $valorNuevo = $nuevos[$campo];
+
+            if ((string) $valorExistente !== (string) ($valorNuevo ?? '')) {
+                return true;
+            }
+        }
+
+        // Comparar alias (es JSON/array)
+        if (array_key_exists('alias', $nuevos)) {
+            $aliasExistente = $existente->alias ?? [];
+            $aliasNuevo = $nuevos['alias'] ?? [];
+
+            if (json_encode($aliasExistente) !== json_encode($aliasNuevo)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

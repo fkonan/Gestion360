@@ -29,6 +29,7 @@ Route::middleware('auth')->prefix('sarlaft')->name('sarlaft.')->group(function (
     Route::post('/bloqueos', [BloqueoController::class, 'store'])->name('bloqueos.store');
     Route::get('/bloqueos/{bloqueo}', [BloqueoController::class, 'show'])->name('bloqueos.show');
     Route::patch('/bloqueos/{bloqueo}', [BloqueoController::class, 'update'])->name('bloqueos.update');
+    Route::get('/bloqueos/{bloqueo}/archivo-soporte', [BloqueoController::class, 'descargarArchivo'])->name('bloqueos.archivo-soporte.download');
 
     Route::resource('lista-negra', ListaNegraController::class)->parameters([
         'lista-negra' => 'lista_negra',

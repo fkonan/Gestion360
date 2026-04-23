@@ -4,8 +4,11 @@
 
 @section('content')
 <div class="card shadow-sm">
-    <div class="card-header">
-        <h5 class="card-title mb-0">Configuracion Operativa de Alertas</h5>
+    <x-sectionHeader titulo="Politicas SARLAFT" rutaVolver="{{ route('sarlaft.dashboard') }}" btnVolver=false />
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <a href="{{ route('sarlaft.dashboard') }}" class="btn btn-sm btn-success">
+            <i class="fas fa-arrow-left"></i> Regresar
+        </a>
     </div>
     <form action="{{ route('sarlaft.politicas.update') }}" method="POST">
         @csrf

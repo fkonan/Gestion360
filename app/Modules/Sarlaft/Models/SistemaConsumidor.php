@@ -21,9 +21,17 @@ class SistemaConsumidor extends Model
         'api_token',
         'estado',
         'limite_requests_minuto',
+        'pull_endpoint',
+        'pull_token',
     ];
 
     protected $hidden = [
         'api_token',
+        'pull_token',
     ];
+
+    public function intentos(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(IntentoOperacion::class, 'sistema_id');
+    }
 }

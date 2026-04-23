@@ -19,6 +19,7 @@ class Alerta extends Model
 
     protected $fillable = [
         'consulta_id',
+        'intento_id',
         'tipo',
         'nivel_riesgo',
         'estado',
@@ -57,6 +58,11 @@ class Alerta extends Model
     public function consulta(): BelongsTo
     {
         return $this->belongsTo(Consulta::class, 'consulta_id');
+    }
+
+    public function intento(): BelongsTo
+    {
+        return $this->belongsTo(IntentoOperacion::class, 'intento_id');
     }
 
     public function atendidaPor(): BelongsTo

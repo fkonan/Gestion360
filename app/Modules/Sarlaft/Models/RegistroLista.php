@@ -29,6 +29,8 @@ class RegistroLista extends Model
         'fecha_inclusion',
         'referencia_externa',
         'estado',
+        'novedad',
+        'sincronizacion_log_id',
     ];
 
     protected function casts(): array
@@ -43,5 +45,10 @@ class RegistroLista extends Model
     public function lista(): BelongsTo
     {
         return $this->belongsTo(ListaVinculante::class, 'lista_id');
+    }
+
+    public function sincronizacionLog(): BelongsTo
+    {
+        return $this->belongsTo(SincronizacionLog::class, 'sincronizacion_log_id');
     }
 }

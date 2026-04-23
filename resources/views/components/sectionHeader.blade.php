@@ -13,6 +13,7 @@
     'excelRoute' => '',             // Ruta de la data del excel
     'excelName' => '',              // Nombre del archivo excel
     'clasePosition' => true,        // Clase "botonBoostrapTable" la cual ayuda a que los botones se vean bien si estan antes de una tabla
+    'btnVolver'=>true
 ])
 
 <div class="border rounded-top d-flex justify-content-between align-items-center px-4 bg-primary-subtle">
@@ -20,13 +21,14 @@
 </div>
 
 <div class="{{ $clasePosition ? 'botonBoostrapTable mt-2' : 'mt-3' }} ms-4">
+  @if($btnVolver=="true")
     <a style="width: 150px;" class="btn btn-success fw-bold" href="{{ $rutaVolver }}">Regresar</a>
     @if (trim($slot))
         <span class="ms-2 d-inline-flex align-items-center gap-2">
             {{ $slot }}
         </span>
     @endif
-
+  @endif
     @if((!$permisoCrear || auth()->user()->can('$permisoCrear')) && $crear)
         @if($crear === 'newpage')
             <a style="min-width: 150px;" class="btn fw-bold bg-warning"

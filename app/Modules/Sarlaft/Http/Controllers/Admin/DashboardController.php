@@ -9,7 +9,6 @@ use App\Modules\Sarlaft\Models\Alerta;
 use App\Modules\Sarlaft\Models\Bloqueo;
 use App\Modules\Sarlaft\Models\Consulta;
 use App\Modules\Sarlaft\Models\ListaNegraInterna;
-use App\Modules\Sarlaft\Models\SincronizacionLog;
 use Illuminate\Contracts\View\View;
 
 class DashboardController extends Controller
@@ -30,14 +29,12 @@ class DashboardController extends Controller
         $ultimasAlertas = Alerta::with('consulta')
             ->where('estado', 'pendiente')
             ->latest()
-            ->limit(10)
+            ->limit(8)
             ->get();
 
-        $ultimasSincronizaciones = SincronizacionLog::with('lista')
-            ->latest('created_at')
-            ->limit(5)
-            ->get();
-
-        return view('sarlaft::admin.dashboard', compact('stats', 'ultimasAlertas', 'ultimasSincronizaciones'));
+        return view('sarlaft::admin.dashboard', compact(
+            'stats',
+            'ultimasAlertas',
+        ));
     }
 }

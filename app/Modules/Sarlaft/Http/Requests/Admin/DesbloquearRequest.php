@@ -20,8 +20,18 @@ class DesbloquearRequest extends FormRequest
     {
         return [
             'justificacion_desbloqueo' => 'required|string|max:2000',
-            'documentos_soporte' => 'nullable|array',
-            'documentos_soporte.*' => 'string|max:500',
+            'archivo_soporte' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'archivo_soporte.mimes' => 'El archivo debe ser PDF, imagen (JPG/PNG) o documento Word.',
+            'archivo_soporte.max' => 'El archivo no puede superar los 10 MB.',
         ];
     }
 }

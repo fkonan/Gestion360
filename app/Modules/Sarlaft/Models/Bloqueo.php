@@ -25,14 +25,14 @@ class Bloqueo extends Model
         'estado',
         'motivo_bloqueo',
         'justificacion_desbloqueo',
-        'documentos_soporte',
+        'archivo_soporte',
         'creado_por',
     ];
 
     protected function casts(): array
     {
         return [
-            'documentos_soporte' => 'array',
+            'archivo_soporte' => 'array',
         ];
     }
 

@@ -6,6 +6,7 @@ namespace App\Modules\Sarlaft\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SincronizacionLog extends Model
 {
@@ -21,6 +22,7 @@ class SincronizacionLog extends Model
         'registros_procesados',
         'registros_nuevos',
         'registros_actualizados',
+        'registros_eliminados',
         'error_mensaje',
         'duracion_segundos',
         'created_at',
@@ -36,5 +38,10 @@ class SincronizacionLog extends Model
     public function lista(): BelongsTo
     {
         return $this->belongsTo(ListaVinculante::class, 'lista_id');
+    }
+
+    public function registrosAfectados(): HasMany
+    {
+        return $this->hasMany(RegistroLista::class, 'sincronizacion_log_id');
     }
 }

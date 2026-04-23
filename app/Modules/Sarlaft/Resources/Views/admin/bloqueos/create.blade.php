@@ -1,17 +1,25 @@
 @extends('layouts.dashboard')
-@section('title', 'Nuevo Bloqueo')
 
+@section('title', 'Nuevo Registro')
+
+@section('breadcrumb')
+<x-breadcrumb :items="[
+        ['name' => 'Inicio', 'url' => route('home')],
+        ['name' => 'Sarlaft', 'url' =>'#'],
+        ['name' => 'Lista de Bloqueos', 'url' => route('sarlaft.bloqueos.index')],
+        ['name' => 'Nuevo Registro']
+    ]" />
+<br>
+@endsection
 @section('content')
-<div class="row justify-content-center">
-    <div class="col-lg-8">
-        <div class="card shadow-sm">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h6 class="mb-0"><i class="fas fa-user-lock"></i> Crear Bloqueo</h6>
-                <a href="{{ route('sarlaft.bloqueos.index') }}" class="btn btn-sm btn-dark">
-                    <i class="fas fa-arrow-left"></i> Volver
-                </a>
-            </div>
-            <div class="card-body">
+   <div class="card shadow-sm">
+      <x-sectionHeader titulo="Bloqueos" rutaVolver="{{ route('sarlaft.bloqueos.index') }}" btnVolver=false />
+      <div class="card-header d-flex justify-content-between align-items-center">
+         <a href="{{ route('sarlaft.bloqueos.index') }}" class="btn btn-sm btn-secondary">
+            <i class="fas fa-arrow-left"></i> Regresar
+         </a>
+      </div>
+      <div class="card-body">
                 <form action="{{ route('sarlaft.bloqueos.store') }}" method="POST">
                     @csrf
                     <div class="row mb-3">
@@ -52,12 +60,13 @@
                             <input type="text" class="form-control" value="Bloqueado" readonly>
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-success">
-                        <i class="fas fa-lock"></i> Crear Bloqueo
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+            <button type="submit" class="btn btn-success">
+               Crear Bloqueo
+            </button>
+         </form>
+      </div>
+   </div>
 @endsection
+@pushOnce('script')
+@vite(['resources/js/cargarModal.js'])
+@endpushOnce

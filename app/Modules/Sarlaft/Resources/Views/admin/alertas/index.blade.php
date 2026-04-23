@@ -1,25 +1,19 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Alertas')
+@section('title', 'Listado de Alertas')
+
+@section('breadcrumb')
+   <x-breadcrumb :items="[
+       ['name' => 'Inicio', 'url' => route('home')],
+       ['name' => 'Sarlaft', 'url' => '#'],
+       ['name' => 'Alertas'],
+   ]" />
+   <br>
+@endsection
 
 @push('css')
     @vite(['resources/css/sarlaft/alertas-index.css'])
 @endpush
-
-@section('breadcrumb')
-<nav aria-label="breadcrumb" class="sarlaft-alerts-breadcrumb">
-    <ol class="breadcrumb mb-0">
-        <li class="breadcrumb-item">
-            <a href="{{ route('sarlaft.dashboard') }}">
-                <i class="fas fa-home"></i>
-                <span>Inicio</span>
-            </a>
-        </li>
-        <li class="breadcrumb-item">Gestion de Alertas</li>
-        <li class="breadcrumb-item active" aria-current="page">Lista de Alertas Combinada</li>
-    </ol>
-</nav>
-@endsection
 
 @section('content')
 @php
