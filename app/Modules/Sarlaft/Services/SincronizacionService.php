@@ -37,7 +37,7 @@ class SincronizacionService
                 return $this->registrarLog($lista, 'fallido', $stats, $inicio, "HTTP {$response->status()}: Error descargando lista.");
             }
 
-            $registros = $this->parsearXml($response->body(), $config);
+            $registros = $this->parsearContenidoLista($response->body(), $config);
             $stats['procesados'] = count($registros);
 
             // Crear el log primero para tener el ID disponible
@@ -363,22 +363,55 @@ class SincronizacionService
         if ($lista->url_fuente) {
             $url = mb_strtolower($lista->url_fuente);
             $parser = 'ofac';
+            $formato = 'xml';
 
             if (str_contains($url, 'scsanctions.un.org')) {
                 $parser = 'onu';
             } elseif (str_contains($url, 'europa.eu')) {
                 $parser = 'eu';
+            } elseif (str_contains($url, 'opensanctions.org') || str_contains($url, 'targets.nested.json')) {
+                $parser = 'eu_opensanctions';
+                $formato = 'jsonl';
             }
 
             return [
                 'url' => $lista->url_fuente,
-                'formato' => 'xml',
+                'formato' => $formato,
                 'parser' => $parser,
                 'nombre' => $lista->nombre,
             ];
         }
 
         return null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $config
+     * @return array<int, array<string, mixed>>
+     */
+    private function parsearContenidoLista(string $contenido, array $config): array
+    {
+        $formato = strtolower(trim((string) ($config['formato'] ?? 'xml')));
+
+        return match ($formato) {
+            'xml' => $this->parsearXml($contenido, $config),
+            'json', 'jsonl' => $this->parsearJson($contenido, $config),
+            default => throw new \RuntimeException("Formato de lista no soportado: {$formato}"),
+        };
+    }
+
+    /**
+     * @param  array<string, mixed>  $config
+     * @return array<int, array<string, mixed>>
+     */
+    private function parsearJson(string $json, array $config): array
+    {
+        $parser = $config['parser'] ?? 'eu_opensanctions';
+
+        return match ($parser) {
+            'eu_opensanctions' => $this->parsearEuOpenSanctionsJsonl($json),
+            default => throw new \RuntimeException("Parser JSON desconocido: {$parser}"),
+        };
     }
 
     /**
@@ -632,6 +665,190 @@ class SincronizacionService
         }
 
         return $registros;
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function parsearEuOpenSanctionsJsonl(string $jsonl): array
+    {
+        $registros = [];
+        $linea = strtok($jsonl, "\n");
+
+        while ($linea !== false) {
+            $lineaNormalizada = trim($linea);
+
+            if ($lineaNormalizada !== '') {
+                $item = json_decode($lineaNormalizada, true);
+
+                if (is_array($item) && $this->esRegistroDatasetUnionEuropea($item['datasets'] ?? null)) {
+                    /** @var array<string, mixed> $propiedades */
+                    $propiedades = is_array($item['properties'] ?? null) ? $item['properties'] : [];
+                    $schema = strtolower(trim((string) ($item['schema'] ?? '')));
+                    $tipoEntidad = $schema === 'person' ? 'persona' : 'organizacion';
+
+                    $nombrePrincipal = $this->primerValorTexto($propiedades['name'] ?? null)
+                        ?? $this->primerValorTexto($item['caption'] ?? null)
+                        ?? 'Sin nombre';
+
+                    $alias = $this->normalizarListaTextos($propiedades['alias'] ?? null);
+                    $nombresAlternos = $this->normalizarListaTextos($propiedades['name'] ?? null);
+
+                    foreach ($nombresAlternos as $nombreAlterno) {
+                        if ($nombreAlterno !== $nombrePrincipal) {
+                            $alias[] = $nombreAlterno;
+                        }
+                    }
+
+                    $alias = array_values(array_unique($alias));
+
+                    [$tipoIdentificacion, $identificacion] = $this->resolverIdentificacionOpenSanctions($propiedades);
+
+                    $fechaInclusion = $this->resolverFechaInclusionOpenSanctions($propiedades['sanctions'] ?? null)
+                        ?? $this->primerValorTexto($item['first_seen'] ?? null);
+
+                    $motivo = $this->primerValorTexto($propiedades['notes'] ?? null)
+                        ?? $this->primerValorTexto($propiedades['topics'] ?? null);
+
+                    $registros[] = [
+                        'tipo_entidad' => $tipoEntidad,
+                        'identificacion' => $identificacion,
+                        'tipo_identificacion' => $tipoIdentificacion,
+                        'nombres' => $nombrePrincipal,
+                        'alias' => $alias !== [] ? $alias : null,
+                        'fecha_nacimiento' => $this->normalizarFecha($this->primerValorTexto($propiedades['birthDate'] ?? null)),
+                        'pais' => $this->primerValorTexto($propiedades['country'] ?? null)
+                            ?? $this->primerValorTexto($propiedades['nationality'] ?? null),
+                        'motivo' => $motivo,
+                        'fecha_inclusion' => $this->normalizarFecha($fechaInclusion),
+                        'referencia_externa' => $this->primerValorTexto($item['id'] ?? null) ?? uniqid('eu_os_'),
+                        'estado' => 'activo',
+                    ];
+                }
+            }
+
+            $linea = strtok("\n");
+        }
+
+        return $registros;
+    }
+
+    private function esRegistroDatasetUnionEuropea(mixed $datasets): bool
+    {
+        if (! is_array($datasets)) {
+            return false;
+        }
+
+        foreach ($datasets as $dataset) {
+            if (! is_string($dataset)) {
+                continue;
+            }
+
+            $valor = strtolower(trim($dataset));
+
+            if ($valor !== '' && str_starts_with($valor, 'eu_')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function primerValorTexto(mixed $valor): ?string
+    {
+        if (is_string($valor)) {
+            $texto = trim($valor);
+
+            return $texto !== '' ? $texto : null;
+        }
+
+        if (! is_array($valor)) {
+            return null;
+        }
+
+        foreach ($valor as $item) {
+            $texto = $this->primerValorTexto($item);
+
+            if ($texto !== null) {
+                return $texto;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function normalizarListaTextos(mixed $valor): array
+    {
+        if (is_string($valor)) {
+            $texto = trim($valor);
+
+            return $texto !== '' ? [$texto] : [];
+        }
+
+        if (! is_array($valor)) {
+            return [];
+        }
+
+        $valores = [];
+
+        foreach ($valor as $item) {
+            foreach ($this->normalizarListaTextos($item) as $texto) {
+                $valores[] = $texto;
+            }
+        }
+
+        return array_values(array_unique($valores));
+    }
+
+    /**
+     * @param  array<string, mixed>  $propiedades
+     * @return array{0: string|null, 1: string|null}
+     */
+    private function resolverIdentificacionOpenSanctions(array $propiedades): array
+    {
+        $mapaCampos = [
+            'idNumber' => 'id_number',
+            'registrationNumber' => 'registration_number',
+            'taxNumber' => 'tax_number',
+            'passportNumber' => 'passport_number',
+            'nationalId' => 'national_id',
+            'innCode' => 'inn_code',
+        ];
+
+        foreach ($mapaCampos as $campo => $tipo) {
+            $valor = $this->primerValorTexto($propiedades[$campo] ?? null);
+
+            if ($valor !== null && mb_strlen($valor) < 150) {
+                return [$tipo, $valor];
+            }
+        }
+
+        return [null, null];
+    }
+
+    private function resolverFechaInclusionOpenSanctions(mixed $sanctions): ?string
+    {
+        if (! is_array($sanctions)) {
+            return null;
+        }
+
+        foreach ($sanctions as $sanction) {
+            if (! is_array($sanction)) {
+                continue;
+            }
+
+            $propiedades = is_array($sanction['properties'] ?? null) ? $sanction['properties'] : [];
+            $fecha = $this->primerValorTexto($propiedades['startDate'] ?? null);
+
+            if ($fecha !== null) {
+                return $fecha;
+            }
+        }
+
+        return null;
     }
 
     /**

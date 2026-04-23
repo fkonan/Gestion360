@@ -34,6 +34,7 @@ class IntentoOperacion extends Model
         'descripcion',
         'contexto',
         'ip_origen',
+        'created_at',
     ];
 
     protected function casts(): array

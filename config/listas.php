@@ -49,9 +49,9 @@ return [
 
     'union_europea' => [
         'nombre' => env('LISTA_UE_NOMBRE', 'Union Europea Consolidada'),
-        'url' => env('LISTA_UE_URL', 'https://webgate.ec.europa.eu/fsd/fsf/public/files/xmlFullSanctionsList_1_1/content'),
-        'formato' => 'xml',
-        'parser' => 'eu',
+        'url' => env('LISTA_UE_URL', 'https://data.opensanctions.org/datasets/latest/eu_sanctions/targets.nested.json'),
+        'formato' => 'jsonl',
+        'parser' => 'eu_opensanctions',
         'frecuencia' => 'diaria',
         'token' => env('LISTA_UE_TOKEN'),
         'usuario' => env('LISTA_UE_USUARIO'),
