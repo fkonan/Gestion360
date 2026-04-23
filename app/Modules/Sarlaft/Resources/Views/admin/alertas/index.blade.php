@@ -216,10 +216,14 @@
                                 $origenAtencion = 'auto_sla';
                             }
 
-                            $tipoOperacion = \Illuminate\Support\Str::headline((string) $alerta->tipo);
-                            $sistemaOrigen = $alerta->consulta?->sistema_origen
-                                ? \Illuminate\Support\Str::headline((string) $alerta->consulta->sistema_origen)
-                                : null;
+                            $tipoOperacion = \Illuminate\Support\Str::headline((string) ($contexto['tipo_operacion'] ?? $alerta->intento?->tipo_operacion ?? $alerta->tipo));
+                            $sistemaOrigen = $alerta->intento?->sistema?->nombre
+                                ? (string) $alerta->intento->sistema->nombre
+                                : (
+                                    $alerta->consulta?->sistema_origen
+                                        ? \Illuminate\Support\Str::headline((string) $alerta->consulta->sistema_origen)
+                                        : null
+                                );
 
                             $operationClass = match (true) {
                                 str_contains(strtolower((string) ($alerta->consulta?->sistema_origen ?? '')), 'remesa') => 'is-remesa',
@@ -227,25 +231,17 @@
                                 default => 'is-default',
                             };
 
-                            $decisionLabel = match ($alerta->decision_servicio) {
-                                'bloquear' => 'Bloquear',
-                                'permitir_una_operacion' => 'Permitir una operacion',
-                                'permitir_permanente' => 'Permitir permanente',
-                                default => 'Sin decision',
-                            };
+                            $resultadoLabel = $alerta->nivel_riesgo === 'alto' || $alerta->nivel_riesgo === 'critico'
+                                ? 'Bloqueante'
+                                : 'Revisar';
 
-                            $decisionClass = match ($alerta->decision_servicio) {
-                                'bloquear' => 'is-danger',
-                                'permitir_una_operacion', 'permitir_permanente' => 'is-success',
-                                default => 'is-muted',
-                            };
+                            $resultadoClass = $alerta->nivel_riesgo === 'alto' || $alerta->nivel_riesgo === 'critico'
+                                ? 'is-danger'
+                                : 'is-muted';
 
-                            $decisionIcon = match ($alerta->decision_servicio) {
-                                'bloquear' => 'fa-ban',
-                                'permitir_una_operacion' => 'fa-unlock',
-                                'permitir_permanente' => 'fa-check-circle',
-                                default => 'fa-minus-circle',
-                            };
+                            $resultadoIcon = $alerta->nivel_riesgo === 'alto' || $alerta->nivel_riesgo === 'critico'
+                                ? 'fa-ban'
+                                : 'fa-search';
 
                             $riskLabel = $riesgoOptions[$alerta->nivel_riesgo] ?? ucfirst((string) $alerta->nivel_riesgo);
                             $riskClass = match ($alerta->nivel_riesgo) {
@@ -288,9 +284,9 @@
                                 <div class="sarlaft-cell-meta">{{ $documento !== '' ? $documento : 'Sin documento asociado' }}</div>
                             </td>
                             <td>
-                                <div class="sarlaft-result {{ $decisionClass }}">
-                                    <i class="fas {{ $decisionIcon }}"></i>
-                                    <span>{{ $decisionLabel }}</span>
+                                <div class="sarlaft-result {{ $resultadoClass }}">
+                                    <i class="fas {{ $resultadoIcon }}"></i>
+                                    <span>{{ $resultadoLabel }}</span>
                                 </div>
                                 <div class="sarlaft-cell-meta">
                                     {{ $originLabel }}
@@ -310,9 +306,6 @@
                                     <a href="{{ route('sarlaft.reportes.operaciones.index', ['tipo_documento' => $reportTipoDocumento, 'numero_documento' => $reportNumeroDocumento]) }}">Historial</a>
                                     @endif
                                 </div>
-                                @if(($contexto['alerta_suprimida'] ?? false) === true)
-                                <div class="sarlaft-cell-note">Suprimida por decision operativa.</div>
-                                @endif
                             </td>
                             <td>
                                 <span class="sarlaft-pill sarlaft-pill-state {{ $stateClass }}">{{ $stateLabel }}</span>

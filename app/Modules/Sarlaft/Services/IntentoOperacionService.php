@@ -22,6 +22,16 @@ class IntentoOperacionService
     public function registrarPush(array $datos, SistemaConsumidor $sistema, string $ip): IntentoOperacion
     {
         return DB::connection('mysql-sarlaft')->transaction(function () use ($datos, $sistema, $ip): IntentoOperacion {
+            $intentoExistente = $this->buscarIntentoExistente(
+                sistema: $sistema,
+                modoIntegracion: 'push',
+                referenciaExterna: isset($datos['referencia_externa']) ? (string) $datos['referencia_externa'] : null,
+            );
+
+            if ($intentoExistente !== null) {
+                return $intentoExistente->load(['personas', 'alertas']);
+            }
+
             $intento = IntentoOperacion::create([
                 'sistema_id' => $sistema->id,
                 'modo_integracion' => 'push',
@@ -48,17 +58,27 @@ class IntentoOperacionService
      * Ejecuta el proceso Pull para un sistema consumidor:
      * consulta su endpoint y registra los intentos encontrados.
      */
-    public function ejecutarPull(SistemaConsumidor $sistema): int
+    public function ejecutarPull(
+        SistemaConsumidor $sistema,
+        ?string $fechaDesde = null,
+        ?string $fechaHasta = null,
+    ): int
     {
         if (! $sistema->pull_endpoint) {
             return 0;
         }
 
+        $filtroFechaDesde = $fechaDesde ?? now()->subDay()->toIso8601String();
+        $filtroFechaHasta = $fechaHasta ?? now()->toIso8601String();
+
         try {
             $response = Http::withToken($sistema->pull_token ?? '')
                 ->timeout(30)
                 ->get($sistema->pull_endpoint, [
-                    'fecha' => now()->subDay()->toDateString(),
+                    'FechaDesde' => $filtroFechaDesde,
+                    'FechaHasta' => $filtroFechaHasta,
+                    'fecha_desde' => $filtroFechaDesde,
+                    'fecha_hasta' => $filtroFechaHasta,
                 ]);
 
             if (! $response->successful()) {
@@ -79,6 +99,16 @@ class IntentoOperacionService
                 }
 
                 DB::connection('mysql-sarlaft')->transaction(function () use ($item, $sistema, &$registrados): void {
+                    $intentoExistente = $this->buscarIntentoExistente(
+                        sistema: $sistema,
+                        modoIntegracion: 'pull',
+                        referenciaExterna: isset($item['referencia_externa']) ? (string) $item['referencia_externa'] : null,
+                    );
+
+                    if ($intentoExistente !== null) {
+                        return;
+                    }
+
                     $intento = IntentoOperacion::create([
                         'sistema_id' => $sistema->id,
                         'modo_integracion' => 'pull',
@@ -156,6 +186,8 @@ class IntentoOperacionService
                 'tipo' => 'intento_operacion_' . $intento->modo_integracion,
                 'nivel_riesgo' => $nivelRiesgo,
                 'estado' => 'pendiente',
+                'tipo_documento' => $persona['tipo_documento'] ?? null,
+                'numero_documento' => $persona['numero_documento'] ?? null,
                 'datos_persona' => [
                     'tipo_documento' => $persona['tipo_documento'] ?? '',
                     'numero_documento' => $persona['numero_documento'] ?? '',
@@ -183,5 +215,21 @@ class IntentoOperacionService
                 ],
             ]);
         }
+    }
+
+    private function buscarIntentoExistente(
+        SistemaConsumidor $sistema,
+        string $modoIntegracion,
+        ?string $referenciaExterna,
+    ): ?IntentoOperacion {
+        if ($referenciaExterna === null || trim($referenciaExterna) === '') {
+            return null;
+        }
+
+        return IntentoOperacion::query()
+            ->where('sistema_id', $sistema->id)
+            ->where('modo_integracion', $modoIntegracion)
+            ->where('referencia_externa', trim($referenciaExterna))
+            ->first();
     }
 }

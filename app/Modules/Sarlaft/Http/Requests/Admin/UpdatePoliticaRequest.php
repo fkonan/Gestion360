@@ -16,8 +16,6 @@ class UpdatePoliticaRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
-            'suppress_alert_on_bloquear' => $this->boolean('suppress_alert_on_bloquear'),
-            'suppress_alert_on_permitir_permanente' => $this->boolean('suppress_alert_on_permitir_permanente'),
             'auto_atender_lista_negra_interna' => $this->boolean('auto_atender_lista_negra_interna'),
             'auto_crear_alerta_atendida' => $this->boolean('auto_crear_alerta_atendida'),
             'auto_user_id' => $this->filled('auto_user_id') ? (int) $this->input('auto_user_id') : null,
@@ -30,13 +28,10 @@ class UpdatePoliticaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'suppress_alert_on_bloquear' => 'required|boolean',
-            'suppress_alert_on_permitir_permanente' => 'required|boolean',
             'sla_dias_alerta' => 'required|integer|min:1|max:30',
             'auto_escalar_riesgos' => 'required|array|min:1',
             'auto_escalar_riesgos.*' => 'required|string|in:bajo,medio,alto,critico',
             'auto_estado' => 'required|string|in:pendiente,en_revision,atendida,descartada',
-            'auto_decision' => 'required|string|in:sin_decision,bloquear,permitir_una_operacion,permitir_permanente',
             'auto_atender_lista_negra_interna' => 'required|boolean',
             'auto_crear_alerta_atendida' => 'required|boolean',
             'auto_user_id' => 'nullable|integer|min:1',
@@ -56,7 +51,6 @@ class UpdatePoliticaRequest extends FormRequest
             'auto_escalar_riesgos.min' => 'Debes seleccionar al menos un nivel de riesgo para autoescalamiento.',
             'auto_escalar_riesgos.*.in' => 'Uno de los niveles de riesgo seleccionados no es valido.',
             'auto_estado.in' => 'El estado automatico seleccionado no es valido.',
-            'auto_decision.in' => 'La decision automatica seleccionada no es valida.',
             'auto_user_id.min' => 'El usuario tecnico debe ser un identificador valido.',
         ];
     }

@@ -33,7 +33,7 @@ class ConsultaService
     private const NAME_HIGH_RISK_MIN_COVERAGE = 1.0;
 
     public function __construct(
-        private readonly DecisionServicioService $decisionServicioService,
+        private readonly GestionAlertaService $gestionAlertaService,
         private readonly PoliticaSarlaftService $politicaSarlaftService,
     ) {}
 
@@ -56,35 +56,7 @@ class ConsultaService
         $prestaServicioBase = ! $bloqueado && $nivelRiesgoBase !== 'alto';
         $nivelRiesgo = $nivelRiesgoBase;
         $prestaServicio = $prestaServicioBase;
-        $decisionAplicada = null;
-        $decisionConsumida = false;
-        $decisionAlertaId = null;
-        $alertaDecision = $this->decisionServicioService->resolverDecisionActiva(
-            $datos['tipo_documento'],
-            $datos['numero_documento'],
-        );
-
-        if ($alertaDecision !== null) {
-            $decisionAplicada = $alertaDecision->decision_servicio;
-            $decisionAlertaId = (int) $alertaDecision->id;
-
-            if ($alertaDecision->decision_servicio === 'bloquear') {
-                $nivelRiesgo = 'alto';
-                $prestaServicio = false;
-            }
-
-            if ($alertaDecision->decision_servicio === 'permitir_permanente') {
-                $prestaServicio = true;
-            }
-
-            if ($alertaDecision->decision_servicio === 'permitir_una_operacion' && ! $prestaServicioBase) {
-                $prestaServicio = true;
-            }
-        }
-
-        $tieneContextoRiesgo = $encontrado || $bloqueado || $decisionAplicada !== null;
-        $motivoSupresion = $encontrado ? $this->resolverMotivoSupresion($decisionAplicada, $politica) : null;
-        $alertaSuprimida = $motivoSupresion !== null;
+        $tieneContextoRiesgo = $encontrado || $bloqueado;
 
         $consulta = Consulta::create([
             'sistema_origen' => $sistemaOrigen,
@@ -96,13 +68,8 @@ class ConsultaService
             'nivel_riesgo' => $tieneContextoRiesgo ? $nivelRiesgo : 'ninguno',
             'coincidencias' => $encontrado ? $coincidencias : null,
             'contexto_operacion' => $this->construirContextoOperacion(
-                decisionAplicada: $decisionAplicada,
-                decisionAlertaId: $decisionAlertaId,
-                decisionConsumida: false,
                 prestaServicioBase: $prestaServicioBase,
                 prestaServicioFinal: $prestaServicio,
-                alertaSuprimida: $alertaSuprimida,
-                motivoSupresion: $motivoSupresion,
                 alertaId: null,
                 origenAtencion: null,
                 coincidenciaListaNegraInterna: $coincidenciaListaNegraInterna,
@@ -111,30 +78,9 @@ class ConsultaService
             'created_at' => now(),
         ]);
 
-        if ($alertaDecision !== null
-          && $alertaDecision->decision_servicio === 'permitir_una_operacion'
-          && ! $prestaServicioBase
-        ) {
-            $decisionConsumida = $this->decisionServicioService->consumirDecisionUnaOperacion($alertaDecision->id, (int) $consulta->id);
-
-            if (! $decisionConsumida) {
-                $decisionAplicada = null;
-                $decisionAlertaId = null;
-                $prestaServicio = $prestaServicioBase;
-                $nivelRiesgo = $nivelRiesgoBase;
-
-                $consulta->update([
-                    'presta_servicio' => $prestaServicioBase,
-                    'nivel_riesgo' => ($encontrado || $bloqueado) ? $nivelRiesgoBase : 'ninguno',
-                ]);
-            }
-        }
-
         ConsultaRealizada::dispatch($consulta);
 
-        $motivoSupresion = $encontrado ? $this->resolverMotivoSupresion($decisionAplicada, $politica) : null;
-        $alertaSuprimida = $motivoSupresion !== null;
-        $debeCrearAlerta = $encontrado && ! $alertaSuprimida;
+        $debeCrearAlerta = $encontrado;
         $alertaId = null;
         $origenAtencion = null;
 
@@ -146,8 +92,6 @@ class ConsultaService
                 'estado' => 'pendiente',
                 'tipo_documento' => $datos['tipo_documento'],
                 'numero_documento' => $datos['numero_documento'],
-                'decision_servicio' => 'sin_decision',
-                'decision_activa' => false,
                 'datos_persona' => [
                     'tipo_documento' => $datos['tipo_documento'],
                     'numero_documento' => $datos['numero_documento'],
@@ -155,13 +99,8 @@ class ConsultaService
                 ],
                 'listas_coincidentes' => $coincidencias,
                 'contexto_operacion' => $this->construirContextoOperacion(
-                    decisionAplicada: $decisionAplicada,
-                    decisionAlertaId: $decisionAlertaId,
-                    decisionConsumida: $decisionConsumida,
                     prestaServicioBase: $prestaServicioBase,
                     prestaServicioFinal: $prestaServicio,
-                    alertaSuprimida: false,
-                    motivoSupresion: null,
                     alertaId: null,
                     origenAtencion: 'manual',
                     coincidenciaListaNegraInterna: $coincidenciaListaNegraInterna,
@@ -176,11 +115,10 @@ class ConsultaService
                 && (bool) ($politica['auto_crear_alerta_atendida'] ?? true);
 
             if ($debeAutoAtenderListaNegra) {
-                $this->decisionServicioService->aplicarDecisionEnAtencion(
+                $this->gestionAlertaService->atender(
                     alerta: $alerta,
                     datos: [
                         'estado' => 'atendida',
-                        'decision_servicio' => 'bloquear',
                         'notas' => '[AUTO] Autoatencion inmediata por lista negra interna.',
                     ],
                     userId: $this->resolverAutoUserId($politica),
@@ -201,13 +139,8 @@ class ConsultaService
 
         $consulta->update([
             'contexto_operacion' => $this->construirContextoOperacion(
-                decisionAplicada: $decisionAplicada,
-                decisionAlertaId: $decisionAlertaId,
-                decisionConsumida: $decisionConsumida,
                 prestaServicioBase: $prestaServicioBase,
                 prestaServicioFinal: $prestaServicio,
-                alertaSuprimida: $alertaSuprimida,
-                motivoSupresion: $motivoSupresion,
                 alertaId: $alertaId,
                 origenAtencion: $origenAtencion,
                 coincidenciaListaNegraInterna: $coincidenciaListaNegraInterna,
@@ -234,22 +167,6 @@ class ConsultaService
     }
 
     /**
-     * @param  array<string, mixed>  $politica
-     */
-    private function resolverMotivoSupresion(?string $decisionAplicada, array $politica): ?string
-    {
-        if ($decisionAplicada === 'bloquear' && (bool) ($politica['suppress_alert_on_bloquear'] ?? true)) {
-            return 'decision_activa_bloquear';
-        }
-
-        if ($decisionAplicada === 'permitir_permanente' && (bool) ($politica['suppress_alert_on_permitir_permanente'] ?? true)) {
-            return 'decision_activa_permitir_permanente';
-        }
-
-        return null;
-    }
-
-    /**
      * @param  array<int, array<string, mixed>>  $coincidencias
      */
     private function tieneCoincidenciaTipo(array $coincidencias, string $tipoCoincidencia): bool
@@ -273,26 +190,16 @@ class ConsultaService
      * @return array<string, mixed>
      */
     private function construirContextoOperacion(
-        ?string $decisionAplicada,
-        ?int $decisionAlertaId,
-        bool $decisionConsumida,
         bool $prestaServicioBase,
         bool $prestaServicioFinal,
-        bool $alertaSuprimida,
-        ?string $motivoSupresion,
         ?int $alertaId,
         ?string $origenAtencion,
         bool $coincidenciaListaNegraInterna,
     ): array {
         return [
-            'decision_aplicada' => $decisionAplicada,
-            'decision_alerta_id' => $decisionAlertaId,
-            'decision_consumida' => $decisionConsumida,
             'presta_servicio_base' => $prestaServicioBase,
             'presta_servicio_final' => $prestaServicioFinal,
             'coincidencia_lista_negra_interna' => $coincidenciaListaNegraInterna,
-            'alerta_suprimida' => $alertaSuprimida,
-            'motivo_suprimir_alerta' => $motivoSupresion,
             'alerta_id' => $alertaId,
             'origen_atencion' => $origenAtencion,
         ];
@@ -655,5 +562,3 @@ class ConsultaService
         return trim(preg_replace('/\s+/', ' ', $limpio) ?? '');
     }
 }
-
-

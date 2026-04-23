@@ -13,6 +13,10 @@ use Illuminate\Support\Facades\Log;
 
 class SincronizacionService
 {
+    public function __construct(
+        private readonly NovedadExportacionService $novedadExportacionService,
+    ) {}
+
     public function sincronizar(ListaVinculante $lista): SincronizacionLog
     {
         $inicio = microtime(true);
@@ -25,7 +29,7 @@ class SincronizacionService
                 return $this->registrarLog($lista, 'fallido', $stats, $inicio, 'Configuración de lista no encontrada.');
             }
 
-            $response = $this->httpClient()
+            $response = $this->clienteLista($config)
                 ->timeout(300)
                 ->get($config['url']);
 
@@ -56,17 +60,28 @@ class SincronizacionService
             $referenciasEliminadas = array_diff($referenciasActuales, $referenciasEntrantes);
 
             if (count($referenciasEliminadas) > 0) {
-                RegistroLista::where('lista_id', $lista->id)
+                $registrosSalida = RegistroLista::where('lista_id', $lista->id)
                     ->whereIn('referencia_externa', $referenciasEliminadas)
                     ->whereNull('deleted_at')
-                    ->update([
+                    ->get();
+
+                foreach ($registrosSalida as $registroSalida) {
+                    $registroSalida->update([
                         'estado' => 'removido',
                         'novedad' => 'salida',
                         'sincronizacion_log_id' => $log->id,
                         'deleted_at' => now(),
                     ]);
 
-                $stats['eliminados'] = count($referenciasEliminadas);
+                    $this->novedadExportacionService->registrarNovedadVinculante(
+                        registro: $registroSalida,
+                        tipoNovedad: 'salida',
+                        nombreLista: $lista->nombre,
+                        sincronizacionLogId: (int) $log->id,
+                    );
+                }
+
+                $stats['eliminados'] = $registrosSalida->count();
             }
 
             // Upsert por lotes para mejor rendimiento con listas grandes
@@ -90,6 +105,13 @@ class SincronizacionService
                                 'novedad' => 'ingreso',
                                 'sincronizacion_log_id' => $log->id,
                             ]);
+                            $existente->refresh();
+                            $this->novedadExportacionService->registrarNovedadVinculante(
+                                registro: $existente,
+                                tipoNovedad: 'ingreso',
+                                nombreLista: $lista->nombre,
+                                sincronizacionLogId: (int) $log->id,
+                            );
                             $stats['nuevos']++;
                         } elseif ($cambio) {
                             $existente->update([
@@ -97,6 +119,13 @@ class SincronizacionService
                                 'novedad' => 'actualizado',
                                 'sincronizacion_log_id' => $log->id,
                             ]);
+                            $existente->refresh();
+                            $this->novedadExportacionService->registrarNovedadVinculante(
+                                registro: $existente,
+                                tipoNovedad: 'actualizado',
+                                nombreLista: $lista->nombre,
+                                sincronizacionLogId: (int) $log->id,
+                            );
                             $stats['actualizados']++;
                         } else {
                             // Sin cambios, solo marcar como procesado
@@ -106,12 +135,18 @@ class SincronizacionService
                             ]);
                         }
                     } else {
-                        RegistroLista::create([
+                        $creado = RegistroLista::create([
                             ...$registro,
                             'lista_id' => $lista->id,
                             'novedad' => 'ingreso',
                             'sincronizacion_log_id' => $log->id,
                         ]);
+                        $this->novedadExportacionService->registrarNovedadVinculante(
+                            registro: $creado,
+                            tipoNovedad: 'ingreso',
+                            nombreLista: $lista->nombre,
+                            sincronizacionLogId: (int) $log->id,
+                        );
                         $stats['nuevos']++;
                     }
                 }
@@ -281,6 +316,31 @@ class SincronizacionService
     }
 
     /**
+     * @param  array<string, mixed>  $config
+     */
+    private function clienteLista(array $config): PendingRequest
+    {
+        $cliente = $this->httpClient();
+
+        if (isset($config['token']) && is_string($config['token']) && trim($config['token']) !== '') {
+            $cliente = $cliente->withToken(trim($config['token']));
+        }
+
+        $usuario = isset($config['usuario']) && is_string($config['usuario']) ? trim($config['usuario']) : '';
+        $contrasena = isset($config['contrasena']) && is_string($config['contrasena']) ? trim($config['contrasena']) : '';
+
+        if ($usuario !== '' && $contrasena !== '') {
+            $cliente = $cliente->withBasicAuth($usuario, $contrasena);
+        }
+
+        if (isset($config['headers']) && is_array($config['headers']) && $config['headers'] !== []) {
+            $cliente = $cliente->withHeaders($config['headers']);
+        }
+
+        return $cliente;
+    }
+
+    /**
      * @return array<string, mixed>|null
      */
     private function obtenerConfigLista(ListaVinculante $lista): ?array
@@ -288,7 +348,7 @@ class SincronizacionService
         $listas = config('listas');
         $nombreLista = mb_strtolower(trim($lista->nombre));
 
-        foreach (['onu', 'ofac_sdn', 'ofac_consolidated'] as $key) {
+        foreach (['onu', 'ofac_sdn', 'ofac_consolidated', 'union_europea'] as $key) {
             if (! isset($listas[$key]['nombre'])) {
                 continue;
             }

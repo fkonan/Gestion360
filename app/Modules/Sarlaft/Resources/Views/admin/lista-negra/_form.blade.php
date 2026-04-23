@@ -35,6 +35,25 @@
     <textarea name="motivo" id="motivo" rows="4" class="form-control @error('motivo') is-invalid @enderror" required>{{ old('motivo', $registro->motivo ?? '') }}</textarea>
     @error('motivo') <div class="invalid-feedback">{{ $message }}</div> @enderror
 </div>
+<div class="mb-3">
+    <label for="archivo_evidencia_inclusion" class="form-label">Evidencia de inclusion <span class="text-danger">*</span></label>
+    <input
+        type="file"
+        name="archivo_evidencia_inclusion"
+        id="archivo_evidencia_inclusion"
+        class="form-control @error('archivo_evidencia_inclusion') is-invalid @enderror"
+        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
+        {{ isset($registro) && $registro->exists ? '' : 'required' }}
+    >
+    @error('archivo_evidencia_inclusion') <div class="invalid-feedback">{{ $message }}</div> @enderror
+
+    @if(isset($registro) && is_array($registro->evidencia_inclusion))
+    <div class="form-text">
+        Evidencia actual: {{ $registro->evidencia_inclusion['original_name'] ?? 'archivo' }}.
+        <a href="{{ route('sarlaft.lista-negra.evidencias.download', [$registro, 'inclusion']) }}" class="ms-1">Descargar</a>
+    </div>
+    @endif
+</div>
 @if(isset($registro) && $registro->exists)
 <div class="mb-3">
     <label for="estado" class="form-label">Estado</label>
@@ -43,5 +62,30 @@
         <option value="inactivo" {{ old('estado', $registro->estado) === 'inactivo' ? 'selected' : '' }}>Inactivo</option>
     </select>
     @error('estado') <div class="invalid-feedback">{{ $message }}</div> @enderror
+</div>
+
+<div class="mb-3">
+    <label for="motivo_retiro" class="form-label">Motivo de retiro (obligatorio al inactivar)</label>
+    <textarea name="motivo_retiro" id="motivo_retiro" rows="3" class="form-control @error('motivo_retiro') is-invalid @enderror">{{ old('motivo_retiro', $registro->motivo_retiro ?? '') }}</textarea>
+    @error('motivo_retiro') <div class="invalid-feedback">{{ $message }}</div> @enderror
+</div>
+
+<div class="mb-3">
+    <label for="archivo_evidencia_retiro" class="form-label">Evidencia de retiro (obligatoria al inactivar)</label>
+    <input
+        type="file"
+        name="archivo_evidencia_retiro"
+        id="archivo_evidencia_retiro"
+        class="form-control @error('archivo_evidencia_retiro') is-invalid @enderror"
+        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
+    >
+    @error('archivo_evidencia_retiro') <div class="invalid-feedback">{{ $message }}</div> @enderror
+
+    @if(isset($registro) && is_array($registro->evidencia_retiro))
+    <div class="form-text">
+        Evidencia de retiro actual: {{ $registro->evidencia_retiro['original_name'] ?? 'archivo' }}.
+        <a href="{{ route('sarlaft.lista-negra.evidencias.download', [$registro, 'retiro']) }}" class="ms-1">Descargar</a>
+    </div>
+    @endif
 </div>
 @endif

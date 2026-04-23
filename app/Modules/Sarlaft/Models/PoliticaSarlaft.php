@@ -14,12 +14,9 @@ class PoliticaSarlaft extends Model
 
     protected $fillable = [
         'id',
-        'suppress_alert_on_bloquear',
-        'suppress_alert_on_permitir_permanente',
         'sla_dias_alerta',
         'auto_escalar_riesgos',
         'auto_estado',
-        'auto_decision',
         'auto_atender_lista_negra_interna',
         'auto_crear_alerta_atendida',
         'auto_user_id',
@@ -29,8 +26,6 @@ class PoliticaSarlaft extends Model
     protected function casts(): array
     {
         return [
-            'suppress_alert_on_bloquear' => 'boolean',
-            'suppress_alert_on_permitir_permanente' => 'boolean',
             'sla_dias_alerta' => 'integer',
             'auto_escalar_riesgos' => 'array',
             'auto_atender_lista_negra_interna' => 'boolean',

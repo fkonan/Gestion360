@@ -20,7 +20,7 @@
          </a>
       </div>
       <div class="card-body">
-         <form action="{{ route('sarlaft.lista-negra.update', $listaNegra) }}" method="POST">
+         <form action="{{ route('sarlaft.lista-negra.update', $listaNegra) }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
             @include('sarlaft::admin.lista-negra._form', ['registro' => $listaNegra])

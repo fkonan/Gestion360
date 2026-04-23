@@ -5,34 +5,38 @@ declare(strict_types=1);
 namespace App\Modules\Sarlaft\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Sarlaft\Http\Requests\Api\ExportarListasRequest;
 use App\Modules\Sarlaft\Http\Resources\ListaNegraInternaResource;
 use App\Modules\Sarlaft\Http\Resources\RegistroListaResource;
 use App\Modules\Sarlaft\Models\ListaNegraInterna;
 use App\Modules\Sarlaft\Models\RegistroLista;
-use App\Modules\Sarlaft\Models\SincronizacionLog;
+use App\Modules\Sarlaft\Services\NovedadExportacionService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class ListaRegistroController extends Controller
 {
+    public function __construct(
+        private readonly NovedadExportacionService $novedadExportacionService,
+    ) {}
+
     /**
-     * Descarga de registros de listas vinculantes + lista interna.
+     * Exportacion de listas vinculantes e internas.
      *
-     * Sin ?fecha → descarga completa (todos los activos).
-     * Con ?fecha=YYYY-MM-DD → novedades de esa sincronización (o la última anterior).
+     * - tipo_descarga=completa: entrega catalogo completo activo.
+     * - tipo_descarga=novedades: entrega delta desde punto_de_control.
      */
-    public function index(Request $request): JsonResponse
+    public function index(ExportarListasRequest $request): JsonResponse
     {
-        $request->validate([
-            'fecha' => 'nullable|date_format:Y-m-d',
-            'lista_id' => 'nullable|integer|exists:mysql-sarlaft.sarlaft_listas_vinculantes,id',
-        ]);
+        $datos = $request->validated();
+        $tipoDescarga = (string) $datos['tipo_descarga'];
+        $listaId = isset($datos['lista_id']) ? (int) $datos['lista_id'] : null;
 
-        $fecha = $request->query('fecha');
-        $listaId = $request->query('lista_id');
-
-        if ($fecha) {
-            return $this->respuestaNovedades($fecha, $listaId);
+        if ($tipoDescarga === 'novedades') {
+            return $this->respuestaNovedades(
+                puntoDeControl: (int) ($datos['punto_de_control'] ?? 0),
+                tamanoLote: (int) ($datos['tamano_lote'] ?? 1000),
+                listaId: $listaId,
+            );
         }
 
         return $this->respuestaCompleta($listaId);
@@ -41,14 +45,14 @@ class ListaRegistroController extends Controller
     /**
      * Descarga completa: todos los registros activos + lista interna activa.
      */
-    private function respuestaCompleta(?string $listaId): JsonResponse
+    private function respuestaCompleta(?int $listaId): JsonResponse
     {
         $queryVinculantes = RegistroLista::with('lista')
             ->where('estado', 'activo')
             ->whereNull('deleted_at');
 
         if ($listaId) {
-            $queryVinculantes->where('lista_id', (int) $listaId);
+            $queryVinculantes->where('lista_id', $listaId);
         }
 
         $vinculantes = $queryVinculantes->get();
@@ -57,10 +61,6 @@ class ListaRegistroController extends Controller
             ->whereNull('deleted_at')
             ->get();
 
-        $ultimaSync = SincronizacionLog::where('estado', 'exitoso')
-            ->latest('created_at')
-            ->first();
-
         return response()->json([
             'data' => [
                 'vinculantes' => RegistroListaResource::collection($vinculantes),
@@ -68,92 +68,51 @@ class ListaRegistroController extends Controller
             ],
             'meta' => [
                 'tipo_descarga' => 'completa',
-                'fecha_sincronizacion' => $ultimaSync?->created_at?->toIso8601String(),
                 'total_vinculantes' => $vinculantes->count(),
                 'total_interna' => $interna->count(),
+                'punto_de_control_actual' => $this->novedadExportacionService->obtenerUltimoPuntoDeControl(),
             ],
         ]);
     }
 
     /**
-     * Descarga por novedades: busca la sync de esa fecha (o la última anterior)
-     * y retorna solo registros con novedad distinta a sin_cambio.
+     * Descarga por novedades desde cursor/punto_de_control.
      */
-    private function respuestaNovedades(string $fecha, ?string $listaId): JsonResponse
+    private function respuestaNovedades(int $puntoDeControl, int $tamanoLote, ?int $listaId = null): JsonResponse
     {
-        // Buscar el log de sincronización de esa fecha o el inmediatamente anterior
-        $logQuery = SincronizacionLog::where('estado', 'exitoso')
-            ->whereDate('created_at', '<=', $fecha)
-            ->latest('created_at');
-
-        if ($listaId) {
-            $logQuery->where('lista_id', (int) $listaId);
-        }
-
-        $log = $logQuery->first();
-
-        if (! $log) {
-            return response()->json([
-                'data' => [
-                    'vinculantes' => [],
-                    'lista_interna' => [],
-                ],
-                'meta' => [
-                    'tipo_descarga' => 'novedades',
-                    'fecha_solicitada' => $fecha,
-                    'fecha_sincronizacion' => null,
-                    'mensaje' => 'No se encontró sincronización para la fecha indicada ni anterior.',
-                    'novedades' => ['ingresos' => 0, 'salidas' => 0, 'actualizados' => 0],
-                    'total_vinculantes' => 0,
-                    'total_interna' => 0,
-                ],
-            ]);
-        }
-
-        // Si no se filtró por lista, obtener todos los logs de esa misma fecha
-        $logIds = SincronizacionLog::where('estado', 'exitoso')
-            ->whereDate('created_at', $log->created_at->toDateString());
-
-        if ($listaId) {
-            $logIds->where('lista_id', (int) $listaId);
-        }
-
-        $syncLogIds = $logIds->pluck('id');
-
-        // Registros vinculantes con novedad en esa sync (excluyendo sin_cambio)
-        $vinculantes = RegistroLista::withTrashed()
-            ->with('lista')
-            ->whereIn('sincronizacion_log_id', $syncLogIds)
-            ->whereIn('novedad', ['ingreso', 'salida', 'actualizado'])
-            ->get();
-
-        // Lista interna: cambios desde esa fecha de sync
-        $fechaSync = $log->created_at->startOfDay();
-        $interna = ListaNegraInterna::withTrashed()
-            ->where(function ($q) use ($fechaSync) {
-                $q->where('updated_at', '>=', $fechaSync)
-                    ->orWhere('deleted_at', '>=', $fechaSync);
-            })
-            ->get();
-
+        $resultado = $this->novedadExportacionService->obtenerNovedades($puntoDeControl, $tamanoLote, $listaId);
+        $novedades = $resultado['novedades'];
         $conteoNovedades = [
-            'ingresos' => $vinculantes->where('novedad', 'ingreso')->count(),
-            'salidas' => $vinculantes->where('novedad', 'salida')->count(),
-            'actualizados' => $vinculantes->where('novedad', 'actualizado')->count(),
+            'ingresos' => $novedades->where('tipo_novedad', 'ingreso')->count(),
+            'salidas' => $novedades->where('tipo_novedad', 'salida')->count(),
+            'actualizados' => $novedades->where('tipo_novedad', 'actualizado')->count(),
         ];
 
         return response()->json([
             'data' => [
-                'vinculantes' => RegistroListaResource::collection($vinculantes),
-                'lista_interna' => ListaNegraInternaResource::collection($interna),
+                'novedades' => $novedades->map(static function ($novedad): array {
+                    return [
+                        'id_novedad' => (int) $novedad->id,
+                        'origen_lista' => (string) $novedad->origen_lista,
+                        'tipo_novedad' => (string) $novedad->tipo_novedad,
+                        'nombre_lista' => (string) $novedad->nombre_lista,
+                        'registro_lista_id' => $novedad->registro_lista_id,
+                        'lista_negra_id' => $novedad->lista_negra_id,
+                        'sincronizacion_log_id' => $novedad->sincronizacion_log_id,
+                        'datos' => $novedad->datos,
+                        'fecha_evento' => $novedad->created_at?->toIso8601String(),
+                    ];
+                })->values(),
             ],
             'meta' => [
                 'tipo_descarga' => 'novedades',
-                'fecha_solicitada' => $fecha,
-                'fecha_sincronizacion' => $log->created_at->toIso8601String(),
+                'punto_de_control_recibido' => $puntoDeControl,
+                'siguiente_punto_de_control' => $resultado['siguiente_punto_de_control'],
+                'hay_mas' => $resultado['hay_mas'],
+                'tamano_lote' => $tamanoLote,
+                'lista_id' => $listaId,
                 'novedades' => $conteoNovedades,
-                'total_vinculantes' => $vinculantes->count(),
-                'total_interna' => $interna->count(),
+                'total_novedades' => $novedades->count(),
             ],
         ]);
     }

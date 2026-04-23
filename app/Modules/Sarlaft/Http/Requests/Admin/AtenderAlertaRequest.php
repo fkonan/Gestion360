@@ -20,7 +20,6 @@ class AtenderAlertaRequest extends FormRequest
     {
         return [
             'estado' => 'required|string|in:pendiente,en_revision,atendida,descartada',
-            'decision_servicio' => 'required|string|in:sin_decision,bloquear,permitir_una_operacion,permitir_permanente',
             'notas' => 'nullable|string|max:2000',
             'evidencias' => 'nullable|array|max:5',
             'evidencias.*' => 'file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:10240',
@@ -35,8 +34,6 @@ class AtenderAlertaRequest extends FormRequest
         return [
             'estado.required' => 'El estado de la alerta es obligatorio.',
             'estado.in' => 'El estado seleccionado no es valido.',
-            'decision_servicio.required' => 'Debes seleccionar una decision de servicio.',
-            'decision_servicio.in' => 'La decision de servicio seleccionada no es valida.',
             'notas.max' => 'Las notas no deben superar 2000 caracteres.',
             'evidencias.array' => 'Las evidencias deben enviarse como una lista de archivos.',
             'evidencias.max' => 'Solo puedes adjuntar hasta 5 evidencias por actualizacion.',

@@ -5,8 +5,7 @@
 @section('content')
 @php
     $consulta = $alerta->consulta;
-    $simulacionPasaje = $consulta?->simulacionPasaje;
-    $simulacionRemesa = $consulta?->simulacionRemesa;
+    $intento = $alerta->intento;
     $evidencias = is_array($alerta->evidencias) ? $alerta->evidencias : [];
     $contextoOperacion = is_array($alerta->contexto_operacion) ? $alerta->contexto_operacion : [];
     $origenAtencion = $contextoOperacion['origen_atencion'] ?? null;
@@ -55,29 +54,6 @@
 
                 <div class="row mb-3">
                     <div class="col-md-4">
-                        <strong>Decision de servicio:</strong><br>
-                        {{ str_replace('_', ' ', ucfirst((string) ($alerta->decision_servicio ?? 'sin_decision'))) }}
-                    </div>
-                    <div class="col-md-4">
-                        <strong>Decision activa:</strong><br>
-                        {{ $alerta->decision_activa ? 'Si' : 'No' }}
-                    </div>
-                    <div class="col-md-4">
-                        <strong>Consumo decision:</strong><br>
-                        @if($alerta->decision_servicio === 'permitir_una_operacion')
-                            @if($alerta->decision_consumida_at)
-                                Consumida ({{ $alerta->decision_consumida_at->format('d/m/Y H:i') }})
-                            @else
-                                Pendiente de consumo
-                            @endif
-                        @else
-                            N/A
-                        @endif
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-md-4">
                         <strong>Escalada automatica:</strong><br>
                         {{ $alerta->escalada_automatica ? 'Si' : 'No' }}
                     </div>
@@ -96,13 +72,6 @@
                         @endif
                     </div>
                 </div>
-
-                @if(($contextoOperacion['alerta_suprimida'] ?? false) === true)
-                <div class="alert alert-dark py-2">
-                    Esta alerta fue marcada con contexto de supresion:
-                    {{ str_replace('_', ' ', (string) ($contextoOperacion['motivo_suprimir_alerta'] ?? 'sin motivo')) }}.
-                </div>
-                @endif
 
                 <h6 class="mt-4">Datos de la Persona</h6>
                 <div class="table-responsive">
@@ -132,8 +101,8 @@
                         <tbody>
                             @foreach($alerta->listas_coincidentes ?? [] as $coincidencia)
                             <tr>
-                                <td>{{ $coincidencia['lista'] ?? '-' }}</td>
-                                <td><span class="badge bg-secondary">{{ $coincidencia['tipo_lista'] ?? '-' }}</span></td>
+                                <td>{{ $coincidencia['lista'] ?? $coincidencia['nombre'] ?? '-' }}</td>
+                                <td><span class="badge bg-secondary">{{ $coincidencia['tipo_lista'] ?? $coincidencia['tipo'] ?? '-' }}</span></td>
                                 <td>{{ $coincidencia['nombres'] ?? '-' }}</td>
                                 <td>
                                     @if(!empty($coincidencia['alias']))
@@ -146,8 +115,8 @@
                                         <span class="text-muted">-</span>
                                     @endif
                                 </td>
-                                <td>{{ $coincidencia['identificacion'] ?? '-' }}</td>
-                                <td>{{ str_replace('_', ' ', $coincidencia['tipo_coincidencia'] ?? '-') }}</td>
+                                <td>{{ $coincidencia['identificacion'] ?? ($alerta->datos_persona['numero_documento'] ?? '-') }}</td>
+                                <td>{{ str_replace('_', ' ', $coincidencia['tipo_coincidencia'] ?? $coincidencia['tipo'] ?? '-') }}</td>
                             </tr>
                             @endforeach
                         </tbody>
@@ -214,7 +183,6 @@
                     @method('PATCH')
                     @php
                         $estadoActual = old('estado', $alerta->estado);
-                        $decisionActual = old('decision_servicio', $alerta->decision_servicio ?? 'sin_decision');
                     @endphp
                     <div class="mb-3">
                         <label for="estado" class="form-label">Cambiar estado</label>
@@ -227,28 +195,6 @@
                         </select>
                         @error('estado') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                     </div>
-                    <div class="mb-3">
-                        <label for="decision_servicio" class="form-label">Decision de servicio</label>
-                        <select name="decision_servicio" id="decision_servicio" class="form-select" required>
-                            <option value="sin_decision" {{ $decisionActual === 'sin_decision' ? 'selected' : '' }}>Sin decision</option>
-                            <option value="bloquear" {{ $decisionActual === 'bloquear' ? 'selected' : '' }}>Bloquear</option>
-                            <option value="permitir_una_operacion" {{ $decisionActual === 'permitir_una_operacion' ? 'selected' : '' }}>Permitir una operacion</option>
-                            <option value="permitir_permanente" {{ $decisionActual === 'permitir_permanente' ? 'selected' : '' }}>Permitir permanente</option>
-                        </select>
-                        <small class="text-muted d-block mt-2">
-                            Esta decision controla el servicio futuro para el documento consultado, independiente del estado operativo de la alerta.
-                        </small>
-                        @error('decision_servicio') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
-                    </div>
-                    @if($alerta->decision_servicio === 'permitir_una_operacion')
-                    <div class="alert alert-info py-2">
-                        @if($alerta->decision_consumida_at)
-                            Excepcion consumida en consulta #{{ $alerta->decision_consumida_consulta_id ?? 'N/A' }}.
-                        @else
-                            Excepcion pendiente: se consumira en la primera consulta bloqueante.
-                        @endif
-                    </div>
-                    @endif
                     <div class="mb-3">
                         <label for="notas" class="form-label">Notas</label>
                         <textarea name="notas" id="notas" rows="4" class="form-control" placeholder="Observaciones...">{{ old('notas', $alerta->notas) }}</textarea>
@@ -265,7 +211,7 @@
                             multiple
                         >
                         <small class="text-muted d-block mt-2">
-                            Adjunta soportes de la decision: PDF, imagen o documentos Office. Maximo 5 archivos por actualizacion.
+                            Adjunta soportes de gestion: PDF, imagen o documentos Office. Maximo 5 archivos por actualizacion.
                         </small>
                         @error('evidencias') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                         @error('evidencias.*') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
@@ -290,36 +236,54 @@
                 <p class="mb-0"><strong>IP:</strong> {{ $consulta->ip_origen }}</p>
             </div>
         </div>
+        @endif
 
-        @if($simulacionPasaje || $simulacionRemesa)
+        @if($intento)
         <div class="card shadow-sm mt-3">
             <div class="card-header">
-                <h6 class="mb-0">Detalle Operativo Asociado</h6>
+                <h6 class="mb-0">Intento de Operacion #{{ $intento->id }}</h6>
             </div>
             <div class="card-body small">
-                @if($simulacionPasaje)
-                <p><strong>Operacion:</strong> Compra de tiquete</p>
-                <p><strong>Ruta:</strong> {{ $simulacionPasaje->ciudad_origen_nombre }} -> {{ $simulacionPasaje->ciudad_destino_nombre }}</p>
-                <p><strong>Fecha viaje:</strong> {{ $simulacionPasaje->fecha_viaje?->format('d/m/Y') ?? '-' }}</p>
-                <p><strong>Persona:</strong> {{ trim($simulacionPasaje->nombres.' '.$simulacionPasaje->apellidos) }}</p>
-                <p><strong>Direccion:</strong> {{ $simulacionPasaje->direccion }}</p>
-                <p><strong>Telefono:</strong> {{ $simulacionPasaje->telefono }}</p>
-                <p class="mb-0"><strong>Correo:</strong> {{ $simulacionPasaje->correo }}</p>
-                @endif
+                <p><strong>Tipo de operacion:</strong> {{ ucfirst((string) $intento->tipo_operacion) }}</p>
+                <p><strong>Sistema consumidor:</strong> {{ $intento->sistema?->nombre ?? 'N/A' }}</p>
+                <p><strong>Modo integracion:</strong> {{ strtoupper((string) $intento->modo_integracion) }}</p>
+                <p><strong>Fecha operacion:</strong> {{ $intento->fecha_operacion?->format('d/m/Y H:i:s') ?? 'N/A' }}</p>
+                <p><strong>Referencia externa:</strong> {{ $intento->referencia_externa ?? 'N/A' }}</p>
+                <p><strong>Ruta:</strong> {{ ($intento->origen ?? 'N/A') . ' -> ' . ($intento->destino ?? 'N/A') }}</p>
+                <p><strong>Monto:</strong> {{ $intento->monto !== null ? '$' . number_format((float) $intento->monto, 2, ',', '.') : 'N/A' }}</p>
+                <p><strong>Moneda:</strong> {{ $intento->moneda ?? 'N/A' }}</p>
+                <p><strong>Descripcion:</strong> {{ $intento->descripcion ?? 'N/A' }}</p>
 
-                @if($simulacionRemesa)
-                <p><strong>Operacion:</strong> Mensajeria / remesa</p>
-                <p><strong>Ruta:</strong> {{ $simulacionRemesa->ciudad_origen_nombre }} -> {{ $simulacionRemesa->ciudad_destino_nombre }}</p>
-                <p><strong>Fecha envio:</strong> {{ $simulacionRemesa->fecha_envio?->format('d/m/Y') ?? '-' }}</p>
-                <p><strong>Remitente:</strong> {{ trim($simulacionRemesa->nombres_remitente.' '.$simulacionRemesa->apellidos_remitente) }}</p>
-                <p><strong>Telefono remitente:</strong> {{ $simulacionRemesa->telefono_remitente }}</p>
-                <p><strong>Destinatario:</strong> {{ $simulacionRemesa->nombre_destinatario }} ({{ $simulacionRemesa->documento_destinatario }})</p>
-                <p><strong>Monto:</strong> ${{ number_format((float) $simulacionRemesa->monto, 2, ',', '.') }}</p>
-                <p class="mb-0"><strong>Concepto:</strong> {{ $simulacionRemesa->concepto }}</p>
+                @if($intento->personas->isNotEmpty())
+                <hr>
+                <strong>Personas reportadas en el intento</strong>
+                <div class="table-responsive mt-2">
+                    <table class="table table-sm table-bordered mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Documento</th>
+                                <th>Nombre</th>
+                                <th>Rol</th>
+                                <th>Tipo lista</th>
+                                <th>Lista</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($intento->personas as $personaIntento)
+                            <tr>
+                                <td>{{ $personaIntento->tipo_documento }} {{ $personaIntento->numero_documento }}</td>
+                                <td>{{ $personaIntento->nombre ?? '-' }}</td>
+                                <td>{{ str_replace('_', ' ', (string) $personaIntento->rol) }}</td>
+                                <td>{{ ucfirst((string) $personaIntento->tipo_lista) }}</td>
+                                <td>{{ $personaIntento->lista_nombre }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
                 @endif
             </div>
         </div>
-        @endif
         @endif
     </div>
 </div>

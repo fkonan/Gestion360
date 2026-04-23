@@ -22,7 +22,7 @@
          </a>
       </div>
       <div class="card-body">
-         <form action="{{ route('sarlaft.lista-negra.store') }}" method="POST">
+         <form action="{{ route('sarlaft.lista-negra.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
             @include('sarlaft::admin.lista-negra._form')
             <button type="submit" class="btn btn-success">

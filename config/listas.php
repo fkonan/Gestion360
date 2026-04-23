@@ -47,13 +47,18 @@ return [
         'frecuencia' => 'diaria',
     ],
 
-    // Union Europea - Requiere autenticación, no disponible para descarga automática
-    // 'eu_consolidated' => [
-    //     'nombre' => 'Union Europea Consolidada',
-    //     'url' => 'https://webgate.ec.europa.eu/fsd/fsf/public/files/xmlFullSanctionsList_1_1/content',
-    //     'formato' => 'xml',
-    //     'parser' => 'eu',
-    //     'frecuencia' => 'diaria',
-    // ],
+    'union_europea' => [
+        'nombre' => env('LISTA_UE_NOMBRE', 'Union Europea Consolidada'),
+        'url' => env('LISTA_UE_URL', 'https://webgate.ec.europa.eu/fsd/fsf/public/files/xmlFullSanctionsList_1_1/content'),
+        'formato' => 'xml',
+        'parser' => 'eu',
+        'frecuencia' => 'diaria',
+        'token' => env('LISTA_UE_TOKEN'),
+        'usuario' => env('LISTA_UE_USUARIO'),
+        'contrasena' => env('LISTA_UE_CONTRASENA'),
+        'headers' => array_filter([
+            'X-Client-Id' => env('LISTA_UE_CLIENT_ID'),
+        ]),
+    ],
 
 ];

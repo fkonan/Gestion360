@@ -27,10 +27,9 @@ class ReporteOperacionesService
         /** @var LengthAwarePaginator<int, Consulta> $operaciones */
         $operaciones = $query
             ->with([
-                'simulacionPasaje',
-                'simulacionRemesa',
                 'alertas' => static function (HasMany $relation): void {
-                    $relation->latest('created_at');
+                    $relation->latest('created_at')
+                        ->with(['intento.sistema']);
                 },
             ])
             ->withCount('alertas')
@@ -77,14 +76,18 @@ class ReporteOperacionesService
     private function construirEstadisticas(array $filtros): array
     {
         $registros = $this->construirConsultaBase($filtros)
-            ->get(['id', 'sistema_origen', 'presta_servicio']);
+            ->get(['id', 'sistema_origen', 'presta_servicio', 'contexto_operacion']);
 
         return [
             'total_operaciones' => $registros->count(),
             'total_permitidas' => $registros->where('presta_servicio', true)->count(),
             'total_bloqueadas' => $registros->where('presta_servicio', false)->count(),
-            'total_pasajes' => $registros->where('sistema_origen', 'simulacion_pasaje')->count(),
-            'total_remesas' => $registros->where('sistema_origen', 'simulacion_remesa')->count(),
+            'total_pasajes' => $registros
+                ->filter(fn (Consulta $consulta): bool => $this->resolverOperacionConsulta($consulta) === 'pasaje')
+                ->count(),
+            'total_remesas' => $registros
+                ->filter(fn (Consulta $consulta): bool => $this->esOperacionRemesa($this->resolverOperacionConsulta($consulta)))
+                ->count(),
             'con_alerta' => $this->construirConsultaBase($filtros)->has('alertas')->count(),
         ];
     }
@@ -94,8 +97,7 @@ class ReporteOperacionesService
      */
     private function construirConsultaBase(array $filtros): Builder
     {
-        $query = Consulta::query()
-            ->whereIn('sistema_origen', ['simulacion_pasaje', 'simulacion_remesa']);
+        $query = Consulta::query();
 
         if ($filtros['tipo_documento'] !== null) {
             $query->where('tipo_documento', $filtros['tipo_documento']);
@@ -110,11 +112,11 @@ class ReporteOperacionesService
         }
 
         if ($filtros['operacion'] === 'pasaje') {
-            $query->where('sistema_origen', 'simulacion_pasaje');
+            $this->aplicarFiltroOperacion($query, 'pasaje');
         }
 
         if ($filtros['operacion'] === 'remesa') {
-            $query->where('sistema_origen', 'simulacion_remesa');
+            $this->aplicarFiltroOperacion($query, 'remesa');
         }
 
         if ($filtros['resultado'] === 'permitida') {
@@ -134,5 +136,63 @@ class ReporteOperacionesService
         }
 
         return $query;
+    }
+
+    private function aplicarFiltroOperacion(Builder $query, string $operacion): void
+    {
+        if ($operacion === 'pasaje') {
+            $query->where(function (Builder $operacionQuery): void {
+                $operacionQuery
+                    ->where('sistema_origen', 'simulacion_pasaje')
+                    ->orWhere('contexto_operacion->tipo_operacion', 'pasaje');
+            });
+
+            return;
+        }
+
+        if ($operacion === 'remesa') {
+            $query->where(function (Builder $operacionQuery): void {
+                $operacionQuery
+                    ->where('sistema_origen', 'simulacion_remesa')
+                    ->orWhereIn('contexto_operacion->tipo_operacion', ['remesa', 'pago']);
+            });
+        }
+    }
+
+    private function resolverOperacionConsulta(Consulta $consulta): ?string
+    {
+        $contexto = is_array($consulta->contexto_operacion) ? $consulta->contexto_operacion : [];
+        $tipoOperacion = isset($contexto['tipo_operacion']) && is_string($contexto['tipo_operacion'])
+            ? strtolower(trim($contexto['tipo_operacion']))
+            : null;
+
+        if ($tipoOperacion !== null && $tipoOperacion !== '') {
+            return $tipoOperacion;
+        }
+
+        if ($consulta->sistema_origen === 'simulacion_pasaje') {
+            return 'pasaje';
+        }
+
+        if ($consulta->sistema_origen === 'simulacion_remesa') {
+            return 'remesa';
+        }
+
+        $sistemaOrigen = strtolower((string) $consulta->sistema_origen);
+
+        if (str_contains($sistemaOrigen, 'pasaje')) {
+            return 'pasaje';
+        }
+
+        if (str_contains($sistemaOrigen, 'remesa')) {
+            return 'remesa';
+        }
+
+        return null;
+    }
+
+    private function esOperacionRemesa(?string $operacion): bool
+    {
+        return in_array($operacion, ['remesa', 'pago'], true);
     }
 }

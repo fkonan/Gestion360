@@ -56,11 +56,6 @@
                                     class="fas fa-eye"></i></a>
                               <a href="{{ route('sarlaft.lista-negra.edit', $registro) }}" class="btn btn-success"><i
                                     class="fas fa-edit"></i></a>
-                              <form action="{{ route('sarlaft.lista-negra.destroy', $registro) }}" method="POST"
-                                 class="d-inline" onsubmit="return confirm('Eliminar este registro?')">
-                                 @csrf @method('DELETE')
-                                 <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
-                              </form>
                            </div>
                         </td>
                      </tr>

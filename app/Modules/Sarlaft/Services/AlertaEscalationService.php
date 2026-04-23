@@ -11,7 +11,7 @@ use Throwable;
 class AlertaEscalationService
 {
     public function __construct(
-        private readonly DecisionServicioService $decisionServicioService,
+        private readonly GestionAlertaService $gestionAlertaService,
         private readonly PoliticaSarlaftService $politicaSarlaftService,
     ) {}
 
@@ -26,7 +26,6 @@ class AlertaEscalationService
         $chunkSize = $this->resolverChunk($chunk);
         $riesgosAutoEscalables = (array) ($politica['auto_escalar_riesgos'] ?? ['alto', 'critico']);
         $autoEstado = (string) ($politica['auto_estado'] ?? 'en_revision');
-        $autoDecision = (string) ($politica['auto_decision'] ?? 'bloquear');
         $autoUserId = $this->resolverUsuarioAutomatico($politica);
 
         $stats = [
@@ -48,7 +47,7 @@ class AlertaEscalationService
                         ->orWhereNull('escalada_automatica');
                 })
                 ->orderBy('id')
-                ->chunkById($chunkSize, function ($alertas) use (&$stats, $dryRun, $autoEstado, $autoDecision, $autoUserId): void {
+                ->chunkById($chunkSize, function ($alertas) use (&$stats, $dryRun, $autoEstado, $autoUserId): void {
                     /** @var \Illuminate\Support\Collection<int, Alerta> $alertas */
                     foreach ($alertas as $alerta) {
                         $stats['evaluadas']++;
@@ -57,11 +56,10 @@ class AlertaEscalationService
                             continue;
                         }
 
-                        $this->decisionServicioService->aplicarDecisionEnAtencion(
+                        $this->gestionAlertaService->atender(
                             alerta: $alerta,
                             datos: [
                                 'estado' => $autoEstado,
-                                'decision_servicio' => $autoDecision,
                                 'notas' => $this->construirNotasAutomaticas($alerta->notas),
                             ],
                             userId: $autoUserId,

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Modules\Sarlaft\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Consulta extends Model
@@ -44,15 +43,5 @@ class Consulta extends Model
     public function alertas(): HasMany
     {
         return $this->hasMany(Alerta::class, 'consulta_id');
-    }
-
-    public function simulacionPasaje(): HasOne
-    {
-        return $this->hasOne(SimulacionPasaje::class, 'consulta_id');
-    }
-
-    public function simulacionRemesa(): HasOne
-    {
-        return $this->hasOne(SimulacionRemesa::class, 'consulta_id');
     }
 }

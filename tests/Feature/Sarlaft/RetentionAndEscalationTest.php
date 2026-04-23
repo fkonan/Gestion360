@@ -31,7 +31,6 @@ class RetentionAndEscalationTest extends TestCase
             'sarlaft.alerta_sla_dias' => 1,
             'sarlaft.auto_escalar_riesgos' => ['alto', 'critico'],
             'sarlaft.auto_estado' => 'en_revision',
-            'sarlaft.auto_decision' => 'bloquear',
             'sarlaft.auto_user_id' => 1,
             'sarlaft.archive_chunk' => 100,
         ]);
@@ -143,17 +142,13 @@ class RetentionAndEscalationTest extends TestCase
 
         $this->assertSame(2, $stats['procesadas']);
         $this->assertSame('en_revision', $alertaAlto->estado);
-        $this->assertSame('bloquear', $alertaAlto->decision_servicio);
-        $this->assertTrue((bool) $alertaAlto->decision_activa);
         $this->assertTrue((bool) $alertaAlto->escalada_automatica);
         $this->assertNotNull($alertaAlto->escalada_automatica_at);
 
         $this->assertSame('en_revision', $alertaCritico->estado);
-        $this->assertSame('bloquear', $alertaCritico->decision_servicio);
-        $this->assertTrue((bool) $alertaCritico->decision_activa);
         $this->assertTrue((bool) $alertaCritico->escalada_automatica);
 
-        $this->assertDatabaseCount('sarlaft_bloqueos', 2, 'mysql-sarlaft');
+        $this->assertDatabaseCount('sarlaft_bloqueos', 0, 'mysql-sarlaft');
     }
 
     public function test_no_escalado_en_bajo_y_medio(): void
@@ -248,14 +243,12 @@ class RetentionAndEscalationTest extends TestCase
     public function test_politica_desde_bd_sobrescribe_config(): void
     {
         config([
-            'sarlaft.auto_decision' => 'permitir_permanente',
             'sarlaft.auto_estado' => 'descartada',
         ]);
 
         DB::connection('mysql-sarlaft')->table('sarlaft_politicas')
             ->where('id', 1)
             ->update([
-                'auto_decision' => 'bloquear',
                 'auto_estado' => 'en_revision',
                 'updated_at' => now(),
             ]);
@@ -274,7 +267,6 @@ class RetentionAndEscalationTest extends TestCase
 
         $this->assertSame(1, $stats['procesadas']);
         $this->assertSame('en_revision', $alerta->estado);
-        $this->assertSame('bloquear', $alerta->decision_servicio);
     }
 
     public function test_fallback_config_si_no_hay_politica(): void
@@ -283,7 +275,6 @@ class RetentionAndEscalationTest extends TestCase
         config([
             'sarlaft.alerta_sla_dias' => 1,
             'sarlaft.auto_estado' => 'descartada',
-            'sarlaft.auto_decision' => 'permitir_permanente',
         ]);
 
         $consulta = $this->crearConsulta([
@@ -300,7 +291,6 @@ class RetentionAndEscalationTest extends TestCase
 
         $this->assertSame(1, $stats['procesadas']);
         $this->assertSame('descartada', $alerta->estado);
-        $this->assertSame('permitir_permanente', $alerta->decision_servicio);
     }
 
     private function crearEsquemaSarlaft(): void
@@ -328,10 +318,6 @@ class RetentionAndEscalationTest extends TestCase
             $table->string('estado', 20)->default('pendiente');
             $table->string('tipo_documento', 20)->nullable();
             $table->string('numero_documento', 50)->nullable();
-            $table->string('decision_servicio', 30)->default('sin_decision');
-            $table->boolean('decision_activa')->default(false);
-            $table->timestamp('decision_consumida_at')->nullable();
-            $table->unsignedBigInteger('decision_consumida_consulta_id')->nullable();
             $table->boolean('escalada_automatica')->default(false);
             $table->timestamp('escalada_automatica_at')->nullable();
             $table->json('datos_persona');
@@ -392,12 +378,9 @@ class RetentionAndEscalationTest extends TestCase
 
         Schema::connection('mysql-sarlaft')->create('sarlaft_politicas', function (Blueprint $table): void {
             $table->id();
-            $table->boolean('suppress_alert_on_bloquear')->default(true);
-            $table->boolean('suppress_alert_on_permitir_permanente')->default(true);
             $table->unsignedTinyInteger('sla_dias_alerta')->default(1);
             $table->json('auto_escalar_riesgos')->nullable();
             $table->string('auto_estado', 20)->default('en_revision');
-            $table->string('auto_decision', 30)->default('bloquear');
             $table->boolean('auto_atender_lista_negra_interna')->default(true);
             $table->boolean('auto_crear_alerta_atendida')->default(true);
             $table->unsignedBigInteger('auto_user_id')->nullable();
@@ -407,12 +390,9 @@ class RetentionAndEscalationTest extends TestCase
 
         DB::connection('mysql-sarlaft')->table('sarlaft_politicas')->insert([
             'id' => 1,
-            'suppress_alert_on_bloquear' => 1,
-            'suppress_alert_on_permitir_permanente' => 1,
             'sla_dias_alerta' => 1,
             'auto_escalar_riesgos' => json_encode(['alto', 'critico']),
             'auto_estado' => 'en_revision',
-            'auto_decision' => 'bloquear',
             'auto_atender_lista_negra_interna' => 1,
             'auto_crear_alerta_atendida' => 1,
             'auto_user_id' => 1,
@@ -458,8 +438,6 @@ class RetentionAndEscalationTest extends TestCase
             'estado' => 'pendiente',
             'tipo_documento' => $tipoDocumento,
             'numero_documento' => $numeroDocumento,
-            'decision_servicio' => 'sin_decision',
-            'decision_activa' => false,
             'datos_persona' => [
                 'tipo_documento' => $tipoDocumento,
                 'numero_documento' => $numeroDocumento,

@@ -6,8 +6,6 @@ namespace Tests\Feature\Sarlaft;
 
 use App\Modules\Sarlaft\Models\Alerta;
 use App\Modules\Sarlaft\Models\Consulta;
-use App\Modules\Sarlaft\Models\SimulacionPasaje;
-use App\Modules\Sarlaft\Models\SimulacionRemesa;
 use App\Modules\Sarlaft\Services\ReporteOperacionesService;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -37,40 +35,46 @@ class ReporteOperacionesServiceTest extends TestCase
 
     public function test_construye_metricas_operativas_por_documento(): void
     {
-        $consultaPasaje = $this->crearConsulta([
+        $this->crearConsulta([
             'numero_documento' => '9001',
             'nombre_consultado' => 'Maria Operativa',
             'presta_servicio' => true,
-            'sistema_origen' => 'simulacion_pasaje',
+            'sistema_origen' => 'api_transportes',
+            'contexto_operacion' => [
+                'tipo_operacion' => 'pasaje',
+                'origen' => 'Bucaramanga',
+                'destino' => 'Bogota',
+            ],
             'created_at' => now()->subDays(2),
         ]);
-        $this->crearSimulacionPasaje($consultaPasaje);
 
-        $consultaRemesa = $this->crearConsulta([
+        $consultaPago = $this->crearConsulta([
             'numero_documento' => '9001',
             'nombre_consultado' => 'Maria Operativa',
             'presta_servicio' => false,
             'nivel_riesgo' => 'alto',
             'encontrado' => true,
-            'sistema_origen' => 'simulacion_remesa',
+            'sistema_origen' => 'api_finanzas',
             'contexto_operacion' => [
-                'decision_aplicada' => 'bloquear',
+                'tipo_operacion' => 'pago',
                 'presta_servicio_base' => false,
                 'presta_servicio_final' => false,
+                'monto' => 350000,
             ],
             'created_at' => now()->subDay(),
         ]);
-        $this->crearSimulacionRemesa($consultaRemesa);
-        $this->crearAlerta($consultaRemesa, '9001');
+        $this->crearAlerta($consultaPago, '9001');
 
-        $consultaTercera = $this->crearConsulta([
+        $this->crearConsulta([
             'numero_documento' => '7777',
             'nombre_consultado' => 'Otra Persona',
             'presta_servicio' => false,
-            'sistema_origen' => 'simulacion_pasaje',
+            'sistema_origen' => 'api_transportes',
+            'contexto_operacion' => [
+                'tipo_operacion' => 'pasaje',
+            ],
             'created_at' => now(),
         ]);
-        $this->crearSimulacionPasaje($consultaTercera, '7777');
 
         $reporte = app(ReporteOperacionesService::class)->construirReporte([
             'tipo_documento' => 'cc',
@@ -90,40 +94,44 @@ class ReporteOperacionesServiceTest extends TestCase
         $this->assertCount(2, $items);
         $this->assertSame('9001', $items[0]->numero_documento);
         $this->assertTrue($items[0]->relationLoaded('alertas'));
-        $this->assertTrue($items[0]->relationLoaded('simulacionPasaje'));
-        $this->assertTrue($items[0]->relationLoaded('simulacionRemesa'));
     }
 
     public function test_filtra_por_operacion_y_resultado(): void
     {
-        $consultaPasajeBloqueado = $this->crearConsulta([
+        $this->crearConsulta([
             'numero_documento' => '5000',
             'nombre_consultado' => 'Carlos Filtro',
             'presta_servicio' => false,
             'nivel_riesgo' => 'alto',
-            'sistema_origen' => 'simulacion_pasaje',
+            'sistema_origen' => 'api_transportes',
+            'contexto_operacion' => [
+                'tipo_operacion' => 'pasaje',
+            ],
             'created_at' => now()->subHours(3),
         ]);
-        $this->crearSimulacionPasaje($consultaPasajeBloqueado, '5000');
 
-        $consultaPasajePermitido = $this->crearConsulta([
+        $this->crearConsulta([
             'numero_documento' => '5000',
             'nombre_consultado' => 'Carlos Filtro',
             'presta_servicio' => true,
-            'sistema_origen' => 'simulacion_pasaje',
+            'sistema_origen' => 'api_transportes',
+            'contexto_operacion' => [
+                'tipo_operacion' => 'pasaje',
+            ],
             'created_at' => now()->subHours(2),
         ]);
-        $this->crearSimulacionPasaje($consultaPasajePermitido, '5000');
 
-        $consultaRemesaBloqueada = $this->crearConsulta([
+        $this->crearConsulta([
             'numero_documento' => '5000',
             'nombre_consultado' => 'Carlos Filtro',
             'presta_servicio' => false,
             'nivel_riesgo' => 'alto',
-            'sistema_origen' => 'simulacion_remesa',
+            'sistema_origen' => 'api_finanzas',
+            'contexto_operacion' => [
+                'tipo_operacion' => 'pago',
+            ],
             'created_at' => now()->subHour(),
         ]);
-        $this->crearSimulacionRemesa($consultaRemesaBloqueada, '5000');
 
         $reporte = app(ReporteOperacionesService::class)->construirReporte([
             'numero_documento' => '5000',
@@ -139,8 +147,8 @@ class ReporteOperacionesServiceTest extends TestCase
         $this->assertSame(1, $reporte['stats']['total_pasajes']);
         $this->assertSame(0, $reporte['stats']['total_remesas']);
         $this->assertCount(1, $items);
-        $this->assertSame('simulacion_pasaje', $items[0]->sistema_origen);
         $this->assertFalse($items[0]->presta_servicio);
+        $this->assertSame('pasaje', $items[0]->contexto_operacion['tipo_operacion']);
     }
 
     private function crearEsquema(): void
@@ -163,15 +171,14 @@ class ReporteOperacionesServiceTest extends TestCase
         Schema::connection('mysql-sarlaft')->create('sarlaft_alertas', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('consulta_id')->nullable();
+            $table->unsignedBigInteger('intento_id')->nullable();
             $table->string('tipo', 50);
             $table->string('nivel_riesgo', 20);
             $table->string('estado', 20)->default('pendiente');
             $table->string('tipo_documento', 20)->nullable();
             $table->string('numero_documento', 50)->nullable();
-            $table->string('decision_servicio', 30)->default('sin_decision');
-            $table->boolean('decision_activa')->default(false);
-            $table->timestamp('decision_consumida_at')->nullable();
-            $table->unsignedBigInteger('decision_consumida_consulta_id')->nullable();
+            $table->boolean('escalada_automatica')->default(false);
+            $table->timestamp('escalada_automatica_at')->nullable();
             $table->json('datos_persona');
             $table->json('listas_coincidentes');
             $table->json('contexto_operacion')->nullable();
@@ -182,54 +189,6 @@ class ReporteOperacionesServiceTest extends TestCase
             $table->timestamps();
             $table->softDeletes();
         });
-
-        Schema::connection('mysql-sarlaft')->create('sarlaft_simulacion_pasajes', function (Blueprint $table): void {
-            $table->id();
-            $table->unsignedBigInteger('consulta_id');
-            $table->unsignedBigInteger('usuario_id')->nullable();
-            $table->unsignedBigInteger('ciudad_origen_id');
-            $table->string('ciudad_origen_nombre', 150);
-            $table->unsignedBigInteger('ciudad_destino_id');
-            $table->string('ciudad_destino_nombre', 150);
-            $table->date('fecha_viaje');
-            $table->string('tipo_documento', 20);
-            $table->string('documento', 50);
-            $table->string('nombres', 150);
-            $table->string('apellidos', 150);
-            $table->string('direccion', 250);
-            $table->string('telefono', 30);
-            $table->string('correo', 150);
-            $table->boolean('encontrado');
-            $table->boolean('presta_servicio');
-            $table->string('nivel_riesgo', 20)->nullable();
-            $table->json('coincidencias')->nullable();
-            $table->timestamps();
-        });
-
-        Schema::connection('mysql-sarlaft')->create('sarlaft_simulacion_remesas', function (Blueprint $table): void {
-            $table->id();
-            $table->unsignedBigInteger('consulta_id');
-            $table->unsignedBigInteger('usuario_id')->nullable();
-            $table->unsignedBigInteger('ciudad_origen_id');
-            $table->string('ciudad_origen_nombre', 150);
-            $table->unsignedBigInteger('ciudad_destino_id');
-            $table->string('ciudad_destino_nombre', 150);
-            $table->date('fecha_envio');
-            $table->string('tipo_documento', 20);
-            $table->string('documento_remitente', 50);
-            $table->string('nombres_remitente', 150);
-            $table->string('apellidos_remitente', 150);
-            $table->string('telefono_remitente', 30);
-            $table->string('nombre_destinatario', 300);
-            $table->string('documento_destinatario', 50);
-            $table->decimal('monto', 14, 2);
-            $table->string('concepto', 500);
-            $table->boolean('encontrado');
-            $table->boolean('presta_servicio');
-            $table->string('nivel_riesgo', 20)->nullable();
-            $table->json('coincidencias')->nullable();
-            $table->timestamps();
-        });
     }
 
     /**
@@ -238,7 +197,7 @@ class ReporteOperacionesServiceTest extends TestCase
     private function crearConsulta(array $override): Consulta
     {
         return Consulta::query()->create(array_merge([
-            'sistema_origen' => 'simulacion_pasaje',
+            'sistema_origen' => 'api',
             'tipo_documento' => 'CC',
             'numero_documento' => '1000',
             'nombre_consultado' => 'Persona de prueba',
@@ -247,7 +206,7 @@ class ReporteOperacionesServiceTest extends TestCase
             'nivel_riesgo' => 'ninguno',
             'coincidencias' => [],
             'contexto_operacion' => [
-                'decision_aplicada' => 'sin_decision',
+                'tipo_operacion' => 'pasaje',
                 'presta_servicio_base' => true,
                 'presta_servicio_final' => true,
             ],
@@ -265,8 +224,6 @@ class ReporteOperacionesServiceTest extends TestCase
             'estado' => 'pendiente',
             'tipo_documento' => 'CC',
             'numero_documento' => $numeroDocumento,
-            'decision_servicio' => 'sin_decision',
-            'decision_activa' => false,
             'datos_persona' => [
                 'tipo_documento' => 'CC',
                 'numero_documento' => $numeroDocumento,
@@ -275,56 +232,6 @@ class ReporteOperacionesServiceTest extends TestCase
             'listas_coincidentes' => [],
             'created_at' => $consulta->created_at,
             'updated_at' => $consulta->created_at,
-        ]);
-    }
-
-    private function crearSimulacionPasaje(Consulta $consulta, string $documento = '9001'): SimulacionPasaje
-    {
-        return SimulacionPasaje::query()->create([
-            'consulta_id' => $consulta->id,
-            'usuario_id' => null,
-            'ciudad_origen_id' => 1,
-            'ciudad_origen_nombre' => 'Bucaramanga',
-            'ciudad_destino_id' => 2,
-            'ciudad_destino_nombre' => 'Bogota',
-            'fecha_viaje' => now()->toDateString(),
-            'tipo_documento' => 'CC',
-            'documento' => $documento,
-            'nombres' => 'Maria',
-            'apellidos' => 'Operativa',
-            'direccion' => 'Calle 1',
-            'telefono' => '3000000000',
-            'correo' => 'maria@example.com',
-            'encontrado' => $consulta->encontrado,
-            'presta_servicio' => $consulta->presta_servicio,
-            'nivel_riesgo' => $consulta->nivel_riesgo,
-            'coincidencias' => [],
-        ]);
-    }
-
-    private function crearSimulacionRemesa(Consulta $consulta, string $documento = '9001'): SimulacionRemesa
-    {
-        return SimulacionRemesa::query()->create([
-            'consulta_id' => $consulta->id,
-            'usuario_id' => null,
-            'ciudad_origen_id' => 1,
-            'ciudad_origen_nombre' => 'Bucaramanga',
-            'ciudad_destino_id' => 3,
-            'ciudad_destino_nombre' => 'Medellin',
-            'fecha_envio' => now()->toDateString(),
-            'tipo_documento' => 'CC',
-            'documento_remitente' => $documento,
-            'nombres_remitente' => 'Maria',
-            'apellidos_remitente' => 'Operativa',
-            'telefono_remitente' => '3000000000',
-            'nombre_destinatario' => 'Destinatario Prueba',
-            'documento_destinatario' => '12345',
-            'monto' => 250000,
-            'concepto' => 'Pago de prueba',
-            'encontrado' => $consulta->encontrado,
-            'presta_servicio' => $consulta->presta_servicio,
-            'nivel_riesgo' => $consulta->nivel_riesgo,
-            'coincidencias' => [],
         ]);
     }
 }

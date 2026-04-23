@@ -7,9 +7,6 @@
     <a href="{{ route('sarlaft.dashboard') }}" class="btn btn-sm btn-outline-dark">
         <i class="fas fa-arrow-left"></i> Dashboard
     </a>
-    <a href="{{ route('sarlaft.simulaciones.index') }}" class="btn btn-sm btn-success">
-        <i class="fas fa-vial"></i> Nueva Simulacion
-    </a>
 </div>
 
 <div class="card shadow-sm mb-4">
@@ -36,7 +33,7 @@
                     <select id="operacion" name="operacion" class="form-select">
                         <option value="">Todas</option>
                         <option value="pasaje" {{ ($filtros['operacion'] ?? null) === 'pasaje' ? 'selected' : '' }}>Pasajes</option>
-                        <option value="remesa" {{ ($filtros['operacion'] ?? null) === 'remesa' ? 'selected' : '' }}>Mensajeria</option>
+                        <option value="remesa" {{ ($filtros['operacion'] ?? null) === 'remesa' ? 'selected' : '' }}>Remesas/Pagos</option>
                     </select>
                 </div>
                 <div class="col-md-3">
@@ -104,7 +101,7 @@
     <div class="col-md-6 col-lg-2">
         <div class="card shadow-sm h-100 border-warning">
             <div class="card-body">
-                <div class="text-muted small">Mensajeria</div>
+                <div class="text-muted small">Remesas/Pagos</div>
                 <div class="fs-3 fw-bold">{{ number_format($stats['total_remesas']) }}</div>
             </div>
         </div>
@@ -146,18 +143,43 @@
                 <tbody>
                     @foreach($operaciones as $consulta)
                     @php
-                        $esPasaje = $consulta->sistema_origen === 'simulacion_pasaje';
-                        $detalle = $esPasaje ? $consulta->simulacionPasaje : $consulta->simulacionRemesa;
                         $contextoOperacion = is_array($consulta->contexto_operacion) ? $consulta->contexto_operacion : [];
+                        $operacionContexto = isset($contextoOperacion['tipo_operacion']) && is_string($contextoOperacion['tipo_operacion'])
+                            ? strtolower(trim($contextoOperacion['tipo_operacion']))
+                            : null;
+
+                        $operacion = $operacionContexto !== null && $operacionContexto !== ''
+                            ? $operacionContexto
+                            : match ($consulta->sistema_origen) {
+                                'simulacion_pasaje' => 'pasaje',
+                                'simulacion_remesa' => 'remesa',
+                                default => 'operacion',
+                            };
+
+                        $esPasaje = $operacion === 'pasaje';
+                        $esRemesa = in_array($operacion, ['remesa', 'pago'], true);
+
+                        $fechaOperacion = $contextoOperacion['fecha_operacion'] ?? null;
+                        $fechaOperacionFormateada = null;
+                        if (is_string($fechaOperacion) && trim($fechaOperacion) !== '') {
+                            try {
+                                $fechaOperacionFormateada = \Illuminate\Support\Carbon::parse($fechaOperacion)->format('d/m/Y H:i');
+                            } catch (\Throwable $throwable) {
+                                $fechaOperacionFormateada = $fechaOperacion;
+                            }
+                        }
+
                         $alerta = $consulta->alertas->first();
                     @endphp
                     <tr>
                         <td class="small text-nowrap">{{ $consulta->created_at?->format('d/m/Y H:i') ?? '-' }}</td>
                         <td>
                             @if($esPasaje)
-                                <span class="badge bg-info text-dark">Pasajes</span>
+                                <span class="badge bg-info text-dark">Pasaje</span>
+                            @elseif($esRemesa)
+                                <span class="badge bg-warning text-dark">Remesa/Pago</span>
                             @else
-                                <span class="badge bg-warning text-dark">Mensajeria</span>
+                                <span class="badge bg-secondary">{{ \Illuminate\Support\Str::headline((string) $operacion) }}</span>
                             @endif
                         </td>
                         <td>
@@ -175,24 +197,23 @@
                             </div>
                         </td>
                         <td class="small">
-                            @if($esPasaje && $detalle)
-                                <div><strong>Ruta:</strong> {{ $detalle->ciudad_origen_nombre }} -> {{ $detalle->ciudad_destino_nombre }}</div>
-                                <div><strong>Fecha viaje:</strong> {{ $detalle->fecha_viaje?->format('d/m/Y') ?? '-' }}</div>
-                                <div><strong>Contacto:</strong> {{ $detalle->telefono }} / {{ $detalle->correo }}</div>
-                                <div><strong>Direccion:</strong> {{ $detalle->direccion }}</div>
-                            @elseif($detalle)
-                                <div><strong>Ruta:</strong> {{ $detalle->ciudad_origen_nombre }} -> {{ $detalle->ciudad_destino_nombre }}</div>
-                                <div><strong>Fecha envio:</strong> {{ $detalle->fecha_envio?->format('d/m/Y') ?? '-' }}</div>
-                                <div><strong>Destinatario:</strong> {{ $detalle->nombre_destinatario }}</div>
-                                <div><strong>Monto:</strong> ${{ number_format((float) $detalle->monto, 2, ',', '.') }}</div>
-                                <div><strong>Concepto:</strong> {{ $detalle->concepto }}</div>
+                            @if($contextoOperacion !== [])
+                                <div><strong>Ruta:</strong> {{ ($contextoOperacion['origen'] ?? 'N/A') . ' -> ' . ($contextoOperacion['destino'] ?? 'N/A') }}</div>
+                                <div><strong>Fecha operacion:</strong> {{ $fechaOperacionFormateada ?? 'N/A' }}</div>
+                                <div><strong>Referencia:</strong> {{ $contextoOperacion['referencia_externa'] ?? 'N/A' }}</div>
+                                @if(isset($contextoOperacion['monto']) && is_numeric($contextoOperacion['monto']))
+                                <div><strong>Monto:</strong> ${{ number_format((float) $contextoOperacion['monto'], 2, ',', '.') }}</div>
+                                @endif
+                                @if(!empty($contextoOperacion['descripcion']))
+                                <div><strong>Descripcion:</strong> {{ $contextoOperacion['descripcion'] }}</div>
+                                @endif
                             @else
-                                <span class="text-muted">Sin detalle operativo adicional.</span>
+                                <span class="text-muted">Sin contexto operativo adicional.</span>
                             @endif
                         </td>
                         <td class="small">
                             <div><strong>Encontrado:</strong> {{ $consulta->encontrado ? 'Si' : 'No' }}</div>
-                            <div><strong>Decision aplicada:</strong> {{ str_replace('_', ' ', (string) ($contextoOperacion['decision_aplicada'] ?? 'sin_decision')) }}</div>
+                            <div><strong>Sistema:</strong> {{ $consulta->sistema_origen ?: 'N/A' }}</div>
                             <div><strong>Resultado base:</strong> {{ ($contextoOperacion['presta_servicio_base'] ?? $consulta->presta_servicio) ? 'Permitido' : 'Bloqueado' }}</div>
                             <div><strong>Resultado final:</strong> {{ ($contextoOperacion['presta_servicio_final'] ?? $consulta->presta_servicio) ? 'Permitido' : 'Bloqueado' }}</div>
                         </td>

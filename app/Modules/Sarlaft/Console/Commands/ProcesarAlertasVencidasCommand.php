@@ -13,7 +13,7 @@ class ProcesarAlertasVencidasCommand extends Command
         {--dry-run : Simula el proceso sin aplicar cambios}
         {--chunk= : Tamano de lote para procesamiento}';
 
-    protected $description = 'Escala alertas SARLAFT vencidas y aplica decision automatica de bloqueo';
+    protected $description = 'Escala alertas SARLAFT vencidas y actualiza su estado automaticamente';
 
     public function __construct(
         private readonly AlertaEscalationService $alertaEscalationService,
@@ -38,5 +38,4 @@ class ProcesarAlertasVencidasCommand extends Command
         return self::SUCCESS;
     }
 }
-
 

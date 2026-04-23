@@ -11,7 +11,9 @@ use Illuminate\Console\Command;
 class PullIntentosOperacionCommand extends Command
 {
     protected $signature = 'sarlaft:pull-intentos
-                            {--sistema= : Codigo del sistema consumidor especifico (opcional)}';
+                            {--sistema= : Codigo del sistema consumidor especifico (opcional)}
+                            {--fecha-desde= : Fecha/hora inicial del filtro (ISO-8601)}
+                            {--fecha-hasta= : Fecha/hora final del filtro (ISO-8601)}';
 
     protected $description = 'Consulta los endpoints Pull de sistemas consumidores y registra intentos de operacion con coincidencias en listas.';
 
@@ -40,11 +42,13 @@ class PullIntentosOperacionCommand extends Command
         }
 
         $totalRegistrados = 0;
+        $fechaDesde = $this->option('fecha-desde') ? (string) $this->option('fecha-desde') : null;
+        $fechaHasta = $this->option('fecha-hasta') ? (string) $this->option('fecha-hasta') : null;
 
         foreach ($sistemas as $sistema) {
             $this->line("Consultando sistema: <comment>{$sistema->nombre}</comment> ({$sistema->codigo})...");
 
-            $registrados = $this->service->ejecutarPull($sistema);
+            $registrados = $this->service->ejecutarPull($sistema, $fechaDesde, $fechaHasta);
 
             $this->line("  → {$registrados} intento(s) registrado(s).");
             $totalRegistrados += $registrados;

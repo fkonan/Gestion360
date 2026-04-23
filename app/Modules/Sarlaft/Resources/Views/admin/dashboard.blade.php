@@ -70,9 +70,6 @@
     <a href="{{ route('sarlaft.politicas.edit') }}" class="btn btn-dark">
         <i class="fas fa-cogs"></i> Politicas SARLAFT
     </a>
-    <a href="{{ route('sarlaft.simulaciones.index') }}" class="btn btn-success">
-        <i class="fas fa-vial"></i> Simulaciones Operativas
-    </a>
     <a href="{{ route('sarlaft.reportes.operaciones.index') }}" class="btn btn-outline-dark">
         <i class="fas fa-chart-bar"></i> Reporte Operativo
     </a>

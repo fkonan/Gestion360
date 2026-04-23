@@ -10,12 +10,9 @@ class PoliticaSarlaftService
 {
     /**
      * @return array{
-     *   suppress_alert_on_bloquear: bool,
-     *   suppress_alert_on_permitir_permanente: bool,
      *   sla_dias_alerta: int,
      *   auto_escalar_riesgos: array<int, string>,
      *   auto_estado: string,
-     *   auto_decision: string,
      *   auto_atender_lista_negra_interna: bool,
      *   auto_crear_alerta_atendida: bool,
      *   auto_user_id: ?int
@@ -31,12 +28,9 @@ class PoliticaSarlaftService
         }
 
         return [
-            'suppress_alert_on_bloquear' => (bool) $politica->suppress_alert_on_bloquear,
-            'suppress_alert_on_permitir_permanente' => (bool) $politica->suppress_alert_on_permitir_permanente,
             'sla_dias_alerta' => max((int) $politica->sla_dias_alerta, 1),
             'auto_escalar_riesgos' => $this->normalizarRiesgos((array) $politica->auto_escalar_riesgos),
             'auto_estado' => $this->valorCadena($politica->auto_estado, $defaults['auto_estado']),
-            'auto_decision' => $this->valorCadena($politica->auto_decision, $defaults['auto_decision']),
             'auto_atender_lista_negra_interna' => (bool) $politica->auto_atender_lista_negra_interna,
             'auto_crear_alerta_atendida' => (bool) $politica->auto_crear_alerta_atendida,
             'auto_user_id' => $this->normalizarAutoUserId($politica->auto_user_id),
@@ -49,12 +43,9 @@ class PoliticaSarlaftService
     public function guardar(array $datos, ?int $updatedBy): PoliticaSarlaft
     {
         $payload = [
-            'suppress_alert_on_bloquear' => (bool) ($datos['suppress_alert_on_bloquear'] ?? true),
-            'suppress_alert_on_permitir_permanente' => (bool) ($datos['suppress_alert_on_permitir_permanente'] ?? true),
             'sla_dias_alerta' => max((int) ($datos['sla_dias_alerta'] ?? 1), 1),
             'auto_escalar_riesgos' => $this->normalizarRiesgos((array) ($datos['auto_escalar_riesgos'] ?? [])),
             'auto_estado' => $this->valorCadena($datos['auto_estado'] ?? null, 'en_revision'),
-            'auto_decision' => $this->valorCadena($datos['auto_decision'] ?? null, 'bloquear'),
             'auto_atender_lista_negra_interna' => (bool) ($datos['auto_atender_lista_negra_interna'] ?? true),
             'auto_crear_alerta_atendida' => (bool) ($datos['auto_crear_alerta_atendida'] ?? true),
             'auto_user_id' => $this->normalizarAutoUserId($datos['auto_user_id'] ?? null),
@@ -69,12 +60,9 @@ class PoliticaSarlaftService
 
     /**
      * @return array{
-     *   suppress_alert_on_bloquear: bool,
-     *   suppress_alert_on_permitir_permanente: bool,
      *   sla_dias_alerta: int,
      *   auto_escalar_riesgos: array<int, string>,
      *   auto_estado: string,
-     *   auto_decision: string,
      *   auto_atender_lista_negra_interna: bool,
      *   auto_crear_alerta_atendida: bool,
      *   auto_user_id: ?int
@@ -83,12 +71,9 @@ class PoliticaSarlaftService
     private function defaults(): array
     {
         return [
-            'suppress_alert_on_bloquear' => (bool) config('sarlaft.suppress_alert_on_bloquear', true),
-            'suppress_alert_on_permitir_permanente' => (bool) config('sarlaft.suppress_alert_on_permitir_permanente', true),
             'sla_dias_alerta' => max((int) config('sarlaft.alerta_sla_dias', 1), 1),
             'auto_escalar_riesgos' => $this->normalizarRiesgos((array) config('sarlaft.auto_escalar_riesgos', ['alto', 'critico'])),
             'auto_estado' => (string) config('sarlaft.auto_estado', 'en_revision'),
-            'auto_decision' => (string) config('sarlaft.auto_decision', 'bloquear'),
             'auto_atender_lista_negra_interna' => (bool) config('sarlaft.auto_atender_lista_negra_interna', true),
             'auto_crear_alerta_atendida' => (bool) config('sarlaft.auto_crear_alerta_atendida', true),
             'auto_user_id' => $this->normalizarAutoUserId(config('sarlaft.auto_user_id', 1)),
@@ -127,4 +112,5 @@ class PoliticaSarlaftService
 
         return $limpio !== '' ? $limpio : $fallback;
     }
+
 }

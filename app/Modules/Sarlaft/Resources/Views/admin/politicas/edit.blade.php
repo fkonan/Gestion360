@@ -50,46 +50,6 @@
 
             <hr>
 
-            <h6 class="mb-3">Supresion de alertas repetidas</h6>
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <input type="hidden" name="suppress_alert_on_bloquear" value="0">
-                    <div class="form-check form-switch">
-                        <input
-                            class="form-check-input"
-                            type="checkbox"
-                            role="switch"
-                            id="suppress_alert_on_bloquear"
-                            name="suppress_alert_on_bloquear"
-                            value="1"
-                            {{ old('suppress_alert_on_bloquear', $politica['suppress_alert_on_bloquear']) ? 'checked' : '' }}
-                        >
-                        <label class="form-check-label" for="suppress_alert_on_bloquear">
-                            No crear alerta nueva si ya existe decision activa <strong>bloquear</strong>
-                        </label>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <input type="hidden" name="suppress_alert_on_permitir_permanente" value="0">
-                    <div class="form-check form-switch">
-                        <input
-                            class="form-check-input"
-                            type="checkbox"
-                            role="switch"
-                            id="suppress_alert_on_permitir_permanente"
-                            name="suppress_alert_on_permitir_permanente"
-                            value="1"
-                            {{ old('suppress_alert_on_permitir_permanente', $politica['suppress_alert_on_permitir_permanente']) ? 'checked' : '' }}
-                        >
-                        <label class="form-check-label" for="suppress_alert_on_permitir_permanente">
-                            No crear alerta nueva si ya existe decision activa <strong>permitir permanente</strong>
-                        </label>
-                    </div>
-                </div>
-            </div>
-
-            <hr>
-
             <h6 class="mb-3">Escalamiento automatico por vencimiento</h6>
             <div class="row g-3">
                 <div class="col-md-6">
@@ -124,19 +84,6 @@
                         @endforeach
                     </select>
                     @error('auto_estado')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
-                <div class="col-md-3">
-                    <label for="auto_decision" class="form-label">Decision automatica</label>
-                    <select id="auto_decision" name="auto_decision" class="form-select @error('auto_decision') is-invalid @enderror" required>
-                        @foreach(['sin_decision', 'bloquear', 'permitir_una_operacion', 'permitir_permanente'] as $decision)
-                            <option value="{{ $decision }}" {{ old('auto_decision', $politica['auto_decision']) === $decision ? 'selected' : '' }}>
-                                {{ str_replace('_', ' ', ucfirst($decision)) }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('auto_decision')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
