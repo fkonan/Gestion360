@@ -244,44 +244,17 @@
                 <h6 class="mb-0">Intento de Operacion #{{ $intento->id }}</h6>
             </div>
             <div class="card-body small">
+                <p><strong>Sistema origen:</strong> {{ $intento->sistema_origen ?? ($intento->sistema?->codigo ?? $intento->sistema?->nombre ?? 'N/A') }}</p>
                 <p><strong>Tipo de operacion:</strong> {{ ucfirst((string) $intento->tipo_operacion) }}</p>
-                <p><strong>Sistema consumidor:</strong> {{ $intento->sistema?->nombre ?? 'N/A' }}</p>
                 <p><strong>Modo integracion:</strong> {{ strtoupper((string) $intento->modo_integracion) }}</p>
-                <p><strong>Fecha operacion:</strong> {{ $intento->fecha_operacion?->format('d/m/Y H:i:s') ?? 'N/A' }}</p>
-                <p><strong>Referencia externa:</strong> {{ $intento->referencia_externa ?? 'N/A' }}</p>
-                <p><strong>Ruta:</strong> {{ ($intento->origen ?? 'N/A') . ' -> ' . ($intento->destino ?? 'N/A') }}</p>
+                <p><strong>Creado en:</strong> {{ $intento->created_at?->format('d/m/Y H:i:s') ?? 'N/A' }}</p>
+                <p><strong>Referencia:</strong> {{ $intento->referencia ?? $intento->referencia_externa ?? 'N/A' }}</p>
+                <p><strong>Documento:</strong> {{ ($intento->tipo_documento ?? 'N/A') . ' ' . ($intento->numero_documento ?? 'N/A') }}</p>
+                <p><strong>Nombre:</strong> {{ $intento->nombre ?? 'N/A' }}</p>
+                <p><strong>Tipo lista:</strong> {{ $intento->tipo_lista ?? 'N/A' }}</p>
+                <p><strong>Lista:</strong> {{ $intento->lista_nombre ?? 'N/A' }}</p>
                 <p><strong>Monto:</strong> {{ $intento->monto !== null ? '$' . number_format((float) $intento->monto, 2, ',', '.') : 'N/A' }}</p>
-                <p><strong>Moneda:</strong> {{ $intento->moneda ?? 'N/A' }}</p>
                 <p><strong>Descripcion:</strong> {{ $intento->descripcion ?? 'N/A' }}</p>
-
-                @if($intento->personas->isNotEmpty())
-                <hr>
-                <strong>Personas reportadas en el intento</strong>
-                <div class="table-responsive mt-2">
-                    <table class="table table-sm table-bordered mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Documento</th>
-                                <th>Nombre</th>
-                                <th>Rol</th>
-                                <th>Tipo lista</th>
-                                <th>Lista</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($intento->personas as $personaIntento)
-                            <tr>
-                                <td>{{ $personaIntento->tipo_documento }} {{ $personaIntento->numero_documento }}</td>
-                                <td>{{ $personaIntento->nombre ?? '-' }}</td>
-                                <td>{{ str_replace('_', ' ', (string) $personaIntento->rol) }}</td>
-                                <td>{{ ucfirst((string) $personaIntento->tipo_lista) }}</td>
-                                <td>{{ $personaIntento->lista_nombre }}</td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-                @endif
             </div>
         </div>
         @endif

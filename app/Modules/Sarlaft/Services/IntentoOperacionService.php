@@ -6,8 +6,8 @@ namespace App\Modules\Sarlaft\Services;
 
 use App\Modules\Sarlaft\Models\Alerta;
 use App\Modules\Sarlaft\Models\IntentoOperacion;
-use App\Modules\Sarlaft\Models\IntentoPersona;
 use App\Modules\Sarlaft\Models\SistemaConsumidor;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -22,35 +22,29 @@ class IntentoOperacionService
     public function registrarPush(array $datos, SistemaConsumidor $sistema, string $ip): IntentoOperacion
     {
         return DB::connection('mysql-sarlaft')->transaction(function () use ($datos, $sistema, $ip): IntentoOperacion {
+            $referencia = $this->normalizarReferencia($datos['referencia'] ?? null);
+
             $intentoExistente = $this->buscarIntentoExistente(
                 sistema: $sistema,
                 modoIntegracion: 'push',
-                referenciaExterna: isset($datos['referencia_externa']) ? (string) $datos['referencia_externa'] : null,
+                referencia: $referencia,
             );
 
             if ($intentoExistente !== null) {
-                return $intentoExistente->load(['personas', 'alertas']);
+                return $intentoExistente->load(['alertas']);
             }
 
-            $intento = IntentoOperacion::create([
-                'sistema_id' => $sistema->id,
-                'modo_integracion' => 'push',
-                'tipo_operacion' => $datos['tipo_operacion'],
-                'referencia_externa' => $datos['referencia_externa'] ?? null,
-                'fecha_operacion' => $datos['fecha_operacion'],
-                'origen' => $datos['origen'] ?? null,
-                'destino' => $datos['destino'] ?? null,
-                'monto' => $datos['monto'] ?? null,
-                'moneda' => $datos['moneda'] ?? 'COP',
-                'descripcion' => $datos['descripcion'] ?? null,
-                'contexto' => $datos['contexto'] ?? null,
-                'ip_origen' => $ip,
-            ]);
+            $intento = $this->crearIntento(
+                datos: $datos,
+                sistema: $sistema,
+                modoIntegracion: 'push',
+                ipOrigen: $ip,
+                sistemaOrigenExterno: null,
+            );
 
-            $this->registrarPersonas($intento, $datos['personas']);
-            $this->generarAlertasPorPersonas($intento, $datos['personas']);
+            $this->generarAlerta($intento);
 
-            return $intento->load(['personas', 'alertas']);
+            return $intento->load(['alertas']);
         });
     }
 
@@ -94,38 +88,32 @@ class IntentoOperacionService
             $registrados = 0;
 
             foreach ($intentos as $item) {
-                if (! is_array($item) || empty($item['personas'])) {
+                if (! is_array($item) || ! $this->tieneCamposMinimos($item)) {
                     continue;
                 }
 
                 DB::connection('mysql-sarlaft')->transaction(function () use ($item, $sistema, &$registrados): void {
+                    $referencia = $this->normalizarReferencia($item['referencia'] ?? null);
+
                     $intentoExistente = $this->buscarIntentoExistente(
                         sistema: $sistema,
                         modoIntegracion: 'pull',
-                        referenciaExterna: isset($item['referencia_externa']) ? (string) $item['referencia_externa'] : null,
+                        referencia: $referencia,
                     );
 
                     if ($intentoExistente !== null) {
                         return;
                     }
 
-                    $intento = IntentoOperacion::create([
-                        'sistema_id' => $sistema->id,
-                        'modo_integracion' => 'pull',
-                        'tipo_operacion' => $item['tipo_operacion'] ?? 'venta',
-                        'referencia_externa' => $item['referencia_externa'] ?? null,
-                        'fecha_operacion' => $item['fecha_operacion'] ?? now(),
-                        'origen' => $item['origen'] ?? null,
-                        'destino' => $item['destino'] ?? null,
-                        'monto' => $item['monto'] ?? null,
-                        'moneda' => $item['moneda'] ?? 'COP',
-                        'descripcion' => $item['descripcion'] ?? null,
-                        'contexto' => isset($item['contexto']) && is_array($item['contexto']) ? $item['contexto'] : null,
-                        'ip_origen' => null,
-                    ]);
+                    $intento = $this->crearIntento(
+                        datos: $item,
+                        sistema: $sistema,
+                        modoIntegracion: 'pull',
+                        ipOrigen: null,
+                        sistemaOrigenExterno: $item['sistema_origen'] ?? null,
+                    );
 
-                    $this->registrarPersonas($intento, $item['personas']);
-                    $this->generarAlertasPorPersonas($intento, $item['personas']);
+                    $this->generarAlerta($intento);
                     $registrados++;
                 });
             }
@@ -141,95 +129,159 @@ class IntentoOperacionService
         }
     }
 
-    /**
-     * @param  array<int, array<string, mixed>>  $personas
-     */
-    private function registrarPersonas(IntentoOperacion $intento, array $personas): void
+    private function crearIntento(
+        array $datos,
+        SistemaConsumidor $sistema,
+        string $modoIntegracion,
+        ?string $ipOrigen,
+        mixed $sistemaOrigenExterno,
+    ): IntentoOperacion
     {
-        foreach ($personas as $persona) {
-            if (! is_array($persona)) {
-                continue;
-            }
+        $createdAt = $this->resolverFechaCreacion($datos['created_at'] ?? null);
+        $referencia = $this->normalizarReferencia($datos['referencia'] ?? null);
 
-            IntentoPersona::create([
-                'intento_id' => $intento->id,
-                'tipo_documento' => $persona['tipo_documento'] ?? '',
-                'numero_documento' => $persona['numero_documento'] ?? '',
-                'nombre' => $persona['nombre'] ?? null,
-                'rol' => $persona['rol'] ?? 'cliente',
-                'tipo_lista' => $persona['tipo_lista'] ?? 'vinculante',
-                'lista_nombre' => $persona['lista_nombre'] ?? '',
-                'detalle_coincidencia' => isset($persona['detalle_coincidencia']) && is_array($persona['detalle_coincidencia'])
-                    ? $persona['detalle_coincidencia']
-                    : null,
-            ]);
+        return IntentoOperacion::create([
+            'sistema_id' => $sistema->id,
+            'sistema_origen' => $this->resolverSistemaOrigen($sistema, $sistemaOrigenExterno),
+            'modo_integracion' => $modoIntegracion,
+            'tipo_documento' => trim((string) ($datos['tipo_documento'] ?? '')),
+            'numero_documento' => trim((string) ($datos['numero_documento'] ?? '')),
+            'nombre' => $this->normalizarTexto($datos['nombre'] ?? null),
+            'tipo_lista' => trim((string) ($datos['tipo_lista'] ?? '')),
+            'lista_nombre' => trim((string) ($datos['lista_nombre'] ?? '')),
+            'tipo_operacion' => trim((string) ($datos['tipo_operacion'] ?? '')),
+            'referencia' => $referencia,
+            'referencia_externa' => $referencia,
+            'fecha_operacion' => $createdAt ?? now(),
+            'monto' => $datos['monto'] ?? null,
+            'descripcion' => $this->normalizarTexto($datos['descripcion'] ?? null),
+            'contexto' => $this->normalizarContexto($datos['contexto'] ?? null),
+            'ip_origen' => $ipOrigen,
+            'created_at' => $createdAt,
+        ]);
+    }
+
+    private function generarAlerta(IntentoOperacion $intento): void
+    {
+        $tipoLista = strtolower(trim((string) $intento->tipo_lista));
+        $nivelRiesgo = str_contains($tipoLista, 'vinculante') ? 'alto' : 'medio';
+
+        Alerta::create([
+            'consulta_id' => null,
+            'intento_id' => $intento->id,
+            'tipo' => 'intento_operacion_'.$intento->modo_integracion,
+            'nivel_riesgo' => $nivelRiesgo,
+            'estado' => 'pendiente',
+            'tipo_documento' => $intento->tipo_documento,
+            'numero_documento' => $intento->numero_documento,
+            'datos_persona' => [
+                'tipo_documento' => $intento->tipo_documento,
+                'numero_documento' => $intento->numero_documento,
+                'nombre' => $intento->nombre,
+            ],
+            'listas_coincidentes' => [
+                [
+                    'tipo_lista' => $intento->tipo_lista,
+                    'tipo' => $intento->tipo_lista,
+                    'lista' => $intento->lista_nombre,
+                    'nombre' => $intento->lista_nombre,
+                    'identificacion' => $intento->numero_documento,
+                    'tipo_coincidencia' => 'coincidencia_intento',
+                ],
+            ],
+            'contexto_operacion' => [
+                'tipo_operacion' => $intento->tipo_operacion,
+                'referencia' => $intento->referencia,
+                'monto' => $intento->monto,
+                'descripcion' => $intento->descripcion,
+                'contexto' => $intento->contexto,
+                'created_at' => $intento->created_at?->toIso8601String(),
+                'sistema_origen' => $intento->sistema_origen,
+                'modo_integracion' => $intento->modo_integracion,
+            ],
+        ]);
+    }
+
+    private function tieneCamposMinimos(array $datos): bool
+    {
+        foreach (['tipo_documento', 'numero_documento', 'tipo_lista', 'lista_nombre', 'tipo_operacion'] as $campo) {
+            if (! isset($datos[$campo]) || trim((string) $datos[$campo]) === '') {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function resolverSistemaOrigen(SistemaConsumidor $sistema, mixed $sistemaOrigenExterno): string
+    {
+        if (is_string($sistemaOrigenExterno) && trim($sistemaOrigenExterno) !== '') {
+            return trim($sistemaOrigenExterno);
+        }
+
+        if (is_string($sistema->codigo) && trim($sistema->codigo) !== '') {
+            return trim($sistema->codigo);
+        }
+
+        return (string) $sistema->id;
+    }
+
+    private function normalizarContexto(mixed $contexto): ?array
+    {
+        return is_array($contexto) ? $contexto : null;
+    }
+
+    private function normalizarTexto(mixed $valor): ?string
+    {
+        if (! is_string($valor)) {
+            return null;
+        }
+
+        $texto = trim($valor);
+
+        return $texto !== '' ? $texto : null;
+    }
+
+    private function resolverFechaCreacion(mixed $valor): ?\Illuminate\Support\Carbon
+    {
+        if (! is_string($valor) || trim($valor) === '') {
+            return null;
+        }
+
+        try {
+            return \Illuminate\Support\Carbon::parse($valor);
+        } catch (\Throwable) {
+            return null;
         }
     }
 
-    /**
-     * Genera una alerta por cada persona que tuvo coincidencia en el intento.
-     *
-     * @param  array<int, array<string, mixed>>  $personas
-     */
-    private function generarAlertasPorPersonas(IntentoOperacion $intento, array $personas): void
+    private function normalizarReferencia(mixed $valor): ?string
     {
-        foreach ($personas as $persona) {
-            if (! is_array($persona)) {
-                continue;
-            }
-
-            $nivelRiesgo = $persona['tipo_lista'] === 'vinculante' ? 'alto' : 'medio';
-
-            Alerta::create([
-                'consulta_id' => null,
-                'intento_id' => $intento->id,
-                'tipo' => 'intento_operacion_' . $intento->modo_integracion,
-                'nivel_riesgo' => $nivelRiesgo,
-                'estado' => 'pendiente',
-                'tipo_documento' => $persona['tipo_documento'] ?? null,
-                'numero_documento' => $persona['numero_documento'] ?? null,
-                'datos_persona' => [
-                    'tipo_documento' => $persona['tipo_documento'] ?? '',
-                    'numero_documento' => $persona['numero_documento'] ?? '',
-                    'nombre' => $persona['nombre'] ?? null,
-                    'rol' => $persona['rol'] ?? null,
-                ],
-                'listas_coincidentes' => [
-                    [
-                        'tipo' => $persona['tipo_lista'] ?? '',
-                        'nombre' => $persona['lista_nombre'] ?? '',
-                        'detalle' => $persona['detalle_coincidencia'] ?? null,
-                    ],
-                ],
-                'contexto_operacion' => [
-                    'tipo_operacion' => $intento->tipo_operacion,
-                    'referencia_externa' => $intento->referencia_externa,
-                    'fecha_operacion' => $intento->fecha_operacion?->toIso8601String(),
-                    'origen' => $intento->origen,
-                    'destino' => $intento->destino,
-                    'monto' => $intento->monto,
-                    'moneda' => $intento->moneda,
-                    'descripcion' => $intento->descripcion,
-                    'sistema' => $intento->sistema?->nombre,
-                    'modo_integracion' => $intento->modo_integracion,
-                ],
-            ]);
+        if (! is_string($valor)) {
+            return null;
         }
+
+        $referencia = trim($valor);
+
+        return $referencia !== '' ? $referencia : null;
     }
 
     private function buscarIntentoExistente(
         SistemaConsumidor $sistema,
         string $modoIntegracion,
-        ?string $referenciaExterna,
+        ?string $referencia,
     ): ?IntentoOperacion {
-        if ($referenciaExterna === null || trim($referenciaExterna) === '') {
+        if ($referencia === null) {
             return null;
         }
 
         return IntentoOperacion::query()
             ->where('sistema_id', $sistema->id)
             ->where('modo_integracion', $modoIntegracion)
-            ->where('referencia_externa', trim($referenciaExterna))
+            ->where(static function (Builder $query) use ($referencia): void {
+                $query->where('referencia', $referencia)
+                    ->orWhere('referencia_externa', $referencia);
+            })
             ->first();
     }
 }

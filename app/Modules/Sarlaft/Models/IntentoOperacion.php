@@ -16,8 +16,15 @@ class IntentoOperacion extends Model
 
     protected $fillable = [
         'sistema_id',
+        'sistema_origen',
         'modo_integracion',
+        'tipo_documento',
+        'numero_documento',
+        'nombre',
+        'tipo_lista',
+        'lista_nombre',
         'tipo_operacion',
+        'referencia',
         'referencia_externa',
         'fecha_operacion',
         'origen',
@@ -33,6 +40,7 @@ class IntentoOperacion extends Model
     {
         return [
             'fecha_operacion' => 'datetime',
+            'created_at' => 'datetime',
             'monto' => 'decimal:2',
             'contexto' => 'array',
         ];
@@ -41,11 +49,6 @@ class IntentoOperacion extends Model
     public function sistema(): BelongsTo
     {
         return $this->belongsTo(SistemaConsumidor::class, 'sistema_id');
-    }
-
-    public function personas(): HasMany
-    {
-        return $this->hasMany(IntentoPersona::class, 'intento_id');
     }
 
     public function alertas(): HasMany

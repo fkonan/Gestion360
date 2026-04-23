@@ -60,9 +60,14 @@ class AlertaController extends Controller
                         });
                     $searchQuery->orWhereHas('intento', function (Builder $intentoQuery) use ($likeSearch): void {
                         $intentoQuery->where('tipo_operacion', 'like', $likeSearch)
+                            ->orWhere('referencia', 'like', $likeSearch)
                             ->orWhere('referencia_externa', 'like', $likeSearch)
-                            ->orWhere('origen', 'like', $likeSearch)
-                            ->orWhere('destino', 'like', $likeSearch);
+                            ->orWhere('tipo_documento', 'like', $likeSearch)
+                            ->orWhere('numero_documento', 'like', $likeSearch)
+                            ->orWhere('nombre', 'like', $likeSearch)
+                            ->orWhere('tipo_lista', 'like', $likeSearch)
+                            ->orWhere('lista_nombre', 'like', $likeSearch)
+                            ->orWhere('sistema_origen', 'like', $likeSearch);
                     });
 
                     if (ctype_digit($search)) {
@@ -92,7 +97,6 @@ class AlertaController extends Controller
         $alerta->load([
             'consulta',
             'intento.sistema',
-            'intento.personas',
             'atendidaPor',
         ]);
 

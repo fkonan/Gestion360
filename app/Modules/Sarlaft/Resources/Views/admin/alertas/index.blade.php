@@ -217,13 +217,16 @@
                             }
 
                             $tipoOperacion = \Illuminate\Support\Str::headline((string) ($contexto['tipo_operacion'] ?? $alerta->intento?->tipo_operacion ?? $alerta->tipo));
-                            $sistemaOrigen = $alerta->intento?->sistema?->nombre
-                                ? (string) $alerta->intento->sistema->nombre
-                                : (
-                                    $alerta->consulta?->sistema_origen
-                                        ? \Illuminate\Support\Str::headline((string) $alerta->consulta->sistema_origen)
-                                        : null
-                                );
+
+                            $sistemaOrigen = null;
+
+                            if (is_string($alerta->intento?->sistema_origen) && trim((string) $alerta->intento?->sistema_origen) !== '') {
+                                $sistemaOrigen = \Illuminate\Support\Str::headline((string) $alerta->intento->sistema_origen);
+                            } elseif (is_string($alerta->intento?->sistema?->nombre) && trim((string) $alerta->intento?->sistema?->nombre) !== '') {
+                                $sistemaOrigen = (string) $alerta->intento->sistema->nombre;
+                            } elseif (is_string($alerta->consulta?->sistema_origen) && trim((string) $alerta->consulta?->sistema_origen) !== '') {
+                                $sistemaOrigen = \Illuminate\Support\Str::headline((string) $alerta->consulta->sistema_origen);
+                            }
 
                             $operationClass = match (true) {
                                 str_contains(strtolower((string) ($alerta->consulta?->sistema_origen ?? '')), 'remesa') => 'is-remesa',
