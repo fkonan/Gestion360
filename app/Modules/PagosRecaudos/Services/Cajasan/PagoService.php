@@ -131,7 +131,8 @@ class PagoService
             }
 
             $documentoUsuario = Auth::user()?->persona?->PerNumDoc;
-            $centroCosto = $documentoUsuario ? EmpleadoService::codigoCentroCosto($documentoUsuario) : null;
+            $sucursalCajaActiva = isset($cajaActiva->idsucursal) ? (int) $cajaActiva->idsucursal : null;
+            $centroCosto = $documentoUsuario ? EmpleadoService::codigoCentroCosto($documentoUsuario, $sucursalCajaActiva) : null;
 
             if (! $centroCosto) {
                 throw new Exception('No se pudo obtener el centro de costo del usuario actual.');

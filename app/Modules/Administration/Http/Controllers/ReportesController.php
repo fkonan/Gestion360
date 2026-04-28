@@ -26,6 +26,14 @@ class ReportesController extends Controller
         9,
     ];
 
+    private const REPORTES_VISTA_LIMITADA = [
+        21 => 3000,
+    ];
+
+    private const REPORTES_EXPORTACION_STREAM = [
+        21,
+    ];
+
     // vista general para el formulario de reportes, aca se genera el formulario en base a los parametros
     public function mostrarFormulario($id)
     {
@@ -180,10 +188,24 @@ class ReportesController extends Controller
     public function data(Request $request, ReportesService $reportesService)
     {
         try {
+            @set_time_limit(300);
             // Obtener todos los parámetros dinámicos que no sean null
             $params = collect($request->all())
                 ->reject(fn ($value) => $value === null || $value === 'null')
                 ->toArray();
+
+            $idReporte = (int) ($params['id'] ?? $params['idReporte'] ?? 0);
+            if (isset(self::REPORTES_VISTA_LIMITADA[$idReporte])) {
+                $maxRows = (int) self::REPORTES_VISTA_LIMITADA[$idReporte];
+                $data = $reportesService->obtenerDatosReporteLimitado($params, $maxRows);
+
+                return response()->json([
+                    'total' => count($data),
+                    'rows' => $data,
+                    'preview_limited' => true,
+                    'max_rows' => $maxRows,
+                ], 200, [], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+            }
 
             $data = $reportesService->obtenerDatosReporte($params);
 
@@ -191,14 +213,90 @@ class ReportesController extends Controller
             return response()->json([
                 'total' => count($data),
                 'rows' => $data,
-            ]);
-        } catch (Exception $e) {
+            ], 200, [], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+        } catch (\Throwable $e) {
             Log::error('Error al obtener el reporte '.($request->id ?? '-').': '.$e->getMessage());
 
             return response()->json([
                 'errors' => ['general' => ['Error al obtener el reporte']],
             ], 500);
         }
+    }
+
+    public function exportarCsv(Request $request, ReportesService $reportesService)
+    {
+        @set_time_limit(0);
+
+        $params = collect($request->all())
+            ->reject(fn ($value) => $value === null || $value === 'null')
+            ->toArray();
+
+        $idReporte = (int) ($params['id'] ?? $params['idReporte'] ?? 0);
+        if (! in_array($idReporte, self::REPORTES_EXPORTACION_STREAM, true)) {
+            abort(403, 'Este reporte no tiene exportacion masiva habilitada.');
+        }
+
+        $reporte = Reporteador::findOrFail($idReporte);
+        $filename = normalizarNombre($reporte->nombre).'_'.now()->format('Ymd_His').'.csv';
+
+        $rows = $reportesService->obtenerCursorReporte($params);
+        if (! is_iterable($rows)) {
+            abort(500, 'No fue posible generar el archivo.');
+        }
+
+        return response()->streamDownload(function () use ($rows): void {
+            $out = fopen('php://output', 'w');
+            if ($out === false) {
+                return;
+            }
+
+            // BOM UTF-8 para apertura correcta en Excel.
+            fwrite($out, "\xEF\xBB\xBF");
+
+            $headerWritten = false;
+            $lineas = 0;
+
+            foreach ($rows as $row) {
+                $fila = is_array($row) ? $row : (array) $row;
+
+                if (! $headerWritten) {
+                    fputcsv($out, array_keys($fila), ';');
+                    $headerWritten = true;
+                }
+
+                $valores = array_map(static function ($value) {
+                    if ($value === null) {
+                        return '';
+                    }
+
+                    if ($value instanceof \DateTimeInterface) {
+                        return $value->format('Y-m-d H:i:s');
+                    }
+
+                    if (is_bool($value)) {
+                        return $value ? '1' : '0';
+                    }
+
+                    if (is_scalar($value)) {
+                        return (string) $value;
+                    }
+
+                    return json_encode($value, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+                }, $fila);
+
+                fputcsv($out, $valores, ';');
+
+                $lineas++;
+                if (($lineas % 500) === 0) {
+                    fflush($out);
+                }
+            }
+
+            fclose($out);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate',
+        ]);
     }
 
     // metodo que retorna la vista principal de reportes

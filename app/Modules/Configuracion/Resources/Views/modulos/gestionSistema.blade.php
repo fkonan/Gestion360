@@ -33,6 +33,13 @@
         icono="fa-user-tag"
         ruta="{{ route('roles.index') }}" />
     </div>
+    <div class="col">
+      <x-card color="bg-teriary"
+        titulo="Permisos"
+        descripcion="Administración"
+        icono="fa-key"
+        ruta="{{ route('gestion-permisos.index') }}" />
+    </div>
   </div>
 </div>
 @endsection

@@ -3,6 +3,14 @@
 use App\Constants\Permisos;
 
 return [
+    'connections' => [
+        'default' => env('REPORTEADOR_CONNECTION_DEFAULT', 'mysql-gestion-admin-reportes'),
+        'origenes' => [
+            'FICS' => env('REPORTEADOR_CONNECTION_FICS', 'sqlsrv-lectura-reportes'),
+            'LOGTRANS' => env('REPORTEADOR_CONNECTION_LOGTRANS', 'oracle-reportes'),
+            'GESTION_PASAJES' => env('REPORTEADOR_CONNECTION_GESTION_PASAJES', 'mysql-gestion-pasajes-reportes'),
+        ],
+    ],
 
     'areas' => [
         'personas' => [

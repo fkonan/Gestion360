@@ -68,9 +68,9 @@ class EmpleadoService
       ->toArray();
   }
 
-  public static function codigoCentroCosto($identificacion)
+  public static function codigoCentroCosto($identificacion, ?int $sucursalId = null)
   {
-    return DB::connection('oracle')
+    $baseQuery = DB::connection('oracle')
       ->table('per_personas as p')
       ->join('per_empresapersonas as ep', 'p.id', '=', 'ep.pe_id_pe')
       ->join('per_cargoccostos as cc', 'ep.cc_id', '=', 'cc.id')
@@ -81,7 +81,23 @@ class EmpleadoService
       ->where('cc.activo', 1)
       ->where('cc.estborrado', 0)
       ->where('ct.estado', 1)
-      ->where('ct.estborrado', 0)
+      ->where('ct.estborrado', 0);
+
+    if ($sucursalId) {
+      $centroCostoSucursal = (clone $baseQuery)
+        ->where('ct.pe_id', $sucursalId)
+        ->orderBy('ep.tp_id', 'asc')
+        ->orderByDesc('ep.id')
+        ->value('ct.codigo');
+
+      if ($centroCostoSucursal) {
+        return $centroCostoSucursal;
+      }
+    }
+
+    return $baseQuery
+      ->orderBy('ep.tp_id', 'asc')
+      ->orderByDesc('ep.id')
       ->value('ct.codigo');
   }
 

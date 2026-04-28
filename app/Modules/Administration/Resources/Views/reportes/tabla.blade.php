@@ -52,14 +52,17 @@
 
   $(document).ready(function () {
     const params = @json($params);
+    const reportId = Number(params.id || params.idReporte || 0);
     const queryString = new URLSearchParams(params).toString();
     const url = "{{ route('reportes.data') }}" + "?" + queryString;
+    const exportCsvUrl = "{{ route('reportes.exportarCsv') }}" + "?" + queryString;
 
     $('#loading').show();
 
     $.ajax({
       url: url,
       method: 'GET',
+      timeout: 300000,
       success: function (response) {
         $('#loading').hide();
 
@@ -80,7 +83,9 @@
             title: key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' '),
             sortable: true,
             formatter: function (value) {
-              if (value == null) return '';
+              if (value == null || value === '') {
+                return '<span class="text-muted fst-italic">Sin dato</span>';
+              }
               return `<span title="${value}">${value}</span>`;
             },
             cellStyle: {
@@ -95,12 +100,13 @@
           }))
           ];
 
-          //Inicializar Bootstrap Table
+          // Inicializar Bootstrap Table (paginacion cliente)
+          const enableClientSearch = reportId !== 21;
           $('#table').bootstrapTable({
             columns: columns,
             data: response.rows,
             pagination: true,
-            search: true,
+            search: enableClientSearch,
             showRefresh: false,
             showColumns: false,
             showToggle: false,
@@ -113,23 +119,26 @@
             detailView: true,
             detailFormatter: detailFormatter,
             theadClasses: 'table-primary',
-            rowStyle: function (row, index) {
+            rowStyle: function () {
               return {
                 classes: 'text-white'
-              }
+              };
             }
           });
 
           $('#table').show();
 
-          // Habilitar la exportación con datos locales
-          setupLocalExcelExport();
+          // Habilitar la exportacion con datos locales
+          setupLocalExcelExport(reportId, exportCsvUrl);
 
+          if (response.preview_limited) {
+            mostrarToast(`Mostrando vista previa de ${response.max_rows} filas para mejorar rendimiento. Usa "Descargar Excel" para obtener todo el reporte completo.`, 'info');
+          }
         } else {
           Swal.fire({
             icon: 'info',
             title: 'No se encontraron registros para los criterios seleccionados.',
-            text: 'Intenta ajustar los filtros o parámetros de búsqueda para obtener resultados.',
+            text: 'Intenta ajustar los filtros o parametros de busqueda para obtener resultados.',
             confirmButtonColor: "#3366CC",
             confirmButtonText: "Aceptar",
             customClass: {
@@ -146,12 +155,20 @@
           });
         }
       },
-      error: function (xhr) {
+      error: function (xhr, textStatus, errorThrown) {
         $('#loading').hide();
+
+        const detalle = xhr?.responseJSON?.errors?.general?.[0]
+          || xhr?.responseJSON?.message
+          || (xhr?.status ? `HTTP ${xhr.status} ${xhr.statusText || ''}`.trim() : null)
+          || textStatus
+          || errorThrown
+          || 'No fue posible completar la consulta.';
 
         Swal.fire({
           icon: 'error',
           title: 'Error al cargar el reporte.',
+          text: detalle,
           confirmButtonColor: "#3366CC",
           confirmButtonText: "Aceptar",
           customClass: {
@@ -170,13 +187,40 @@
     });
   });
 
-  function setupLocalExcelExport() {
+  function setupLocalExcelExport(reportId, exportCsvUrl) {
     const exportBtn = document.getElementById('exportar');
-    if (exportBtn && reportData.length > 0) {
-      // Reutiliza los datos en memoria para evitar duplicarlos en atributos del DOM
-      exportBtn.removeAttribute('data-url');
-      exportBtn.onclick = () => exportarExcel(exportBtn.id, reportData, exportBtn.dataset.name, false);
+    if (!exportBtn || reportData.length === 0) {
+      return;
     }
+
+    const setExportLoadingState = (text = 'Descargando...') => {
+      const originalHtml = exportBtn.innerHTML;
+      exportBtn.disabled = true;
+      exportBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> ${text}`;
+
+      return () => {
+        exportBtn.disabled = false;
+        exportBtn.innerHTML = originalHtml;
+      };
+    };
+
+    if (reportId === 21) {
+      exportBtn.removeAttribute('data-url');
+      exportBtn.onclick = () => {
+        const restoreButton = setExportLoadingState('Preparando descarga...');
+        window.location.href = exportCsvUrl;
+
+        // Si la descarga falla, permite reintentar sin recargar la pagina.
+        setTimeout(() => {
+          restoreButton();
+        }, 12000);
+      };
+      return;
+    }
+
+    // Reutiliza los datos en memoria para evitar duplicarlos en atributos del DOM
+    exportBtn.removeAttribute('data-url');
+    exportBtn.onclick = () => exportarExcel(exportBtn.id, reportData, exportBtn.dataset.name, false);
   }
 
   document.addEventListener("DOMContentLoaded", () => {
