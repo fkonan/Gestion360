@@ -17,6 +17,7 @@ class ListaNegraInternaResource extends JsonResource
         return [
             'id' => $this->id,
             'origen' => 'interna',
+            'lista' => 'copetran',
             'tipo_entidad' => $this->tipo_entidad,
             'tipo_documento' => $this->tipo_documento,
             'numero_documento' => $this->numero_documento,

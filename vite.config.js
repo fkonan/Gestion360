@@ -44,6 +44,7 @@ export default defineConfig({
             "resources/css/custom.css",
             "resources/css/huellero.css",
             "resources/css/mobile.css",
+            "resources/css/sarlaft/alertas-index.css",
             "resources/js/app.js",
             "resources/js/cargarModal.js",
             //   'resources/js/faceDetection.js',

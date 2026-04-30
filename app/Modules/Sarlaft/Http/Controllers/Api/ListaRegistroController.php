@@ -6,9 +6,8 @@ namespace App\Modules\Sarlaft\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Sarlaft\Http\Requests\Api\ExportarListasRequest;
-use App\Modules\Sarlaft\Http\Resources\ListaNegraInternaResource;
-use App\Modules\Sarlaft\Http\Resources\RegistroListaResource;
 use App\Modules\Sarlaft\Models\ListaNegraInterna;
+use App\Modules\Sarlaft\Models\NovedadExportacion;
 use App\Modules\Sarlaft\Models\RegistroLista;
 use App\Modules\Sarlaft\Services\NovedadExportacionService;
 use Illuminate\Http\JsonResponse;
@@ -23,97 +22,166 @@ class ListaRegistroController extends Controller
      * Exportacion de listas vinculantes e internas.
      *
      * - tipo_descarga=completa: entrega catalogo completo activo.
-     * - tipo_descarga=novedades: entrega delta desde punto_de_control.
+     * - tipo_descarga=novedades: entrega delta por rango de fecha.
      */
     public function index(ExportarListasRequest $request): JsonResponse
     {
         $datos = $request->validated();
         $tipoDescarga = (string) $datos['tipo_descarga'];
-        $listaId = isset($datos['lista_id']) ? (int) $datos['lista_id'] : null;
+        $page = isset($datos['page']) ? (int) $datos['page'] : 1;
 
         if ($tipoDescarga === 'novedades') {
             return $this->respuestaNovedades(
-                puntoDeControl: (int) ($datos['punto_de_control'] ?? 0),
-                tamanoLote: (int) ($datos['tamano_lote'] ?? 1000),
-                listaId: $listaId,
+                fechaDesde: (string) $datos['fecha_desde'],
+                page: $page,
             );
         }
 
-        return $this->respuestaCompleta($listaId);
+        return $this->respuestaCompleta($page);
     }
 
     /**
      * Descarga completa: todos los registros activos + lista interna activa.
      */
-    private function respuestaCompleta(?int $listaId): JsonResponse
+    private function respuestaCompleta(int $page): JsonResponse
     {
-        $queryVinculantes = RegistroLista::with('lista')
+        $vinculantes = RegistroLista::with('lista')
             ->where('estado', 'activo')
-            ->whereNull('deleted_at');
-
-        if ($listaId) {
-            $queryVinculantes->where('lista_id', $listaId);
-        }
-
-        $vinculantes = $queryVinculantes->get();
+            ->whereNull('deleted_at')
+            ->paginate(1000, ['*'], 'page', $page);
 
         $interna = ListaNegraInterna::where('estado', 'activo')
             ->whereNull('deleted_at')
-            ->get();
+            ->paginate(1000, ['*'], 'page', $page);
+
+        $registros = $vinculantes->getCollection()
+            ->map(fn ($r) => $this->mapearVinculante($r))
+            ->merge(
+                $interna->getCollection()->map(fn ($r) => $this->mapearInterna($r))
+            )
+            ->values();
 
         return response()->json([
             'data' => [
-                'vinculantes' => RegistroListaResource::collection($vinculantes),
-                'lista_interna' => ListaNegraInternaResource::collection($interna),
+                'registros' => $registros,
             ],
             'meta' => [
                 'tipo_descarga' => 'completa',
-                'total_vinculantes' => $vinculantes->count(),
-                'total_interna' => $interna->count(),
-                'punto_de_control_actual' => $this->novedadExportacionService->obtenerUltimoPuntoDeControl(),
+                'total_vinculantes' => $vinculantes->total(),
+                'total_interna' => $interna->total(),
+                'total' => $vinculantes->total() + $interna->total(),
+                'paginacion' => [
+                    'pagina_actual' => $page,
+                    'ultima_pagina' => max($vinculantes->lastPage(), $interna->lastPage()),
+                ],
             ],
         ]);
     }
 
     /**
-     * Descarga por novedades desde cursor/punto_de_control.
+     * Descarga por novedades en un rango de fechas.
      */
-    private function respuestaNovedades(int $puntoDeControl, int $tamanoLote, ?int $listaId = null): JsonResponse
+    private function respuestaNovedades(string $fechaDesde, int $page = 1): JsonResponse
     {
-        $resultado = $this->novedadExportacionService->obtenerNovedades($puntoDeControl, $tamanoLote, $listaId);
-        $novedades = $resultado['novedades'];
-        $conteoNovedades = [
-            'ingresos' => $novedades->where('tipo_novedad', 'ingreso')->count(),
-            'salidas' => $novedades->where('tipo_novedad', 'salida')->count(),
-            'actualizados' => $novedades->where('tipo_novedad', 'actualizado')->count(),
-        ];
+        $resultado = $this->novedadExportacionService->obtenerNovedades($fechaDesde, $page);
+        $paginador = $resultado['novedades'];
+
+        $registros = $paginador->getCollection()
+            ->map(fn ($n) => $this->mapearNovedad($n))
+            ->values();
 
         return response()->json([
             'data' => [
-                'novedades' => $novedades->map(static function ($novedad): array {
-                    return [
-                        'id_novedad' => (int) $novedad->id,
-                        'origen_lista' => (string) $novedad->origen_lista,
-                        'tipo_novedad' => (string) $novedad->tipo_novedad,
-                        'nombre_lista' => (string) $novedad->nombre_lista,
-                        'registro_lista_id' => $novedad->registro_lista_id,
-                        'lista_negra_id' => $novedad->lista_negra_id,
-                        'sincronizacion_log_id' => $novedad->sincronizacion_log_id,
-                        'datos' => $novedad->datos,
-                        'fecha_evento' => $novedad->created_at?->toIso8601String(),
-                    ];
-                })->values(),
+                'registros' => $registros,
             ],
             'meta' => [
                 'tipo_descarga' => 'novedades',
-                'punto_de_control_recibido' => $puntoDeControl,
-                'siguiente_punto_de_control' => $resultado['siguiente_punto_de_control'],
-                'hay_mas' => $resultado['hay_mas'],
-                'tamano_lote' => $tamanoLote,
-                'lista_id' => $listaId,
-                'novedades' => $conteoNovedades,
-                'total_novedades' => $novedades->count(),
+                'fecha_desde' => $fechaDesde,
+                'fecha_hasta' => now()->toDateString(),
+                'novedades' => $resultado['conteo_por_tipo'],
+                'total_novedades' => $resultado['total'],
+                'paginacion' => [
+                    'pagina_actual' => $paginador->currentPage(),
+                    'ultima_pagina' => $paginador->lastPage(),
+                ],
             ],
         ]);
     }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function mapearVinculante(RegistroLista $r): array
+    {
+        return [
+            'id' => $r->id,
+            'tipo_novedad' => $r->novedad ?? 'sin_cambio',
+            'origen' => 'vinculante',
+            'lista' => $r->relationLoaded('lista') ? $r->lista?->nombre : null,
+            'tipo_entidad' => $r->tipo_entidad,
+            'nombres' => $r->nombres,
+            'alias' => $r->alias,
+            'identificacion' => $r->identificacion,
+            'tipo_identificacion' => $r->tipo_identificacion,
+            'fecha_nacimiento' => $r->fecha_nacimiento?->format('Y-m-d'),
+            'pais' => $r->pais,
+            'motivo' => $r->motivo,
+            'fecha_inclusion' => $r->fecha_inclusion?->format('Y-m-d'),
+            'estado' => $r->estado,
+            'updated_at' => $r->updated_at?->toIso8601String(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function mapearInterna(ListaNegraInterna $r): array
+    {
+        return [
+            'id' => $r->id,
+            'tipo_novedad' => 'sin_cambio',
+            'origen' => 'interna',
+            'lista' => 'copetran',
+            'tipo_entidad' => $r->tipo_entidad,
+            'nombres' => $r->nombres,
+            'alias' => null,
+            'identificacion' => $r->numero_documento,
+            'tipo_identificacion' => $r->tipo_documento,
+            'fecha_nacimiento' => null,
+            'pais' => null,
+            'motivo' => $r->motivo,
+            'fecha_inclusion' => null,
+            'estado' => $r->estado,
+            'updated_at' => $r->updated_at?->toIso8601String(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function mapearNovedad(NovedadExportacion $n): array
+    {
+        $datos = is_array($n->datos) ? $n->datos : [];
+
+        return [
+            'id_novedad' => $n->id,
+            'tipo_novedad' => $n->tipo_novedad,
+            'origen' => $n->origen_lista,
+            'lista' => $n->nombre_lista,
+            'tipo_entidad' => $datos['tipo_entidad'] ?? null,
+            'nombres' => $datos['nombres'] ?? null,
+            'alias' => $datos['alias'] ?? null,
+            'identificacion' => $datos['identificacion'] ?? null,
+            'tipo_identificacion' => $datos['tipo_identificacion'] ?? null,
+            'fecha_nacimiento' => $datos['fecha_nacimiento'] ?? null,
+            'pais' => $datos['pais'] ?? null,
+            'motivo' => $datos['motivo'] ?? null,
+            'fecha_inclusion' => $datos['fecha_inclusion'] ?? null,
+            'estado' => $datos['estado'] ?? null,
+            'updated_at' => $n->created_at?->toIso8601String(),
+        ];
+    }
 }
+
+
+

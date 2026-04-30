@@ -19,9 +19,8 @@ class ExportarListasRequest extends FormRequest
 
         $this->merge([
             'tipo_descarga' => $tipoDescarga,
-            'punto_de_control' => $this->query('punto_de_control', 0),
-            'tamano_lote' => $this->query('tamano_lote', 1000),
-            'lista_id' => $this->query('lista_id'),
+            'fecha_desde' => $this->query('fecha_desde'),
+            'page' => $this->query('page', 1),
         ]);
     }
 
@@ -32,9 +31,8 @@ class ExportarListasRequest extends FormRequest
     {
         return [
             'tipo_descarga' => 'required|string|in:completa,novedades',
-            'punto_de_control' => 'required_if:tipo_descarga,novedades|integer|min:0',
-            'tamano_lote' => 'required_if:tipo_descarga,novedades|integer|min:1|max:5000',
-            'lista_id' => 'nullable|integer|exists:mysql-sarlaft.sarlaft_listas_vinculantes,id',
+            'fecha_desde' => 'required_if:tipo_descarga,novedades|nullable|date_format:Y-m-d',
+            'page' => 'nullable|integer|min:1',
         ];
     }
 
@@ -45,8 +43,8 @@ class ExportarListasRequest extends FormRequest
     {
         return [
             'tipo_descarga.in' => 'El tipo de descarga debe ser completa o novedades.',
-            'punto_de_control.required_if' => 'El punto_de_control es obligatorio para descargar novedades.',
-            'tamano_lote.required_if' => 'El tamano_lote es obligatorio para descargar novedades.',
+            'fecha_desde.required_if' => 'El campo fecha_desde es obligatorio para novedades. Formato: YYYY-MM-DD',
+            'fecha_desde.date_format' => 'El campo fecha_desde debe tener el formato YYYY-MM-DD.',
         ];
     }
 }

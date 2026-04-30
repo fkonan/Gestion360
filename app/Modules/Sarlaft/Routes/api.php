@@ -5,9 +5,22 @@ declare(strict_types=1);
 use App\Modules\Sarlaft\Http\Controllers\Api\ConsultaController;
 use App\Modules\Sarlaft\Http\Controllers\Api\IntentoOperacionController;
 use App\Modules\Sarlaft\Http\Controllers\Api\ListaRegistroController;
+use App\Modules\Sarlaft\Http\Controllers\Api\MockSistemaExternoController;
 use App\Modules\Sarlaft\Http\Middleware\AutenticarSistemaConsumidor;
 use App\Modules\Sarlaft\Http\Middleware\RateLimitSistema;
 use Illuminate\Support\Facades\Route;
+
+/*
+ * Mock que simula los endpoints externos que los sistemas consumidores
+ * expondrán para el modo Pull. Cuando tengamos las URLs reales, se
+ * actualiza pull_endpoint en sarlaft_sistemas_consumidores y listo.
+ *
+ * URL:  GET /api/mock/sistema-externo?sistema=logtrans&fecha_desde=2026-04-29
+ */
+Route::prefix('mock')->group(function (): void {
+    Route::get('/sistema-externo', [MockSistemaExternoController::class, 'index'])
+        ->name('sarlaft.mock.sistema-externo');
+});
 
 Route::prefix('v1')
     ->middleware([AutenticarSistemaConsumidor::class, RateLimitSistema::class])

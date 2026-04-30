@@ -7,7 +7,7 @@ namespace App\Modules\Sarlaft\Services;
 use App\Modules\Sarlaft\Models\ListaNegraInterna;
 use App\Modules\Sarlaft\Models\NovedadExportacion;
 use App\Modules\Sarlaft\Models\RegistroLista;
-use Illuminate\Support\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class NovedadExportacionService
 {
@@ -67,39 +67,29 @@ class NovedadExportacionService
     }
 
     /**
-     * @return array{novedades: Collection<int, NovedadExportacion>, siguiente_punto_de_control:int, hay_mas:bool}
+     * @return array{novedades: LengthAwarePaginator, total: int, conteo_por_tipo: array{ingresos: int, salidas: int, actualizados: int}}
      */
-    public function obtenerNovedades(int $puntoDeControl, int $tamanoLote, ?int $listaId = null): array
+    public function obtenerNovedades(string $fechaDesde, int $page = 1): array
     {
+        $hasta = now()->toDateString().' 23:59:59';
+
         $consulta = NovedadExportacion::query()
-            ->where('id', '>', $puntoDeControl)
+            ->whereBetween('created_at', [$fechaDesde.' 00:00:00', $hasta])
+            ->orderBy('created_at')
             ->orderBy('id');
 
-        if ($listaId !== null) {
-            $consulta->where('lista_id', $listaId);
-        }
+        $conteoPorTipo = [
+            'ingresos' => (clone $consulta)->where('tipo_novedad', 'ingreso')->count(),
+            'salidas' => (clone $consulta)->where('tipo_novedad', 'salida')->count(),
+            'actualizados' => (clone $consulta)->where('tipo_novedad', 'actualizado')->count(),
+        ];
 
-        $novedades = $consulta
-            ->limit($tamanoLote + 1)
-            ->get();
-
-        $hayMas = $novedades->count() > $tamanoLote;
-
-        if ($hayMas) {
-            $novedades = $novedades->take($tamanoLote);
-        }
-
-        $siguientePuntoDeControl = $novedades->last()?->id ?? $puntoDeControl;
+        $paginador = $consulta->paginate(1000, ['*'], 'page', $page);
 
         return [
-            'novedades' => $novedades,
-            'siguiente_punto_de_control' => (int) $siguientePuntoDeControl,
-            'hay_mas' => $hayMas,
+            'novedades' => $paginador,
+            'total' => $paginador->total(),
+            'conteo_por_tipo' => $conteoPorTipo,
         ];
-    }
-
-    public function obtenerUltimoPuntoDeControl(): int
-    {
-        return (int) (NovedadExportacion::query()->max('id') ?? 0);
     }
 }

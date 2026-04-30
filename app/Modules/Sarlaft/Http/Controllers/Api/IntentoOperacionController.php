@@ -32,3 +32,4 @@ class IntentoOperacionController extends Controller
         ], 201);
     }
 }
+
