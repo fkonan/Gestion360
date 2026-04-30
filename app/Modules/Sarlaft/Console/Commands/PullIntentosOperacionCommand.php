@@ -59,3 +59,4 @@ class PullIntentosOperacionCommand extends Command
         return self::SUCCESS;
     }
 }
+
