@@ -17,7 +17,7 @@
             Puedes iniciar sesión usando las mismas credenciales que tienes en la aplicación móvil.
          </div>
 
-         @if(request()->has('expired'))
+         @if (request()->has('expired'))
             <div class="alert alert-warning">
                Tu sesión ha expirado. Por favor, inicia sesión nuevamente.
             </div>
@@ -32,8 +32,8 @@
                   @csrf
                   <div class="d-flex flex-column mb-3">
                      <div class="input-group">
-                        <input type="number" class="form-control" id="identificacion" name="identificacion" placeholder="Identificación"
-                           value="{{ old('identificacion') }}" required />
+                        <input type="number" class="form-control" id="identificacion" name="identificacion"
+                           placeholder="Identificación" value="{{ old('identificacion') }}" required />
                         <div class="input-group-text">
                            <span class="fas fa-user"></span>
                         </div>
@@ -74,7 +74,8 @@
                   </div>
 
                   <div class="mt-3 text-end">
-                     <a href="{{ route('password.request') }}" class="text-decoration-none">¿Olvidaste tu contraseña?</a>
+                     <a href="{{ route('password.request') }}" class="text-decoration-none">¿Olvidaste tu
+                        contraseña?</a>
                   </div>
                   <hr>
                   <div class="text-center my-3">
@@ -83,12 +84,18 @@
                         <span class="text-secondary">Descárgala aquí:</span>
                      </span>
                   </div>
-                   <div class="d-flex justify-content-center align-items-center gap-4 mt-2 mb-2">
-                     <a href="https://play.google.com/store/apps/details?id=co.com.copetran" target="_blank" title="Descargar para Android" class="app-download-link">
-                        <img src="{{ asset('img/playStore.png') }}" alt="Android" style="height:40px; transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                  <div class="d-flex justify-content-center align-items-center gap-4 mt-2 mb-2">
+                     <a href="https://play.google.com/store/apps/details?id=co.com.copetran" target="_blank"
+                        title="Descargar para Android" class="app-download-link">
+                        <img src="{{ asset('img/playStore.png') }}" alt="Android"
+                           style="height:40px; transition:transform 0.2s;"
+                           onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
                      </a>
-                     <a href="https://apps.apple.com/app/id1769416503" target="_blank" title="Descargar para iOS" class="app-download-link">
-                        <img src="{{ asset('img/appstore.png') }}" alt="iOS" style="height:40px; transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                     <a href="https://apps.apple.com/app/id1769416503" target="_blank" title="Descargar para iOS"
+                        class="app-download-link">
+                        <img src="{{ asset('img/appstore.png') }}" alt="iOS"
+                           style="height:40px; transition:transform 0.2s;"
+                           onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
                      </a>
                   </div>
                </form>
@@ -103,29 +110,29 @@
 @endsection
 
 @pushOnce('script')
-   {!! NoCaptcha::renderJs() !!}
-   <script>
-      function captchaOk() {
-            document.getElementById('Boton').disabled = false;
-            document.getElementById('captcha-error').classList.add('d-none');
-        }
+{!! NoCaptcha::renderJs() !!}
+<script>
+   function captchaOk() {
+      document.getElementById('Boton').disabled = false;
+      document.getElementById('captcha-error').classList.add('d-none');
+   }
 
-        $form = document.getElementById('login');
-        $form.addEventListener('submit', function (e) {
-            if (grecaptcha.getResponse() === '') {
-                e.preventDefault();
-                habilitarSubmit($form);
-                document.getElementById('captcha-error').classList.remove('d-none');
-            }
-        });
-
-      function togglePasswordVisibility() {
-         let passwordField = document.getElementById("password");
-         if (passwordField.type === "password") {
-            passwordField.type = "text";
-         } else {
-            passwordField.type = "password";
-         }
+   $form = document.getElementById('login');
+   $form.addEventListener('submit', function(e) {
+      if (grecaptcha.getResponse() === '') {
+         e.preventDefault();
+         habilitarSubmit($form);
+         document.getElementById('captcha-error').classList.remove('d-none');
       }
-   </script>
+   });
+
+   function togglePasswordVisibility() {
+      let passwordField = document.getElementById("password");
+      if (passwordField.type === "password") {
+         passwordField.type = "text";
+      } else {
+         passwordField.type = "password";
+      }
+   }
+</script>
 @endpushOnce
