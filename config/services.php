@@ -41,6 +41,11 @@ return [
         'key' => env('ATTENDANCE_EVENTS_API_KEY'),
     ],
 
+    'employee_permits' => [
+        'key' => env('EMPLOYEE_PERMITS_API_KEY'),
+        'pdf_template_path' => env('EMPLOYEE_PERMITS_PDF_TEMPLATE_PATH', base_path('app/Modules/Administration/Resources/Templates/FormatoPermisoSalida.pdf')),
+    ],
+
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),

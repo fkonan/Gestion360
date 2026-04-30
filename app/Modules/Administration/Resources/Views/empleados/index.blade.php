@@ -15,6 +15,24 @@
     <div class="col">
       <x-card
         color="bg-teriary"
+        titulo="Radicar permiso"
+        descripcion="Crear solicitud para cualquier empleado"
+        icono="fa-file-signature"
+        ruta="{{ route('empleados.permisos.create') }}" />
+    </div>
+
+    <div class="col">
+      <x-card
+        color="bg-teriary"
+        titulo="Mis permisos"
+        descripcion="Consultar mis solicitudes, PDF y anular"
+        icono="fa-clipboard-check"
+        ruta="{{ route('empleados.permisos.mis-solicitudes') }}" />
+    </div>
+
+    <div class="col">
+      <x-card
+        color="bg-teriary"
         titulo="Novedades"
         descripcion="Consulta empleados"
         icono="fa-clipboard-list"
@@ -23,4 +41,3 @@
   </div>
 </div>
 @endsection
-

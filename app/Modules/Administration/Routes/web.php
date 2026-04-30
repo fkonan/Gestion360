@@ -3,6 +3,7 @@
 use App\Constants\Permisos;
 use App\Modules\Administration\Http\Controllers\GestionPasajesController;
 use App\Modules\Administration\Http\Controllers\EmpleadosController;
+use App\Modules\Administration\Http\Controllers\EmpleadoPermisoController;
 use App\Modules\Administration\Http\Controllers\PermisosController;
 use App\Modules\Administration\Http\Controllers\PersonaController;
 use App\Modules\Administration\Http\Controllers\ReportesController;
@@ -43,6 +44,17 @@ Route::prefix('administracion')->middleware(['auth', 'permisos:'.Permisos::ADMIN
         Route::get('/', [EmpleadosController::class, 'index'])->name('empleados.index');
         Route::get('/novedades', [EmpleadosController::class, 'novedades'])->name('empleados.novedades');
         Route::put('/novedades/{id}/horas', [EmpleadosController::class, 'actualizarHoras'])->name('empleados.novedades.horas.update');
+
+        Route::get('/permisos', [EmpleadoPermisoController::class, 'index'])->name('empleados.permisos.index');
+        Route::get('/permisos/radicar', [EmpleadoPermisoController::class, 'create'])->name('empleados.permisos.create');
+        Route::get('/permisos/mis-solicitudes', [EmpleadoPermisoController::class, 'misSolicitudes'])->name('empleados.permisos.mis-solicitudes');
+        Route::post('/permisos', [EmpleadoPermisoController::class, 'store'])->name('empleados.permisos.store');
+        Route::post('/permisos/{idNovedad}/aprobar-jefe', [EmpleadoPermisoController::class, 'aprobarJefe'])->name('empleados.permisos.aprobar-jefe');
+        Route::post('/permisos/{idNovedad}/aprobar-rrhh', [EmpleadoPermisoController::class, 'aprobarRrhh'])->name('empleados.permisos.aprobar-rrhh');
+        Route::post('/permisos/{idNovedad}/rechazar', [EmpleadoPermisoController::class, 'rechazar'])->name('empleados.permisos.rechazar');
+        Route::post('/permisos/{idNovedad}/anular', [EmpleadoPermisoController::class, 'anular'])->name('empleados.permisos.anular');
+        Route::get('/permisos/{idNovedad}/pdf', [EmpleadoPermisoController::class, 'pdf'])->name('empleados.permisos.pdf');
+        Route::get('/permisos/persona/{documento}', [EmpleadoPermisoController::class, 'persona'])->name('empleados.permisos.persona');
     });
 
     // Submodulo Usuarios
