@@ -60,6 +60,20 @@ return [
             'report' => false,
         ],
 
+        'documental_sftp' => [
+            'driver' => 'sftp',
+            'host' => env('DOCUMENTAL_SFTP_HOST'),
+            'username' => env('DOCUMENTAL_SFTP_USERNAME'),
+            'password' => env('DOCUMENTAL_SFTP_PASSWORD'),
+            'port' => (int) env('DOCUMENTAL_SFTP_PORT', 22),
+            'root' => env('DOCUMENTAL_SFTP_ROOT', '/var/www/html'),
+            'privateKey' => ($privateKey = trim((string) env('DOCUMENTAL_SFTP_PRIVATE_KEY', ''))) !== '' ? $privateKey : null,
+            'passphrase' => ($passphrase = trim((string) env('DOCUMENTAL_SFTP_PASSPHRASE', ''))) !== '' ? $passphrase : null,
+            'timeout' => (int) env('DOCUMENTAL_SFTP_TIMEOUT', 30),
+            'throw' => false,
+            'report' => false,
+        ],
+
     ],
 
     /*

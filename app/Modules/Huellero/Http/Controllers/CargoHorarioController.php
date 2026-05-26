@@ -4,6 +4,7 @@ namespace App\Modules\Huellero\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Modules\GestionRRHH\Services\JefeEquipoService;
 use App\Modules\Huellero\Models\PrsCargos;
 use App\Modules\Huellero\Models\PrsCentroCosto;
 use App\Modules\Huellero\Models\PrsHorariosCargos;
@@ -16,6 +17,10 @@ use Throwable;
 
 class CargoHorarioController extends Controller
 {
+  public function __construct(
+    private readonly JefeEquipoService $jefeEquipoService
+  ) {}
+
   public function index(Request $request)
   {
     $usuario = $request->user();
@@ -344,167 +349,30 @@ class CargoHorarioController extends Controller
 
   private function obtenerEmpleadosPorJefe(string $identificacion): Collection
   {
-    $sql = <<<'SQL'
-WITH jefe_cargos AS (
-    SELECT DISTINCT
-        p.id              AS jefe_pe_id,
-        p.identificacion  AS doc_jefe,
-        cc.ca_codigo      AS cargo_jefe,
-        cc.ct_codigo      AS centro_costo_jefe
-    FROM per_personas p
-    JOIN per_empresapersonas ep ON ep.pe_id_pe = p.id
-    JOIN per_cargoccostos cc ON cc.id = ep.cc_id
-    JOIN per_centrocostos ct ON ct.codigo = cc.ct_codigo
-    WHERE p.identificacion = ?
-      AND ep.tp_id IN (1, 11)
-      AND ep.activo = 1
-      AND ep.estborrado = 0
-      AND ep.fecfin IS NULL
-      AND cc.activo = 1
-      AND cc.estborrado = 0
-      AND ct.estado = 1
-      AND ct.estborrado = 0
-)
-SELECT DISTINCT
-    pe.identificacion AS doc_empleado,
-    TRIM(pe.pnombre || ' ' || NVL(pe.snombre, '')) || ' ' ||
-    TRIM(pe.papellido || ' ' || NVL(pe.sapellido, '')) AS nombre_empleado,
-    cae.descripcion AS cargo_empleado,
-    cs.descripcion AS cargo_superior,
-    ct.codigo AS codigo_centro_costo,
-    ct.descripcion AS centro_costo
-FROM jefe_cargos jc
-JOIN per_cargoccostos cce
-  ON cce.id_cargosup = jc.cargo_jefe
- AND cce.ct_codigo = jc.centro_costo_jefe
-JOIN per_empresapersonas epe ON epe.cc_id = cce.id
-JOIN per_personas pe ON pe.id = epe.pe_id_pe
-JOIN per_centrocostos ct ON ct.codigo = cce.ct_codigo
-JOIN per_cargos cae ON cae.codigo = cce.ca_codigo
-LEFT JOIN per_cargos cs ON cs.codigo = cce.id_cargosup
-WHERE epe.tp_id IN (1, 11)
-  AND epe.activo = 1
-  AND epe.estborrado = 0
-  AND epe.fecfin IS NULL
-  AND cce.activo = 1
-  AND cce.estborrado = 0
-  AND ct.estado = 1
-  AND ct.estborrado = 0
-  AND cae.estborrado = 0
-  AND pe.id <> jc.jefe_pe_id
-ORDER BY nombre_empleado
-SQL;
-
-    $rows = DB::connection('oracle')->select($sql, [$identificacion]);
-
-    return collect($rows)->map(function ($row) {
-      return [
-        'doc_empleado' => trim((string) ($row->doc_empleado ?? '')),
-        'nombre_empleado' => trim((string) ($row->nombre_empleado ?? '')),
-        'cargo_empleado' => trim((string) ($row->cargo_empleado ?? '')),
-        'cargo_superior' => trim((string) ($row->cargo_superior ?? '')),
-        'codigo_centro_costo' => trim((string) ($row->codigo_centro_costo ?? '')),
-        'centro_costo' => trim((string) ($row->centro_costo ?? '')),
-      ];
-    });
+    return $this->jefeEquipoService->obtenerEmpleadosDirectos($identificacion);
   }
 
   private function obtenerInformacionJefe(string $identificacion): ?array
   {
-    $sql = <<<'SQL'
-SELECT *
-FROM (
-    SELECT
-        p.identificacion AS doc_jefe,
-        TRIM(p.pnombre || ' ' || NVL(p.snombre, '')) || ' ' ||
-        TRIM(p.papellido || ' ' || NVL(p.sapellido, '')) AS nombre_jefe,
-        ca.descripcion AS cargo_jefe,
-        ct.codigo AS codigo_centro_costo,
-        ct.descripcion AS centro_costo
-    FROM per_personas p
-    JOIN per_empresapersonas ep ON ep.pe_id_pe = p.id
-    JOIN per_cargoccostos cc ON cc.id = ep.cc_id
-    JOIN per_centrocostos ct ON ct.codigo = cc.ct_codigo
-    JOIN per_cargos ca ON ca.codigo = cc.ca_codigo
-    WHERE p.identificacion = ?
-      AND ep.tp_id IN (1, 11)
-      AND ep.activo = 1
-      AND ep.estborrado = 0
-      AND ep.fecfin IS NULL
-      AND cc.activo = 1
-      AND cc.estborrado = 0
-      AND ct.estado = 1
-      AND ct.estborrado = 0
-      AND ca.estborrado = 0
-    ORDER BY ep.id DESC
-)
-WHERE ROWNUM = 1
-SQL;
-
-    $row = DB::connection('oracle')->selectOne($sql, [$identificacion]);
-    if (!$row) {
+    $row = $this->jefeEquipoService->obtenerInformacionJefe($identificacion);
+    if (! $row) {
       return null;
     }
 
     return [
-      'identificacion' => trim((string) ($row->doc_jefe ?? '')),
-      'nombre' => trim((string) ($row->nombre_jefe ?? '')),
-      'cargo' => trim((string) ($row->cargo_jefe ?? '')),
+      'identificacion' => trim((string) ($row['identificacion'] ?? '')),
+      'nombre' => trim((string) ($row['nombre'] ?? '')),
+      'cargo' => trim((string) ($row['cargo'] ?? '')),
       'centro_costo' => $this->formatearNombreCentroCosto(
-        trim((string) ($row->codigo_centro_costo ?? '')),
-        trim((string) ($row->centro_costo ?? ''))
+        trim((string) ($row['codigo_centro_costo'] ?? '')),
+        trim((string) ($row['centro_costo'] ?? ''))
       ),
     ];
   }
 
   private function obtenerJefesConPersonalACargo(): Collection
   {
-    $sql = <<<'SQL'
-SELECT DISTINCT
-  p.identificacion AS identificacion,
-  TRIM(p.pnombre || ' ' || NVL(p.snombre, '')) || ' ' ||
-  TRIM(p.papellido || ' ' || NVL(p.sapellido, '')) AS nombre
-FROM per_personas p
-JOIN per_empresapersonas ep ON ep.pe_id_pe = p.id
-JOIN per_cargoccostos cc ON cc.id = ep.cc_id
-JOIN per_centrocostos ct ON ct.codigo = cc.ct_codigo
-WHERE ep.tp_id IN (1, 11)
-  AND ep.activo = 1
-  AND ep.estborrado = 0
-  AND ep.fecfin IS NULL
-  AND cc.activo = 1
-  AND cc.estborrado = 0
-  AND ct.estado = 1
-  AND ct.estborrado = 0
-  AND EXISTS (
-    SELECT 1
-    FROM per_cargoccostos cce
-    JOIN per_empresapersonas epe ON epe.cc_id = cce.id
-    JOIN per_centrocostos cte ON cte.codigo = cce.ct_codigo
-    WHERE cce.id_cargosup = cc.ca_codigo
-      AND cce.ct_codigo = cc.ct_codigo
-      AND cce.activo = 1
-      AND cce.estborrado = 0
-      AND epe.tp_id IN (1, 11)
-      AND epe.activo = 1
-      AND epe.estborrado = 0
-      AND epe.fecfin IS NULL
-      AND cte.estado = 1
-      AND cte.estborrado = 0
-  )
-ORDER BY nombre
-SQL;
-
-    $rows = DB::connection('oracle')->select($sql);
-
-    return collect($rows)->map(function ($row) {
-      return [
-        'identificacion' => trim((string) ($row->identificacion ?? '')),
-        'nombre' => trim((string) ($row->nombre ?? '')),
-      ];
-    })->filter(function (array $item) {
-      return $item['identificacion'] !== '';
-    })->values();
+    return $this->jefeEquipoService->obtenerJefesConPersonalACargo();
   }
 
   private function sincronizarCargosFaltantes(Collection $empleados): void

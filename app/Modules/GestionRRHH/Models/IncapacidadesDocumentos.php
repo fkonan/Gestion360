@@ -15,6 +15,14 @@ class IncapacidadesDocumentos extends Model
 
     public $timestamps = false;
 
+    protected $fillable = [
+        'IncapacidadId',
+        'Ruta',
+        'DocFecReg',
+        'DocHorReg',
+        'ParametroId',
+    ];
+
     public function incapacidad()
     {
         return $this->belongsTo(Incapacidad::class, 'IncapacidadId', 'IdIncapacidad');

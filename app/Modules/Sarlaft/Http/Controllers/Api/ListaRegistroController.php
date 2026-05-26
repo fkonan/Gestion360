@@ -165,6 +165,7 @@ class ListaRegistroController extends Controller
 
         return [
             'id_novedad' => $n->id,
+            'registro_lista_id' => $n->registro_lista_id,
             'tipo_novedad' => $n->tipo_novedad,
             'origen' => $n->origen_lista,
             'lista' => $n->nombre_lista,

@@ -19,7 +19,8 @@ use Illuminate\Support\Facades\Validator;
 class ReportesController extends Controller
 {
     private const REPORTES_RANGO_MAXIMO_MESES = [
-        99 => 3,
+        7 => 6,
+        99 => 1,
     ];
 
     private const REPORTES_SIN_LIMITE_FECHAS = [
@@ -28,10 +29,12 @@ class ReportesController extends Controller
 
     private const REPORTES_VISTA_LIMITADA = [
         21 => 3000,
+        99 => 3000,
     ];
 
     private const REPORTES_EXPORTACION_STREAM = [
         21,
+        99,
     ];
 
     // vista general para el formulario de reportes, aca se genera el formulario en base a los parametros
@@ -177,11 +180,24 @@ class ReportesController extends Controller
 
     private function obtenerLimiteMesesReporte(int $reporteId): ?int
     {
-        if (in_array($reporteId, self::REPORTES_SIN_LIMITE_FECHAS, true)) {
+        $sinLimite = array_map('intval', (array) config(
+            'reporteador.reportes_rango_fechas.sin_limite',
+            self::REPORTES_SIN_LIMITE_FECHAS
+        ));
+
+        if (in_array($reporteId, $sinLimite, true)) {
             return null;
         }
 
-        return self::REPORTES_RANGO_MAXIMO_MESES[$reporteId] ?? 1;
+        $maxMesesPorReporte = (array) config(
+            'reporteador.reportes_rango_fechas.max_meses_por_reporte',
+            self::REPORTES_RANGO_MAXIMO_MESES
+        );
+
+        $limiteDefault = max(1, (int) config('reporteador.reportes_rango_fechas.default_meses', 1));
+        $limite = $maxMesesPorReporte[$reporteId] ?? $limiteDefault;
+
+        return max(1, (int) $limite);
     }
 
     // Cargar datos de los reportes con la API

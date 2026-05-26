@@ -11,7 +11,7 @@
 
 @section('content')
 <div class="container optionsMenu mt-4 p-0" style="max-width: 1500px;">
-  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-2">
+  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-2">
     <div class="col">
       <x-card color="bg-success"
         titulo="Modulos"

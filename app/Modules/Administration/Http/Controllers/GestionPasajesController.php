@@ -174,7 +174,7 @@ class GestionPasajesController extends Controller
         try {
             $id = $this->decryptFromNode($token);
             /* $id = $token; */
-            $conn = DB::connection('sqlsrv');
+            $conn = DB::connection('sqlsrv-lectura');
 
             /*  $abordo = $conn->selectOne("
              select vd.Abordo from PasajesOperaciones as po
@@ -308,7 +308,7 @@ class GestionPasajesController extends Controller
 
             if (empty($tiquete)) {
                 // Cerrar conexión
-                DB::disconnect('sqlsrv');
+                DB::disconnect('sqlsrv-lectura');
 
                 $mensajeError = '⚠️ '.now()->format('Y-m-d H:i:s').
                   " | Tiquete: {$id} | No se encontraron tiquetes para el ID proporcionado";
@@ -359,7 +359,7 @@ class GestionPasajesController extends Controller
       ", [$id]);
 
             // Cerrar conexión
-            DB::disconnect('sqlsrv');
+            DB::disconnect('sqlsrv-lectura');
 
             // Generar contenido de QR
             $urlDian = 'https://catalogo-vpfe.dian.gov.co/User/SearchDocument?DocumentKey=';

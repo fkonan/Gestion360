@@ -1021,6 +1021,13 @@ body:not(.sidebar-collapse) .nav-item .nav-treeview .nav-link {
     border-color: var(--bs-border-color);
 }
 
+[class*=sidebar-dark] .list-group-item {
+    background-color: var(--bs-secondary-bg) !important;
+    color: var(--bs-body-color);
+    border-color: var(--bs-border-color);
+}
+
+
 [data-bs-theme="dark"] .bootstrap-table .detail-view .list-group-item:hover {
     background-color: rgba(79, 163, 255, 0.06) !important;
 }
@@ -1792,6 +1799,18 @@ body:not(.sidebar-collapse) .nav-item .nav-treeview .nav-link {
 [data-bs-theme="dark"] .swalAlert .swal2-title,
 [data-bs-theme="dark"] .swalAlert .swal2-html-container {
   color: var(--bs-body-color) !important;
+}
+
+[data-bs-theme="dark"] .swalAlert,
+body.dark-mode .swalAlert {
+  background: var(--bs-tertiary-bg, #2b3035) !important;
+  border: 1px solid var(--bs-border-color, #495057) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45) !important;
+}
+
+[data-bs-theme="dark"] .swalAlert .swal2-loader,
+body.dark-mode .swalAlert .swal2-loader {
+  border-color: var(--bs-primary, #0d6efd) transparent var(--bs-primary, #0d6efd) transparent !important;
 }
 
 .dropdown-noti {

@@ -21,6 +21,7 @@ use Throwable;
 
 class RegistrarEventoEmpleadoService
 {
+  private const MINUTOS_ANTIDUPLICADO_EVENTO_MANUAL_DEFAULT = 2;
   private const MINUTOS_ANTIDUPLICADO_OVERRIDE_NOVEDAD_DEFAULT = 25;
   private const MINUTOS_NOVEDAD_ANTES_DEFAULT = 5;
   private const MINUTOS_NOVEDAD_DESPUES_DEFAULT = 20;
@@ -255,6 +256,30 @@ class RegistrarEventoEmpleadoService
           $cargoId,
           ((int) $cargoId === 3),
           ['modo' => 'manual', 'evento_manual' => $eventoManual]
+        );
+      }
+
+      $minutosAntiduplicadoManual = $this->obtenerMinutosAntiduplicadoEventoManual();
+      if ($this->existeEventoManualReciente(
+        $identificacion,
+        $eventoManual,
+        $fecha,
+        $minutosAntiduplicadoManual
+      )) {
+        $ventanaTexto = $this->formatearVentanaAntiduplicado($minutosAntiduplicadoManual);
+        $motivoDuplicado = $eventoManual === 2
+          ? 'ya existe un ingreso registrado recientemente. espere ' . $ventanaTexto . ' antes de repetir el mismo evento'
+          : 'ya existe una salida registrada recientemente. espere ' . $ventanaTexto . ' antes de repetir el mismo evento';
+
+        return DecisionEventoDTO::rechazado(
+          $motivoDuplicado,
+          $cargoId,
+          ((int) $cargoId === 3),
+          [
+            'modo' => 'manual',
+            'evento_manual' => $eventoManual,
+            'antiduplicado_minutos' => $minutosAntiduplicadoManual,
+          ]
         );
       }
 
@@ -1058,6 +1083,39 @@ class RegistrarEventoEmpleadoService
       ->where('evento', $evento)
       ->whereBetween('fecha_creacion', [$fechaInicioVentana, $fechaFinVentana])
       ->exists();
+  }
+
+  private function existeEventoManualReciente(
+    string $identificacion,
+    int $evento,
+    Carbon $fecha,
+    int $minutosAntiduplicado
+  ): bool {
+    $fechaInicioVentana = $fecha->copy()->subMinutes($minutosAntiduplicado);
+
+    return PrsHuellaEventos::query()
+      ->where('identificacion', $identificacion)
+      ->where('evento', $evento)
+      ->where('fecha_creacion', '>', $fechaInicioVentana)
+      ->where('fecha_creacion', '<=', $fecha)
+      ->exists();
+  }
+
+  private function obtenerMinutosAntiduplicadoEventoManual(): int
+  {
+    $minutos = (int) env(
+      'ASISTENCIA_MANUAL_MINUTOS_ANTIDUPLICADO',
+      self::MINUTOS_ANTIDUPLICADO_EVENTO_MANUAL_DEFAULT
+    );
+
+    return $minutos > 0
+      ? $minutos
+      : self::MINUTOS_ANTIDUPLICADO_EVENTO_MANUAL_DEFAULT;
+  }
+
+  private function formatearVentanaAntiduplicado(int $minutos): string
+  {
+    return $minutos === 1 ? '1 minuto' : $minutos . ' minutos';
   }
 
   private function obtenerMinutosAntiduplicadoOverrideNovedad(): int

@@ -202,6 +202,57 @@ class RegistrarEventoEmpleadoServiceCargoCentroTest extends TestCase
     $this->assertSame('hora_inicio_mas_cercana_hacia_adelante', (string) ($resultado['criterio'] ?? ''));
   }
 
+  public function test_evento_manual_repetido_en_menos_de_dos_minutos_se_rechaza(): void
+  {
+    $this->insertarEventoPrs([
+      'id' => 2001,
+      'evento' => 2,
+      'descripcion' => 'ingreso de personal por huella',
+      'identificacion' => '77777',
+      'fecha_creacion' => '2026-04-14 09:00:00',
+    ]);
+
+    $service = new RegistrarEventoEmpleadoService(new DecidirEventoService());
+    $decision = $this->invocarResolverDecision(
+      $service,
+      '77777',
+      2,
+      null,
+      now()->copy()->setDate(2026, 4, 14)->setTime(9, 1, 0)
+    );
+
+    $this->assertFalse($decision->esOk());
+    $this->assertSame('RECHAZADO', $decision->status);
+    $this->assertStringContainsString(
+      'espere 2 minutos antes de repetir el mismo evento',
+      strtolower((string) $decision->motivo)
+    );
+  }
+
+  public function test_evento_manual_repetido_a_los_dos_minutos_se_permite(): void
+  {
+    $this->insertarEventoPrs([
+      'id' => 2002,
+      'evento' => 1,
+      'descripcion' => 'salida de personal por huella',
+      'identificacion' => '88888',
+      'fecha_creacion' => '2026-04-14 10:00:00',
+    ]);
+
+    $service = new RegistrarEventoEmpleadoService(new DecidirEventoService());
+    $decision = $this->invocarResolverDecision(
+      $service,
+      '88888',
+      1,
+      null,
+      now()->copy()->setDate(2026, 4, 14)->setTime(10, 2, 0)
+    );
+
+    $this->assertTrue($decision->esOk());
+    $this->assertSame('OK', $decision->status);
+    $this->assertSame(1, $decision->evento);
+  }
+
   private function invocarResolverCargoId(
     RegistrarEventoEmpleadoService $service,
     string $cargoNombre,
@@ -222,6 +273,19 @@ class RegistrarEventoEmpleadoServiceCargoCentroTest extends TestCase
     $method->setAccessible(true);
 
     return $method->invoke($service, $cargoId, $fecha);
+  }
+
+  private function invocarResolverDecision(
+    RegistrarEventoEmpleadoService $service,
+    string $identificacion,
+    ?int $eventoManual,
+    ?int $cargoId,
+    \Carbon\Carbon $fecha
+  ) {
+    $method = new ReflectionMethod(RegistrarEventoEmpleadoService::class, 'resolverDecision');
+    $method->setAccessible(true);
+
+    return $method->invoke($service, $identificacion, $eventoManual, $cargoId, $fecha);
   }
 
   private function configurarConexionOracle360Sqlite(): void

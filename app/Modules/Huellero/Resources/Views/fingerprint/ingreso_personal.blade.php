@@ -400,6 +400,15 @@
             if (motivo.indexOf('ya existe salida registrada hoy') !== -1) {
                 return 'Ya tienes una salida registrada hoy. Si necesitas ajuste, solicita apoyo al area administrativa.';
             }
+            if (motivo.indexOf('antes de repetir el mismo evento') !== -1) {
+                var minutosMatch = motivoRaw.match(/espere\s+(\d+)\s+minuto/i);
+                if (minutosMatch && minutosMatch[1]) {
+                    var minutos = Number(minutosMatch[1]);
+                    var etiquetaMinutos = minutos === 1 ? '1 minuto' : (String(minutos) + ' minutos');
+                    return 'Ya existe un registro reciente del mismo tipo. Espera ' + etiquetaMinutos + ' antes de volver a marcar.';
+                }
+                return 'Ya existe un registro reciente del mismo tipo. Espera un momento antes de volver a marcar.';
+            }
             if (motivo.indexOf('reingreso bloqueado por 7 horas') !== -1) {
                 var match = motivoRaw.match(/habilitado desde ([^)]+)/i);
                 if (match && match[1]) {

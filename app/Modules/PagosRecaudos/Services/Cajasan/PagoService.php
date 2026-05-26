@@ -7,7 +7,6 @@ use App\Modules\PagosRecaudos\Models\ConDetCarguePagRec;
 use App\Modules\PagosRecaudos\Services\PagosRecaudosLogger;
 use App\Services\UsuarioService;
 use Exception;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
@@ -130,12 +129,11 @@ class PagoService
                 throw new Exception('Saldo insuficiente para procesar el pago');
             }
 
-            $documentoUsuario = Auth::user()?->persona?->PerNumDoc;
             $sucursalCajaActiva = isset($cajaActiva->idsucursal) ? (int) $cajaActiva->idsucursal : null;
-            $centroCosto = $documentoUsuario ? EmpleadoService::codigoCentroCosto($documentoUsuario, $sucursalCajaActiva) : null;
+            $centroCosto = $sucursalCajaActiva ? EmpleadoService::codigoCentroCostoPorSucursal($sucursalCajaActiva) : null;
 
             if (! $centroCosto) {
-                throw new Exception('No se pudo obtener el centro de costo del usuario actual.');
+                throw new Exception('No se pudo obtener el centro de costo de la caja activa.');
             }
 
             // 2. Crear cargue y detalle

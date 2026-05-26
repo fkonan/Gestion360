@@ -9,6 +9,9 @@ class Permisos
     const GESTION_RRHH_GESTION_EMPLEADO_CREAR = 'gestion_rrhh.gestion_empleado.crear';
     const GESTION_RRHH_GESTION_EMPLEADO_ACCEDER = 'gestion_rrhh.gestion_empleado.acceder';
     const GESTION_RRHH_GESTION_EMPLEADO_ACTUALIZAR = 'gestion_rrhh.gestion_empleado.actualizar';
+    const GESTION_RRHH_GESTION_EMPLEADO_PERMISOS_RRHH = 'gestion_rrhh.gestion_empleado.permisosRRHH';
+    const GESTION_RRHH_PERMISOS_PERMISOS_RRHH = 'gestion_rrhh.permisos.permisosRRHH';
+    const GESTION_RRHH_PERMISOS_NOVEDADES = 'gestion_rrhh.permisos.novedades';
 
     // CONFIGURACIÓN
     const CONFIGURACION_ACCEDER = 'configuracion.acceder';

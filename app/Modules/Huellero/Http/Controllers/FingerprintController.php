@@ -3,8 +3,10 @@
 namespace App\Modules\Huellero\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\GestionRRHH\Models\PerConductoresEventos;
 use App\Modules\GestionRRHH\Models\PerContratoPersona;
 use App\Modules\GestionRRHH\Models\PerPersonas;
+use App\Modules\GestionRRHH\Services\DescansosService;
 use App\Modules\Huellero\Models\PerIdentHuella;
 use App\Modules\Huellero\Models\PrsHuellaEventos;
 use App\Modules\Huellero\Models\PrsPersonas;
@@ -18,9 +20,13 @@ use Throwable;
 
 class FingerprintController extends Controller
 {
+  private readonly DescansosService $descansosService;
+
   public function __construct(
-    private readonly RegistrarEventoEmpleadoService $registrarEventoEmpleadoService
+    private readonly RegistrarEventoEmpleadoService $registrarEventoEmpleadoService,
+    ?DescansosService $descansosService = null
   ) {
+    $this->descansosService = $descansosService ?? app(DescansosService::class);
   }
 
   public function enroll(Request $request)
@@ -235,40 +241,25 @@ class FingerprintController extends Controller
     }
 
     $payload = $validator->validated();
-      $nombre = null;
-      $cargo = null;
-      $usuarioCreacionId = null;
-      $documentoUsuario = $request->user()?->persona?->PerNumDoc;
-      if ($documentoUsuario) {
-        $usuarioCreacionId = PrsPersonas::query()
-          ->where('numero_documento', $documentoUsuario)
-          ->value('id');
-      }
+    $nombre = null;
+    $cargo = null;
+    $usuarioCreacionId = null;
+    $documentoUsuario = $request->user()?->persona?->PerNumDoc;
+    if ($documentoUsuario) {
+      $usuarioCreacionId = PrsPersonas::query()
+        ->where('numero_documento', $documentoUsuario)
+        ->value('id');
+    }
 
     try {
+      $eventoRrhh = ((int) $payload['evento'] === 4)
+        ? DescansosService::REGRESO_DE_DESCANSO
+        : DescansosService::SALIDA_A_DESCANSO;
+      $fecha = isset($payload['fecha']) ? Carbon::parse($payload['fecha']) : now();
+
       $limiteDuplicado = now()->subMinutes(5);
-      $ultimoEvento = PrsHuellaEventos::query()
-        ->where('identificacion', $payload['identificacion'])
-        ->where('tipo', 2)
-        ->orderByDesc('fecha_creacion')
-        ->first();
 
-      $fechaUltimoEvento = $ultimoEvento?->fecha_creacion
-        ? Carbon::parse($ultimoEvento->fecha_creacion)
-        : null;
-      $esEventoRepetidoEnVentana = $ultimoEvento
-        && (int) $ultimoEvento->evento === (int) $payload['evento']
-        && $fechaUltimoEvento
-        && $fechaUltimoEvento->greaterThanOrEqualTo($limiteDuplicado);
-
-      if ($esEventoRepetidoEnVentana) {
-        return response()->json([
-          'ok' => false,
-          'error' => 'Ya existe un registro reciente para este evento. Intenta nuevamente en unos minutos.',
-        ], 422);
-      }
-
-      $contratoPersona = PerContratoPersona::query()
+      $contratoPersonaQuery = PerContratoPersona::query()
         ->where('identificacion', $payload['identificacion'])
         ->where('estborrado', 0)
         ->whereHas('perEmpresaPersonas', function ($query) {
@@ -276,7 +267,9 @@ class FingerprintController extends Controller
             ->where('estborrado', 0)
             ->whereNull('fecfin')
             ->whereIn('tp_id', [11]);
-        })
+        });
+
+      $contratoPersona = $contratoPersonaQuery
         ->first();
 
       if (!$contratoPersona) {
@@ -289,6 +282,7 @@ class FingerprintController extends Controller
         ], 422);
       }
 
+      $personaId = $contratoPersona->pe_id_pe;
       $nombre = $contratoPersona->nombreCompleto();
       $cargoDetalle = $contratoPersona->cargoDetallado();
       if ($cargoDetalle) {
@@ -299,6 +293,79 @@ class FingerprintController extends Controller
           ?? null;
       }
 
+      $ultimoEventoRrhh = PerConductoresEventos::query()
+        ->where('pe_id', $personaId)
+        ->where('estborrado', 0)
+        ->whereIn('evento', [
+          DescansosService::REGRESO_DE_DESCANSO,
+          DescansosService::SALIDA_A_DESCANSO,
+        ])
+        ->orderByDesc('id')
+        ->first();
+
+      $fechaUltimoEventoRrhh = $ultimoEventoRrhh?->feccreacion
+        ? Carbon::parse($ultimoEventoRrhh->feccreacion)
+        : null;
+      $esEventoRrhhRepetidoEnVentana = $ultimoEventoRrhh
+        && (int) $ultimoEventoRrhh->evento === $eventoRrhh
+        && $fechaUltimoEventoRrhh
+        && $fechaUltimoEventoRrhh->greaterThanOrEqualTo($limiteDuplicado);
+
+      if ($esEventoRrhhRepetidoEnVentana) {
+        return response()->json([
+          'ok' => false,
+          'error' => 'Ya existe un registro reciente para este evento. Intenta nuevamente en unos minutos.',
+        ], 422);
+      }
+
+      $fechaEventoUltimoRrhh = $ultimoEventoRrhh?->fechaevento
+        ? Carbon::parse($ultimoEventoRrhh->fechaevento)
+        : null;
+      $ultimoEventoRrhhVigente = $ultimoEventoRrhh
+        && (!$fechaEventoUltimoRrhh || $fechaEventoUltimoRrhh->greaterThan(now()->subMonths(6)));
+      $ultimoEventoRrhhCodigo = $ultimoEventoRrhhVigente ? (int) $ultimoEventoRrhh->evento : null;
+
+      if (
+        $eventoRrhh === DescansosService::SALIDA_A_DESCANSO
+        && $ultimoEventoRrhhCodigo === DescansosService::SALIDA_A_DESCANSO
+      ) {
+        return response()->json([
+          'ok' => false,
+          'error' => 'El conductor ya tiene una salida a descanso pendiente de regreso.',
+        ], 422);
+      }
+
+      if (
+        $eventoRrhh === DescansosService::REGRESO_DE_DESCANSO
+        && $ultimoEventoRrhhCodigo !== DescansosService::SALIDA_A_DESCANSO
+      ) {
+        return response()->json([
+          'ok' => false,
+          'error' => 'El conductor no tiene una salida a descanso pendiente.',
+        ], 422);
+      }
+
+      $respuestaRrhh = $this->descansosService->registrarEventoDescanso(new Request([
+        'identificacion' => (string) $payload['identificacion'],
+        'evento' => $eventoRrhh,
+        'fecha' => $fecha->format('Y-m-d H:i:s'),
+        'observacion' => 'REGISTRO POR HUELLA',
+      ]));
+      $respuestaRrhhData = $respuestaRrhh->getData(true);
+
+      if ($respuestaRrhh->getStatusCode() >= 400 || ($respuestaRrhhData['type'] ?? null) !== 'success') {
+        $error = $respuestaRrhhData['title'] ?? null;
+        if (!$error && isset($respuestaRrhhData['errors']) && is_array($respuestaRrhhData['errors'])) {
+          $firstFieldErrors = reset($respuestaRrhhData['errors']);
+          $error = is_array($firstFieldErrors) ? ($firstFieldErrors[0] ?? null) : $firstFieldErrors;
+        }
+
+        return response()->json([
+          'ok' => false,
+          'error' => $error ?: 'No se pudo registrar el evento de descanso.',
+        ], $respuestaRrhh->getStatusCode() >= 400 ? $respuestaRrhh->getStatusCode() : 422);
+      }
+
       $evento = new PrsHuellaEventos();
       $evento->evento = (int) $payload['evento'];
       $evento->descripcion = ((int) $payload['evento'] === 4)
@@ -306,7 +373,6 @@ class FingerprintController extends Controller
         : 'salida a descanso';
       $evento->tipo = 2;
       $evento->identificacion = $payload['identificacion'];
-      $fecha = isset($payload['fecha']) ? Carbon::parse($payload['fecha']) : now();
       $evento->fecha_creacion = $fecha;
       $evento->usuario_creacion = $usuarioCreacionId;
       $evento->llegada_tarde = 0;
@@ -496,11 +562,28 @@ class FingerprintController extends Controller
     $identificacion = $validator->validated()['identificacion'];
 
     try {
-      $evento = PrsHuellaEventos::query()
+      $persona = PerPersonas::query()
         ->where('identificacion', $identificacion)
-        ->where('tipo', 2)
-        ->whereIn('evento', [3, 4])
-        ->orderBy('fecha_creacion', 'desc')
+        ->where('estado', 'ACTIVO')
+        ->where('estborrado', 0)
+        ->whereIn('tipdocumento', [1])
+        ->first();
+
+      if (!$persona) {
+        return response()->json([
+          'ok' => true,
+          'data' => null,
+        ]);
+      }
+
+      $evento = PerConductoresEventos::query()
+        ->where('pe_id', $persona->id)
+        ->where('estborrado', 0)
+        ->whereIn('evento', [
+          DescansosService::REGRESO_DE_DESCANSO,
+          DescansosService::SALIDA_A_DESCANSO,
+        ])
+        ->orderBy('id', 'desc')
         ->first();
     } catch (Throwable $e) {
       $this->huelleroLogger()->error('Huellero ultimo evento conductor error', [
@@ -520,23 +603,40 @@ class FingerprintController extends Controller
       ]);
     }
 
-    $fecha = $evento->fecha_creacion;
+    $fecha = $evento->fechaevento;
     try {
       if ($fecha instanceof Carbon) {
+        if ($fecha->lte(now()->subMonths(6))) {
+          return response()->json([
+            'ok' => true,
+            'data' => null,
+          ]);
+        }
+
         $fecha = $fecha->toIso8601String();
       } elseif ($fecha) {
-        $fecha = Carbon::parse($fecha)->toIso8601String();
+        $fechaEvento = Carbon::parse($fecha);
+        if ($fechaEvento->lte(now()->subMonths(6))) {
+          return response()->json([
+            'ok' => true,
+            'data' => null,
+          ]);
+        }
+
+        $fecha = $fechaEvento->toIso8601String();
       }
     } catch (Throwable $e) {
-      $fecha = $evento->fecha_creacion;
+      $fecha = $evento->fechaevento;
     }
 
     return response()->json([
       'ok' => true,
       'data' => [
-        'evento' => (int) $evento->evento,
-        'descripcion' => $evento->descripcion,
-        'identificacion' => (string) $evento->identificacion,
+        'evento' => (int) $evento->evento === DescansosService::REGRESO_DE_DESCANSO ? 4 : 3,
+        'descripcion' => (int) $evento->evento === DescansosService::REGRESO_DE_DESCANSO
+          ? 'regreso de descanso'
+          : 'salida a descanso',
+        'identificacion' => (string) $identificacion,
         'fecha' => $fecha,
       ],
     ]);

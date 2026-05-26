@@ -32,7 +32,7 @@ class Incapacidad extends Model
         'RevisionDatos',
         'IncFecIni',
         'IncFecFin',
-        'IncFechReg',
+        'IncFecReg',
         'IncHorReg',
 
     ];

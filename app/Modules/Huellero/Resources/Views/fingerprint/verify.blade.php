@@ -134,6 +134,11 @@
         var lastQuality = null;
         var targetCount = 1;
         var activeReader = '';
+        var readerUnavailableNotified = false;
+        var communicationFailedNotified = false;
+        var communicationPaused = false;
+        var communicationRetryTimer = null;
+        var communicationRetryDelayMs = 3000;
         var autoCaptureEnabled = true;
         var restartTimer = null;
 
@@ -269,6 +274,60 @@
             }, 4000);
         }
 
+        function notifyReaderUnavailable(message) {
+            if (readerUnavailableNotified) {
+                return;
+            }
+            readerUnavailableNotified = true;
+            showAlert('warning', message);
+        }
+
+        function resetReaderUnavailableNotice() {
+            readerUnavailableNotified = false;
+        }
+
+        function notifyCommunicationFailure(message) {
+            if (communicationFailedNotified) {
+                return;
+            }
+            communicationFailedNotified = true;
+            showAlert('danger', message || 'Fallo la comunicacion con el servicio WebAPI.');
+        }
+
+        function clearCommunicationRetry() {
+            if (!communicationRetryTimer) {
+                return;
+            }
+            clearTimeout(communicationRetryTimer);
+            communicationRetryTimer = null;
+        }
+
+        function markCommunicationRecovered() {
+            communicationPaused = false;
+            communicationFailedNotified = false;
+            clearCommunicationRetry();
+        }
+
+        function scheduleCommunicationRetry() {
+            if (communicationRetryTimer || currentMode() !== 'huella') {
+                return;
+            }
+            communicationRetryTimer = setTimeout(async function() {
+                communicationRetryTimer = null;
+                if (currentMode() !== 'huella') {
+                    return;
+                }
+                await refreshReaders(true);
+                if (communicationPaused) {
+                    scheduleCommunicationRetry();
+                    return;
+                }
+                if (autoCaptureEnabled) {
+                    scheduleAutoCapture();
+                }
+            }, communicationRetryDelayMs);
+        }
+
         function setButtons(isCapturing) {
             if (ui.startCapture) ui.startCapture.disabled = isCapturing;
             if (ui.stopCapture) ui.stopCapture.disabled = !isCapturing;
@@ -307,6 +366,7 @@
 
         function scheduleAutoCapture() {
             if (!autoCaptureEnabled) return;
+            if (communicationPaused) return;
             if (currentMode() !== 'huella') return;
             if (client.acquisitionStarted) return;
             if (probe) {
@@ -359,18 +419,23 @@
         async function refreshReaders(autoSelect) {
             try {
                 var readers = await client.enumerateReaders();
+                markCommunicationRecovered();
                 if (!readers || readers.length === 0) {
                     setStatus('disconnected');
-                    showAlert('warning', 'No se detectaron lectores.');
+                    notifyReaderUnavailable('No se detectaron lectores.');
                     activeReader = '';
                     return;
                 }
+                resetReaderUnavailableNotice();
                 if (autoSelect || !activeReader) {
                     activeReader = readers[0];
                 }
             } catch (err) {
+                communicationPaused = true;
+                activeReader = '';
                 setStatus('error');
-                showAlert('danger', 'No se pudo enumerar lectores.');
+                notifyCommunicationFailure('Fallo la comunicacion con el servicio WebAPI.');
+                scheduleCommunicationRetry();
             }
         }
 
@@ -404,11 +469,14 @@
             if (currentMode() !== 'huella') {
                 return;
             }
+            if (communicationPaused) {
+                scheduleCommunicationRetry();
+                return;
+            }
             if (!activeReader) {
                 await refreshReaders(true);
             }
             if (!activeReader) {
-                showAlert('warning', 'No se detecto un lector disponible.');
                 return;
             }
             if (client.acquisitionStarted) return;
@@ -421,8 +489,18 @@
             } catch (err) {
                 register = false;
                 setButtons(false);
+                var rawDetail = err && err.message ? err.message : '';
+                var detail = String(rawDetail || '');
+                var detailLower = detail.toLowerCase();
+                if (detailLower.indexOf('communication') !== -1 || detailLower.indexOf('webapi') !== -1) {
+                    communicationPaused = true;
+                    activeReader = '';
+                    setStatus('error');
+                    notifyCommunicationFailure('Fallo la comunicacion con el servicio WebAPI.');
+                    scheduleCommunicationRetry();
+                    return;
+                }
                 setStatus('error');
-                var detail = err && err.message ? err.message : '';
                 if (detail) {
                     showAlert('danger', 'No se pudo iniciar la captura: ' + detail);
                 } else {
@@ -525,19 +603,26 @@
         }
 
         client.onDeviceConnected = function() {
+            markCommunicationRecovered();
+            resetReaderUnavailableNotice();
             setStatus('connected');
             refreshReaders(true);
             scheduleAutoCapture();
         };
         client.onDeviceDisconnected = function() {
+            resetReaderUnavailableNotice();
             setStatus('disconnected');
             setButtons(false);
             activeReader = '';
         };
         client.onCommunicationFailed = function() {
+            communicationPaused = true;
+            activeReader = '';
+            register = false;
+            setButtons(false);
             setStatus('error');
-            showAlert('danger', 'Fallo la comunicación con el servicio WebAPI.');
-            scheduleAutoCapture();
+            notifyCommunicationFailure('Fallo la comunicacion con el servicio WebAPI.');
+            scheduleCommunicationRetry();
         };
         client.onErrorOccurred = function() {
             setStatus('error');

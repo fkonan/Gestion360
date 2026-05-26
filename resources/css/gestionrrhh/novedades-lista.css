@@ -1,0 +1,29 @@
+.novedades-central-content {
+  padding: 1.2rem 1.25rem;
+}
+
+#no-more-tables .table {
+  margin-bottom: 0.35rem;
+}
+
+.permiso-actions-group {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.permiso-action-trigger {
+  line-height: 1;
+}
+
+.permiso-action-icon {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+.permiso-action-icon-seguimiento {
+  width: 34px;
+  height: 34px;
+}

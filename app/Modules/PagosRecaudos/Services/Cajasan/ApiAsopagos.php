@@ -6,10 +6,29 @@ use App\Modules\PagosRecaudos\Services\PagosRecaudosLogger;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class ApiAsopagos
 {
+  private const API_LOG_CHANNEL = 'pagos_recaudos_api';
+
+  private const API_SENSITIVE_KEYS = [
+    'password',
+    'auth_password',
+    'client_secret',
+    'token',
+    'access_token',
+    'refresh_token',
+    'authorization',
+    'secret',
+  ];
+
+  private const CITY_CODE_OVERRIDES = [
+    '68233' => '68081',  //Dagota no existe en DIVIPOLA, se usa municipio vecino (Barrancabermeja)
+    '20430' => '20250'   //Municipio vecino
+  ];
+
   private const TRANSACTION_TYPE_CONSULTA = '10';
 
   private const TRANSACTION_TYPE_RETIRO = '01';
@@ -46,13 +65,23 @@ class ApiAsopagos
         });
       }
 
-      $response = $request->post(config('apiAsopagos.token_url'), [
+      $tokenPayload = [
         'username' => config('apiAsopagos.credentials.auth_username'),
         'password' => config('apiAsopagos.credentials.auth_password'),
         'grant_type' => 'password',
         'client_id' => config('apiAsopagos.credentials.client_id'),
         'client_secret' => config('apiAsopagos.credentials.client_secret'),
         'scope' => config('apiAsopagos.credentials.scope'),
+      ];
+      $this->logApi('token.request', [
+        'url' => config('apiAsopagos.token_url'),
+        'payload' => $tokenPayload,
+      ]);
+      $response = $request->post(config('apiAsopagos.token_url'), $tokenPayload);
+      $this->logApi('token.response', [
+        'url' => config('apiAsopagos.token_url'),
+        'http_status' => $response->status(),
+        'response' => $this->decodificarJson($response),
       ]);
 
       if ($response->successful()) {
@@ -154,12 +183,25 @@ class ApiAsopagos
     ], $datos);
 
     try {
+      $this->logApi('transaction.request', [
+        'url' => config('apiAsopagos.base_url'),
+        'payload' => $payload,
+      ]);
+
       $response = Http::withToken($token)
         ->withHeaders(['Content-Type' => 'application/json'])
         ->timeout($this->transactionTimeoutSeconds())
         ->post(config('apiAsopagos.base_url'), $payload);
 
       $data = $this->decodificarJson($response);
+      $this->logApi('transaction.response', [
+        'url' => config('apiAsopagos.base_url'),
+        'http_status' => $response->status(),
+        'transactionType' => $payload['transactionType'] ?? null,
+        'transactionId' => $payload['transactionId'] ?? null,
+        'sequenceId' => $payload['sequenceId'] ?? null,
+        'response' => $data,
+      ]);
 
       if (! $data || ! is_array($data)) {
         PagosRecaudosLogger::error('Respuesta invalida de Asopagos', [
@@ -216,6 +258,15 @@ class ApiAsopagos
         $response->body()
       );
     } catch (ConnectionException $e) {
+      $this->logApi('transaction.exception', [
+        'url' => config('apiAsopagos.base_url'),
+        'transactionType' => $payload['transactionType'] ?? null,
+        'transactionId' => $payload['transactionId'] ?? null,
+        'sequenceId' => $payload['sequenceId'] ?? null,
+        'exception_class' => $e::class,
+        'exception_message' => $e->getMessage(),
+      ], 'error');
+
       PagosRecaudosLogger::exception('Excepcion de transporte al ejecutar transaccion con Asopagos', $e, [
         'operation' => 'api_asopagos',
         'stage' => 'transaction_request',
@@ -229,6 +280,15 @@ class ApiAsopagos
         'No fue posible confirmar el estado final de la transaccion con Asopagos.'
       );
     } catch (Throwable $e) {
+      $this->logApi('transaction.exception', [
+        'url' => config('apiAsopagos.base_url'),
+        'transactionType' => $payload['transactionType'] ?? null,
+        'transactionId' => $payload['transactionId'] ?? null,
+        'sequenceId' => $payload['sequenceId'] ?? null,
+        'exception_class' => $e::class,
+        'exception_message' => $e->getMessage(),
+      ], 'error');
+
       PagosRecaudosLogger::exception('Excepcion al ejecutar transaccion con Asopagos', $e, [
         'operation' => 'api_asopagos',
         'stage' => 'transaction_request',
@@ -250,7 +310,7 @@ class ApiAsopagos
       'transactionType' => self::TRANSACTION_TYPE_CONSULTA,
       'currencyCode' => null,
       'state' => $departamento,
-      'city' => $ciudad,
+      'city' => $this->normalizarCiudadParaApi($ciudad),
       'identificationType' => $tipoDoc,
       'identification' => $documento,
     ]);
@@ -262,7 +322,7 @@ class ApiAsopagos
       'transactionType' => self::TRANSACTION_TYPE_RETIRO,
       'amountTran' => $monto,
       'state' => $departamento,
-      'city' => $ciudad,
+      'city' => $this->normalizarCiudadParaApi($ciudad),
       'identificationType' => $tipoDoc,
       'identification' => $documento,
     ], $transactionId, $sequenceId);
@@ -343,7 +403,7 @@ class ApiAsopagos
       'transactionType' => self::TRANSACTION_TYPE_REVERSO,
       'amountTran' => $monto,
       'state' => $departamento,
-      'city' => $ciudad,
+      'city' => $this->normalizarCiudadParaApi($ciudad),
       'identificationType' => $tipoDoc,
       'identification' => $documento,
     ], $transactionId, $sequenceId);
@@ -355,7 +415,7 @@ class ApiAsopagos
       'transactionType' => self::TRANSACTION_TYPE_REVERSO,
       'amountTran' => $monto,
       'state' => $departamento,
-      'city' => $ciudad,
+      'city' => $this->normalizarCiudadParaApi($ciudad),
       'identificationType' => $tipoDoc,
       'identification' => $documento,
     ], $transactionId, $sequenceId);
@@ -543,5 +603,54 @@ class ApiAsopagos
   private function tokenRetrySleepMs(): int
   {
     return (int) config('apiAsopagos.token_retry_sleep_ms', 200);
+  }
+
+  private function normalizarCiudadParaApi(int|string $ciudad): string
+  {
+    $codigo = trim((string) $ciudad);
+
+    return self::CITY_CODE_OVERRIDES[$codigo] ?? $codigo;
+  }
+
+  private function logApi(string $event, array $context = [], string $level = 'info'): void
+  {
+    $context = $this->sanitizeContext($context);
+
+    Log::channel(self::API_LOG_CHANNEL)->{$level}($event, array_filter([
+      'module' => 'pagos_recaudos',
+      'request_id' => request()?->attributes->get('pagos_recaudos_request_id'),
+      'route' => request()?->route()?->getName(),
+      'method' => request()?->method(),
+      'event' => $event,
+      'context' => $context,
+    ], fn($value) => $value !== null));
+  }
+
+  private function sanitizeContext(array $context): array
+  {
+    foreach ($context as $key => $value) {
+      if (is_array($value)) {
+        $context[$key] = $this->sanitizeContext($value);
+        continue;
+      }
+
+      if ($this->isSensitiveKey((string) $key)) {
+        $context[$key] = '[redacted]';
+      }
+    }
+
+    return $context;
+  }
+
+  private function isSensitiveKey(string $key): bool
+  {
+    $normalized = strtolower(trim($key));
+    if (in_array($normalized, self::API_SENSITIVE_KEYS, true)) {
+      return true;
+    }
+
+    return str_contains($normalized, 'token')
+      || str_contains($normalized, 'password')
+      || str_contains($normalized, 'secret');
   }
 }

@@ -101,7 +101,7 @@
           ];
 
           // Inicializar Bootstrap Table (paginacion cliente)
-          const enableClientSearch = reportId !== 21;
+          const enableClientSearch = ![21, 65].includes(reportId);
           $('#table').bootstrapTable({
             columns: columns,
             data: response.rows,
@@ -204,7 +204,7 @@
       };
     };
 
-    if (reportId === 21) {
+    if ([21, 65].includes(reportId)) {
       exportBtn.removeAttribute('data-url');
       exportBtn.onclick = () => {
         const restoreButton = setExportLoadingState('Preparando descarga...');

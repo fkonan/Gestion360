@@ -53,7 +53,7 @@
     </div>
 
     <div class="mb-3">
-      <label for="observacion" class="form-label">Observacion <span class="text-danger">*</span></label>
+      <label for="observacion" class="form-label">Observación <span class="text-danger">*</span></label>
       <textarea
         name="observacion"
         id="observacion"

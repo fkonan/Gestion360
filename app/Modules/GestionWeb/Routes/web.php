@@ -3,6 +3,7 @@
 use App\Constants\Permisos;
 use App\Modules\GestionWeb\Http\Controllers\AppmovilController;
 use App\Modules\GestionWeb\Http\Controllers\GestionWebController;
+use App\Modules\GestionWeb\Http\Controllers\PersonaAppmovilController;
 use App\Modules\GestionWeb\Http\Controllers\RecursosDigitalesAdminController;
 use App\Modules\GestionWeb\Http\Controllers\TrackingRemesasController;
 use Illuminate\Support\Facades\Route;
@@ -33,6 +34,13 @@ Route::prefix('gestion-web')->middleware(['auth', 'permisos:'.Permisos::GESTION_
             Route::post('/{id}/cambiar-estado', [AppmovilController::class, 'cambiarEstadoNotificacion'])->middleware('soloAJAX')->name('cambiarEstado');
             Route::get('/{id}/edit', [AppmovilController::class, 'editarNotificacion'])->name('edit');
             Route::put('/{id}', [AppmovilController::class, 'updateNotificacion'])->name('update');
+        });
+
+        Route::prefix('personas')->name('personas-appmovil.')->group(function () {
+            Route::get('/', [PersonaAppmovilController::class, 'index'])->name('index');
+            Route::get('/cargarDatos', [PersonaAppmovilController::class, 'cargarDatos'])->middleware('soloAJAX')->name('cargarDatos');
+            Route::get('/{id}/edit', [PersonaAppmovilController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [PersonaAppmovilController::class, 'update'])->name('update');
         });
 
         Route::prefix('recursos-digitales')->name('recursos-digitales.')->group(function () {

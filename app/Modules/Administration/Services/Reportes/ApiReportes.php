@@ -462,6 +462,22 @@ class ApiReportes
         $limit = max(1, (int) $limit);
 
         if ($origen === self::ORIGEN_FICS) {
+            // SQL Server no permite CTE (WITH ...) dentro de una tabla derivada.
+            // Para reportes con CTE (ej: id 99), limitamos por cursor en PHP.
+            if (preg_match('/^\s*WITH\b/i', $sql) === 1) {
+                $rows = [];
+                $cursor = $this->ejecutarConsultaCursor($origen, $sql, $bindingsAsociativos, $bindingsPosicionales);
+
+                foreach ($cursor as $row) {
+                    $rows[] = $row;
+                    if (count($rows) >= $limit) {
+                        break;
+                    }
+                }
+
+                return $rows;
+            }
+
             [$sqlSqlSrv, $bindingsSqlSrv] = $this->convertirMarcadoresNombradosAPosicionales($sql, $bindingsAsociativos);
             $sqlLimit = "SELECT TOP {$limit} * FROM ({$sqlSqlSrv}) T_LIMIT";
 

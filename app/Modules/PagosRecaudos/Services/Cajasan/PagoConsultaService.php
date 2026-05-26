@@ -77,7 +77,7 @@ class PagoConsultaService
                     'duration_ms' => PagosRecaudosLogger::elapsedMs($startedAt),
                 ]);
 
-                return ['error' => true, 'message' => 'Verifique el documento. Si es primer pago, registre la persona.'];
+                return ['error' => true, 'message' => 'No es posible procesar la solicitud en este momento. La información del beneficiario no está disponible aún.'];
             }
 
             $sigla = $this->resolverTipoIdentificacion($cliente);
@@ -289,8 +289,10 @@ class PagoConsultaService
         return [(string) $ubicacion['departamento'], (string) $ubicacion['municipio']];
     }
 
+
     private function buscarMunicipioConFallback(int|string|null $codigoMunicipio): GenMunicipios
     {
+
         $codigoOriginal = trim((string) $codigoMunicipio);
         $municipio = GenMunicipios::where('codigo', $codigoOriginal)->first();
 
@@ -299,11 +301,16 @@ class PagoConsultaService
         }
 
         if (! $municipio) {
+            $municipio = GenMunicipios::where('id', $codigoOriginal)->first();
+        }
+
+        if (! $municipio) {
             $municipio = GenMunicipios::where('codigo', $codigoOriginal)->firstOrFail();
         }
 
         return $municipio;
     }
+
 
     private function normalizarCodigoUbicacion(mixed $codigo, int $longitud): string
     {
@@ -431,4 +438,3 @@ class PagoConsultaService
         return isset($cajaActiva->idsucursal) ? (string) $cajaActiva->idsucursal : null;
     }
 }
-
