@@ -3,6 +3,27 @@
 use App\Constants\Permisos;
 
 return [
+    'connections' => [
+        'default' => env('REPORTEADOR_CONNECTION_DEFAULT', 'mysql-gestion-admin-reportes'),
+        'origenes' => [
+            'FICS' => env('REPORTEADOR_CONNECTION_FICS', 'sqlsrv-lectura-reportes'),
+            'LOGTRANS' => env('REPORTEADOR_CONNECTION_LOGTRANS', 'oracle-reportes'),
+            'GESTION_PASAJES' => env('REPORTEADOR_CONNECTION_GESTION_PASAJES', 'mysql-gestion-pasajes-reportes'),
+        ],
+    ],
+
+    // Configuracion de rango de fechas para el reporteador.
+    // - default_meses: limite por defecto para cualquier reporte no listado.
+    // - sin_limite: reportes sin restriccion de rango.
+    // - max_meses_por_reporte: overrides por id de reporte.
+    'reportes_rango_fechas' => [
+        'default_meses' => 1,
+        'sin_limite' => [9],
+        'max_meses_por_reporte' => [
+            7 => 6,
+            65 => 1,
+        ],
+    ],
 
     'areas' => [
         'personas' => [

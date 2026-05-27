@@ -3,10 +3,10 @@
 namespace App\Modules\PagosRecaudos\Services\Cajasan;
 
 use App\Modules\PagosRecaudos\Models\ConPagosRecaudos;
+use App\Modules\PagosRecaudos\Services\PagosRecaudosLogger;
 use App\Services\UsuarioService;
 use Exception;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class CargueService
 {
@@ -20,28 +20,30 @@ class CargueService
 
     private const USRCARGUE = 6761;
 
-    public function __construct(
-        private UsuarioService $usuarioService
-    ) {}
-
-    public function obtenerOCrear(object $cajaActiva): int
+    public function obtenerOCrear(object $cajaActiva, ?int $userId = null): ConPagosRecaudos
     {
         $fechaHoy = now()->format('Y-n-d');
         $descripcion = 'CAJASAN '.$fechaHoy;
 
-        $cargue = ConPagosRecaudos::where('descripcion', $descripcion)->first();
-        if ($cargue) {
-            return $cargue->id;
-        }
+        return app(PagoProcesoLockService::class)->runNamedCriticalSection(
+            'cargue:'.md5($descripcion),
+            function () use ($descripcion, $cajaActiva, $userId) {
+                $cargue = ConPagosRecaudos::where('descripcion', $descripcion)->first();
+                if ($cargue) {
+                    return $cargue;
+                }
 
-        return self::crear($descripcion, $cajaActiva);
+                $userId ??= UsuarioService::obtenerUserId();
+
+                return $this->crear($descripcion, $cajaActiva, $userId);
+            }
+        );
     }
 
-    private function crear(string $descripcion, object $cajaActiva): int
+    private function crear(string $descripcion, object $cajaActiva, int $userId): ConPagosRecaudos
     {
         try {
             $fechaActual = now();
-            $userId = $this->usuarioService->obtenerUserId();
             $idGenerado = self::obtenerSiguienteId('SEC_PAGOSYRECAUDOS');
 
             $cargue = new ConPagosRecaudos;
@@ -51,7 +53,7 @@ class CargueService
             $cargue->valortotal = 0;
             $cargue->tipomovimiento = self::TIPOMOVIMIENTO;
             $cargue->estado = self::ESTADO_CREADO;
-            $cargue->fechacargue = $fechaActual;
+            $cargue->fechacargue = \Carbon\Carbon::today('America/Bogota');
             $cargue->usrcargue = self::USRCARGUE;
             $cargue->estborrado = 0;
             $cargue->fecmodifica = $fechaActual;
@@ -63,9 +65,13 @@ class CargueService
             $cargue->empcreacion = $cajaActiva->idsucursal;
             $cargue->save();
 
-            return $cargue->id;
+            return $cargue;
         } catch (Exception $e) {
-            Log::error('Error al crear cargue: '.$e->getMessage());
+            PagosRecaudosLogger::exception('Error al crear cargue', $e, [
+                'operation' => 'pago',
+                'descripcion_cargue' => $descripcion,
+                'caja_activa_id' => $cajaActiva->id ?? null,
+            ]);
             throw new Exception('Error al crear cargue.');
             /* throw $e; */
         }

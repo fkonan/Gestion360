@@ -3,6 +3,7 @@
 namespace App\Modules\Huellero\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Modules\GestionRRHH\Models\PerContratoPersona;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -20,11 +21,11 @@ class FingerprintController extends Controller
             'huellas.*' => ['required', 'string'],
             'idCreacion' => ['nullable'],
             'tipo' => ['required', 'in:1,2'],
+            'cargo' => ['nullable', 'string'],
         ]);
 
         if ($validator->fails()) {
             $this->huelleroLogger()->warning('Huellero API enroll validation failed', [
-                'identificacion' => $request->input('identificacion'),
                 'error' => $validator->errors()->first(),
             ]);
             return response()->json([
@@ -36,6 +37,9 @@ class FingerprintController extends Controller
         $payload = $validator->validated();
         if (!array_key_exists('idCreacion', $payload)) {
             $payload['idCreacion'] = null;
+        }
+        if (empty($payload['cargo']) && !empty($payload['identificacion'])) {
+            $payload['cargo'] = $this->resolverCargoPorIdentificacion((string) $payload['identificacion']);
         }
 
         return $this->proxyToService('enroll', $payload);
@@ -50,7 +54,6 @@ class FingerprintController extends Controller
 
         if ($validator->fails()) {
             $this->huelleroLogger()->warning('Huellero API verify validation failed', [
-                'has_huella' => (bool) $request->input('huella'),
                 'error' => $validator->errors()->first(),
             ]);
             return response()->json([
@@ -71,8 +74,6 @@ class FingerprintController extends Controller
 
         if ($validator->fails()) {
             $this->huelleroLogger()->warning('Huellero API verifyDetailed validation failed', [
-                'identificacion' => $request->input('identificacion'),
-                'has_huella' => (bool) $request->input('huella'),
                 'error' => $validator->errors()->first(),
             ]);
             return response()->json([
@@ -113,7 +114,6 @@ class FingerprintController extends Controller
             if (!$isSuccess) {
                 $this->huelleroLogger()->warning('Huellero API mock error response', [
                     'endpoint' => $endpoint,
-                    'identificacion' => (string) $identificacion,
                 ]);
             }
             return response()->json([
@@ -201,9 +201,7 @@ class FingerprintController extends Controller
 
             $mockStatus = strtolower((string) env('HUELLA_API_MOCK_STATUS', 'success'));
             if ($mockStatus !== 'success') {
-                $this->huelleroLogger()->warning('Huellero API verifyDetailed mock error response', [
-                    'identificacion' => (string) $identificacion,
-                ]);
+                $this->huelleroLogger()->warning('Huellero API verifyDetailed mock error response');
                 return response()->json([
                     'status' => 'error',
                 ]);
@@ -278,8 +276,6 @@ class FingerprintController extends Controller
             $status = strtolower((string) ($data['status'] ?? 'error'));
             if ($status !== 'ok') {
                 $this->huelleroLogger()->warning('Huellero API verifyDetailed non-ok response', [
-                    'has_identificacion' => (bool) ($payload['identificacion'] ?? null),
-                    'huella_len' => isset($payload['huella']) ? strlen((string) $payload['huella']) : 0,
                     'status' => $data['status'] ?? null,
                 ]);
             }
@@ -303,5 +299,34 @@ class FingerprintController extends Controller
             'path' => storage_path('logs/huellero/huellero.log'),
             'days' => 7,
         ]);
+    }
+
+    private function resolverCargoPorIdentificacion(string $identificacion): ?string
+    {
+        $contratoPersona = PerContratoPersona::query()
+            ->where('identificacion', $identificacion)
+            ->where('estborrado', 0)
+            ->whereHas('perEmpresaPersonas', function ($query) {
+                $query->where('activo', 1)
+                    ->where('estborrado', 0)
+                    ->whereNull('fecfin')
+                    ->whereIn('tp_id', [1, 11]);
+            })
+            ->first();
+
+        if (!$contratoPersona) {
+            return null;
+        }
+
+        $cargoDetalle = $contratoPersona->cargoDetallado();
+        if (!$cargoDetalle) {
+            return null;
+        }
+
+        return $cargoDetalle->descripcion
+            ?? $cargoDetalle->nombre
+            ?? $cargoDetalle->cargo
+            ?? $cargoDetalle->codigo
+            ?? null;
     }
 }

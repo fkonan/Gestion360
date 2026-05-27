@@ -1,0 +1,9 @@
+.permiso-action-trigger {
+  line-height: 1;
+}
+
+.permiso-action-icon {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}

@@ -113,46 +113,66 @@ class User extends Authenticatable
 
     public function obtenerDescripcionCentroCosto()
     {
-        $key = 'centrocosto_'.$this->persona->PerNumDoc;
+        $identificacion = trim((string) ($this->persona->PerNumDoc ?? ''));
+        if ($identificacion === '') {
+            return null;
+        }
+
+        $sucursalCajaActiva = $this->obtenerSucursalCajaActivaPorDocumento($identificacion);
+        $key = 'centrocosto_'.$identificacion.'_sucursal_'.($sucursalCajaActiva ?? 'na');
 
         // se cachea el centro de costo del usuario ya que este no cambia seguido
-        return Cache::remember($key, now()->addHours(6), function () {
-            return DB::connection('oracle')
-                ->table('per_contrato_persona as cp')
-                ->join('per_empresapersonas as ep', 'cp.pe_id_pe', '=', 'ep.pe_id_pe')
-                ->join('per_cargoccostos as cc', 'ep.cc_id', '=', 'cc.id')
-                ->join('per_centrocostos as ct', 'cc.ct_codigo', '=', 'ct.codigo')
-                ->where('cp.identificacion', $this->persona->PerNumDoc)
-                ->where('ep.activo', 1)
-                ->where('ep.estborrado', 0)
-                ->where('cc.activo', 1)
-                ->where('cc.estborrado', 0)
-                ->where('ct.estado', 1)
-                ->where('ct.estborrado', 0)
-                ->pluck('ct.descripcion', 'ct.codigo')
-                ->first();
+        return Cache::remember($key, now()->addHours(6), function () use ($identificacion, $sucursalCajaActiva) {
+            $baseQuery = $this->baseCentroCostoQuery($identificacion);
+
+            if ($sucursalCajaActiva) {
+                $descripcionSucursal = (clone $baseQuery)
+                    ->where('ct.pe_id', $sucursalCajaActiva)
+                    ->orderBy('ep.tp_id', 'asc')
+                    ->orderByDesc('ep.id')
+                    ->value('ct.descripcion');
+
+                if ($descripcionSucursal) {
+                    return $descripcionSucursal;
+                }
+            }
+
+            return $baseQuery
+                ->orderBy('ep.tp_id', 'asc')
+                ->orderByDesc('ep.id')
+                ->value('ct.descripcion');
         });
     }
 
     public function obtenerCodigoCentroCosto()
     {
-        $key = 'centrocosto_codigo_'.$this->persona->PerNumDoc;
+        $identificacion = trim((string) ($this->persona->PerNumDoc ?? ''));
+        if ($identificacion === '') {
+            return null;
+        }
 
-        return Cache::remember($key, now()->addHours(6), function () {
-            return DB::connection('oracle')
-                ->table('per_contrato_persona as cp')
-                ->join('per_empresapersonas as ep', 'cp.pe_id_pe', '=', 'ep.pe_id_pe')
-                ->join('per_cargoccostos as cc', 'ep.cc_id', '=', 'cc.id')
-                ->join('per_centrocostos as ct', 'cc.ct_codigo', '=', 'ct.codigo')
-                ->where('cp.identificacion', $this->persona->PerNumDoc)
-                ->where('ep.activo', 1)
-                ->where('ep.estborrado', 0)
-                ->where('cc.activo', 1)
-                ->where('cc.estborrado', 0)
-                ->where('ct.estado', 1)
-                ->where('ct.estborrado', 0)
-                ->pluck('ct.codigo')
-                ->first();
+        $sucursalCajaActiva = $this->obtenerSucursalCajaActivaPorDocumento($identificacion);
+        $key = 'centrocosto_codigo_'.$identificacion.'_sucursal_'.($sucursalCajaActiva ?? 'na');
+
+        return Cache::remember($key, now()->addHours(6), function () use ($identificacion, $sucursalCajaActiva) {
+            $baseQuery = $this->baseCentroCostoQuery($identificacion);
+
+            if ($sucursalCajaActiva) {
+                $codigoSucursal = (clone $baseQuery)
+                    ->where('ct.pe_id', $sucursalCajaActiva)
+                    ->orderBy('ep.tp_id', 'asc')
+                    ->orderByDesc('ep.id')
+                    ->value('ct.codigo');
+
+                if ($codigoSucursal) {
+                    return $codigoSucursal;
+                }
+            }
+
+            return $baseQuery
+                ->orderBy('ep.tp_id', 'asc')
+                ->orderByDesc('ep.id')
+                ->value('ct.codigo');
         });
     }
 
@@ -173,6 +193,52 @@ class User extends Authenticatable
                 ->distinct()
                 ->orderBy('ct.descripcion')
                 ->get(['ct.descripcion', 'ct.codigo']);
+        });
+    }
+
+    private function baseCentroCostoQuery(string $identificacion)
+    {
+        return DB::connection('oracle')
+            ->table('per_personas as p')
+            ->join('per_empresapersonas as ep', 'p.id', '=', 'ep.pe_id_pe')
+            ->join('per_cargoccostos as cc', 'ep.cc_id', '=', 'cc.id')
+            ->join('per_centrocostos as ct', 'cc.ct_codigo', '=', 'ct.codigo')
+            ->where('p.identificacion', $identificacion)
+            ->where('ep.activo', 1)
+            ->where('ep.estborrado', 0)
+            ->where('cc.activo', 1)
+            ->where('cc.estborrado', 0)
+            ->where('ct.estado', 1)
+            ->where('ct.estborrado', 0);
+    }
+
+    private function obtenerSucursalCajaActivaPorDocumento(string $identificacion): ?int
+    {
+        $cacheKey = 'caja_activa_sucursal_'.$identificacion;
+
+        return Cache::remember($cacheKey, now()->addMinutes(10), function () use ($identificacion) {
+            $personaId = DB::connection('oracle')
+                ->table('PER_PERSONAS')
+                ->where('IDENTIFICACION', $identificacion)
+                ->where('ESTADO', 'ACTIVO')
+                ->where('ESTBORRADO', 0)
+                ->value('ID');
+
+            if (! $personaId) {
+                return null;
+            }
+
+            $idsucursal = DB::connection('oracle')
+                ->table('TES_CAJATURNOS as T')
+                ->join('TES_CAJAS as CJ', 'T.CJ_ID', '=', 'CJ.ID')
+                ->join('PER_PERSONAS as P', 'CJ.PE_ID_AG', '=', 'P.ID')
+                ->where('T.PE_ID', $personaId)
+                ->where('T.ESTADO', 'T')
+                ->where('T.ESTBORRADO', 0)
+                ->orderByDesc('T.ID')
+                ->value('P.ID');
+
+            return $idsucursal ? (int) $idsucursal : null;
         });
     }
 

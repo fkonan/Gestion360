@@ -5,7 +5,7 @@ namespace App\Modules\GestionRRHH\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Administration\Models\Cargos;
 use App\Modules\Administration\Models\ParametrosPasajes;
-use App\Modules\Administration\Models\Preoperacionales;
+use App\Modules\GestionRRHH\Models\Preoperacionales;
 use App\Modules\GestionRRHH\Models\Tripulantes;
 use App\Modules\GestionRRHH\Services\BloqueoService;
 use App\Modules\GestionRRHH\Services\DescansosService;
@@ -24,6 +24,10 @@ class ConductorController extends Controller
     public function preoperacionArchivo($id)
     {
         $archivo = Preoperacionales::findOrFail($id);
+
+        if (empty($archivo->contenido) || empty($archivo->mime)) {
+            return response('Registro sin archivo adjunto.', 404);
+        }
 
         return response($archivo->contenido)
             ->header('Content-Type', $archivo->mime);
@@ -154,14 +158,12 @@ class ConductorController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'identificacion' => ['required', 'regex:/^\d{1,15}$/'],
-            'adjunto' => 'required|file|max:2048|mimes:jpg,jpeg,png',
+            'observacion' => ['required', 'string', 'max:500'],
         ], [
-            'identificacion.regex' => 'El campo identificación no tiene un formato valido.',
-            'identificacion.required' => 'El campo identificación es obligatorio.',
-            'adjunto.required' => 'El adjunto es obligatorio.',
-            'adjunto.file' => 'El adjunto debe ser un archivo válido.',
-            'adjunto.max' => 'El adjunto no debe superar los 2MB.',
-            'adjunto.mimes' => 'El adjunto debe ser una imagen (jpg, jpeg, png).',
+            'identificacion.regex' => 'El campo identificacion no tiene un formato valido.',
+            'identificacion.required' => 'El campo identificacion es obligatorio.',
+            'observacion.required' => 'La observacion es obligatoria.',
+            'observacion.max' => 'La observacion no puede superar 500 caracteres.',
         ]);
 
         if ($validator->fails()) {
@@ -171,28 +173,37 @@ class ConductorController extends Controller
         }
 
         try {
-            // Adjunto
-            $file = $request->file('adjunto');
+            $resultadoDesbloqueo = BloqueoService::levantarBloqueoPreoperacional((string) $request->identificacion);
+            $estadoDesbloqueo = $resultadoDesbloqueo['status'] ?? 'error';
+            $mensajeDesbloqueo = $resultadoDesbloqueo['message'] ?? null;
 
-            $preoperacional = new Preoperacionales;
-            $preoperacional->documento = $request->identificacion;
-            $preoperacional->nombre = $file->getClientOriginalName();
-            $preoperacional->mime = $file->getMimeType();
-            $preoperacional->contenido = file_get_contents($file->getRealPath());
-
-            $resp = BloqueoService::levantarBloqueoFICS($request->identificacion, BloqueoService::ID_BLOQUEO_FICS_PREOPERACIONAL);
-
-            if ($resp) {
+            if ($estadoDesbloqueo === 'unlocked') {
+                $preoperacional = new Preoperacionales;
+                $preoperacional->documento = (string) $request->identificacion;
+                $preoperacional->observacion = trim((string) $request->observacion);
                 $preoperacional->save();
 
-                return toastModal('Se levanto el bloqueo correctamente', 'success', route('gestion-incapacidades.index'));
-            } else {
-                return toastModal('El conductor no presenta ningun bloqueo activo', 'info', route('gestion-incapacidades.index'));
+                return toastModal($mensajeDesbloqueo ?: 'Se levanto el bloqueo correctamente', 'success', route('gestion-incapacidades.index'));
             }
-        } catch (Exception $e) {
-            Log::error('Error al levantar la novedad de preoperacional '.$e->getMessage());
 
-            return toastModal('Error al levantar la novedad de preoperacional', 'success', route('gestion-incapacidades.index'));
+            if ($estadoDesbloqueo === 'no_blocks') {
+                return toastModal($mensajeDesbloqueo ?: 'El conductor no presenta ningun bloqueo activo', 'info', route('gestion-incapacidades.index'));
+            }
+
+            Log::warning('No fue posible levantar la novedad de preoperacional', [
+                'identificacion' => (string) $request->identificacion,
+                'status' => $estadoDesbloqueo,
+                'http_status' => $resultadoDesbloqueo['http_status'] ?? null,
+                'message' => $mensajeDesbloqueo,
+            ]);
+
+            return toastModal($mensajeDesbloqueo ?: 'Error al levantar la novedad de preoperacional', 'error', route('gestion-incapacidades.index'));
+        } catch (Exception $e) {
+            Log::error('Error al levantar la novedad de preoperacional '.$e->getMessage(), [
+                'identificacion' => (string) $request->identificacion,
+            ]);
+
+            return toastModal('Error al levantar la novedad de preoperacional', 'error', route('gestion-incapacidades.index'));
         }
     }
 }

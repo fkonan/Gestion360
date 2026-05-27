@@ -7,11 +7,12 @@ use App\Modules\GestionRRHH\Services\EmpleadoService;
 use App\Modules\PagosRecaudos\Models\ConAuxComprobantes;
 use App\Modules\PagosRecaudos\Models\ConComprobantes;
 use App\Modules\PagosRecaudos\Models\ConDetPagoRecaudo;
+use App\Modules\PagosRecaudos\Services\PagosRecaudosLogger;
 use App\Services\UsuarioService;
 use Exception;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class ComprobanteService
 {
@@ -29,70 +30,82 @@ class ComprobanteService
 
     private const ESTADO_PAGADO = 'P';
 
-    public function obtenerOCrear(float $valor, object $cajaActiva): ConComprobantes
+    private const LOOKUP_CACHE_MINUTES = 30;
+
+    public function obtenerOCrear(float $valor, object $cajaActiva, ?int $usuarioCaja = null): ConComprobantes
     {
         try {
             $agenciaCaja = $cajaActiva->idsucursal;
-            $usuarioCaja = UsuarioService::obtenerUserId();
+            $usuarioCaja ??= UsuarioService::obtenerUserId();
             $hoy = now()->toDateString();
 
-            // Buscar comprobante existente para hoy, agencia y usuario
-            $comprobante = ConComprobantes::where('pe_id_ag', $agenciaCaja)
-                ->whereDate('fecaplica', $hoy)
-                ->where('usrcreacion', $usuarioCaja)
-                ->where('estborrado', 0)
-                ->first();
+            return app(PagoProcesoLockService::class)->runNamedCriticalSection(
+                "comprobante:{$agenciaCaja}:{$usuarioCaja}:{$hoy}",
+                function () use ($valor, $cajaActiva, $usuarioCaja, $agenciaCaja, $hoy) {
+                    $comprobante = ConComprobantes::where('pe_id_ag', $agenciaCaja)
+                        ->whereDate('fecaplica', $hoy)
+                        ->where('usrcreacion', $usuarioCaja)
+                        ->where('descripcion', 'PAGOS CONVENIOS EMPRESARIALES')
+                        ->where('estborrado', 0)
+                        ->first();
 
-            if ($comprobante) {
-                $this->actValorComprobante($comprobante->id, $valor);
+                    if ($comprobante) {
+                        $this->actValorComprobante($comprobante->id, $valor);
+                        $comprobante->valtotcredito += $valor;
+                        $comprobante->valtotdebito += $valor;
 
-                return $comprobante;
-            }
+                        return $comprobante;
+                    }
 
-            $nextId = ConComprobantes::max('id') + 1;
-            $comprobanteId = $this->obtenerSiguienteId('SEC_DOC_COMPROBANTE');
-            $tc_codigo = $this->obtenerTcCodigo();
+                    $nextId = ConComprobantes::max('id') + 1;
+                    $comprobanteId = $this->obtenerSiguienteId('SEC_DOC_COMPROBANTE');
+                    $tc_codigo = $this->obtenerTcCodigo();
 
-            // Maximo valor actual del consecutivo
-            $consTipoAgencia = ConComprobantes::where('pe_id_ag', $cajaActiva->idsucursal)
-                ->where('descripcion', 'PAGOS CONVENIOS EMPRESARIALES')
-                ->max('constipoagencia');
+                    $consTipoAgencia = ConComprobantes::where('pe_id_ag', $cajaActiva->idsucursal)
+                        ->where('descripcion', 'PAGOS CONVENIOS EMPRESARIALES')
+                        ->max('constipoagencia');
 
-            $comprobante = new ConComprobantes;
-            $comprobante->id = $nextId;
-            $comprobante->descripcion = 'PAGOS CONVENIOS EMPRESARIALES';
-            $comprobante->comprobante = $comprobanteId;
-            $comprobante->estado = 0;
-            $comprobante->pe_id_ag = $cajaActiva->idsucursal;
-            $comprobante->en_id = $cajaActiva->en_id;
-            $comprobante->fecaplica = now();
-            $comprobante->valtotcredito = $valor;
-            $comprobante->valtotdebito = $valor;
-            $comprobante->fecmodifica = now();
-            $comprobante->usrmodifica = $usuarioCaja;
-            $comprobante->rolmodifica = self::ROL_MODIFICA;
-            $comprobante->empmodifica = $cajaActiva->idsucursal;
-            $comprobante->estborrado = 0;
-            $comprobante->docnro = $comprobanteId;
-            $comprobante->docrep = 1;
-            $comprobante->docver = 1;
-            $comprobante->docestado = 'TEMPORAL';
-            $comprobante->tc_codigo = $tc_codigo;
-            $comprobante->ct_id = $cajaActiva->id;
-            $comprobante->as_id = self::AS_ID;
-            $comprobante->agrupado = 'TA';
-            $comprobante->automatico = 'T';
-            $comprobante->constipoagencia = $consTipoAgencia + 1;
-            $comprobante->tipoperacion = null;
-            $comprobante->consap = 0;
-            $comprobante->feccreacion = now();
-            $comprobante->usrcreacion = $usuarioCaja;
-            $comprobante->empcreacion = $cajaActiva->idsucursal;
-            $comprobante->save();
+                    $comprobante = new ConComprobantes;
+                    $comprobante->id = $nextId;
+                    $comprobante->descripcion = 'PAGOS CONVENIOS EMPRESARIALES';
+                    $comprobante->comprobante = $comprobanteId;
+                    $comprobante->estado = 0;
+                    $comprobante->pe_id_ag = $cajaActiva->idsucursal;
+                    $comprobante->en_id = $cajaActiva->en_id;
+                    $comprobante->fecaplica = now();
+                    $comprobante->valtotcredito = $valor;
+                    $comprobante->valtotdebito = $valor;
+                    $comprobante->fecmodifica = now();
+                    $comprobante->usrmodifica = $usuarioCaja;
+                    $comprobante->rolmodifica = self::ROL_MODIFICA;
+                    $comprobante->empmodifica = $cajaActiva->idsucursal;
+                    $comprobante->estborrado = 0;
+                    $comprobante->docnro = $comprobanteId;
+                    $comprobante->docrep = 1;
+                    $comprobante->docver = 1;
+                    $comprobante->docestado = 'TEMPORAL';
+                    $comprobante->tc_codigo = $tc_codigo;
+                    $comprobante->ct_id = $cajaActiva->id;
+                    $comprobante->as_id = self::AS_ID;
+                    $comprobante->agrupado = 'TA';
+                    $comprobante->automatico = 'T';
+                    $comprobante->constipoagencia = $consTipoAgencia + 1;
+                    $comprobante->tipoperacion = null;
+                    $comprobante->consap = 0;
+                    $comprobante->feccreacion = now();
+                    $comprobante->usrcreacion = $usuarioCaja;
+                    $comprobante->empcreacion = $cajaActiva->idsucursal;
+                    $comprobante->save();
 
-            return $comprobante;
+                    return $comprobante;
+                }
+            );
         } catch (Exception $e) {
-            Log::error('Error al crear/obtener comprobante: '.$e->getMessage());
+            PagosRecaudosLogger::exception('Error al crear u obtener comprobante', $e, [
+                'operation' => 'pago',
+                'caja_activa_id' => $cajaActiva->id ?? null,
+                'valor' => $valor,
+            ]);
             throw new Exception('Error al crear/obtener comprobante.');
             /* throw $e; */
         }
@@ -104,11 +117,12 @@ class ComprobanteService
         string $saldo,
         array $clienteData,
         object $cajaActiva,
-        string $telefono
+        string $telefono,
+        ?int $userId = null
     ): void {
 
         try {
-            $userId = UsuarioService::obtenerUserId();
+            $userId ??= UsuarioService::obtenerUserId();
             $nextId = ConDetPagoRecaudo::max('id') + 1;
 
             $detalle = new ConDetPagoRecaudo;
@@ -117,7 +131,7 @@ class ComprobanteService
             $detalle->valregistrado = $saldo;
             $detalle->iden_clienteregistro = $clienteData['identificacion'];
             $detalle->clienteregistro = $clienteData['nombre'];
-            $detalle->fec_registro = now();
+            $detalle->fec_registro = \Carbon\Carbon::today('America/Bogota');
             $detalle->estado = self::ESTADO_PAGADO;
             $detalle->cp_id = $idComprobante;
             $detalle->estborrado = 0;
@@ -133,7 +147,11 @@ class ComprobanteService
             $detalle->nrointernocajasan = 0;
             $detalle->save();
         } catch (Exception $e) {
-            Log::error('Error al crear el detalle del comprobante: '.$e->getMessage());
+            PagosRecaudosLogger::exception('Error al crear detalle de comprobante', $e, [
+                'operation' => 'pago',
+                'id_comprobante' => $idComprobante,
+                'id_detalle_cargue' => $idDetalleCargue,
+            ]);
             throw new Exception('Error al crear el detalle del comprobante.');
             /* throw $e; */
         }
@@ -155,7 +173,9 @@ class ComprobanteService
         array $clienteData,
         object $cajaActiva,
         int $bloque,
-        int $grupo
+        int $grupo,
+        ?int $userId = null,
+        ?string $centroCosto = null
     ): void {
         try {
             if (! in_array($tipo, ['D', 'C'])) {
@@ -164,16 +184,14 @@ class ComprobanteService
 
             $nextId = ConAuxComprobantes::max('id') + 1;
             $numeroCuenta = $this->obtenerNumeroCuenta($tipo);
-            $user = Auth::user();
-            $documento = $user->persona->PerNumDoc;
-            $centroCosto = EmpleadoService::codigoCentroCosto($documento);
-            $userId = UsuarioService::obtenerUserId();
+            $centroCosto = $this->normalizarCentroCostoAuxiliar((string) ($centroCosto ?? $this->obtenerCentroCostoUsuarioActual()));
+            $userId ??= UsuarioService::obtenerUserId();
 
             $fechaFormatoEspecial = now()->format('Y-n');
 
             // Segun Tipo CREDITO o DEBITO
             if ($tipo == 'C') {
-                $sucursal = PerPersonas::findOrFail($cajaActiva->idsucursal);
+                $sucursal = $this->resolverSucursal($cajaActiva);
                 $descripcion = 'Pago.Convenio.';
                 $referencia1 = $sucursal->codigo;
                 $numdocumento = null;
@@ -213,7 +231,11 @@ class ComprobanteService
             $auxComprobante->empcreacion = $cajaActiva->idsucursal;
             $auxComprobante->save();
         } catch (Exception $e) {
-            Log::error('Error al crear comprobante auxiliar: '.$e->getMessage());
+            PagosRecaudosLogger::exception('Error al crear comprobante auxiliar', $e, [
+                'operation' => 'pago',
+                'id_comprobante' => $idComprobante,
+                'tipo' => $tipo,
+            ]);
             throw new Exception('Error al crear comprobante auxiliar.');
             /* throw $e; */
         }
@@ -221,11 +243,13 @@ class ComprobanteService
 
     public function actValorComprobante(int $idComprobante, int $valor): void
     {
-        $comprobante = ConComprobantes::findOrFail($idComprobante);
-        $comprobante->valtotcredito += $valor;
-        $comprobante->valtotdebito += $valor;
-        $comprobante->fecmodifica = now();
-        $comprobante->save();
+        $valorSql = number_format((float) $valor, 2, '.', '');
+
+        ConComprobantes::where('id', $idComprobante)->update([
+            'valtotcredito' => DB::raw("NVL(valtotcredito, 0) + {$valorSql}"),
+            'valtotdebito' => DB::raw("NVL(valtotdebito, 0) + {$valorSql}"),
+            'fecmodifica' => now(),
+        ]);
     }
 
     public function obtenerNumeroCuenta(string $tipo): string
@@ -235,15 +259,21 @@ class ComprobanteService
                 throw new Exception('Tipo de cuenta inválido: '.$tipo);
             }
 
-            $numeroCuenta = DB::connection('oracle')
-                ->table('CON_ENLACEDETALLES as D')
-                ->where('D.ENL_ID', self::ENL_ID)
-                ->where('D.ESTBORRADO', 0)
-                ->where('D.AFECTACION', $tipo)
-                ->orderBy('D.GRUPO')
-                ->orderByDesc('D.AFECTACION')
-                ->orderBy('D.CU_CUENTA')
-                ->value('CU_CUENTA');
+            $numeroCuenta = Cache::remember(
+                "pagos-recaudos:cuenta:{$tipo}",
+                now()->addMinutes(self::LOOKUP_CACHE_MINUTES),
+                function () use ($tipo) {
+                    return DB::connection('oracle')
+                        ->table('CON_ENLACEDETALLES as D')
+                        ->where('D.ENL_ID', self::ENL_ID)
+                        ->where('D.ESTBORRADO', 0)
+                        ->where('D.AFECTACION', $tipo)
+                        ->orderBy('D.GRUPO')
+                        ->orderByDesc('D.AFECTACION')
+                        ->orderBy('D.CU_CUENTA')
+                        ->value('CU_CUENTA');
+                }
+            );
 
             if (! $numeroCuenta) {
                 throw new Exception('No se encontró número de cuenta para tipo: '.$tipo);
@@ -251,7 +281,10 @@ class ComprobanteService
 
             return $numeroCuenta;
         } catch (Exception $e) {
-            Log::error('Error al obtener número de cuenta: '.$e->getMessage());
+            PagosRecaudosLogger::exception('Error al obtener numero de cuenta', $e, [
+                'operation' => 'pago',
+                'tipo' => $tipo,
+            ]);
             throw new Exception('Error al obtener número de cuenta.');
             /* throw $e; */
         }
@@ -267,6 +300,39 @@ class ComprobanteService
         return $resp;
     }
 
+    private function obtenerCentroCostoUsuarioActual(): string
+    {
+        $documento = Auth::user()?->persona?->PerNumDoc;
+
+        if (! $documento) {
+            throw new Exception('No se pudo obtener el documento del usuario autenticado.');
+        }
+
+        $centroCosto = EmpleadoService::codigoCentroCosto($documento);
+
+        if (! $centroCosto) {
+            throw new Exception('No se encontro centro de costo para el usuario autenticado.');
+        }
+
+        return $centroCosto;
+    }
+
+    private function resolverSucursal(object $cajaActiva): object
+    {
+        return PerPersonas::findOrFail($cajaActiva->idsucursal);
+    }
+
+    private function normalizarCentroCostoAuxiliar(string $centroCosto): string
+    {
+        $centroCosto = trim($centroCosto);
+
+        if (preg_match('/^0\d{3}$/', $centroCosto) === 1) {
+            return substr($centroCosto, -3);
+        }
+
+        return $centroCosto;
+    }
+
     public function obtenerSiguienteId(string $secuencia)
     {
         try {
@@ -279,7 +345,10 @@ class ComprobanteService
 
             return $result[0]->id;
         } catch (Exception $e) {
-            Log::error('Error al obtener siguiente ID: '.$e->getMessage());
+            PagosRecaudosLogger::exception('Error al obtener siguiente ID para comprobante', $e, [
+                'operation' => 'pago',
+                'secuencia' => $secuencia,
+            ]);
             throw new Exception('Error al obtener siguiente ID.');
             /* throw $e; */
         }
@@ -288,15 +357,23 @@ class ComprobanteService
     public function obtenerTcCodigo(): ?string
     {
         try {
-            return DB::connection('oracle')
-                ->table('CON_ASIENTOS as A')
-                ->join('CON_ASIENTOMOVIMIENTOS as AM', 'A.ID', '=', 'AM.AS_ID')
-                ->where('AM.TM_ID', self::TM_ID)
-                ->where('A.ESTBORRADO', 0)
-                ->where('AM.ESTBORRADO', 0)
-                ->value('TC_CODIGO');
+            return Cache::remember(
+                'pagos-recaudos:tc-codigo',
+                now()->addMinutes(self::LOOKUP_CACHE_MINUTES),
+                function () {
+                    return DB::connection('oracle')
+                        ->table('CON_ASIENTOS as A')
+                        ->join('CON_ASIENTOMOVIMIENTOS as AM', 'A.ID', '=', 'AM.AS_ID')
+                        ->where('AM.TM_ID', self::TM_ID)
+                        ->where('A.ESTBORRADO', 0)
+                        ->where('AM.ESTBORRADO', 0)
+                        ->value('TC_CODIGO');
+                }
+            );
         } catch (Exception $e) {
-            Log::error('Error al obtener TC_CODIGO: '.$e->getMessage());
+            PagosRecaudosLogger::exception('Error al obtener TC_CODIGO', $e, [
+                'operation' => 'pago',
+            ]);
 
             return null;
         }

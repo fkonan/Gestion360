@@ -60,20 +60,13 @@ class HuellaService
 
             DB::commit();
 
-            Log::info('Huella registrada exitosamente', [
-                'persona_id' => $personaId,
-                'dedo' => $dedo,
-                'huella_id' => $nuevoId,
-                'usuario_creacion' => $usuarioCreacion,
-            ]);
+            Log::info('Huella registrada exitosamente');
 
             return $huella;
 
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error al registrar huella', [
-                'persona_id' => $personaId,
-                'dedo' => $dedo,
                 'error' => $e->getMessage(),
             ]);
             throw $e;
@@ -104,16 +97,12 @@ class HuellaService
                 'empmodifica' => $usuarioModificacion,
             ]);
 
-            Log::info('Huella actualizada exitosamente', [
-                'huella_id' => $huellaId,
-                'usuario_modificacion' => $usuarioModificacion,
-            ]);
+            Log::info('Huella actualizada exitosamente');
 
             return $huella->fresh();
 
         } catch (\Exception $e) {
             Log::error('Error al actualizar huella', [
-                'huella_id' => $huellaId,
                 'error' => $e->getMessage(),
             ]);
             throw $e;
@@ -139,16 +128,12 @@ class HuellaService
                 'empmodifica' => $usuarioModificacion,
             ]);
 
-            Log::info('Huella eliminada exitosamente', [
-                'huella_id' => $huellaId,
-                'usuario_modificacion' => $usuarioModificacion,
-            ]);
+            Log::info('Huella eliminada exitosamente');
 
             return true;
 
         } catch (\Exception $e) {
             Log::error('Error al eliminar huella', [
-                'huella_id' => $huellaId,
                 'error' => $e->getMessage(),
             ]);
             throw $e;

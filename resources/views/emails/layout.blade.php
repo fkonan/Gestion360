@@ -6,6 +6,19 @@
   <title>{{ $title ?? 'Notificación' }}</title>
 </head>
 
+@php
+  $logoPath = public_path('img/LogoCopeBlancoFull.png');
+  $logoSrc = asset('img/LogoCopeBlancoFull.png');
+
+  if (is_file($logoPath)) {
+    if (isset($message) && method_exists($message, 'embed')) {
+      $logoSrc = $message->embed($logoPath);
+    } else {
+      $logoSrc = 'data:image/png;base64,'.base64_encode((string) file_get_contents($logoPath));
+    }
+  }
+@endphp
+
 <body style="margin: 0; padding: 10px; background-color: #f6f6f6; font-family: Arial, sans-serif;">
   <center>
     <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f6f6f6">
@@ -17,7 +30,7 @@
             <!-- HEADER -->
             <tr>
               <td bgcolor="#005CA3" align="center" style="padding: 20px;">
-                <img src="{{ asset('img/LogoCopeBlancoFull.png') }}"
+                <img src="{{ $logoSrc }}"
                   alt="Logo Copetran" style="height: 45px; display: block;" />
               </td>
             </tr>

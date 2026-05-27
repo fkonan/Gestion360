@@ -9,6 +9,9 @@ class Permisos
     const GESTION_RRHH_GESTION_EMPLEADO_CREAR = 'gestion_rrhh.gestion_empleado.crear';
     const GESTION_RRHH_GESTION_EMPLEADO_ACCEDER = 'gestion_rrhh.gestion_empleado.acceder';
     const GESTION_RRHH_GESTION_EMPLEADO_ACTUALIZAR = 'gestion_rrhh.gestion_empleado.actualizar';
+    const GESTION_RRHH_GESTION_EMPLEADO_PERMISOS_RRHH = 'gestion_rrhh.gestion_empleado.permisosRRHH';
+    const GESTION_RRHH_PERMISOS_PERMISOS_RRHH = 'gestion_rrhh.permisos.permisosRRHH';
+    const GESTION_RRHH_PERMISOS_NOVEDADES = 'gestion_rrhh.permisos.novedades';
 
     // CONFIGURACIÓN
     const CONFIGURACION_ACCEDER = 'configuracion.acceder';
@@ -78,6 +81,7 @@ class Permisos
     const SIG_MAPA_PROCESOS_VER_EMISION = 'sig.mapa_procesos.ver_emision';
     const SIG_MAPA_PROCESOS_EDITAR = 'sig.mapa_procesos.editar';
     const SIG_MAPA_PROCESOS_VER_TODOS = 'sig.mapa_procesos.ver_todos';
+    const SIG_MAPA_PROCESOS_LISTADO_MAESTRO = 'sig.mapa_procesos.listado_maestro';
 
     // BIOMETRIA
     const BIOMETRIA_GESTION_HUELLERO_ACCESO_PERSONAL = 'biometria.gestion_huellero.acceso_personal';
@@ -85,4 +89,8 @@ class Permisos
     const BIOMETRIA_GESTION_HUELLERO_ENROLL = 'biometria.gestion_huellero.enroll';
     const BIOMETRIA_GESTION_HUELLERO_VERIFICAR = 'biometria.gestion_huellero.verificar';
     const BIOMETRIA_GESTION_HUELLERO_DESCANSO_CONDUCTORES = 'biometria.gestion_huellero.descanso_conductores';
+
+    // BIOMETRIA - CAMARA
+    const BIOMETRIA_GESTION_CAMARA_ENROLL = 'biometria.reconocimiento_facial.enroll';
+    const BIOMETRIA_GESTION_CAMARA_RECONOCER = 'biometria.reconocimiento_facial.reconocer';
 }

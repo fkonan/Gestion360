@@ -20,6 +20,20 @@
         icono="fa-bell-slash"
         ruta="{{ route('notificaciones.index') }}" />
     </div>
+    <div class="col">
+      <x-card color="bg-teriary"
+        titulo="Recursos digitales"
+        descripcion="Tipos y recursos"
+        icono="fa-images"
+        ruta="{{ route('recursos-digitales.index') }}" />
+    </div>
+    <div class="col">
+      <x-card color="bg-info"
+        titulo="Personas"
+        descripcion="Datos appmovil"
+        icono="fa-user"
+        ruta="{{ route('personas-appmovil.index') }}" />
+    </div>
   </div>
 </div>
 @endsection

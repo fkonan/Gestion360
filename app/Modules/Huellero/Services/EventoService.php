@@ -66,10 +66,7 @@ class EventoService
         $persona = $this->huellaService->buscarPersonaPorHuella($templateHuella);
 
         if (! $persona) {
-            Log::warning('Huella no reconocida en el sistema', [
-                'timestamp' => now(),
-                'template_length' => strlen($templateHuella),
-            ]);
+            Log::warning('Huella no reconocida en el sistema');
 
             return [
                 'success' => false,
@@ -90,12 +87,7 @@ class EventoService
         // Registrar evento automático
         $evento = $this->registrarEventoAutomatico($persona->id, $tipoEvento);
 
-        Log::info('Evento registrado por lectura de huella', [
-            'persona_id' => $persona->id,
-            'identificacion' => $persona->identificacion,
-            'tipo_evento' => $tipoEvento,
-            'evento_id' => $evento->id,
-        ]);
+        Log::info('Evento registrado por lectura de huella');
 
         return [
             'success' => true,
@@ -215,18 +207,12 @@ class EventoService
 
             DB::commit();
 
-            Log::info('Evento creado exitosamente', [
-                'evento_id' => $nuevoId,
-                'persona_id' => $personaId,
-                'tipo_evento' => $evento,
-                'tipo_registro' => $tipoRegistro,
-            ]);
+            Log::info('Evento creado exitosamente');
 
             return $eventoModel;
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error al crear evento', [
-                'persona_id' => $personaId,
                 'evento' => $evento,
                 'error' => $e->getMessage(),
             ]);

@@ -1,8 +1,18 @@
 /* Mobile estilos */
 @media (max-width: 576px) {
-   .captcha-container {
-      transform: scale(0.85);
+   .header-toolbar {
+      flex-wrap: wrap;
+      justify-content: flex-end;
    }
+
+   .header-info-slot {
+      width: 100%;
+      justify-content: flex-start;
+   }
+
+    .captcha-container {
+       transform: scale(0.85);
+    }
 
    .botonBoostrapTable {
       position: relative;

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class PerPersonasEventos extends Model
 {
-    protected $connection = 'oracle';
+    protected $connection = 'oracle-pruebas';
 
     protected $table = 'PER_PERSONASEVENTOS';
 

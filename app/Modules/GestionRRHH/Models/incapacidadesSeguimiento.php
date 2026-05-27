@@ -19,7 +19,7 @@ class incapacidadesSeguimiento extends Model
         'IncapacidadId',
         'Observacion',
         'SegFecReg',
-        'SegHoReg',
+        'SegHorReg',
         'UserRegistra',
         'Estado',
     ];

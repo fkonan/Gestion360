@@ -7,22 +7,17 @@ use App\Modules\Administration\Models\Reporteador;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class ReportesService
 {
-    private const CACHE_ACTIVOS_KEY = 'reportes_activos_por_area';
-
-    private const CACHE_ACTIVOS_TTL_MINUTES = 10;
-
     private const PERMISO_PREFIX = 'administracion.reportes.id_';
 
     /** @var ApiReportes */
     protected $apiReportes;
 
-    /** @var Collection|null Cache en memoria de reportes activos agrupados por area */
-    protected ?Collection $reportesActivosPorArea = null;
+    /** @var Collection|null Cache en memoria de reportes activos */
+    protected ?Collection $reportesActivos = null;
 
     public function __construct(ApiReportes $apiReportes)
     {
@@ -30,11 +25,11 @@ class ReportesService
     }
 
     /**
-     * Solicita datos de un reporte via API y aplica formato especial.
+     * Solicita datos de un reporte local y aplica formato especial.
      */
     public function obtenerDatosReporte(array $params)
     {
-        // Normalizamos el id para la API
+        // Normalizamos el id para el servicio de reportes
         if (isset($params['id'])) {
             $params['idReporte'] = $params['id'];
             unset($params['id']);
@@ -45,7 +40,7 @@ class ReportesService
         $reporte = Reporteador::findOrFail($params['idReporte']);
         $inicio = microtime(true);
 
-        // Consultar API
+        // Consultar servicio de reportes
         $data = $this->apiReportes->obtenerReporte($params);
 
         if (! $data) {
@@ -86,6 +81,143 @@ class ReportesService
         ]);
 
         return $data;
+    }
+
+    /**
+     * Solicita una vista previa limitada para reportes muy grandes.
+     */
+    public function obtenerDatosReporteLimitado(array $params, int $limit): array
+    {
+        if (isset($params['id'])) {
+            $params['idReporte'] = $params['id'];
+            unset($params['id']);
+        }
+
+        $this->validarParametrosObligatorios($params);
+
+        $reporte = Reporteador::findOrFail($params['idReporte']);
+        $inicio = microtime(true);
+
+        $data = $this->apiReportes->obtenerReporteLimitado($params, $limit);
+
+        if (! $data) {
+            Log::build([
+                'driver' => 'daily',
+                'path' => storage_path('logs/reportes/apiReportes.log'),
+                'days' => 7,
+            ])->info('Reporte limitado sin datos o error al obtener', [
+                'id_reporte' => $reporte->id,
+                'area' => $reporte->area,
+                'user_id' => Auth::id(),
+                'limit' => $limit,
+                'duration_ms' => round((microtime(true) - $inicio) * 1000, 2),
+            ]);
+
+            return [];
+        }
+
+        $data = $this->formatoEspecialReporte($reporte->id, $data);
+
+        Log::build([
+            'driver' => 'daily',
+            'path' => storage_path('logs/reportes/apiReportes.log'),
+            'days' => 7,
+        ])->info('Reporte consultado (limitado)', [
+            'id_reporte' => $reporte->id,
+            'area' => $reporte->area,
+            'user_id' => Auth::id(),
+            'rows' => is_array($data) ? count($data) : 0,
+            'limit' => $limit,
+            'duration_ms' => round((microtime(true) - $inicio) * 1000, 2),
+        ]);
+
+        return $data;
+    }
+
+    /**
+     * Retorna un iterable de filas para exportacion de archivos grandes.
+     */
+    public function obtenerCursorReporte(array $params)
+    {
+        if (isset($params['id'])) {
+            $params['idReporte'] = $params['id'];
+            unset($params['id']);
+        }
+
+        $this->validarParametrosObligatorios($params);
+
+        return $this->apiReportes->obtenerReporteCursor($params);
+    }
+
+    /**
+     * Solicita datos paginados de un reporte local.
+     */
+    public function obtenerDatosReportePaginado(array $params, int $limit, int $offset): array
+    {
+        if (isset($params['id'])) {
+            $params['idReporte'] = $params['id'];
+            unset($params['id']);
+        }
+
+        $this->validarParametrosObligatorios($params);
+
+        $reporte = Reporteador::findOrFail($params['idReporte']);
+        $inicio = microtime(true);
+
+        $resultado = $this->apiReportes->obtenerReportePaginado($params, $limit, $offset);
+
+        if (! $resultado || ! is_array($resultado)) {
+            Log::build([
+                'driver' => 'daily',
+                'path' => storage_path('logs/reportes/apiReportes.log'),
+                'days' => 7,
+            ])->info('Reporte paginado sin datos o error al obtener', [
+                'id_reporte' => $reporte->id,
+                'area' => $reporte->area,
+                'user_id' => Auth::id(),
+                'limit' => $limit,
+                'offset' => $offset,
+                'duration_ms' => round((microtime(true) - $inicio) * 1000, 2),
+            ]);
+
+            return ['total' => 0, 'rows' => []];
+        }
+
+        $rows = is_array($resultado['rows'] ?? null) ? $resultado['rows'] : [];
+        $total = (int) ($resultado['total'] ?? count($rows));
+
+        // Formatos especiales por reporte (aplicados a la pagina actual)
+        $rows = $this->formatoEspecialReporte($reporte->id, $rows);
+
+        if ($total < count($rows)) {
+            $total = count($rows);
+        }
+
+        try {
+            $reporte->increment('total_consultas');
+        } catch (\Throwable $e) {
+            // Silenciar si falla el write; no debe afectar al usuario
+        }
+
+        Log::build([
+            'driver' => 'daily',
+            'path' => storage_path('logs/reportes/apiReportes.log'),
+            'days' => 7,
+        ])->info('Reporte consultado (paginado)', [
+            'id_reporte' => $reporte->id,
+            'area' => $reporte->area,
+            'user_id' => Auth::id(),
+            'rows' => count($rows),
+            'total' => $total,
+            'limit' => $limit,
+            'offset' => $offset,
+            'duration_ms' => round((microtime(true) - $inicio) * 1000, 2),
+        ]);
+
+        return [
+            'total' => $total,
+            'rows' => $rows,
+        ];
     }
 
     /**
@@ -130,22 +262,77 @@ class ReportesService
     }
 
     /**
-     * Devuelve los reportes activos agrupados por area (cache liviana).
+     * Devuelve los reportes activos (cache liviana).
      */
-    protected function obtenerReportesActivosAgrupados(): Collection
+    protected function obtenerReportesActivos(): Collection
     {
-        if ($this->reportesActivosPorArea === null) {
-            $this->reportesActivosPorArea = Cache::remember(
-                self::CACHE_ACTIVOS_KEY,
-                now()->addMinutes(self::CACHE_ACTIVOS_TTL_MINUTES),
-                function () {
-                    return Reporteador::get()
-                        ->groupBy('area');
-                }
-            );
+        if ($this->reportesActivos === null) {
+            // Sin cache persistente para reflejar cambios manuales en BD al instante.
+            $this->reportesActivos = Reporteador::get();
         }
 
-        return $this->reportesActivosPorArea;
+        return $this->reportesActivos;
+    }
+
+    protected function normalizarArea(?string $area): string
+    {
+        return strtolower(trim((string) $area));
+    }
+
+    /**
+     * Soporta area simple (ej: RRHH) y lista delimitada (ej: |RRHH|Unidad pasajes|).
+     */
+    protected function extraerAreasDesdeCampo(?string $areaRaw): array
+    {
+        if ($areaRaw === null) {
+            return [];
+        }
+
+        $areaRaw = trim($areaRaw);
+
+        if ($areaRaw === '') {
+            return [];
+        }
+
+        // Compatibilidad adicional por si se guarda JSON en pruebas.
+        if (str_starts_with($areaRaw, '[')) {
+            $decoded = json_decode($areaRaw, true);
+            if (is_array($decoded)) {
+                return collect($decoded)
+                    ->filter(fn ($area) => is_string($area) && trim($area) !== '')
+                    ->map(fn ($area) => trim($area))
+                    ->unique()
+                    ->values()
+                    ->all();
+            }
+        }
+
+        if (str_contains($areaRaw, '|')) {
+            return collect(explode('|', $areaRaw))
+                ->map(fn ($area) => trim($area))
+                ->filter(fn ($area) => $area !== '')
+                ->unique()
+                ->values()
+                ->all();
+        }
+
+        return [$areaRaw];
+    }
+
+    protected function reportePerteneceAArea(Reporteador $reporte, string $areaNombre): bool
+    {
+        $areaBuscada = $this->normalizarArea($areaNombre);
+        $areasReporte = collect($this->extraerAreasDesdeCampo($reporte->area ?? null))
+            ->map(fn ($area) => $this->normalizarArea($area))
+            ->values()
+            ->all();
+
+        return in_array($areaBuscada, $areasReporte, true);
+    }
+
+    protected function filtrarReportesPorNombreArea(Collection $reportes, string $areaNombre): Collection
+    {
+        return $reportes->filter(fn ($reporte) => $this->reportePerteneceAArea($reporte, $areaNombre));
     }
 
     protected function obtenerConfigPorSlug(string $slug): ?array
@@ -168,12 +355,16 @@ class ReportesService
      */
     public function obtenerRutaAreaPorNombre(string $areaNombre): ?array
     {
-        foreach ($this->obtenerAreasConfig() as $slug => $config) {
-            if (($config['nombre_bd'] ?? null) === $areaNombre) {
-                return [
-                    'slug' => $slug,
-                    'ruta' => route($config['ruta'] ?? 'reportes.area', ['area' => $slug]),
-                ];
+        $areasReporte = $this->extraerAreasDesdeCampo($areaNombre);
+
+        foreach ($areasReporte as $area) {
+            foreach ($this->obtenerAreasConfig() as $slug => $config) {
+                if ($this->normalizarArea($config['nombre_bd'] ?? null) === $this->normalizarArea($area)) {
+                    return [
+                        'slug' => $slug,
+                        'ruta' => route($config['ruta'] ?? 'reportes.area', ['area' => $slug]),
+                    ];
+                }
             }
         }
 
@@ -191,7 +382,7 @@ class ReportesService
         $result = [];
 
         $areasConfig = $this->obtenerAreasConfig();
-        $reportesPorArea = $this->obtenerReportesActivosAgrupados();
+        $reportesActivos = $this->obtenerReportesActivos();
 
         foreach ($areasConfig as $slug => $conf) {
 
@@ -204,7 +395,7 @@ class ReportesService
 
             $accesoPorArea = $permisoArea ? $user->can($permisoArea) : false;
 
-            $reportesArea = $reportesPorArea->get($areaNombre, collect());
+            $reportesArea = $this->filtrarReportesPorNombreArea($reportesActivos, $areaNombre);
 
             $accesoIndividual = $reportesArea->contains(
                 fn ($rep) => $user->can($this->permisoReporteId($rep->id))
@@ -248,8 +439,10 @@ class ReportesService
         }
 
         // Buscar reportes de esta area
-        $reportes = $this->obtenerReportesActivosAgrupados()
-            ->get($config['nombre_bd'] ?? $slugArea, collect());
+        $reportes = $this->filtrarReportesPorNombreArea(
+            $this->obtenerReportesActivos(),
+            $config['nombre_bd'] ?? $slugArea
+        );
 
         // Ver si el usuario tiene permiso individual a alguno
         foreach ($reportes as $r) {
@@ -275,8 +468,10 @@ class ReportesService
         $user = Auth::user();
 
         // 1. OBTENER TODOS LOS REPORTES DEL AREA
-        $reportesArea = $this->obtenerReportesActivosAgrupados()
-            ->get($config['nombre_bd'], collect());
+        $reportesArea = $this->filtrarReportesPorNombreArea(
+            $this->obtenerReportesActivos(),
+            $config['nombre_bd']
+        );
 
         // 2. FILTRAR QUE REPORTES INDIVIDUALES EL USUARIO PUEDE VER
         $reportesConPermisoIndividual = $reportesArea->filter(function ($reporte) use ($user) {

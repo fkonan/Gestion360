@@ -2,12 +2,10 @@
 
 namespace App\Modules\PagosRecaudos\Services\Cajasan;
 
-use App\Modules\GestionRRHH\Models\PerPersonas;
 use App\Modules\PagosRecaudos\Models\TesCajaTurnoDoc;
+use App\Modules\PagosRecaudos\Services\PagosRecaudosLogger;
 use App\Services\UsuarioService;
 use Exception;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 
 class CajaTurnoDocService
 {
@@ -15,14 +13,10 @@ class CajaTurnoDocService
 
     private const ROL_MODIFICA = 60;
 
-    public function __construct(
-        private UsuarioService $usuarioService
-    ) {}
-
-    public function crear(int $idComprobante, float $valor, object $cajaActiva): void
+    public function crear(int $idComprobante, float $valor, object $cajaActiva, ?int $userId = null): void
     {
         try {
-            $userId = $this->usuarioService->obtenerUserId();
+            $userId ??= UsuarioService::obtenerUserId();
             $nextId = TesCajaTurnoDoc::max('id') + 1;
 
             $cajaTurnoDoc = new TesCajaTurnoDoc;
@@ -47,29 +41,12 @@ class CajaTurnoDocService
             $cajaTurnoDoc->empcreacion = $cajaActiva->idsucursal;
             $cajaTurnoDoc->save();
         } catch (Exception $e) {
-            Log::error('Error al crear caja turno doc: '.$e->getMessage());
+            PagosRecaudosLogger::exception('Error al crear caja turno doc', $e, [
+                'operation' => 'pago',
+                'id_comprobante' => $idComprobante,
+                'caja_activa_id' => $cajaActiva->id ?? null,
+            ]);
             throw new Exception('Error al crear caja turno doc.');
-        }
-    }
-
-    public static function obtenerUserId(): int
-    {
-        try {
-            $user = Auth::user();
-            if (! $user || ! $user->persona) {
-                throw new Exception('Usuario no autenticado o sin persona asociada');
-            }
-
-            $userId = PerPersonas::where('identificacion', $user->persona->PerNumDoc)->value('id');
-
-            if (! $userId) {
-                throw new Exception('Usuario no encontrado en la tabla PerPersonas');
-            }
-
-            return $userId;
-        } catch (Exception $e) {
-            Log::error('Error al obtener userId: '.$e->getMessage());
-            throw new Exception('Error al obtener userId.');
         }
     }
 }

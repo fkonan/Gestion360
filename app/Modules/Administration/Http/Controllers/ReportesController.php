@@ -18,6 +18,25 @@ use Illuminate\Support\Facades\Validator;
 
 class ReportesController extends Controller
 {
+    private const REPORTES_RANGO_MAXIMO_MESES = [
+        7 => 6,
+        99 => 1,
+    ];
+
+    private const REPORTES_SIN_LIMITE_FECHAS = [
+        9,
+    ];
+
+    private const REPORTES_VISTA_LIMITADA = [
+        21 => 3000,
+        99 => 3000,
+    ];
+
+    private const REPORTES_EXPORTACION_STREAM = [
+        21,
+        99,
+    ];
+
     // vista general para el formulario de reportes, aca se genera el formulario en base a los parametros
     public function mostrarFormulario($id)
     {
@@ -33,6 +52,7 @@ class ReportesController extends Controller
         // Hay algún parámetro activo
         $tieneFechaInicio = isset($parametros['paramFechaInicio']);
         $tieneFechaFin = isset($parametros['paramFechaFin']);
+        $limiteMeses = $this->obtenerLimiteMesesReporte((int) $id);
 
         $hayParametros = $parametros->isNotEmpty();
 
@@ -41,6 +61,10 @@ class ReportesController extends Controller
             $mensajeCabecera = $hayParametros
               ? 'Este reporte no requiere de un rango de fechas.'
               : 'Este reporte no requiere parámetros.';
+        } elseif ($limiteMeses === null) {
+            $mensajeCabecera = 'Este reporte no tiene restriccion maxima en el rango de fechas.';
+        } elseif ($limiteMeses > 1) {
+            $mensajeCabecera = "El rango de fechas no puede ser mayor a {$limiteMeses} meses.";
         } else {
             $mensajeCabecera = 'El rango de fechas no puede ser mayor a 30 días.';
         }
@@ -119,18 +143,23 @@ class ReportesController extends Controller
             return sweetAlert($validator->errors()->first(), 'error');
         }
 
-        // Validar rango de máximo 1 mes (el reporte 9 ignora esta condición)
+        // Validar rango de fechas segun la configuracion del reporte
+        $id = $request->input('id');
+        $reporte = Reporteador::findOrFail($id);
+        $limiteMeses = $this->obtenerLimiteMesesReporte((int) $id);
+
         $fechaInicio = Carbon::parse($request->fechaInicio);
         $fechaFin = Carbon::parse($request->fechaFin);
 
-        if ($request->id != 9) {
-            if ($fechaInicio->diffInMonths($fechaFin) > 1 || $fechaFin->gt($fechaInicio->copy()->addMonth())) {
-                return sweetAlert('El rango entre las fechas no puede ser mayor a 1 mes.', 'error');
+        if ($limiteMeses !== null) {
+            $fechaMaxima = $fechaInicio->copy()->addMonthsNoOverflow($limiteMeses);
+
+            if ($fechaInicio->diffInMonths($fechaFin) > $limiteMeses || $fechaFin->gt($fechaMaxima)) {
+                $mensajeRango = $limiteMeses > 1 ? "{$limiteMeses} meses" : '1 mes';
+
+                return sweetAlert("El rango entre las fechas no puede ser mayor a {$mensajeRango}.", 'error');
             }
         }
-
-        $id = $request->input('id');
-        $reporte = Reporteador::findOrFail($id);
 
         $nombreReporte = $reporte->nombre;
         $nombreDocExcel = normalizarNombre($nombreReporte);
@@ -149,14 +178,50 @@ class ReportesController extends Controller
         return view('administration::reportes.tabla', compact('id', 'nombreReporte', 'nombreDocExcel', 'params', 'ruta'));
     }
 
+    private function obtenerLimiteMesesReporte(int $reporteId): ?int
+    {
+        $sinLimite = array_map('intval', (array) config(
+            'reporteador.reportes_rango_fechas.sin_limite',
+            self::REPORTES_SIN_LIMITE_FECHAS
+        ));
+
+        if (in_array($reporteId, $sinLimite, true)) {
+            return null;
+        }
+
+        $maxMesesPorReporte = (array) config(
+            'reporteador.reportes_rango_fechas.max_meses_por_reporte',
+            self::REPORTES_RANGO_MAXIMO_MESES
+        );
+
+        $limiteDefault = max(1, (int) config('reporteador.reportes_rango_fechas.default_meses', 1));
+        $limite = $maxMesesPorReporte[$reporteId] ?? $limiteDefault;
+
+        return max(1, (int) $limite);
+    }
+
     // Cargar datos de los reportes con la API
     public function data(Request $request, ReportesService $reportesService)
     {
         try {
+            @set_time_limit(300);
             // Obtener todos los parámetros dinámicos que no sean null
             $params = collect($request->all())
                 ->reject(fn ($value) => $value === null || $value === 'null')
                 ->toArray();
+
+            $idReporte = (int) ($params['id'] ?? $params['idReporte'] ?? 0);
+            if (isset(self::REPORTES_VISTA_LIMITADA[$idReporte])) {
+                $maxRows = (int) self::REPORTES_VISTA_LIMITADA[$idReporte];
+                $data = $reportesService->obtenerDatosReporteLimitado($params, $maxRows);
+
+                return response()->json([
+                    'total' => count($data),
+                    'rows' => $data,
+                    'preview_limited' => true,
+                    'max_rows' => $maxRows,
+                ], 200, [], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+            }
 
             $data = $reportesService->obtenerDatosReporte($params);
 
@@ -164,14 +229,90 @@ class ReportesController extends Controller
             return response()->json([
                 'total' => count($data),
                 'rows' => $data,
-            ]);
-        } catch (Exception $e) {
+            ], 200, [], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+        } catch (\Throwable $e) {
             Log::error('Error al obtener el reporte '.($request->id ?? '-').': '.$e->getMessage());
 
             return response()->json([
                 'errors' => ['general' => ['Error al obtener el reporte']],
             ], 500);
         }
+    }
+
+    public function exportarCsv(Request $request, ReportesService $reportesService)
+    {
+        @set_time_limit(0);
+
+        $params = collect($request->all())
+            ->reject(fn ($value) => $value === null || $value === 'null')
+            ->toArray();
+
+        $idReporte = (int) ($params['id'] ?? $params['idReporte'] ?? 0);
+        if (! in_array($idReporte, self::REPORTES_EXPORTACION_STREAM, true)) {
+            abort(403, 'Este reporte no tiene exportacion masiva habilitada.');
+        }
+
+        $reporte = Reporteador::findOrFail($idReporte);
+        $filename = normalizarNombre($reporte->nombre).'_'.now()->format('Ymd_His').'.csv';
+
+        $rows = $reportesService->obtenerCursorReporte($params);
+        if (! is_iterable($rows)) {
+            abort(500, 'No fue posible generar el archivo.');
+        }
+
+        return response()->streamDownload(function () use ($rows): void {
+            $out = fopen('php://output', 'w');
+            if ($out === false) {
+                return;
+            }
+
+            // BOM UTF-8 para apertura correcta en Excel.
+            fwrite($out, "\xEF\xBB\xBF");
+
+            $headerWritten = false;
+            $lineas = 0;
+
+            foreach ($rows as $row) {
+                $fila = is_array($row) ? $row : (array) $row;
+
+                if (! $headerWritten) {
+                    fputcsv($out, array_keys($fila), ';');
+                    $headerWritten = true;
+                }
+
+                $valores = array_map(static function ($value) {
+                    if ($value === null) {
+                        return '';
+                    }
+
+                    if ($value instanceof \DateTimeInterface) {
+                        return $value->format('Y-m-d H:i:s');
+                    }
+
+                    if (is_bool($value)) {
+                        return $value ? '1' : '0';
+                    }
+
+                    if (is_scalar($value)) {
+                        return (string) $value;
+                    }
+
+                    return json_encode($value, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+                }, $fila);
+
+                fputcsv($out, $valores, ';');
+
+                $lineas++;
+                if (($lineas % 500) === 0) {
+                    fflush($out);
+                }
+            }
+
+            fclose($out);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate',
+        ]);
     }
 
     // metodo que retorna la vista principal de reportes

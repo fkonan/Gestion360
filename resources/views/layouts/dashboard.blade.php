@@ -114,30 +114,34 @@
 
     <!-- Contenido Principal -->
     <div class="content-wrapper">
-      <section class="content-header mb-4 p-2 py-1 d-flex justify-content-between align-items-center bg-primary-subtle"
+      <section class="content-header mb-4 p-2 py-1 bg-primary-subtle"
         style="position: sticky; top: 0; z-index: 1030;">
         <div class="container-fluid my-2 d-flex align-items-center gap-3">
           <a class="pushmenu btn btn-sm text-light navbar-toggler" data-widget="pushmenu" data-enable-remember="true"
             href="#" role="button">
             <i class="fas fa-bars"></i>
           </a>
-        </div>
-        <div class="d-flex align-items-center gap-3 flex-wrap header-info p-1" style="white-space: nowrap;">
-          @yield('headerInfo')
-          <div class="position-relative">
-            <button id="btnNotificaciones" class="btn btn-sm btn-notificaciones">
-              <i class="fas fa-bell text-white"></i>
-              <span id="badgeNotificaciones" class="badge-notificaciones">3</span>
-            </button>
-            <div id="dropdownNotificaciones"
-              class="dropdown-noti bg-body text-dark shadow rounded position-absolute mt-2"
-              style="right:0; min-width:300px; display:none; max-height:360px; overflow-y:auto; z-index:1050;">
-              <div class="p-2 border-bottom fw-semibold bg-light text-dark d-flex justify-content-between align-items-center">
-                <span>Notificaciones</span>
-                <i class="fas fa-bell text-primary"></i>
+          <div class="header-toolbar ms-auto">
+            <div class="header-info-slot">
+              @yield('headerInfo')
+            </div>
+            <div class="header-actions">
+              <div class="position-relative">
+                <button id="btnNotificaciones" class="btn btn-sm btn-notificaciones">
+                  <i class="fas fa-bell text-white"></i>
+                  <span id="badgeNotificaciones" class="badge-notificaciones">3</span>
+                </button>
+                <div id="dropdownNotificaciones"
+                  class="dropdown-noti bg-body text-dark shadow rounded position-absolute mt-2"
+                  style="right:0; min-width:300px; display:none; max-height:360px; overflow-y:auto; z-index:1050;">
+                  <div class="p-2 border-bottom fw-semibold bg-light text-dark d-flex justify-content-between align-items-center">
+                    <span>Notificaciones</span>
+                    <i class="fas fa-bell text-primary"></i>
+                  </div>
+                  <div id="listaNotificaciones" class="list-group list-group-flush small"></div>
+                  <div id="sinNotificaciones" class="p-3 text-muted small text-center" style="display:none;">Sin notificaciones.</div>
+                </div>
               </div>
-              <div id="listaNotificaciones" class="list-group list-group-flush small"></div>
-              <div id="sinNotificaciones" class="p-3 text-muted small text-center" style="display:none;">Sin notificaciones.</div>
             </div>
           </div>
         </div>

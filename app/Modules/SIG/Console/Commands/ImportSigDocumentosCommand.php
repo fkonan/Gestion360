@@ -5,122 +5,216 @@ namespace App\Modules\SIG\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use stdClass;
 
 class ImportSigDocumentosCommand extends Command
 {
-    protected $signature = 'sig:import-documentos {--limit=100 : Número máximo de registros a leer de Oracle para la prueba}';
+    protected $signature = 'sig:import-documentos
+        {--limit=0 : Maximo de codigos a leer de Oracle (0 = sin limite)}
+        {--chunk=200 : Cantidad de codigos por lote}
+        {--from-code= : Procesa codigos >= a este valor}';
 
-    protected $description = 'Importa documentos y sus versiones desde ODIN.CAL_DOCUMENTOS (Oracle) hacia sig_documentos y sig_documento_versiones (MySQL).';
+    protected $description = 'Importa documentos desde ODIN.CAL_DOCUMENTOS (Oracle) sincronizando versiones faltantes en sig_documentos y sig_documento_versiones (MySQL).';
 
     public function handle(): int
     {
-        $limit = (int) $this->option('limit');
+        $limit = max(0, (int) $this->option('limit'));
+        $chunkSize = max(1, (int) $this->option('chunk'));
+        $fromCode = trim((string) $this->option('from-code'));
 
-        $this->info("Leyendo datos desde Oracle (ODIN.CAL_DOCUMENTOS) límite {$limit}...");
+        $this->info('Preparando codigos desde Oracle (ODIN.CAL_DOCUMENTOS)...');
 
-        $rows = DB::connection('oracle')
+        $codigosQuery = DB::connection('oracle')
             ->table(DB::raw('ODIN.CAL_DOCUMENTOS'))
-            ->select([
-                'codigo',
-                'nombre',
-                'id_proceso',
-                'id_tipo_doc',
-                'id_ubicacion',
-                'usrcreacion',
-                'feccreacion',
-                'usrmodifica',
-                'fecmodifica',
-                'emision',
-                'url',
-                'paginas',
-                'observacion',
-                'id_elaboro',
-                'id_reviso',
-                'id_aprobo',
-                'fecemision',
-            ])
-            ->orderBy('codigo')
-            ->orderBy('emision')
-            ->limit($limit)
-            ->get();
+            ->select('codigo')
+            ->distinct()
+            ->orderBy('codigo');
 
-        if ($rows->isEmpty()) {
-            $this->warn('No se encontraron registros en Oracle.');
+        if ($fromCode !== '') {
+            $codigosQuery->where('codigo', '>=', $fromCode);
+        }
+
+        if ($limit > 0) {
+            $codigosQuery->limit($limit);
+        }
+
+        $codigos = $codigosQuery
+            ->pluck('codigo')
+            ->filter(fn ($codigo) => $codigo !== null && trim((string) $codigo) !== '')
+            ->values();
+
+        if ($codigos->isEmpty()) {
+            $this->warn('No se encontraron codigos para procesar en Oracle.');
 
             return self::SUCCESS;
         }
 
-        $grouped = $rows->groupBy('codigo');
-        $this->info("Procesando {$grouped->count()} códigos únicos...");
+        $this->info("Codigos a procesar: {$codigos->count()}. Tamano lote: {$chunkSize}.");
 
-        $insertedDocs = 0;
-        $insertedVersions = 0;
+        $documentosNuevos = 0;
+        $documentosExistentes = 0;
+        $versionesInsertadas = 0;
+        $versionesYaExistentes = 0;
+        $versionesActualizadasUsrCreacion = 0;
+        $codigosSinFilas = 0;
 
-        foreach ($grouped as $codigo => $items) {
+        foreach ($codigos->chunk($chunkSize) as $loteCodigos) {
+            $listaCodigos = $loteCodigos->values()->all();
 
-            $exists = DB::connection('mysql-gestion-admin')
+            $rowsByCodigo = DB::connection('oracle')
+                ->table(DB::raw('ODIN.CAL_DOCUMENTOS'))
+                ->select([
+                    'codigo',
+                    'nombre',
+                    'id_proceso',
+                    'id_tipo_doc',
+                    'id_ubicacion',
+                    'usrcreacion',
+                    'feccreacion',
+                    'usrmodifica',
+                    'fecmodifica',
+                    'emision',
+                    'url',
+                    'paginas',
+                    'observacion',
+                    'id_elaboro',
+                    'id_reviso',
+                    'id_aprobo',
+                    'fecemision',
+                ])
+                ->whereIn('codigo', $listaCodigos)
+                ->orderBy('codigo')
+                ->orderBy('emision')
+                ->get()
+                ->groupBy('codigo');
+
+            foreach ($listaCodigos as $codigo) {
+                /** @var Collection $items */
+                $items = $rowsByCodigo->get($codigo, collect());
+
+                if ($items->isEmpty()) {
+                    $codigosSinFilas++;
+                    $this->warn("Codigo {$codigo} sin filas en Oracle; se omite.");
+
+                    continue;
+                }
+
+                $resultado = $this->sincronizarCodigo((string) $codigo, $items);
+
+                $documentosNuevos += $resultado['documento_nuevo'] ? 1 : 0;
+                $documentosExistentes += $resultado['documento_nuevo'] ? 0 : 1;
+                $versionesInsertadas += $resultado['versiones_insertadas'];
+                $versionesYaExistentes += $resultado['versiones_ya_existentes'];
+                $versionesActualizadasUsrCreacion += $resultado['versiones_actualizadas_usrcreacion'];
+
+                $this->line(
+                    "Codigo {$codigo}: ".($resultado['documento_nuevo'] ? 'documento nuevo' : 'documento existente')
+                    .", versiones insertadas {$resultado['versiones_insertadas']}"
+                    .", versiones ya existentes {$resultado['versiones_ya_existentes']}"
+                    .", usrcreacion actualizado {$resultado['versiones_actualizadas_usrcreacion']}."
+                );
+            }
+        }
+
+        $this->info(
+            'Finalizado. '.
+            "Documentos nuevos: {$documentosNuevos}. ".
+            "Documentos existentes: {$documentosExistentes}. ".
+            "Versiones insertadas: {$versionesInsertadas}. ".
+            "Versiones ya existentes: {$versionesYaExistentes}. ".
+            "Usrcreacion actualizado en versiones: {$versionesActualizadasUsrCreacion}. ".
+            "Codigos sin filas: {$codigosSinFilas}."
+        );
+
+        return self::SUCCESS;
+    }
+
+    /**
+     * @return array{documento_nuevo: bool, versiones_insertadas: int, versiones_ya_existentes: int, versiones_actualizadas_usrcreacion: int}
+     */
+    private function sincronizarCodigo(string $codigo, Collection $items): array
+    {
+        return DB::connection('mysql-gestion-admin')->transaction(function () use ($codigo, $items) {
+            $documentoBase = $this->obtenerDocumentoBase($items);
+
+            $doc = DB::connection('mysql-gestion-admin')
                 ->table('sig_documentos')
                 ->where('codigo', $codigo)
-                ->exists();
+                ->lockForUpdate()
+                ->first(['id']);
 
-            if ($exists) {
-                $this->line("Saltando código existente: {$codigo}");
+            $documentoNuevo = false;
 
-                continue;
+            if ($doc) {
+                $documentoId = (int) $doc->id;
+            } else {
+                $documentoId = DB::connection('mysql-gestion-admin')
+                    ->table('sig_documentos')
+                    ->insertGetId([
+                        'codigo' => $documentoBase->codigo,
+                        'nombre' => $documentoBase->nombre,
+                        'descripcion' => null,
+                        'id_proceso' => $documentoBase->id_proceso,
+                        'id_tipo_doc' => $documentoBase->id_tipo_doc,
+                        'id_ubicacion' => $documentoBase->id_ubicacion,
+                        'usrcreacion' => $documentoBase->usrcreacion,
+                        'fechacreacion' => $documentoBase->feccreacion,
+                        'usrmodifica' => $documentoBase->usrmodifica,
+                        'fechamodifica' => $documentoBase->fecmodifica,
+                    ]);
+                $documentoNuevo = true;
             }
 
-            /** @var Collection $items */
-            // Ordenar por emision desc y fecha para usar la mas reciente como base
-            $ordenados = $items->sortByDesc(function ($row) {
-                $emisionOrden = is_numeric($row->emision) ? (int) $row->emision : $row->emision;
-                $fechaOrden = $row->fecmodifica ?? $row->feccreacion ?? $row->fecemision;
+            $versionesOrigen = $this->obtenerVersionesOrigen($items);
+            $versionMaximaOrigen = $this->normalizarVersion($versionesOrigen->first()?->emision);
 
-                return [$emisionOrden, $fechaOrden];
-            })->values();
+            $versionesDestino = DB::connection('mysql-gestion-admin')
+                ->table('sig_documento_versiones')
+                ->where('documento_id', $documentoId)
+                ->get(['id', 'version', 'estado', 'usrcreacion']);
 
-            $baseDoc = $ordenados->first();
+            $versionesDestinoPorNumero = $versionesDestino
+                ->filter(fn ($version) => $version->version !== null)
+                ->groupBy(fn ($version) => (string) $this->normalizarVersion($version->version));
 
-            $documentoId = DB::connection('mysql-gestion-admin')
-                ->table('sig_documentos')
-                ->insertGetId([
-                    'codigo' => $baseDoc->codigo,
-                    'nombre' => $baseDoc->nombre,
-                    'descripcion' => null,
-                    'id_proceso' => $baseDoc->id_proceso,
-                    'id_tipo_doc' => $baseDoc->id_tipo_doc,
-                    'id_ubicacion' => $baseDoc->id_ubicacion,
-                    'usrcreacion' => $baseDoc->usrcreacion,
-                    'fechacreacion' => $baseDoc->feccreacion,
-                    'usrmodifica' => $baseDoc->usrmodifica,
-                    'fechamodifica' => $baseDoc->fecmodifica,
-                ]);
+            $tieneAprobada = $versionesDestino->contains(fn ($version) => $version->estado === 'APROBADO');
 
-            $insertedDocs++;
+            $versionesInsertar = [];
+            $versionesYaExistentes = 0;
+            $versionesActualizadasUsrCreacion = 0;
 
-            // Agrupar por emision y conservar una fila por versión (prioriza la más reciente por fecha_modifica/creacion)
-            $versionesPorEmision = $items
-                ->groupBy('emision')
-                ->map(function ($grupo) {
-                    return $grupo->sortByDesc(function ($row) {
-                        return $row->fecmodifica ?? $row->feccreacion ?? $row->fecemision;
-                    })->first();
-                });
+            foreach ($versionesOrigen as $row) {
+                $version = $this->normalizarVersion($row->emision);
 
-            // Ordenar versiones por número de emision (descendente para identificar la vigente)
-            $versionesOrdenadas = $versionesPorEmision
-                ->sortByDesc(function ($row, $emision) {
-                    return is_numeric($emision) ? (int) $emision : $emision;
-                })
-                ->values();
+                if ($versionesDestinoPorNumero->has((string) $version)) {
+                    $versionesYaExistentes++;
 
-            $totalVersiones = $versionesOrdenadas->count();
+                    if ($row->usrcreacion !== null) {
+                        $actualizadas = DB::connection('mysql-gestion-admin')
+                            ->table('sig_documento_versiones')
+                            ->where('documento_id', $documentoId)
+                            ->where('version', $version)
+                            ->whereNull('usrcreacion')
+                            ->update([
+                                'usrcreacion' => $row->usrcreacion,
+                            ]);
 
-            $versiones = $versionesOrdenadas->values()->map(function ($row, $index) use ($documentoId) {
-                $estado = ($index === 0) ? 'APROBADO' : 'HISTORICO';
+                        $versionesActualizadasUsrCreacion += (int) $actualizadas;
+                    }
 
-                return [
+                    continue;
+                }
+
+                $estado = 'HISTORICO';
+
+                if (! $tieneAprobada && $version === $versionMaximaOrigen) {
+                    $estado = 'APROBADO';
+                    $tieneAprobada = true;
+                }
+
+                $versionesInsertar[] = [
                     'documento_id' => $documentoId,
-                    'version' => $row->emision,
+                    'version' => $version,
                     'archivo_url' => $row->url,
                     'paginas' => $row->paginas,
                     'estado' => $estado,
@@ -128,23 +222,68 @@ class ImportSigDocumentosCommand extends Command
                     'id_elabora' => $row->id_elaboro,
                     'id_revisa' => $row->id_reviso,
                     'id_aprueba' => $row->id_aprobo,
+                    'usrcreacion' => $row->usrcreacion,
                     'fecha_elaboracion' => $row->feccreacion,
                     'fecha_revision' => null,
                     'fecha_aprobacion' => $row->fecemision,
                     'fecha_modificacion' => $row->fecmodifica,
                 ];
-            })->all();
+            }
 
-            DB::connection('mysql-gestion-admin')
-                ->table('sig_documento_versiones')
-                ->insert($versiones);
+            if (! empty($versionesInsertar)) {
+                DB::connection('mysql-gestion-admin')
+                    ->table('sig_documento_versiones')
+                    ->insert($versionesInsertar);
+            }
 
-            $insertedVersions += count($versiones);
-            $this->line("Insertado documento {$codigo} con ".count($versiones).' versiones.');
+            return [
+                'documento_nuevo' => $documentoNuevo,
+                'versiones_insertadas' => count($versionesInsertar),
+                'versiones_ya_existentes' => $versionesYaExistentes,
+                'versiones_actualizadas_usrcreacion' => $versionesActualizadasUsrCreacion,
+            ];
+        });
+    }
+
+    private function obtenerDocumentoBase(Collection $items): stdClass
+    {
+        /** @var stdClass $base */
+        $base = $items
+            ->sortByDesc(fn ($row) => $this->claveRecencia($row->emision, $row->fecmodifica ?? $row->feccreacion ?? $row->fecemision))
+            ->first();
+
+        return $base;
+    }
+
+    private function obtenerVersionesOrigen(Collection $items): Collection
+    {
+        return $items
+            ->groupBy('emision')
+            ->map(function (Collection $grupo) {
+                return $grupo
+                    ->sortByDesc(fn ($row) => $this->normalizarFecha($row->fecmodifica ?? $row->feccreacion ?? $row->fecemision))
+                    ->first();
+            })
+            ->sortByDesc(fn ($row, $emision) => $this->normalizarVersion($emision))
+            ->values();
+    }
+
+    private function claveRecencia(mixed $emision, mixed $fecha): string
+    {
+        return sprintf('%010d|%s', $this->normalizarVersion($emision), $this->normalizarFecha($fecha));
+    }
+
+    private function normalizarVersion(mixed $emision): int
+    {
+        return is_numeric($emision) ? (int) $emision : 0;
+    }
+
+    private function normalizarFecha(mixed $fecha): string
+    {
+        if ($fecha === null) {
+            return '0000-00-00 00:00:00';
         }
 
-        $this->info("Finalizado. Documentos insertados: {$insertedDocs}. Versiones insertadas: {$insertedVersions}.");
-
-        return self::SUCCESS;
+        return substr((string) $fecha, 0, 19);
     }
 }

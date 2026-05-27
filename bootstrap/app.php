@@ -1,9 +1,15 @@
 <?php
 
 use App\Http\Middleware\CajaActivaMiddleware;
+use App\Http\Middleware\DenyMobileAccess;
+use App\Http\Middleware\LogRrhhRequestConsumption;
+use App\Http\Middleware\ValidateApiJwt;
+use App\Http\Middleware\ValidateAttendanceApiKey;
+use App\Http\Middleware\ValidateEmployeePermitsApiKey;
 use App\Http\Middleware\ModuloActivoMiddleware;
 use App\Http\Middleware\SoloAjaxMiddleware;
 use App\Http\Middleware\SubModuloActivoMiddleware;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -24,8 +30,19 @@ return Application::configure(basePath: dirname(__DIR__))
             'caja.activa' => CajaActivaMiddleware::class,
             'soloAJAX' => SoloAjaxMiddleware::class,
             'modulo.activo' => ModuloActivoMiddleware::class,
-            'submodulo.activo' => SubModuloActivoMiddleware::class
+            'submodulo.activo' => SubModuloActivoMiddleware::class,
+            'deny.mobile' => DenyMobileAccess::class,
+            'attendance.api' => ValidateAttendanceApiKey::class,
+            'employee.permits.api' => ValidateEmployeePermitsApiKey::class,
+            'jwt.api' => ValidateApiJwt::class,
+            'rrhh.consumo' => LogRrhhRequestConsumption::class,
         ]);
+    })
+    ->withSchedule(function (Schedule $schedule) {
+        $schedule->command('bloqueo:reprocesar-desbloqueos-fics --limit=300')
+            ->everyFiveMinutes()
+            ->withoutOverlapping(30)
+            ->runInBackground();
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

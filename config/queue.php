@@ -43,6 +43,15 @@ return [
             'after_commit' => false,
         ],
 
+        'database-admin' => [
+            'driver' => 'database',
+            'connection' => env('DB_QUEUE_ADMIN_CONNECTION', 'mysql-gestion-admin'),
+            'table' => env('DB_QUEUE_ADMIN_TABLE', 'jobs'),
+            'queue' => env('DB_QUEUE_ADMIN_QUEUE', 'rrhh-mails'),
+            'retry_after' => (int) env('DB_QUEUE_ADMIN_RETRY_AFTER', 90),
+            'after_commit' => false,
+        ],
+
         'beanstalkd' => [
             'driver' => 'beanstalkd',
             'host' => env('BEANSTALKD_QUEUE_HOST', 'localhost'),
@@ -105,8 +114,8 @@ return [
 
     'failed' => [
         'driver' => env('QUEUE_FAILED_DRIVER', 'database-uuids'),
-        'database' => env('DB_CONNECTION', 'sqlite'),
-        'table' => 'failed_jobs',
+        'database' => env('QUEUE_FAILED_DATABASE', env('DB_QUEUE_ADMIN_CONNECTION', env('DB_CONNECTION', 'sqlite'))),
+        'table' => env('QUEUE_FAILED_TABLE', 'failed_jobs'),
     ],
 
 ];

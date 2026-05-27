@@ -96,9 +96,6 @@ class DescansosService
         // Manejo de la novedad y bloqueos en logtrans
         $resp = $this->novedadDescansoConductor($conductor, $eventoDesc, $request);
 
-        // Levantar bloqueo en FICS
-        BloqueoService::levantarBloqueoFICS($conductor->identificacion, self::BLOQUEO_DESCANSO_FICS);
-
         if ($resp !== true) {
             return toastModal($resp, 'danger', route('gestion-incapacidades.index'));
         }
@@ -109,8 +106,9 @@ class DescansosService
     private function novedadDescansoConductor($conductor, $eventoDesc, $request)
     {
 
-        /* DB::beginTransaction(); */
         try {
+            DB::connection('oracle')->beginTransaction();
+
             $fecha = Carbon::parse($request->fecha)->format('Y/m/d H:i:s');
             $fechaNow = Carbon::now()->format('Y/m/d H:i:s');
 
@@ -189,18 +187,41 @@ class DescansosService
                 $bloqueo->fec_inicio = $fecha;
                 $bloqueo->fec_fin = null;
                 $bloqueo->save();
+
+                $bloqueoFics = BloqueoService::crearBloqueoFICS(
+                    $conductor->identificacion,
+                    self::BLOQUEO_DESCANSO_FICS
+                );
+
+                if (! $bloqueoFics) {
+                    DB::connection('oracle')->rollBack();
+
+                    return 'No se pudo generar el bloqueo en FICS.';
+                }
             }
 
-            /* DB::commit(); */
+            DB::connection('oracle')->commit();
 
             if ($request->evento == self::REGRESO_DE_DESCANSO) {
                 // Levantar bloqueo en FICS
-                BloqueoService::levantarBloqueoFICS($conductor->identificacion, self::BLOQUEO_DESCANSO_FICS);
+                $desbloqueadoFics = BloqueoService::levantarBloqueoFICS(
+                    $conductor->identificacion,
+                    self::BLOQUEO_DESCANSO_FICS
+                );
+
+                if (! $desbloqueadoFics) {
+                    Log::warning('Desbloqueo FICS de descanso quedo pendiente para reproceso', [
+                        'identificacion' => (string) $conductor->identificacion,
+                        'id_bloqueo_fics' => self::BLOQUEO_DESCANSO_FICS,
+                    ]);
+                }
             }
 
             return true;
         } catch (Exception $e) {
-            /* DB::rollBack(); */
+            if (DB::connection('oracle')->transactionLevel() > 0) {
+                DB::connection('oracle')->rollBack();
+            }
             Log::error('Error al registrar la novedad de descanso: '.$e->getMessage());
 
             // Parsear mensaje de Oracle

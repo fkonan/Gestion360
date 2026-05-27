@@ -4,10 +4,10 @@ namespace App\Modules\PagosRecaudos\Services\Cajasan;
 
 use App\Modules\GestionRRHH\Models\PerPersonas;
 use App\Modules\PagosRecaudos\Models\ConDetCarguePagRec;
+use App\Modules\PagosRecaudos\Services\PagosRecaudosLogger;
 use App\Services\UsuarioService;
 use Exception;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class DetallePagoService
 {
@@ -17,19 +17,21 @@ class DetallePagoService
 
     private const CIUDAD_DEFAULT = 'Bucaramanga';
 
-    public function __construct(
-        private UsuarioService $usuarioService
-    ) {}
-
-    public function crearCargueDetalle(int $idCargue, array $clienteData, array $respuestaApi, object $cajaActiva): int
+    public function crearCargueDetalle(
+        int $idCargue,
+        array $clienteData,
+        array $respuestaApi,
+        object $cajaActiva,
+        ?int $userId = null
+    ): ConDetCarguePagRec
     {
         try {
             $fechaFormatoEspecial = now()->format('Y-n');
             $concepto = 'CONSULTA CAJASAN '.$fechaFormatoEspecial;
-            $userId = $this->usuarioService->obtenerUserId();
+            $userId ??= UsuarioService::obtenerUserId();
 
             $saldoTotal = $respuestaApi['additionalData']['saldo'];
-            $sucursal = PerPersonas::findOrFail($cajaActiva->idsucursal);
+            $sucursal = $this->resolverSucursal($cajaActiva);
 
             $idGenerado = $this->obtenerSiguienteId('SEC_PAGOSYRECAUDOSDET');
 
@@ -61,12 +63,21 @@ class DetallePagoService
             $detalle->empcreacion = $cajaActiva->idsucursal;
             $detalle->save();
 
-            return $detalle->id;
+            return $detalle;
         } catch (Exception $e) {
-            Log::error('Error al crear detalle pago: '.$e->getMessage());
+            PagosRecaudosLogger::exception('Error al crear detalle de pago', $e, [
+                'operation' => 'pago',
+                'id_cargue' => $idCargue,
+                'identificacion_cliente' => $clienteData['identificacion'] ?? null,
+            ]);
             throw new Exception('Error al crear detalle pago.');
             /* throw $e; */
         }
+    }
+
+    private function resolverSucursal(object $cajaActiva): object
+    {
+        return PerPersonas::findOrFail($cajaActiva->idsucursal);
     }
 
     public function obtenerSiguienteId(string $secuencia)
@@ -81,7 +92,10 @@ class DetallePagoService
 
             return $result[0]->id;
         } catch (Exception $e) {
-            Log::error('Error al obtener siguiente ID: '.$e->getMessage());
+            PagosRecaudosLogger::exception('Error al obtener siguiente ID para detalle de pago', $e, [
+                'operation' => 'pago',
+                'secuencia' => $secuencia,
+            ]);
             throw new Exception('Error al obtener siguiente ID.');
             /* throw $e; */
         }

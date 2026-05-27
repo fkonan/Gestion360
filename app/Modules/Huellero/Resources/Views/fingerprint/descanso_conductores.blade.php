@@ -75,6 +75,7 @@
                 <span class="shortcut-key">2</span>
                 <span class="shortcut-text">Regreso de descanso</span>
             </div>
+
         </div>
     </div>
 </div>

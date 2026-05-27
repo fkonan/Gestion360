@@ -60,6 +60,7 @@ Route::prefix('administracion')->middleware(['auth', 'permisos:'.Permisos::ADMIN
         Route::get('/reportes/{area}', [ReportesController::class, 'reportesPorArea'])->name('reportes.area');
         Route::get('/{id}/formulario', [ReportesController::class, 'mostrarFormulario'])->name('reportes.formulario');
         Route::get('/api/reportes', [ReportesController::class, 'data'])->name('reportes.data');
+        Route::get('/api/reportes/exportar-csv', [ReportesController::class, 'exportarCsv'])->name('reportes.exportarCsv');
 
         // Reportes Personas
         Route::prefix('personas')->middleware(['permisos:'.Permisos::ADMINISTRACION_REPORTES_EMPLEADOS])->group(function () {

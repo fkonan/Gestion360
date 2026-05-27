@@ -1,23 +1,28 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Huellas - Ingreso personal')
+@php
+    $modoAutomatico = (bool) ($modoAutomatico ?? false);
+    $tituloIngresoPersonal = $tituloIngresoPersonal ?? ($modoAutomatico ? 'Ingreso personal automatico' : 'Ingreso personal manual');
+@endphp
+
+@section('title', 'Huellas - ' . $tituloIngresoPersonal)
 
 @section('breadcrumb')
 <x-breadcrumb :items="[
         ['name' => 'Inicio', 'url' => route('home')],
         ['name' => 'Gestion huellero', 'url' => route('fingerprint.gestion')],
-        ['name' => 'Ingreso personal'],
+        ['name' => $tituloIngresoPersonal],
     ]" />
 <br>
 @endsection
 
 @section('content')
 <div class="container-fluid p-0 border rounded sidebar-dark-primary tableContainer" style="min-height:150px;">
-    <x-sectionHeader titulo="Ingreso personal" rutaVolver="{{ route('fingerprint.gestion') }}" :crear="false">
-        <button id="lastEventTrigger" type="button" class="btn btn-outline-secondary text-nowrap me-2" data-bs-toggle="modal" data-bs-target="#lastEventModal">
-            Ultimo evento
+    <x-sectionHeader :titulo="$tituloIngresoPersonal" rutaVolver="{{ route('fingerprint.gestion') }}" :crear="false">
+        <button id="latestEventsTrigger" type="button" class="btn btn-outline-secondary text-nowrap me-2" data-bs-toggle="modal" data-bs-target="#latestEventsModal">
+            Registros
         </button>
-        @if(auth()->user()->can(\App\Constants\Permisos::BIOMETRIA_GESTION_HUELLERO_INGRESO_MANUAL))
+        @if(!$modoAutomatico && auth()->user()->can(\App\Constants\Permisos::BIOMETRIA_GESTION_HUELLERO_INGRESO_MANUAL))
         <button id="manualTrigger" type="button" class="btn btn-primary fw-bold text-nowrap text-light" data-bs-toggle="modal" data-bs-target="#manualEventModal">
             Ingreso manual
         </button>
@@ -30,7 +35,7 @@
         <div class="huellero-kiosk">
             <div id="eventPanel" class="card huellero-kiosk-card huellero-event-ingreso">
                 <div class="huellero-kiosk-card-head text-center">
-                    <div id="eventTitle" class="huellero-kiosk-title">REGISTRO DE INGRESO</div>
+                    <div id="eventTitle" class="huellero-kiosk-title">{{ $modoAutomatico ? 'REGISTRO AUTOMATICO' : 'REGISTRO DE INGRESO' }}</div>
                     <div id="eventMessage" class="huellero-kiosk-message"></div>
                 </div>
 
@@ -74,6 +79,7 @@
                 </div>
             </div>
 
+            @if(!$modoAutomatico)
             <div class="huellero-kiosk-shortcuts-bar">
                 <span class="shortcut-key">1</span>
                 <span class="shortcut-text">Ingreso</span>
@@ -81,40 +87,38 @@
                 <span class="shortcut-key">2</span>
                 <span class="shortcut-text">Salida</span>
             </div>
+            @endif
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="lastEventModal" tabindex="-1" aria-labelledby="lastEventLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+<div class="modal fade" id="latestEventsModal" tabindex="-1" aria-labelledby="latestEventsLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="lastEventLabel">Consultar ultimo evento</h5>
+                <h5 class="modal-title" id="latestEventsLabel">Ultimos 10 registros</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
             <div class="modal-body">
-                <label for="lastEventIdent" class="form-label">Identificacion</label>
-                <input type="text" id="lastEventIdent" class="form-control" autocomplete="off">
-                <div class="form-text">Consulta el ultimo ingreso o salida registrado.</div>
-
-                <div id="lastEventLoading" class="text-muted small mt-3 d-none">Consultando...</div>
-                <div id="lastEventResult" class="border rounded p-3 bg-body-tertiary mt-3 d-none">
-                    <div class="text-muted small">Ultimo evento</div>
-                    <div id="lastEventDescription" class="fw-semibold"></div>
-                    <div id="lastEventTime" class="text-muted"></div>
+                <div class="border rounded p-2 mb-3">
+                    <label for="todayEventsDocInput" class="form-label form-label-sm mb-1">Buscar registros de hoy por identificacion</label>
+                    <div class="input-group input-group-sm">
+                        <input id="todayEventsDocInput" type="text" class="form-control" placeholder="Numero de identificacion" inputmode="numeric" pattern="[0-9]*" maxlength="20" autocomplete="off">
+                        <button id="todayEventsSearchBtn" class="btn btn-primary" type="button">Buscar</button>
+                        <button id="todayEventsResetBtn" class="btn btn-outline-secondary" type="button">Ultimos 10</button>
+                    </div>
                 </div>
-                <div id="lastEventEmpty" class="text-muted small mt-3 d-none">Sin eventos registrados.</div>
-                <div id="lastEventError" class="text-danger small mt-3 d-none"></div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" class="btn btn-primary" id="lastEventSearch">Consultar</button>
+                <div id="latestEventsLoading" class="text-center text-muted py-2 d-none">
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Consultando...
+                </div>
+                <div id="latestEventsEmpty" class="text-muted small">Sin registros recientes.</div>
+                <ul id="latestEventsList" class="list-group list-group-flush"></ul>
             </div>
         </div>
     </div>
 </div>
 
-@if(auth()->user()->can(\App\Constants\Permisos::BIOMETRIA_GESTION_HUELLERO_INGRESO_MANUAL))
+@if(!$modoAutomatico && auth()->user()->can(\App\Constants\Permisos::BIOMETRIA_GESTION_HUELLERO_INGRESO_MANUAL))
 <div class="modal fade" id="manualEventModal" tabindex="-1" aria-labelledby="manualEventLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -192,6 +196,7 @@
         };
 
         var client = new FingerprintClient();
+        var automaticMode = @json($modoAutomatico);
         var register = false;
         var probe = '';
         var identificacion = '';
@@ -202,6 +207,8 @@
         var displayTimer = null;
         var displayDelayMs = 4000;
         var statusLockUntil = 0;
+        var resolvedEventCode = 2;
+        var hasResolvedEvent = false;
         var isSubmitting = false;
         var duplicateWindowMs = 2500;
         var lastSampleData = '';
@@ -215,19 +222,21 @@
         var manualFecha = document.getElementById('manualFecha');
         var manualSubmit = document.getElementById('manualSubmit');
         var manualSelectedPerson = null;
-        var lastEventModal = document.getElementById('lastEventModal');
-        var lastEventIdent = document.getElementById('lastEventIdent');
-        var lastEventSearch = document.getElementById('lastEventSearch');
-        var lastEventResult = document.getElementById('lastEventResult');
-        var lastEventDescription = document.getElementById('lastEventDescription');
-        var lastEventTime = document.getElementById('lastEventTime');
-        var lastEventEmpty = document.getElementById('lastEventEmpty');
-        var lastEventError = document.getElementById('lastEventError');
-        var lastEventLoading = document.getElementById('lastEventLoading');
+        var latestEventsModal = document.getElementById('latestEventsModal');
+        var latestEventsLoading = document.getElementById('latestEventsLoading');
+        var latestEventsEmpty = document.getElementById('latestEventsEmpty');
+        var latestEventsList = document.getElementById('latestEventsList');
+        var todayEventsDocInput = document.getElementById('todayEventsDocInput');
+        var todayEventsSearchBtn = document.getElementById('todayEventsSearchBtn');
+        var todayEventsResetBtn = document.getElementById('todayEventsResetBtn');
+        var latestEventsInFlight = false;
         var activeReader = null;
         var readerRefreshing = null;
 
         function isSalidaEvent() {
+            if (automaticMode) {
+                return hasResolvedEvent ? resolvedEventCode === 1 : false;
+            }
             return selectedEventValue() === '1';
         }
 
@@ -238,12 +247,16 @@
                 ui.eventPanel.classList.toggle('huellero-event-salida', salida);
             }
             if (ui.eventTitle) {
-                ui.eventTitle.textContent = salida ? 'REGISTRO DE SALIDA' : 'REGISTRO DE INGRESO';
+                if (automaticMode && !hasResolvedEvent) {
+                    ui.eventTitle.textContent = 'REGISTRO AUTOMATICO';
+                } else {
+                    ui.eventTitle.textContent = salida ? 'REGISTRO DE SALIDA' : 'REGISTRO DE INGRESO';
+                }
             }
             if (ui.eventMessage) {
                 ui.eventMessage.textContent = '';
             }
-            if (ui.manualTrigger) {
+            if (!automaticMode && ui.manualTrigger) {
                 ui.manualTrigger.textContent = salida ? 'Salida manual' : 'Ingreso manual';
             }
         }
@@ -267,7 +280,9 @@
             }
             var salida = isSalidaEvent();
             var badgeClass = 'is-neutral';
-            var badgeText = salida ? 'LISTO PARA SALIDA' : 'LISTO PARA INGRESO';
+            var badgeText = automaticMode
+                ? 'LISTO PARA REGISTRO AUTOMATICO'
+                : (salida ? 'LISTO PARA SALIDA' : 'LISTO PARA INGRESO');
             var hintText = '';
             var messageText = '';
 
@@ -280,10 +295,11 @@
                 badgeText = 'VALIDANDO...';
                 hintText = 'Consultando información.';
             } else if (state === 'completed') {
-                badgeClass = salida ? 'is-danger' : 'is-success';
-                badgeText = salida ? 'SALIDA REGISTRADA' : 'INGRESO REGISTRADO';
+                var salidaRegistrada = salida;
+                badgeClass = salidaRegistrada ? 'is-danger' : 'is-success';
+                badgeText = salidaRegistrada ? 'SALIDA REGISTRADA' : 'INGRESO REGISTRADO';
                 hintText = 'Puede continuar el siguiente empleado.';
-                messageText = salida ? 'HASTA LUEGO' : 'BIENVENIDO';
+                messageText = salidaRegistrada ? 'HASTA LUEGO' : 'BIENVENIDO';
             } else if (state === 'error') {
                 badgeClass = 'is-error';
                 badgeText = 'ERROR DE LECTOR';
@@ -340,6 +356,89 @@
             }, 4000);
         }
 
+        function normalizeText(value) {
+            return String(value || '').trim();
+        }
+
+        function formatSystemDateTime(value) {
+            var raw = normalizeText(value);
+            if (!raw) return '';
+            var normalized = raw.replace(' ', 'T');
+            var parsed = new Date(normalized);
+            if (isNaN(parsed.getTime())) {
+                return raw;
+            }
+            return parsed.toLocaleString('es-CO', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function buildFriendlyEventError(data) {
+            var motivoRaw = normalizeText((data && (data.motivo || data.error)) || '');
+            if (!motivoRaw) {
+                return 'No se pudo registrar el evento. Intenta nuevamente en unos segundos.';
+            }
+
+            var motivo = motivoRaw.toLowerCase();
+
+            if (motivo.indexOf('fuera de horarios') !== -1) {
+                return 'No se pudo registrar porque en este momento estas fuera de tu horario permitido.';
+            }
+            if (motivo.indexOf('aun no puede salir') !== -1) {
+                return 'Tu salida aun no esta habilitada. Debes esperar a la hora de salida de tu jornada.';
+            }
+            if (motivo.indexOf('no puede salir sin haber ingresado hoy') !== -1) {
+                return 'No se puede registrar salida porque no tienes un ingreso registrado hoy.';
+            }
+            if (motivo.indexOf('ya existe ingreso registrado hoy') !== -1) {
+                return 'Ya tienes un ingreso registrado hoy. El siguiente evento debe corresponder a salida segun horario.';
+            }
+            if (motivo.indexOf('ya existe salida registrada hoy') !== -1) {
+                return 'Ya tienes una salida registrada hoy. Si necesitas ajuste, solicita apoyo al area administrativa.';
+            }
+            if (motivo.indexOf('antes de repetir el mismo evento') !== -1) {
+                var minutosMatch = motivoRaw.match(/espere\s+(\d+)\s+minuto/i);
+                if (minutosMatch && minutosMatch[1]) {
+                    var minutos = Number(minutosMatch[1]);
+                    var etiquetaMinutos = minutos === 1 ? '1 minuto' : (String(minutos) + ' minutos');
+                    return 'Ya existe un registro reciente del mismo tipo. Espera ' + etiquetaMinutos + ' antes de volver a marcar.';
+                }
+                return 'Ya existe un registro reciente del mismo tipo. Espera un momento antes de volver a marcar.';
+            }
+            if (motivo.indexOf('reingreso bloqueado por 7 horas') !== -1) {
+                var match = motivoRaw.match(/habilitado desde ([^)]+)/i);
+                if (match && match[1]) {
+                    var fechaHabilita = formatSystemDateTime(match[1]);
+                    return 'Tu nuevo ingreso esta bloqueado temporalmente. Podras volver a ingresar desde ' + fechaHabilita + '.';
+                }
+                return 'Tu nuevo ingreso esta bloqueado temporalmente. Debes esperar 7 horas despues de la ultima salida.';
+            }
+            if (motivo.indexOf('no puede marcar salida dentro de otra jornada valida') !== -1) {
+                return 'No se pudo registrar salida porque ya estas dentro de otra jornada activa.';
+            }
+            if (motivo.indexOf('no se pudo resolver el cargo') !== -1) {
+                return 'No se pudo validar tu cargo para asignar horario. Comunicate con el administrador del sistema.';
+            }
+            if (motivo.indexOf('la persona no fue encontrada') !== -1) {
+                return 'No se encontro una vinculacion activa para esta identificacion.';
+            }
+            if (motivo.indexOf('identificacion invalida') !== -1) {
+                return 'La identificacion recibida no es valida.';
+            }
+            if (motivo.indexOf('tipo de evento invalido') !== -1) {
+                return 'El tipo de evento enviado no es valido para este proceso.';
+            }
+            if (motivo.indexOf('no se pudo guardar el evento') !== -1) {
+                return 'No fue posible guardar el evento. Intenta nuevamente.';
+            }
+
+            return motivoRaw.endsWith('.') ? motivoRaw : (motivoRaw + '.');
+        }
+
         function getQualityLabel(quality) {
             if (quality === null || typeof quality === 'undefined') return '-';
             if (window.Fingerprint && Fingerprint.QualityCode && typeof Fingerprint.QualityCode[quality] === 'string') {
@@ -381,6 +480,9 @@
         }
 
         function setEventType(value) {
+            if (automaticMode) {
+                return;
+            }
             var entrada = document.getElementById('eventEntrada');
             var salida = document.getElementById('eventSalida');
             var target = value === '1' ? salida : entrada;
@@ -395,9 +497,10 @@
         }
 
         function shouldIgnoreShortcut(event) {
+            if (automaticMode) return true;
             if (!event || event.defaultPrevented) return true;
             if (manualModal && manualModal.classList.contains('show')) return true;
-            if (lastEventModal && lastEventModal.classList.contains('show')) return true;
+            if (latestEventsModal && latestEventsModal.classList.contains('show')) return true;
             var target = event.target;
             if (!target) return false;
             if (target.isContentEditable) return true;
@@ -463,63 +566,97 @@
             if (!ui.eventTime) return;
             ui.eventTime.textContent = formatTime12(date);
         }
+        function sanitizeIdentificationInput(value) {
+            return String(value || '').replace(/\D+/g, '').slice(0, 20);
+        }
 
-        function formatLastEventDescription(value) {
-            if (!value) return '-';
-            var map = {
-                'entrada': 'Ingreso',
-                'salida': 'Salida'
+        function getEventVisual(eventCode) {
+            var isSalida = Number(eventCode) === 1;
+            return {
+                isSalida: isSalida,
+                label: isSalida ? 'Salida' : 'Ingreso',
+                badgeClass: isSalida ? 'bg-danger' : 'bg-success',
+                borderColor: isSalida ? '#dc3545' : '#198754'
             };
-            return map[value] || value;
         }
 
-        function formatLastEventTime(value) {
-            if (!value) return '-';
-            var date = new Date(value);
-            if (isNaN(date.getTime())) {
-                return value;
-            }
-            var time = formatTime12(date);
-            var dateText = date.toLocaleDateString('es-CO');
-            return time + ' · ' + dateText;
+        function buildLatestEventItemElement(item) {
+            var li = document.createElement('li');
+            var eventVisual = getEventVisual(item && item.evento ? item.evento : 0);
+            var nombre = item && item.nombre ? item.nombre : 'Sin nombre';
+            var identificacionTexto = item && item.identificacion ? 'CC ' + item.identificacion : '';
+            var descripcion = item && item.descripcion ? String(item.descripcion).trim() : '';
+            var hora = item && item.hora_evento ? item.hora_evento : '--';
+
+            li.className = 'list-group-item d-flex align-items-center justify-content-between gap-3';
+            li.style.borderLeft = '4px solid ' + eventVisual.borderColor;
+            li.innerHTML =
+                '<div style="min-width:0; flex:1 1 auto;">' +
+                '<div class="fw-semibold text-truncate">' + nombre + '</div>' +
+                (identificacionTexto ? '<div class="text-muted small">' + identificacionTexto + '</div>' : '') +
+                (descripcion ? '<div class="small">' + descripcion + '</div>' : '') +
+                '</div>' +
+                '<div class="d-flex flex-column align-items-end gap-1" style="white-space:nowrap;">' +
+                '<span class="badge ' + eventVisual.badgeClass + '">' + eventVisual.label + '</span>' +
+                '<div class="fw-semibold" style="font-size:1rem;">' + hora + '</div>' +
+                '</div>';
+            return li;
         }
 
-        function resetLastEventState() {
-            if (lastEventResult) {
-                lastEventResult.classList.add('d-none');
+        function renderLatestEvents(items, emptyText) {
+            if (!latestEventsList || !latestEventsEmpty) {
+                return;
             }
-            if (lastEventEmpty) {
-                lastEventEmpty.classList.add('d-none');
-            }
-            if (lastEventError) {
-                lastEventError.classList.add('d-none');
-                lastEventError.textContent = '';
-            }
-            if (lastEventLoading) {
-                lastEventLoading.classList.add('d-none');
-            }
-        }
-
-        async function fetchLastEvent() {
-            if (!lastEventIdent || !lastEventSearch) return;
-            var ident = (lastEventIdent.value || '').trim();
-            resetLastEventState();
-
-            if (!ident) {
-                if (lastEventError) {
-                    lastEventError.textContent = 'Ingrese una identificacion.';
-                    lastEventError.classList.remove('d-none');
-                }
+            latestEventsList.innerHTML = '';
+            if (!Array.isArray(items) || items.length === 0) {
+                latestEventsEmpty.classList.remove('d-none');
+                latestEventsEmpty.textContent = emptyText || 'Sin registros recientes.';
                 return;
             }
 
-            lastEventSearch.disabled = true;
-            if (lastEventLoading) {
-                lastEventLoading.classList.remove('d-none');
-            }
+            latestEventsEmpty.classList.add('d-none');
+            var fragment = document.createDocumentFragment();
+            items.forEach(function(item) {
+                fragment.appendChild(buildLatestEventItemElement(item));
+            });
+            latestEventsList.appendChild(fragment);
+        }
 
+        function setLatestEventsLoading(isLoading) {
+            if (latestEventsLoading) {
+                latestEventsLoading.classList.toggle('d-none', !isLoading);
+            }
+            if (todayEventsSearchBtn) {
+                todayEventsSearchBtn.disabled = isLoading;
+            }
+            if (todayEventsResetBtn) {
+                todayEventsResetBtn.disabled = isLoading;
+            }
+        }
+
+        function setLatestEventsFetchError(message) {
+            renderLatestEvents([], message || 'No se pudieron consultar los registros.');
+            if (!latestEventsEmpty) {
+                return;
+            }
+            latestEventsEmpty.classList.remove('d-none');
+            latestEventsEmpty.textContent = message || 'No se pudieron consultar los registros.';
+        }
+
+        function getTodayEventsDocQuery() {
+            if (!todayEventsDocInput) return '';
+            return sanitizeIdentificationInput(todayEventsDocInput.value);
+        }
+
+        async function loadLatestEvents() {
+            if (latestEventsInFlight || !latestEventsList) {
+                return;
+            }
+            latestEventsInFlight = true;
+            setLatestEventsLoading(true);
             try {
-                var response = await fetch('{{ route("fingerprint.eventos.empleados.ultimo") }}?identificacion=' + encodeURIComponent(ident), {
+                var response = await fetch('{{ route("fingerprint.eventos.empleados.ultimos") }}', {
+                    method: 'GET',
                     headers: {
                         'Accept': 'application/json'
                     },
@@ -534,45 +671,61 @@
                 }
 
                 if (!response.ok || !data || data.ok !== true) {
-                    var message = (data && data.error) ? data.error : 'No se pudo consultar el ultimo evento.';
-                    if (lastEventError) {
-                        lastEventError.textContent = message;
-                        lastEventError.classList.remove('d-none');
-                    }
+                    setLatestEventsFetchError('No se pudieron consultar los registros.');
                     return;
                 }
 
-                if (!data.data) {
-                    if (lastEventEmpty) {
-                        lastEventEmpty.classList.remove('d-none');
-                    }
-                    return;
-                }
-
-                if (lastEventDescription) {
-                    lastEventDescription.textContent = formatLastEventDescription(data.data.descripcion);
-                }
-                if (lastEventTime) {
-                    lastEventTime.textContent = formatLastEventTime(data.data.fecha);
-                }
-                if (lastEventResult) {
-                    lastEventResult.classList.remove('d-none');
-                }
+                renderLatestEvents(Array.isArray(data.data) ? data.data : []);
             } catch (err) {
-                if (lastEventError) {
-                    lastEventError.textContent = 'No se pudo consultar el ultimo evento.';
-                    lastEventError.classList.remove('d-none');
-                }
+                setLatestEventsFetchError('No se pudieron consultar los registros.');
             } finally {
-                if (lastEventLoading) {
-                    lastEventLoading.classList.add('d-none');
-                }
-                if (lastEventSearch) {
-                    lastEventSearch.disabled = false;
-                }
+                latestEventsInFlight = false;
+                setLatestEventsLoading(false);
             }
         }
 
+        async function loadTodayEventsByDoc() {
+            var identificacion = getTodayEventsDocQuery();
+            if (!identificacion) {
+                setLatestEventsFetchError('Ingresa una identificacion valida.');
+                return;
+            }
+            if (latestEventsInFlight || !latestEventsList) {
+                return;
+            }
+            latestEventsInFlight = true;
+            setLatestEventsLoading(true);
+            try {
+                var url = '{{ route("fingerprint.eventos.empleados.hoy") }}?identificacion=' + encodeURIComponent(identificacion);
+                var response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                });
+
+                var data = null;
+                try {
+                    data = await response.json();
+                } catch (err) {
+                    data = null;
+                }
+
+                if (!response.ok || !data || data.ok !== true) {
+                    setLatestEventsFetchError('No se pudo consultar los registros de hoy.');
+                    return;
+                }
+
+                var items = Array.isArray(data.data) ? data.data : [];
+                renderLatestEvents(items, 'No hay registros hoy para esta identificacion.');
+            } catch (err) {
+                setLatestEventsFetchError('No se pudo consultar los registros de hoy.');
+            } finally {
+                latestEventsInFlight = false;
+                setLatestEventsLoading(false);
+            }
+        }
         function resetEmpleadoInfo() {
             if (ui.empleadoNombre) {
                 ui.empleadoNombre.textContent = 'Sin identificar';
@@ -643,11 +796,16 @@
         function clearDisplay() {
             probe = '';
             identificacion = '';
+            if (automaticMode) {
+                resolvedEventCode = 2;
+                hasResolvedEvent = false;
+            }
             updateIdentificacionBox();
             resetEmpleadoInfo();
             setEventTime(null);
             updateProgress();
             unlockStatus();
+            applyEventTheme();
         }
 
         function stopCaptureSafely() {
@@ -687,6 +845,9 @@
         }
 
         function requireEvent() {
+            if (automaticMode) {
+                return true;
+            }
             if (!selectedEventValue()) {
                 showAlert('warning', 'Seleccione el tipo de evento.');
                 return false;
@@ -926,8 +1087,20 @@
                 }
 
                 if (!response.ok || !data || data.ok !== true) {
-                    showAlert('warning', (data && data.error) ? data.error : 'Servicio no disponible.');
+                    showAlert('warning', buildFriendlyEventError(data || {}));
                 } else {
+                    if (automaticMode) {
+                        var eventoRegistrado = Number(data.evento || 0);
+                        if (eventoRegistrado === 1 || eventoRegistrado === 2) {
+                            resolvedEventCode = eventoRegistrado;
+                            hasResolvedEvent = true;
+                            var radio = document.getElementById(eventoRegistrado === 1 ? 'eventSalida' : 'eventEntrada');
+                            if (radio) {
+                                radio.checked = true;
+                            }
+                            applyEventTheme();
+                        }
+                    }
                     if (data.data) {
                         if (data.data.nombre && ui.empleadoNombre) {
                             ui.empleadoNombre.textContent = data.data.nombre;
@@ -961,10 +1134,12 @@
             }
 
             var payload = {
-                evento: Number(selectedEventValue()),
-                descripcion: selectedEventDescription(),
                 identificacion: identificacion
             };
+            if (!automaticMode) {
+                payload.evento = Number(selectedEventValue());
+                payload.descripcion = selectedEventDescription();
+            }
 
             submitEvent(payload, eventCapturedAt || new Date());
         }
@@ -1063,11 +1238,13 @@
             handleSample(normalized[0]);
         };
 
-        eventInputs.forEach(function(node) {
-            node.addEventListener('change', function() {
-                resetState();
+        if (!automaticMode) {
+            eventInputs.forEach(function(node) {
+                node.addEventListener('change', function() {
+                    resetState();
+                });
             });
-        });
+        }
 
         if (manualModal) {
             manualModal.addEventListener('show.bs.modal', function() {
@@ -1098,30 +1275,45 @@
             });
         }
 
-        if (lastEventModal) {
-            lastEventModal.addEventListener('show.bs.modal', function() {
-                resetLastEventState();
-                if (lastEventIdent) {
-                    lastEventIdent.value = '';
+        if (latestEventsModal) {
+            latestEventsModal.addEventListener('show.bs.modal', function() {
+                if (todayEventsDocInput) {
+                    todayEventsDocInput.value = '';
                     setTimeout(function() {
-                        lastEventIdent.focus();
+                        todayEventsDocInput.focus();
                     }, 100);
                 }
+                loadLatestEvents();
             });
         }
 
-        if (lastEventSearch) {
-            lastEventSearch.addEventListener('click', function() {
-                fetchLastEvent();
+        if (todayEventsSearchBtn) {
+            todayEventsSearchBtn.addEventListener('click', function() {
+                loadTodayEventsByDoc();
             });
         }
 
-        if (lastEventIdent) {
-            lastEventIdent.addEventListener('keydown', function(event) {
+        if (todayEventsDocInput) {
+            todayEventsDocInput.addEventListener('input', function() {
+                var sanitized = sanitizeIdentificationInput(todayEventsDocInput.value);
+                if (todayEventsDocInput.value !== sanitized) {
+                    todayEventsDocInput.value = sanitized;
+                }
+            });
+            todayEventsDocInput.addEventListener('keydown', function(event) {
                 if (event.key === 'Enter') {
                     event.preventDefault();
-                    fetchLastEvent();
+                    loadTodayEventsByDoc();
                 }
+            });
+        }
+
+        if (todayEventsResetBtn) {
+            todayEventsResetBtn.addEventListener('click', function() {
+                if (todayEventsDocInput) {
+                    todayEventsDocInput.value = '';
+                }
+                loadLatestEvents();
             });
         }
 
@@ -1131,7 +1323,9 @@
             });
         }
 
-        document.addEventListener('keydown', handleShortcut);
+        if (!automaticMode) {
+            document.addEventListener('keydown', handleShortcut);
+        }
 
         applyEventTheme();
         setStatus('disconnected');
@@ -1143,3 +1337,4 @@
     });
 </script>
 @endpush
+

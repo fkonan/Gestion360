@@ -8,7 +8,7 @@ class ConReversoCajasan extends Model
 {
     protected $connection = 'oracle';
 
-    protected $table = 'CON_REVERSO_CAJASAN';
+    protected $table = 'LOGTRANSPRO.CON_REVERSO_CAJASAN';
 
     protected $primaryKey = 'id';
 
@@ -20,9 +20,17 @@ class ConReversoCajasan extends Model
         'id',
         'detalle_id',
         'transmission_datetime',
+        'identification_type',
+        'identification',
+        'amount_tran',
+        'state_code',
+        'city_code',
+        'sequence_id',
+        'status',
         'response_code',
         'authorization_rsp_code',
         'error_id',
+        'error_message',
         'additional_data',
     ];
 }
