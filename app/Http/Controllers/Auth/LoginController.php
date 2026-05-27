@@ -54,7 +54,7 @@ class LoginController extends Controller
 
                 // CASO 2 - Si existe usuario en autogestion -> se valida
                 //!password_verify($request->password, $user->Password)
-                if (false) {
+                if (!password_verify($request->password, $user->Password)) {
                     return back()->withInput()->withErrors(['identificacion' => 'Identificación o contraseña incorrectos']);
                 }
 
