@@ -21,3 +21,13 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# Local-only: IA tooling and agent configuration
+.claude/
+.ia-sarlaft/
+.atl/
+AGENTS.md
+
+# Local-only: project memory backends
+.engram/
+memory/
