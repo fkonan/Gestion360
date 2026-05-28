@@ -30,11 +30,8 @@ const ensureMediapipeAssets = () => {
 ensureMediapipeAssets();
 
 export default defineConfig({
-   /* Pruebas */
-   //  base: '/gestion/autogestion2/public/build/',
+    base: '/gestion/autogestion2/public/build/',
 
-   /* Produccion */
-   base: "/testgestion/build/",
 
    plugins: [
       laravel({
