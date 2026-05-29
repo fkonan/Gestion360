@@ -10,6 +10,12 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if ($this->hasForeignKey('sarlaft_alertas', 'sarlaft_alertas_consulta_id_foreign')) {
+            Schema::connection('mysql-sarlaft')->table('sarlaft_alertas', function (Blueprint $table): void {
+                $table->dropForeign('sarlaft_alertas_consulta_id_foreign');
+            });
+        }
+
         Schema::connection('mysql-sarlaft')->table('sarlaft_alertas', function (Blueprint $table): void {
             if (Schema::connection('mysql-sarlaft')->hasColumn('sarlaft_alertas', 'consulta_id')) {
                 $table->dropColumn('consulta_id');
@@ -19,23 +25,23 @@ return new class extends Migration
         Schema::connection('mysql-sarlaft')->dropIfExists('sarlaft_consultas_archivo');
         Schema::connection('mysql-sarlaft')->dropIfExists('sarlaft_consultas');
 
-        Schema::connection('mysql-sarlaft')->table('sarlaft_alertas', function (Blueprint $table): void {
-            if (! $this->hasForeignKey('sarlaft_alertas', 'fk_alertas_intento')) {
+        if (! $this->hasForeignKey('sarlaft_alertas', 'fk_alertas_intento')) {
+            Schema::connection('mysql-sarlaft')->table('sarlaft_alertas', function (Blueprint $table): void {
                 $table->foreign('intento_id', 'fk_alertas_intento')
                     ->references('id')
                     ->on('sarlaft_intentos_operacion')
                     ->nullOnDelete();
-            }
-        });
+            });
+        }
     }
 
     public function down(): void
     {
-        Schema::connection('mysql-sarlaft')->table('sarlaft_alertas', function (Blueprint $table): void {
-            if ($this->hasForeignKey('sarlaft_alertas', 'fk_alertas_intento')) {
+        if ($this->hasForeignKey('sarlaft_alertas', 'fk_alertas_intento')) {
+            Schema::connection('mysql-sarlaft')->table('sarlaft_alertas', function (Blueprint $table): void {
                 $table->dropForeign('fk_alertas_intento');
-            }
-        });
+            });
+        }
     }
 
     private function hasForeignKey(string $table, string $name): bool
