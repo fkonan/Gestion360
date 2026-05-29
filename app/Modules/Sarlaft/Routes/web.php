@@ -5,15 +5,12 @@ declare(strict_types=1);
 use App\Modules\Sarlaft\Http\Controllers\Admin\AlertaController;
 use App\Modules\Sarlaft\Http\Controllers\Admin\DashboardController;
 use App\Modules\Sarlaft\Http\Controllers\Admin\ListaNegraController;
-use App\Modules\Sarlaft\Http\Controllers\Admin\PoliticaController;
 use App\Modules\Sarlaft\Http\Controllers\Admin\SincronizacionController;
 use App\Modules\Sarlaft\Http\Controllers\Admin\SistemaConsumidorController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->prefix('sarlaft')->name('sarlaft.')->group(function (): void {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/politicas', [PoliticaController::class, 'edit'])->name('politicas.edit');
-    Route::put('/politicas', [PoliticaController::class, 'update'])->name('politicas.update');
 
     Route::get('/alertas', [AlertaController::class, 'index'])->name('alertas.index');
     Route::get('/alertas/{alerta}', [AlertaController::class, 'show'])->name('alertas.show');

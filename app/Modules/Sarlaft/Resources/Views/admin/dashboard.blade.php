@@ -40,11 +40,6 @@
     </div>
 </div>
 
-<div class="d-flex justify-content-end gap-2 mb-3">
-    <a href="{{ route('sarlaft.politicas.edit') }}" class="btn btn-dark">
-        <i class="fas fa-cogs"></i> Politicas SARLAFT
-    </a>
-</div>
 
 <div class="row g-4">
     {{-- Alertas Pendientes --}}

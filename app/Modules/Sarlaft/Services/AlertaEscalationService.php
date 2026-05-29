@@ -12,7 +12,6 @@ class AlertaEscalationService
 {
     public function __construct(
         private readonly GestionAlertaService $gestionAlertaService,
-        private readonly PoliticaSarlaftService $politicaSarlaftService,
     ) {}
 
     /**
@@ -21,12 +20,11 @@ class AlertaEscalationService
     public function procesarVencidas(bool $dryRun = false, ?int $chunk = null): array
     {
         $inicio = microtime(true);
-        $politica = $this->politicaSarlaftService->obtener();
-        $cutoff = now()->subDays((int) ($politica['sla_dias_alerta'] ?? 1));
+        $cutoff = now()->subDays(max((int) config('sarlaft.alerta_sla_dias', 1), 1));
         $chunkSize = $this->resolverChunk($chunk);
-        $riesgosAutoEscalables = (array) ($politica['auto_escalar_riesgos'] ?? ['alto', 'critico']);
-        $autoEstado = (string) ($politica['auto_estado'] ?? 'en_revision');
-        $autoUserId = $this->resolverUsuarioAutomatico($politica);
+        $riesgosAutoEscalables = (array) config('sarlaft.auto_escalar_riesgos', ['alto', 'critico']);
+        $autoEstado = (string) config('sarlaft.auto_estado', 'en_revision');
+        $autoUserId = $this->resolverUsuarioAutomatico();
 
         $stats = [
             'evaluadas' => 0,
@@ -94,18 +92,14 @@ class AlertaEscalationService
 
     private function resolverChunk(?int $chunk): int
     {
-        $configChunk = (int) config('sarlaft.archive_chunk', 5000);
-        $valor = $chunk ?? $configChunk;
+        $valor = $chunk ?? 5000;
 
         return $valor > 0 ? $valor : 5000;
     }
 
-    /**
-     * @param  array<string, mixed>  $politica
-     */
-    private function resolverUsuarioAutomatico(array $politica): ?int
+    private function resolverUsuarioAutomatico(): ?int
     {
-        $userId = isset($politica['auto_user_id']) ? (int) $politica['auto_user_id'] : (int) config('sarlaft.auto_user_id', 1);
+        $userId = (int) config('sarlaft.auto_user_id', 1);
 
         return $userId > 0 ? $userId : null;
     }
