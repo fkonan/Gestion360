@@ -263,7 +263,7 @@
                             };
 
                             $originLabel = match ($origenAtencion) {
-                                'auto_lista_negra_interna' => 'Auto Lista Negra',
+                                'auto_lista_negra_interna' => 'Auto Lista Restrictiva',
                                 'auto_sla' => 'Auto SLA',
                                 default => 'Manual',
                             };

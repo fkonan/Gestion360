@@ -1,12 +1,12 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Lista Restictiva Interna')
+@section('title', 'Lista Restrictiva')
 
 @section('breadcrumb')
    <x-breadcrumb :items="[
        ['name' => 'Inicio', 'url' => route('home')],
        ['name' => 'Sarlaft', 'url' => '#'],
-       ['name' => 'Lista Restictiva Interna'],
+       ['name' => 'Lista Restrictiva'],
    ]" />
    <br>
 @endsection
@@ -61,7 +61,7 @@
                      </tr>
                   @empty
                      <tr>
-                        <td colspan="8" class="text-center text-muted py-4">No hay registros en la lista negra.</td>
+                        <td colspan="8" class="text-center text-muted py-4">No hay registros en la lista restrictiva.</td>
                      </tr>
                   @endforelse
                </tbody>

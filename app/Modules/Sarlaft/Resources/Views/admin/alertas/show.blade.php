@@ -64,7 +64,7 @@
                     <div class="col-md-4">
                         <strong>Tipo atencion:</strong><br>
                         @if($origenAtencion === 'auto_lista_negra_interna')
-                            Auto Lista Negra Interna
+                            Auto Lista Restrictiva
                         @elseif($origenAtencion === 'auto_sla')
                             Auto SLA
                         @else

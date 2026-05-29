@@ -91,7 +91,7 @@
 
             <hr>
 
-            <h6 class="mb-3">Autoatencion por Lista Negra Interna</h6>
+            <h6 class="mb-3">Autoatencion por Lista Restrictiva</h6>
             <div class="row g-3">
                 <div class="col-md-6">
                     <input type="hidden" name="auto_atender_lista_negra_interna" value="0">
@@ -106,7 +106,7 @@
                             {{ old('auto_atender_lista_negra_interna', $politica['auto_atender_lista_negra_interna']) ? 'checked' : '' }}
                         >
                         <label class="form-check-label" for="auto_atender_lista_negra_interna">
-                            Autoatender alertas generadas por coincidencia en lista negra interna
+                            Autoatender alertas generadas por coincidencia en lista restrictiva
                         </label>
                     </div>
                 </div>
