@@ -45,16 +45,6 @@
         </a>
     </div>
     <div class="col-md-4 col-lg-3">
-        <a href="{{ route('sarlaft.bloqueos.index') }}" class="text-decoration-none">
-            <div class="card stat-card border-secondary shadow-sm h-100">
-                <div class="card-body">
-                    <div class="text-muted small">Bloqueos Activos</div>
-                    <div class="fs-3 fw-bold text-secondary">{{ $stats['bloqueos_activos'] }}</div>
-                </div>
-            </div>
-        </a>
-    </div>
-    <div class="col-md-4 col-lg-3">
         <a href="{{ route('sarlaft.lista-negra.index') }}" class="text-decoration-none">
             <div class="card stat-card border-dark shadow-sm h-100">
                 <div class="card-body">

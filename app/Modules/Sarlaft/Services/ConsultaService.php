@@ -7,7 +7,6 @@ namespace App\Modules\Sarlaft\Services;
 use App\Modules\Sarlaft\Events\AlertaGenerada;
 use App\Modules\Sarlaft\Events\ConsultaRealizada;
 use App\Modules\Sarlaft\Models\Alerta;
-use App\Modules\Sarlaft\Models\Bloqueo;
 use App\Modules\Sarlaft\Models\Consulta;
 use App\Modules\Sarlaft\Models\RegistroLista;
 use Illuminate\Support\Facades\DB;
@@ -51,12 +50,11 @@ class ConsultaService
 
         $encontrado = count($coincidencias) > 0;
         $coincidenciaListaNegraInterna = $this->tieneCoincidenciaTipo($coincidencias, 'lista_negra_interna');
-        $bloqueado = $this->estaBloqueado($datos['tipo_documento'], $datos['numero_documento']);
-        $nivelRiesgoBase = $this->calcularNivelRiesgo($coincidencias, $bloqueado);
-        $prestaServicioBase = ! $bloqueado && $nivelRiesgoBase !== 'alto';
+        $nivelRiesgoBase = $this->calcularNivelRiesgo($coincidencias);
+        $prestaServicioBase = $nivelRiesgoBase !== 'alto';
         $nivelRiesgo = $nivelRiesgoBase;
         $prestaServicio = $prestaServicioBase;
-        $tieneContextoRiesgo = $encontrado || $bloqueado;
+        $tieneContextoRiesgo = $encontrado;
 
         $consulta = Consulta::create([
             'sistema_origen' => $sistemaOrigen,
@@ -258,23 +256,11 @@ class ConsultaService
         return $coincidencias;
     }
 
-    private function estaBloqueado(string $tipoDocumento, string $numeroDocumento): bool
-    {
-        return Bloqueo::where('tipo_documento', $tipoDocumento)
-            ->where('numero_documento', $numeroDocumento)
-            ->where('estado', 'bloqueado')
-            ->exists();
-    }
-
     /**
      * @param  array<int, array<string, mixed>>  $coincidencias
      */
-    private function calcularNivelRiesgo(array $coincidencias, bool $bloqueado): string
+    private function calcularNivelRiesgo(array $coincidencias): string
     {
-        if ($bloqueado) {
-            return 'alto';
-        }
-
         if (count($coincidencias) === 0) {
             return 'ninguno';
         }

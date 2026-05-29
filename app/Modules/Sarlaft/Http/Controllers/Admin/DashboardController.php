@@ -6,7 +6,6 @@ namespace App\Modules\Sarlaft\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Sarlaft\Models\Alerta;
-use App\Modules\Sarlaft\Models\Bloqueo;
 use App\Modules\Sarlaft\Models\Consulta;
 use App\Modules\Sarlaft\Models\ListaNegraInterna;
 use Illuminate\Contracts\View\View;
@@ -22,7 +21,6 @@ class DashboardController extends Controller
                 ->count(),
             'alertas_pendientes' => Alerta::where('estado', 'pendiente')->count(),
             'alertas_en_revision' => Alerta::where('estado', 'en_revision')->count(),
-            'bloqueos_activos' => Bloqueo::where('estado', 'bloqueado')->count(),
             'lista_negra_total' => ListaNegraInterna::where('estado', 'activo')->count(),
         ];
 

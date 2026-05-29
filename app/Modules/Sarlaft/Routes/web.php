@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use App\Modules\Sarlaft\Http\Controllers\Admin\AlertaController;
-use App\Modules\Sarlaft\Http\Controllers\Admin\BloqueoController;
 use App\Modules\Sarlaft\Http\Controllers\Admin\DashboardController;
 use App\Modules\Sarlaft\Http\Controllers\Admin\ListaNegraController;
 use App\Modules\Sarlaft\Http\Controllers\Admin\PoliticaController;
@@ -22,13 +21,6 @@ Route::middleware('auth')->prefix('sarlaft')->name('sarlaft.')->group(function (
     Route::patch('/alertas/{alerta}/atender', [AlertaController::class, 'atender'])->name('alertas.atender');
     Route::get('/alertas/{alerta}/evidencias/{evidencia}', [AlertaController::class, 'descargarEvidencia'])
         ->name('alertas.evidencias.download');
-
-    Route::get('/bloqueos', [BloqueoController::class, 'index'])->name('bloqueos.index');
-    Route::get('/bloqueos/crear', [BloqueoController::class, 'create'])->name('bloqueos.create');
-    Route::post('/bloqueos', [BloqueoController::class, 'store'])->name('bloqueos.store');
-    Route::get('/bloqueos/{bloqueo}', [BloqueoController::class, 'show'])->name('bloqueos.show');
-    Route::patch('/bloqueos/{bloqueo}', [BloqueoController::class, 'update'])->name('bloqueos.update');
-    Route::get('/bloqueos/{bloqueo}/archivo-soporte', [BloqueoController::class, 'descargarArchivo'])->name('bloqueos.archivo-soporte.download');
 
     Route::get('/lista-negra/{lista_negra}/evidencias/{tipo}', [ListaNegraController::class, 'descargarEvidencia'])
         ->whereIn('tipo', ['inclusion', 'retiro'])
