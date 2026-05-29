@@ -4,7 +4,6 @@
 
 @section('content')
 @php
-    $consulta = $alerta->consulta;
     $intento = $alerta->intento;
     $evidencias = is_array($alerta->evidencias) ? $alerta->evidencias : [];
     $contextoOperacion = is_array($alerta->contexto_operacion) ? $alerta->contexto_operacion : [];
@@ -222,21 +221,6 @@
                 </form>
             </div>
         </div>
-
-        @if($consulta)
-        <div class="card shadow-sm mt-3">
-            <div class="card-header">
-                <h6 class="mb-0">Consulta Asociada #{{ $consulta->id }}</h6>
-            </div>
-            <div class="card-body small">
-                <p><strong>Sistema:</strong> {{ $consulta->sistema_origen }}</p>
-                <p><strong>Documento:</strong> {{ $consulta->tipo_documento }} {{ $consulta->numero_documento }}</p>
-                <p><strong>Resultado:</strong> {{ $consulta->encontrado ? 'Encontrado' : 'No encontrado' }}</p>
-                <p><strong>Presta servicio:</strong> {{ $consulta->presta_servicio ? 'Si' : 'No' }}</p>
-                <p class="mb-0"><strong>IP:</strong> {{ $consulta->ip_origen }}</p>
-            </div>
-        </div>
-        @endif
 
         @if($intento)
         <div class="card shadow-sm mt-3">

@@ -8,22 +8,6 @@
   <h3>Dashboard Sarlaft</h3>
 </div>
 <div class="row g-3 mb-4">
-    {{-- <div class="col-md-4 col-lg-2">
-        <div class="card stat-card border-primary shadow-sm">
-            <div class="card-body">
-                <div class="text-muted small">Consultas Hoy</div>
-                <div class="fs-3 fw-bold">{{ number_format($stats['consultas_hoy']) }}</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4 col-lg-2">
-        <div class="card stat-card border-primary shadow-sm">
-            <div class="card-body">
-                <div class="text-muted small">Consultas Mes</div>
-                <div class="fs-3 fw-bold">{{ number_format($stats['consultas_mes']) }}</div>
-            </div>
-        </div>
-    </div> --}}
     <div class="col-md-4 col-lg-3">
         <a href="{{ route('sarlaft.alertas.index') }}" class="text-decoration-none">
             <div class="card stat-card border-danger shadow-sm h-100">
@@ -59,9 +43,6 @@
 <div class="d-flex justify-content-end gap-2 mb-3">
     <a href="{{ route('sarlaft.politicas.edit') }}" class="btn btn-dark">
         <i class="fas fa-cogs"></i> Politicas SARLAFT
-    </a>
-    <a href="{{ route('sarlaft.reportes.operaciones.index') }}" class="btn btn-outline-dark">
-        <i class="fas fa-chart-bar"></i> Reporte Operativo
     </a>
 </div>
 

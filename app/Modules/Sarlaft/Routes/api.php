@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Modules\Sarlaft\Http\Controllers\Api\ConsultaController;
 use App\Modules\Sarlaft\Http\Controllers\Api\IntentoOperacionController;
 use App\Modules\Sarlaft\Http\Controllers\Api\ListaRegistroController;
 use App\Modules\Sarlaft\Http\Controllers\Api\MockSistemaExternoController;
@@ -34,10 +33,6 @@ if (! app()->isProduction()) {
 Route::prefix('v1')
     ->middleware([AutenticarSistemaConsumidor::class, RateLimitSistema::class])
     ->group(function (): void {
-        Route::post('/consulta', [ConsultaController::class, 'store']);
-        Route::post('/consulta/lote', [ConsultaController::class, 'storeLote']);
-        Route::get('/consulta/{consulta}', [ConsultaController::class, 'show']);
-
         Route::get('/listas/registros', [ListaRegistroController::class, 'index']);
 
         Route::post('/intentos-operacion', [IntentoOperacionController::class, 'store']);

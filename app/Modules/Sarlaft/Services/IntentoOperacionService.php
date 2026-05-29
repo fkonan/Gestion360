@@ -167,7 +167,6 @@ class IntentoOperacionService
         $nivelRiesgo = str_contains($tipoLista, 'vinculante') ? 'alto' : 'medio';
 
         Alerta::create([
-            'consulta_id' => null,
             'intento_id' => $intento->id,
             'tipo' => 'intento_operacion_'.$intento->modo_integracion,
             'nivel_riesgo' => $nivelRiesgo,

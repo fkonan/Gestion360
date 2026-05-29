@@ -19,7 +19,7 @@ class NotificarAlerta implements ShouldQueue
     {
         Log::channel('daily')->warning('Alerta generada', [
             'alerta_id' => $event->alerta->id,
-            'consulta_id' => $event->alerta->consulta_id,
+            'intento_id' => $event->alerta->intento_id,
             'tipo' => $event->alerta->tipo,
             'nivel_riesgo' => $event->alerta->nivel_riesgo,
             'datos_persona' => $event->alerta->datos_persona,

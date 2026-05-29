@@ -6,7 +6,6 @@ use App\Modules\Sarlaft\Http\Controllers\Admin\AlertaController;
 use App\Modules\Sarlaft\Http\Controllers\Admin\DashboardController;
 use App\Modules\Sarlaft\Http\Controllers\Admin\ListaNegraController;
 use App\Modules\Sarlaft\Http\Controllers\Admin\PoliticaController;
-use App\Modules\Sarlaft\Http\Controllers\Admin\ReporteOperacionesController;
 use App\Modules\Sarlaft\Http\Controllers\Admin\SincronizacionController;
 use App\Modules\Sarlaft\Http\Controllers\Admin\SistemaConsumidorController;
 use Illuminate\Support\Facades\Route;
@@ -40,6 +39,4 @@ Route::middleware('auth')->prefix('sarlaft')->name('sarlaft.')->group(function (
     Route::post('/sincronizacion/listas/sincronizar-config', [SincronizacionController::class, 'sincronizarDesdeConfig'])->name('sincronizacion.listas.sincronizar-config');
     Route::post('/sincronizacion/listas/sincronizar-ahora', [SincronizacionController::class, 'sincronizarListasAhora'])->name('sincronizacion.listas.sincronizar-ahora');
     Route::post('/sincronizacion/intentos/sincronizar-ahora', [SincronizacionController::class, 'sincronizarIntentosAhora'])->name('sincronizacion.intentos.sincronizar-ahora');
-
-    Route::get('/reportes/operaciones', [ReporteOperacionesController::class, 'index'])->name('reportes.operaciones.index');
 });

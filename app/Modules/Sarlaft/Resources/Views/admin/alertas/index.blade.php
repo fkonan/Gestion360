@@ -224,13 +224,11 @@
                                 $sistemaOrigen = \Illuminate\Support\Str::headline((string) $alerta->intento->sistema_origen);
                             } elseif (is_string($alerta->intento?->sistema?->nombre) && trim((string) $alerta->intento?->sistema?->nombre) !== '') {
                                 $sistemaOrigen = (string) $alerta->intento->sistema->nombre;
-                            } elseif (is_string($alerta->consulta?->sistema_origen) && trim((string) $alerta->consulta?->sistema_origen) !== '') {
-                                $sistemaOrigen = \Illuminate\Support\Str::headline((string) $alerta->consulta->sistema_origen);
                             }
 
                             $operationClass = match (true) {
-                                str_contains(strtolower((string) ($alerta->consulta?->sistema_origen ?? '')), 'remesa') => 'is-remesa',
-                                str_contains(strtolower((string) ($alerta->consulta?->sistema_origen ?? '')), 'pasaje') => 'is-pasaje',
+                                str_contains(strtolower((string) ($alerta->intento?->sistema_origen ?? '')), 'remesa') => 'is-remesa',
+                                str_contains(strtolower((string) ($alerta->intento?->sistema_origen ?? '')), 'pasaje') => 'is-pasaje',
                                 default => 'is-default',
                             };
 

@@ -29,7 +29,7 @@ class AlertaResource extends JsonResource
 
         return [
             'id' => $this->id,
-            'consulta_id' => $this->consulta_id,
+            'intento_id' => $this->intento_id,
             'tipo' => $this->tipo,
             'nivel_riesgo' => $this->nivel_riesgo,
             'estado' => $this->estado,

@@ -18,7 +18,6 @@ class Alerta extends Model
     protected $connection = 'mysql-sarlaft';
 
     protected $fillable = [
-        'consulta_id',
         'intento_id',
         'tipo',
         'nivel_riesgo',
@@ -47,11 +46,6 @@ class Alerta extends Model
             'escalada_automatica_at' => 'datetime',
             'fecha_atencion' => 'datetime',
         ];
-    }
-
-    public function consulta(): BelongsTo
-    {
-        return $this->belongsTo(Consulta::class, 'consulta_id');
     }
 
     public function intento(): BelongsTo

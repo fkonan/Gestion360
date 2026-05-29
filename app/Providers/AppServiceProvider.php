@@ -8,9 +8,7 @@ use App\Modules\Configuracion\Models\SubModulo;
 use App\Modules\Configuracion\Observers\ModuloObserver;
 use App\Modules\Configuracion\Observers\SubmoduloObserver;
 use App\Modules\Sarlaft\Events\AlertaGenerada;
-use App\Modules\Sarlaft\Events\ConsultaRealizada;
 use App\Modules\Sarlaft\Listeners\NotificarAlerta;
-use App\Modules\Sarlaft\Listeners\RegistrarConsulta;
 use App\Observers\PermisoObserver;
 use App\View\Composers\MenuComposer;
 use Illuminate\Pagination\Paginator;
@@ -47,7 +45,6 @@ class AppServiceProvider extends ServiceProvider
               && Auth::user()->can($permiso);
         });
 
-        Event::listen(ConsultaRealizada::class, RegistrarConsulta::class);
         Event::listen(AlertaGenerada::class, NotificarAlerta::class);
     }
 }
