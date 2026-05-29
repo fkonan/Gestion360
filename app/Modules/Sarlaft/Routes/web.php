@@ -46,7 +46,8 @@ Route::middleware('auth')->prefix('sarlaft')->name('sarlaft.')->group(function (
     Route::get('/sincronizacion', [SincronizacionController::class, 'index'])->name('sincronizacion.index');
     Route::post('/sincronizacion/listas', [SincronizacionController::class, 'storeLista'])->name('sincronizacion.listas.store');
     Route::post('/sincronizacion/listas/sincronizar-config', [SincronizacionController::class, 'sincronizarDesdeConfig'])->name('sincronizacion.listas.sincronizar-config');
-    Route::post('/sincronizacion/sincronizar-ahora', [SincronizacionController::class, 'sincronizarAhora'])->name('sincronizacion.sincronizar-ahora');
+    Route::post('/sincronizacion/listas/sincronizar-ahora', [SincronizacionController::class, 'sincronizarListasAhora'])->name('sincronizacion.listas.sincronizar-ahora');
+    Route::post('/sincronizacion/intentos/sincronizar-ahora', [SincronizacionController::class, 'sincronizarIntentosAhora'])->name('sincronizacion.intentos.sincronizar-ahora');
 
     Route::get('/reportes/operaciones', [ReporteOperacionesController::class, 'index'])->name('reportes.operaciones.index');
 });

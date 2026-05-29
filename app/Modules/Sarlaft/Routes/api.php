@@ -15,12 +15,21 @@ use Illuminate\Support\Facades\Route;
  * expondrán para el modo Pull. Cuando tengamos las URLs reales, se
  * actualiza pull_endpoint en sarlaft_sistemas_consumidores y listo.
  *
+ * Restricciones:
+ *  - Solo se registra en entornos NO productivos (local, staging, testing).
+ *  - Requiere Bearer token de un sistema consumidor activo.
+ *  - Sujeto al rate limit por sistema.
+ *
  * URL:  GET /api/mock/sistema-externo?sistema=logtrans&fecha_desde=2026-04-29
  */
-Route::prefix('mock')->group(function (): void {
-    Route::get('/sistema-externo', [MockSistemaExternoController::class, 'index'])
-        ->name('sarlaft.mock.sistema-externo');
-});
+if (! app()->isProduction()) {
+    Route::prefix('mock')
+        ->middleware([AutenticarSistemaConsumidor::class, RateLimitSistema::class])
+        ->group(function (): void {
+            Route::get('/sistema-externo', [MockSistemaExternoController::class, 'index'])
+                ->name('sarlaft.mock.sistema-externo');
+        });
+}
 
 Route::prefix('v1')
     ->middleware([AutenticarSistemaConsumidor::class, RateLimitSistema::class])

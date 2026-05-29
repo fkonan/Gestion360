@@ -9,12 +9,20 @@ use App\Modules\Sarlaft\Http\Requests\Admin\ListaVinculanteRequest;
 use App\Modules\Sarlaft\Jobs\SincronizarListaJob;
 use App\Modules\Sarlaft\Models\ListaVinculante;
 use App\Modules\Sarlaft\Models\SincronizacionLog;
+use App\Modules\Sarlaft\Models\SistemaConsumidor;
+use App\Modules\Sarlaft\Services\IntentoOperacionService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cache;
 
 class SincronizacionController extends Controller
 {
+    private const COOLDOWN_SECONDS = 28800;
+
+    public function __construct(
+        private readonly IntentoOperacionService $intentoOperacionService,
+    ) {}
+
     public function index(): View
     {
         $listas = ListaVinculante::query()
@@ -29,8 +37,10 @@ class SincronizacionController extends Controller
         return view('sarlaft::admin.sincronizacion.index', [
             'logs' => $logs,
             'listas' => $listas,
-            'isDev' => app()->environment(['local', 'development', 'dev']),
-            'puedeSincronizarAhora' => $this->puedeSincronizarAhora(),
+            'puedeSincronizarListasAhora' => $this->puedeSincronizarListasAhora(),
+            'puedeSincronizarIntentosAhora' => $this->puedeSincronizarIntentosAhora(),
+            'proximaSincronizacionListas' => $this->proximaSincronizacionListas(),
+            'proximaSincronizacionIntentos' => $this->proximaSincronizacionIntentos(),
         ]);
     }
 
@@ -86,52 +96,131 @@ class SincronizacionController extends Controller
             ->with('success', "Listas sincronizadas desde config: {$sincronizadas}.");
     }
 
-    public function sincronizarAhora(): RedirectResponse
+    public function sincronizarListasAhora(): RedirectResponse
     {
-        if (! app()->environment(['local', 'development', 'dev'])) {
+        if (! $this->puedeSincronizarListasAhora()) {
             return redirect()
                 ->route('sarlaft.sincronizacion.index')
-                ->with('error', 'Esta accion solo esta habilitada en entorno dev.');
-        }
-
-        if (! $this->puedeSincronizarAhora()) {
-            return redirect()
-                ->route('sarlaft.sincronizacion.index')
-                ->with('warning', 'La sincronizacion manual ya se ejecuto hoy. Intenta nuevamente manana.');
+                ->with('warning', 'La sincronizacion de listas se ejecuto recientemente. Intenta nuevamente en '.$this->proximaSincronizacionListas().'.');
         }
 
         $listasActivas = ListaVinculante::query()
             ->where('activa', true)
             ->get();
 
+        if ($listasActivas->isEmpty()) {
+            return redirect()
+                ->route('sarlaft.sincronizacion.index')
+                ->with('warning', 'No hay listas activas para sincronizar.');
+        }
+
         foreach ($listasActivas as $lista) {
             SincronizarListaJob::dispatch($lista);
         }
 
-        $this->marcarSincronizacionAhoraEjecutada();
+        $this->marcarSincronizacionListasEjecutada();
 
         return redirect()
             ->route('sarlaft.sincronizacion.index')
-            ->with('success', "Sincronizacion manual enviada a cola para {$listasActivas->count()} listas.");
+            ->with('success', "Sincronizacion de listas vinculantes enviada a cola para {$listasActivas->count()} lista(s).");
     }
 
-    private function puedeSincronizarAhora(): bool
+    public function sincronizarIntentosAhora(): RedirectResponse
     {
-        return ! Cache::has($this->cacheKeySincronizacionAhoraDiaria());
+        if (! $this->puedeSincronizarIntentosAhora()) {
+            return redirect()
+                ->route('sarlaft.sincronizacion.index')
+                ->with('warning', 'La sincronizacion de intentos se ejecuto recientemente. Intenta nuevamente en '.$this->proximaSincronizacionIntentos().'.');
+        }
+
+        $sistemas = SistemaConsumidor::query()
+            ->where('estado', 'activo')
+            ->whereNotNull('pull_endpoint')
+            ->get();
+
+        if ($sistemas->isEmpty()) {
+            return redirect()
+                ->route('sarlaft.sincronizacion.index')
+                ->with('warning', 'No hay sistemas consumidores activos con Pull configurado.');
+        }
+
+        $totalRegistrados = 0;
+        foreach ($sistemas as $sistema) {
+            $totalRegistrados += $this->intentoOperacionService->ejecutarPull($sistema);
+        }
+
+        $this->marcarSincronizacionIntentosEjecutada();
+
+        return redirect()
+            ->route('sarlaft.sincronizacion.index')
+            ->with('success', "Sincronizacion de intentos ejecutada. Total registrados: {$totalRegistrados} desde {$sistemas->count()} sistema(s).");
     }
 
-    private function marcarSincronizacionAhoraEjecutada(): void
+    private function puedeSincronizarListasAhora(): bool
     {
-        $expiraEnSegundos = now()->endOfDay()->diffInSeconds(now());
+        return ! Cache::has($this->cacheKeySincronizacionListas());
+    }
+
+    private function puedeSincronizarIntentosAhora(): bool
+    {
+        return ! Cache::has($this->cacheKeySincronizacionIntentos());
+    }
+
+    private function marcarSincronizacionListasEjecutada(): void
+    {
         Cache::put(
-            $this->cacheKeySincronizacionAhoraDiaria(),
+            $this->cacheKeySincronizacionListas(),
             now()->toDateTimeString(),
-            max($expiraEnSegundos, 60),
+            self::COOLDOWN_SECONDS,
         );
     }
 
-    private function cacheKeySincronizacionAhoraDiaria(): string
+    private function marcarSincronizacionIntentosEjecutada(): void
     {
-        return 'sarlaft:sincronizar_ahora:'.now()->toDateString();
+        Cache::put(
+            $this->cacheKeySincronizacionIntentos(),
+            now()->toDateTimeString(),
+            self::COOLDOWN_SECONDS,
+        );
+    }
+
+    private function proximaSincronizacionListas(): ?string
+    {
+        return $this->formatearTiempoRestante($this->cacheKeySincronizacionListas());
+    }
+
+    private function proximaSincronizacionIntentos(): ?string
+    {
+        return $this->formatearTiempoRestante($this->cacheKeySincronizacionIntentos());
+    }
+
+    private function formatearTiempoRestante(string $cacheKey): ?string
+    {
+        $ultimaEjecucion = Cache::get($cacheKey);
+
+        if (! $ultimaEjecucion) {
+            return null;
+        }
+
+        $habilitadoEn = \Carbon\Carbon::parse($ultimaEjecucion)->addSeconds(self::COOLDOWN_SECONDS);
+
+        if ($habilitadoEn->isPast()) {
+            return null;
+        }
+
+        return $habilitadoEn->diffForHumans(now(), [
+            'parts' => 2,
+            'syntax' => \Carbon\CarbonInterface::DIFF_ABSOLUTE,
+        ]);
+    }
+
+    private function cacheKeySincronizacionListas(): string
+    {
+        return 'sarlaft:sincronizar_listas_ahora';
+    }
+
+    private function cacheKeySincronizacionIntentos(): string
+    {
+        return 'sarlaft:sincronizar_intentos_ahora';
     }
 }

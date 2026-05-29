@@ -14,23 +14,35 @@
    <div class="container-fluid p-0 border shadow rounded sidebar-dark-primary" style="min-height:150px;">
       <x-sectionHeader titulo="Listas vinculantes registradas" rutaVolver="{{ route('home') }}" btnVolver=false />
       <div class="col mb-2">
-         <div class="card-header d-flex justify-content-between align-items-center d-none">
-            <div class="d-flex align-items-center gap-2">
-               @if ($isDev)
-                  <form action="{{ route('sarlaft.sincronizacion.sincronizar-ahora') }}" method="POST"
-                     onsubmit="this.querySelector('[data-sync-text]').classList.add('d-none'); this.querySelector('[data-sync-loader]').classList.remove('d-none'); this.querySelector('button[type=submit]').setAttribute('disabled','disabled');">
-                     @csrf
-                     <button type="submit" class="btn btn-sm btn-success" @disabled(!$puedeSincronizarAhora)
-                        title="{{ $puedeSincronizarAhora ? 'Sincronizar ahora' : 'Ya ejecutada hoy' }}">
-                        <span data-sync-text>
-                           <i class="fas fa-sync-alt"></i> Sincronizar ahora (dev)
-                        </span>
-                        <span data-sync-loader class="d-none">
-                           <i class="fas fa-spinner fa-spin"></i> Encolando...
-                        </span>
-                     </button>
-                  </form>
-               @endif
+         <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+               <form action="{{ route('sarlaft.sincronizacion.listas.sincronizar-ahora') }}" method="POST"
+                  onsubmit="this.querySelector('[data-sync-text]').classList.add('d-none'); this.querySelector('[data-sync-loader]').classList.remove('d-none'); this.querySelector('button[type=submit]').setAttribute('disabled','disabled');">
+                  @csrf
+                  <button type="submit" class="btn btn-sm btn-success" @disabled(!$puedeSincronizarListasAhora)
+                     title="{{ $puedeSincronizarListasAhora ? 'Sincronizar listas vinculantes ahora' : 'Disponible en ' . $proximaSincronizacionListas }}">
+                     <span data-sync-text>
+                        <i class="fas fa-sync-alt"></i> Sincronizar listas vinculantes
+                     </span>
+                     <span data-sync-loader class="d-none">
+                        <i class="fas fa-spinner fa-spin"></i> Encolando...
+                     </span>
+                  </button>
+               </form>
+
+               <form action="{{ route('sarlaft.sincronizacion.intentos.sincronizar-ahora') }}" method="POST"
+                  onsubmit="this.querySelector('[data-sync-text]').classList.add('d-none'); this.querySelector('[data-sync-loader]').classList.remove('d-none'); this.querySelector('button[type=submit]').setAttribute('disabled','disabled');">
+                  @csrf
+                  <button type="submit" class="btn btn-sm btn-primary" @disabled(!$puedeSincronizarIntentosAhora)
+                     title="{{ $puedeSincronizarIntentosAhora ? 'Sincronizar intentos de operacion ahora' : 'Disponible en ' . $proximaSincronizacionIntentos }}">
+                     <span data-sync-text>
+                        <i class="fas fa-cloud-download-alt"></i> Sincronizar intentos de operacion
+                     </span>
+                     <span data-sync-loader class="d-none">
+                        <i class="fas fa-spinner fa-spin"></i> Procesando...
+                     </span>
+                  </button>
+               </form>
 
                <form action="{{ route('sarlaft.sincronizacion.listas.sincronizar-config') }}" method="POST">
                   @csrf
@@ -42,9 +54,14 @@
          </div>
 
          <div class="card-body">
-            @if ($isDev && !$puedeSincronizarAhora)
-               <div class="alert alert-warning mb-0 rounded-0 border-0">
-                  La sincronizacion manual de hoy ya fue ejecutada. Se habilita nuevamente manana.
+            @if (!$puedeSincronizarListasAhora)
+               <div class="alert alert-warning mb-2 rounded-0 border-0">
+                  <i class="fas fa-clock"></i> Sincronizacion de listas en cooldown. Disponible en {{ $proximaSincronizacionListas }}.
+               </div>
+            @endif
+            @if (!$puedeSincronizarIntentosAhora)
+               <div class="alert alert-info mb-2 rounded-0 border-0">
+                  <i class="fas fa-clock"></i> Sincronizacion de intentos en cooldown. Disponible en {{ $proximaSincronizacionIntentos }}.
                </div>
             @endif
             <div class="table-responsive">
