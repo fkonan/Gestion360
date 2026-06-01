@@ -3,14 +3,13 @@
 declare(strict_types=1);
 
 use App\Modules\Sarlaft\Http\Controllers\Admin\AlertaController;
-use App\Modules\Sarlaft\Http\Controllers\Admin\DashboardController;
 use App\Modules\Sarlaft\Http\Controllers\Admin\ListaNegraController;
 use App\Modules\Sarlaft\Http\Controllers\Admin\SincronizacionController;
 use App\Modules\Sarlaft\Http\Controllers\Admin\SistemaConsumidorController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->prefix('sarlaft')->name('sarlaft.')->group(function (): void {
-    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/', [AlertaController::class, 'index'])->name('dashboard');
 
     Route::get('/alertas', [AlertaController::class, 'index'])->name('alertas.index');
     Route::get('/alertas/{alerta}', [AlertaController::class, 'show'])->name('alertas.show');
@@ -34,6 +33,10 @@ Route::middleware('auth')->prefix('sarlaft')->name('sarlaft.')->group(function (
     Route::get('/sincronizacion', [SincronizacionController::class, 'index'])->name('sincronizacion.index');
     Route::post('/sincronizacion/listas', [SincronizacionController::class, 'storeLista'])->name('sincronizacion.listas.store');
     Route::post('/sincronizacion/listas/sincronizar-config', [SincronizacionController::class, 'sincronizarDesdeConfig'])->name('sincronizacion.listas.sincronizar-config');
-    Route::post('/sincronizacion/listas/sincronizar-ahora', [SincronizacionController::class, 'sincronizarListasAhora'])->name('sincronizacion.listas.sincronizar-ahora');
-    Route::post('/sincronizacion/intentos/sincronizar-ahora', [SincronizacionController::class, 'sincronizarIntentosAhora'])->name('sincronizacion.intentos.sincronizar-ahora');
+    Route::post('/sincronizacion/listas/sincronizar-ahora', [SincronizacionController::class, 'sincronizarListasAhora'])
+        ->middleware('role:SUPER-ADMIN|ADMIN')
+        ->name('sincronizacion.listas.sincronizar-ahora');
+    Route::post('/sincronizacion/intentos/sincronizar-ahora', [SincronizacionController::class, 'sincronizarIntentosAhora'])
+        ->middleware('role:SUPER-ADMIN|ADMIN')
+        ->name('sincronizacion.intentos.sincronizar-ahora');
 });
