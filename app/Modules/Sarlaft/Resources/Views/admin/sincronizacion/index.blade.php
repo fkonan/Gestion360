@@ -14,7 +14,8 @@
    <div class="container-fluid p-0 border shadow rounded sidebar-dark-primary" style="min-height:150px;">
       <x-sectionHeader titulo="Listas vinculantes registradas" rutaVolver="{{ route('home') }}" btnVolver=false />
       <div class="col mb-2">
-         <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+         <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2 m-3">
+            @hasanyrole('SUPER-ADMIN|ADMIN')
             <div class="d-flex align-items-center gap-2 flex-wrap">
                <form action="{{ route('sarlaft.sincronizacion.listas.sincronizar-ahora') }}" method="POST"
                   onsubmit="this.querySelector('[data-sync-text]').classList.add('d-none'); this.querySelector('[data-sync-loader]').classList.remove('d-none'); this.querySelector('button[type=submit]').setAttribute('disabled','disabled');">
@@ -44,13 +45,14 @@
                   </button>
                </form>
 
-               <form action="{{ route('sarlaft.sincronizacion.listas.sincronizar-config') }}" method="POST">
+               {{-- <form action="{{ route('sarlaft.sincronizacion.listas.sincronizar-config') }}" method="POST">
                   @csrf
                   <button type="submit" class="btn btn-sm btn-dark">
                      <i class="bi bi-arrow-repeat"></i> Cargar desde config/listas.php
                   </button>
-               </form>
+               </form> --}}
             </div>
+            @endhasanyrole
          </div>
 
          <div class="card-body">
