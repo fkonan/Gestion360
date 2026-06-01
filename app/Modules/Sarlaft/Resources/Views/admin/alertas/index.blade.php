@@ -24,10 +24,8 @@
         'descartada' => 'Descartada',
     ];
     $riesgoOptions = [
-        'critico' => 'Critico',
-        'alto' => 'Alto',
-        'medio' => 'Medio',
-        'bajo' => 'Bajo',
+        'vinculante'  => 'Lista Vinculante',
+        'restrictiva' => 'Lista Restrictiva',
     ];
     $hasFilters = collect($filters)->filter(static fn ($value): bool => filled($value))->isNotEmpty();
 @endphp
@@ -43,13 +41,9 @@
         </div>
 
         <div class="sarlaft-alerts-actions">
-            <a href="{{ route('sarlaft.dashboard') }}" class="btn btn-outline-dark">
+            <a href="{{ route('home') }}" class="btn btn-outline-dark">
                 <i class="fas fa-arrow-left"></i>
-                <span>Dashboard</span>
-            </a>
-            <a href="{{ route('sarlaft.reportes.operaciones.index') }}" class="btn btn-dark">
-                <i class="fas fa-chart-bar"></i>
-                <span>Reporte Operativo</span>
+                <span>Inicio</span>
             </a>
         </div>
     </div>
@@ -60,9 +54,9 @@
                 <div class="sarlaft-kpi-icon">
                     <i class="fas fa-exclamation-triangle"></i>
                 </div>
-                <div class="sarlaft-kpi-label">Critico</div>
-                <div class="sarlaft-kpi-value">{{ number_format($stats['criticas_pendientes']) }}</div>
-                <p class="sarlaft-kpi-copy mb-0">Alertas de alto impacto abiertas.</p>
+                <div class="sarlaft-kpi-label">Coincidencias</div>
+                <div class="sarlaft-kpi-value">{{ number_format($stats['coincidencias_pendientes']) }}</div>
+                <p class="sarlaft-kpi-copy mb-0">Coincidencias pendientes de revision.</p>
             </article>
         </div>
 
@@ -120,7 +114,7 @@
                         </div>
 
                         <div class="col-md-4 col-xl-2">
-                            <label for="riesgo" class="form-label">Riesgo</label>
+                            <label for="riesgo" class="form-label">Tipo de lista</label>
                             <select name="riesgo" id="riesgo" class="form-select">
                                 <option value="">Todos</option>
                                 @foreach($riesgoOptions as $value => $label)
@@ -184,9 +178,7 @@
                             <th>Fecha</th>
                             <th>Operacion</th>
                             <th>Persona</th>
-                            <th>Resultado</th>
-                            <th>Riesgo</th>
-                            <th>Detalles</th>
+                            <th>Coincidencia</th>
                             <th>Estado</th>
                             <th class="text-center">Acciones</th>
                         </tr>
@@ -232,24 +224,12 @@
                                 default => 'is-default',
                             };
 
-                            $resultadoLabel = $alerta->nivel_riesgo === 'alto' || $alerta->nivel_riesgo === 'critico'
-                                ? 'Bloqueante'
-                                : 'Revisar';
+                            $nivelNorm = strtolower(trim((string) $alerta->nivel_riesgo));
 
-                            $resultadoClass = $alerta->nivel_riesgo === 'alto' || $alerta->nivel_riesgo === 'critico'
-                                ? 'is-danger'
-                                : 'is-muted';
-
-                            $resultadoIcon = $alerta->nivel_riesgo === 'alto' || $alerta->nivel_riesgo === 'critico'
-                                ? 'fa-ban'
-                                : 'fa-search';
-
-                            $riskLabel = $riesgoOptions[$alerta->nivel_riesgo] ?? ucfirst((string) $alerta->nivel_riesgo);
-                            $riskClass = match ($alerta->nivel_riesgo) {
-                                'critico' => 'is-critical',
-                                'alto' => 'is-high',
-                                'medio' => 'is-medium',
-                                default => 'is-low',
+                            [$coincidenciaLabel, $coincidenciaClass] = match (true) {
+                                in_array($nivelNorm, ['vinculante', 'alto'])   => [$riesgoOptions['vinculante'] ?? 'Lista Vinculante', 'is-high'],
+                                in_array($nivelNorm, ['restrictiva', 'medio']) => [$riesgoOptions['restrictiva'] ?? 'Lista Restrictiva', 'is-medium'],
+                                default                                        => ['Coincidencia', 'is-low'],
                             };
 
                             $stateLabel = $estadoOptions[$alerta->estado] ?? ucfirst((string) $alerta->estado);
@@ -263,7 +243,7 @@
                             $originLabel = match ($origenAtencion) {
                                 'auto_lista_negra_interna' => 'Auto Lista Restrictiva',
                                 'auto_sla' => 'Auto SLA',
-                                default => 'Manual',
+                                default => null,
                             };
                         @endphp
                         <tr>
@@ -285,28 +265,16 @@
                                 <div class="sarlaft-cell-meta">{{ $documento !== '' ? $documento : 'Sin documento asociado' }}</div>
                             </td>
                             <td>
-                                <div class="sarlaft-result {{ $resultadoClass }}">
-                                    <i class="fas {{ $resultadoIcon }}"></i>
-                                    <span>{{ $resultadoLabel }}</span>
-                                </div>
+                                <span class="sarlaft-pill sarlaft-pill-risk {{ $coincidenciaClass }}">{{ $coincidenciaLabel }}</span>
+                                @if($originLabel || $alerta->escalada_automatica)
                                 <div class="sarlaft-cell-meta">
                                     {{ $originLabel }}
                                     @if($alerta->escalada_automatica)
-                                    <span class="sarlaft-meta-separator"></span>
+                                    @if($originLabel)<span class="sarlaft-meta-separator"></span>@endif
                                     <span>Escalada automatica</span>
                                     @endif
                                 </div>
-                            </td>
-                            <td>
-                                <span class="sarlaft-pill sarlaft-pill-risk {{ $riskClass }}">{{ $riskLabel }}</span>
-                            </td>
-                            <td>
-                                <div class="sarlaft-link-group">
-                                    <a href="{{ route('sarlaft.alertas.show', $alerta) }}">Ver</a>
-                                    @if($reportTipoDocumento !== '' && $reportNumeroDocumento !== '')
-                                    <a href="{{ route('sarlaft.reportes.operaciones.index', ['tipo_documento' => $reportTipoDocumento, 'numero_documento' => $reportNumeroDocumento]) }}">Historial</a>
-                                    @endif
-                                </div>
+                                @endif
                             </td>
                             <td>
                                 <span class="sarlaft-pill sarlaft-pill-state {{ $stateClass }}">{{ $stateLabel }}</span>

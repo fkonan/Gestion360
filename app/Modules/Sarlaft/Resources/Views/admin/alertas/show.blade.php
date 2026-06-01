@@ -18,11 +18,6 @@
     <a href="{{ route('sarlaft.alertas.index') }}" class="btn btn-sm btn-outline-dark">
         <i class="fas fa-arrow-left"></i> Volver
     </a>
-    @if($alerta->numero_documento)
-    <a href="{{ route('sarlaft.reportes.operaciones.index', ['tipo_documento' => $alerta->tipo_documento, 'numero_documento' => $alerta->numero_documento]) }}" class="btn btn-sm btn-dark">
-        <i class="fas fa-chart-line"></i> Historial Operativo
-    </a>
-    @endif
 </div>
 
 <div class="row g-4">
@@ -38,7 +33,7 @@
                         @include('sarlaft::admin.partials.badge-estado-alerta', ['estado' => $alerta->estado])
                     </div>
                     <div class="col-md-3">
-                        <strong>Riesgo:</strong><br>
+                        <strong>Coincidencia:</strong><br>
                         @include('sarlaft::admin.partials.badge-riesgo', ['nivel' => $alerta->nivel_riesgo])
                     </div>
                     <div class="col-md-3">
@@ -67,7 +62,7 @@
                         @elseif($origenAtencion === 'auto_sla')
                             Auto SLA
                         @else
-                            Manual
+                            &mdash;
                         @endif
                     </div>
                 </div>

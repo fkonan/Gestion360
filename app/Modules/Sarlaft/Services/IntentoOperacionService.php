@@ -56,8 +56,7 @@ class IntentoOperacionService
         SistemaConsumidor $sistema,
         ?string $fechaDesde = null,
         ?string $fechaHasta = null,
-    ): int
-    {
+    ): int {
         if (! $sistema->pull_endpoint) {
             return 0;
         }
@@ -135,8 +134,7 @@ class IntentoOperacionService
         string $modoIntegracion,
         ?string $ipOrigen,
         mixed $sistemaOrigenExterno,
-    ): IntentoOperacion
-    {
+    ): IntentoOperacion {
         $createdAt = $this->resolverFechaCreacion($datos['created_at'] ?? null);
         $referencia = $this->normalizarReferencia($datos['referencia'] ?? null);
 
@@ -164,7 +162,7 @@ class IntentoOperacionService
     private function generarAlerta(IntentoOperacion $intento): void
     {
         $tipoLista = strtolower(trim((string) $intento->tipo_lista));
-        $nivelRiesgo = str_contains($tipoLista, 'vinculante') ? 'alto' : 'medio';
+        $nivelRiesgo = str_contains($tipoLista, 'vinculante') ? 'vinculante' : 'restrictiva';
 
         Alerta::create([
             'intento_id' => $intento->id,

@@ -43,31 +43,34 @@ class AlertaGeneradaMail extends Mailable implements ShouldQueue
 
     private function resolverSubject(): string
     {
-        return match ($this->alerta->nivel_riesgo) {
-            'alto' => '[SARLAFT] ALERTA CRITICA - Coincidencia confirmada',
-            'medio' => '[SARLAFT] Alerta de revision - Multiples coincidencias',
-            'bajo' => '[SARLAFT] Alerta para revision - Coincidencia menor',
-            default => '[SARLAFT] Nueva alerta generada',
+        $nivel = strtolower(trim((string) $this->alerta->nivel_riesgo));
+
+        return match (true) {
+            in_array($nivel, ['vinculante', 'alto']) => '[SARLAFT] Coincidencia en Lista Vinculante',
+            in_array($nivel, ['restrictiva', 'medio']) => '[SARLAFT] Coincidencia en Lista Restrictiva',
+            default => '[SARLAFT] Nueva coincidencia registrada',
         };
     }
 
     private function resolverColorNivel(): string
     {
-        return match ($this->alerta->nivel_riesgo) {
-            'alto' => '#dc3545',
-            'medio' => '#fd7e14',
-            'bajo' => '#ffc107',
+        $nivel = strtolower(trim((string) $this->alerta->nivel_riesgo));
+
+        return match (true) {
+            in_array($nivel, ['vinculante', 'alto']) => '#dc3545',
+            in_array($nivel, ['restrictiva', 'medio']) => '#6c757d',
             default => '#6c757d',
         };
     }
 
     private function resolverEtiquetaNivel(): string
     {
-        return match ($this->alerta->nivel_riesgo) {
-            'alto' => 'CRITICA',
-            'medio' => 'MEDIA',
-            'bajo' => 'BAJA',
-            default => 'INFORMATIVA',
+        $nivel = strtolower(trim((string) $this->alerta->nivel_riesgo));
+
+        return match (true) {
+            in_array($nivel, ['vinculante', 'alto']) => 'LISTA VINCULANTE',
+            in_array($nivel, ['restrictiva', 'medio']) => 'LISTA RESTRICTIVA',
+            default => 'COINCIDENCIA',
         };
     }
 }

@@ -1,10 +1,9 @@
 @php
-$clases = match($nivel ?? 'ninguno') {
-    'critico' => 'bg-dark',
-    'alto' => 'bg-danger',
-    'medio' => 'bg-warning text-dark',
-    'bajo' => 'bg-info text-dark',
-    default => 'bg-success',
+$nivelNormalizado = strtolower(trim((string) ($nivel ?? '')));
+[$clases, $texto] = match(true) {
+    in_array($nivelNormalizado, ['vinculante', 'alto'])    => ['bg-danger', 'Lista Vinculante'],
+    in_array($nivelNormalizado, ['restrictiva', 'medio'])  => ['bg-secondary', 'Lista Restrictiva'],
+    default                                                => ['bg-light text-dark', 'Coincidencia'],
 };
 @endphp
-<span class="badge {{ $clases }}">{{ ucfirst($nivel ?? 'ninguno') }}</span>
+<span class="badge {{ $clases }}">{{ $texto }}</span>

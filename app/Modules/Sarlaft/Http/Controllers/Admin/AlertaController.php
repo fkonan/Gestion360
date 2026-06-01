@@ -28,9 +28,8 @@ class AlertaController extends Controller
 
         $statsBaseQuery = Alerta::query();
         $stats = [
-            'criticas_pendientes' => (clone $statsBaseQuery)
+            'coincidencias_pendientes' => (clone $statsBaseQuery)
                 ->whereIn('estado', ['pendiente', 'en_revision'])
-                ->whereIn('nivel_riesgo', ['alto', 'critico'])
                 ->count(),
             'resueltas_hoy' => (clone $statsBaseQuery)
                 ->whereNotNull('fecha_atencion')
@@ -42,7 +41,7 @@ class AlertaController extends Controller
         ];
 
         $alertas = Alerta::query()
-            ->with(['consulta', 'intento.sistema'])
+            ->with(['intento.sistema'])
             ->when(isset($filters['search']), function (Builder $query) use ($filters): void {
                 $search = (string) $filters['search'];
                 $likeSearch = '%'.$search.'%';
@@ -54,10 +53,7 @@ class AlertaController extends Controller
                         ->orWhere('tipo_documento', 'like', $likeSearch)
                         ->orWhere('datos_persona->nombre', 'like', $likeSearch)
                         ->orWhere('datos_persona->nombres', 'like', $likeSearch)
-                        ->orWhere('datos_persona->apellidos', 'like', $likeSearch)
-                        ->orWhereHas('consulta', function (Builder $consultaQuery) use ($likeSearch): void {
-                            $consultaQuery->where('sistema_origen', 'like', $likeSearch);
-                        });
+                        ->orWhere('datos_persona->apellidos', 'like', $likeSearch);
                     $searchQuery->orWhereHas('intento', function (Builder $intentoQuery) use ($likeSearch): void {
                         $intentoQuery->where('tipo_operacion', 'like', $likeSearch)
                             ->orWhere('referencia', 'like', $likeSearch)
@@ -95,7 +91,6 @@ class AlertaController extends Controller
     public function show(Alerta $alerta): View
     {
         $alerta->load([
-            'consulta',
             'intento.sistema',
             'atendidaPor',
         ]);

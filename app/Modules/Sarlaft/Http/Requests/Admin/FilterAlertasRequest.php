@@ -34,7 +34,7 @@ class FilterAlertasRequest extends FormRequest
         return [
             'search' => 'nullable|string|max:120',
             'estado' => 'nullable|string|in:pendiente,en_revision,atendida,descartada',
-            'riesgo' => 'nullable|string|in:bajo,medio,alto,critico',
+            'riesgo' => 'nullable|string|in:bajo,medio,alto,critico,vinculante,restrictiva',
         ];
     }
 
