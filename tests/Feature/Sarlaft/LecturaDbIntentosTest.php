@@ -151,6 +151,28 @@ class LecturaDbIntentosTest extends TestCase
         $this->assertSame('vinculante', $alerta->nivel_riesgo);
     }
 
+    public function test_parsea_el_contexto_clave_valor_a_array_estructurado(): void
+    {
+        $sistema = $this->crearSistemaDb();
+
+        $this->insertarOperacionExterna([
+            'REFERENCIA' => null,
+            'SISTEMA_ORIGEN' => 'Logtrans',
+            'CONTEXTO' => 'evento=CONSULTAR_PAGOS_RECAUDOS|empresa=COMFACESAR - PAGOS|agencia=005 - AGUACHICA PASAJES|usuario=ANDREA JIMENEZ|resultadoConsulta=coincidencia=true\|listaId=OFAC SDN',
+        ]);
+
+        $this->service->ejecutarLecturaDb($sistema);
+
+        $intento = IntentoOperacion::query()->first();
+        $this->assertNotNull($intento);
+        $this->assertIsArray($intento->contexto);
+        $this->assertSame('CONSULTAR_PAGOS_RECAUDOS', $intento->contexto['evento']);
+        $this->assertSame('COMFACESAR - PAGOS', $intento->contexto['empresa']);
+        $this->assertSame('ANDREA JIMENEZ', $intento->contexto['usuario']);
+        // El '\|' escapado se preserva como '|' literal dentro del valor.
+        $this->assertSame('coincidencia=true|listaId=OFAC SDN', $intento->contexto['resultadoConsulta']);
+    }
+
     public function test_solo_lee_filas_con_id_mayor_al_ultimo_procesado(): void
     {
         $sistema = $this->crearSistemaDb();

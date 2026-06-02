@@ -142,22 +142,27 @@ class IntentoOperacionService
             return 0;
         }
 
-        // Respaldo por fecha: se acota la ventana ademas del control por ID.
-        $filtroFechaDesde = $fechaDesde
-            ?? $sistema->db_ultima_lectura_at?->toDateTimeString()
-            ?? now()->subDay()->toDateTimeString();
-        $filtroFechaHasta = $fechaHasta ?? now()->toDateTimeString();
-
-        // Control principal: solo filas con ID mayor al ultimo procesado. Asi cada
-        // fila de origen se procesa una unica vez (los intentos repetidos del usuario
-        // son filas distintas con IDs distintos: se conservan todos).
+        // Control principal: solo filas con ID mayor al ultimo procesado. Garantiza
+        // que cada fila de origen se procese una unica vez y trae TODO lo nuevo sin
+        // importar la antiguedad (los intentos repetidos del usuario son filas
+        // distintas con IDs distintos: se conservan todos).
         $ultimoId = (int) ($sistema->db_ultimo_id ?? 0);
 
         try {
             $query = DB::connection($sistema->db_conexion)
                 ->table($sistema->db_tabla)
-                ->where('ID', '>', $ultimoId)
-                ->whereBetween('CREATED_AT', [$filtroFechaDesde, $filtroFechaHasta]);
+                ->where('ID', '>', $ultimoId);
+
+            // El filtro por fecha es OPCIONAL: solo se aplica si se pasa
+            // explicitamente (ej. para acotar una carga manual). No se usa por
+            // defecto para no excluir filas historicas no procesadas.
+            if ($fechaDesde !== null) {
+                $query->where('CREATED_AT', '>=', $fechaDesde);
+            }
+
+            if ($fechaHasta !== null) {
+                $query->where('CREATED_AT', '<=', $fechaHasta);
+            }
 
             if (is_string($sistema->db_filtro_sistema_origen) && trim($sistema->db_filtro_sistema_origen) !== '') {
                 $query->where('SISTEMA_ORIGEN', trim($sistema->db_filtro_sistema_origen));
@@ -225,10 +230,7 @@ class IntentoOperacionService
 
         $descripcion = $get('DESCRIPCION');
         $contexto = $get('CONTEXTO');
-        $contextoTexto = is_string($contexto) ? trim($contexto) : null;
-        $contextoDecodificado = $contextoTexto !== null && $contextoTexto !== ''
-            ? json_decode($contextoTexto, true)
-            : null;
+        $contextoDecodificado = $this->parsearContexto(is_string($contexto) ? $contexto : null);
 
         return [
             'tipo_documento' => $get('TIPO_DOCUMENTO'),
@@ -244,6 +246,52 @@ class IntentoOperacionService
             'created_at' => $get('CREATED_AT'),
             'sistema_origen' => $get('SISTEMA_ORIGEN'),
         ];
+    }
+
+    /**
+     * Parsea el CONTEXTO de la tabla externa, en formato clave=valor separado
+     * por '|' (con '\|' como separador escapado dentro de sub-valores), a un
+     * array asociativo. Si ya viniera en JSON, tambien lo soporta.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function parsearContexto(?string $contexto): ?array
+    {
+        $texto = $contexto !== null ? trim($contexto) : '';
+
+        if ($texto === '') {
+            return null;
+        }
+
+        // Soporte por si algun sistema envia JSON valido.
+        $json = json_decode($texto, true);
+        if (is_array($json)) {
+            return $json;
+        }
+
+        // Formato clave=valor|clave=valor. El '\|' escapado se preserva como '|'
+        // literal dentro del valor (no corta el par).
+        $marcador = "\x00";
+        $normalizado = str_replace('\\|', $marcador, $texto);
+        $pares = explode('|', $normalizado);
+
+        $resultado = [];
+        foreach ($pares as $par) {
+            $par = trim($par);
+            if ($par === '' || ! str_contains($par, '=')) {
+                continue;
+            }
+
+            [$clave, $valor] = explode('=', $par, 2);
+            $clave = trim($clave);
+            if ($clave === '') {
+                continue;
+            }
+
+            $resultado[$clave] = str_replace($marcador, '|', trim($valor));
+        }
+
+        return $resultado !== [] ? $resultado : null;
     }
 
     private function crearIntento(

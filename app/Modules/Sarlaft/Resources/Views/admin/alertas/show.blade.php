@@ -110,6 +110,49 @@
         </div>
         @endif
 
+        {{-- Contexto de la operacion (enriquecido desde el sistema origen) --}}
+        @php
+            $ctx = $intento && is_array($intento->contexto) ? $intento->contexto : [];
+            // Etiquetas legibles para las claves conocidas; el orden define la prioridad de despliegue.
+            $ctxLabels = [
+                'empresa' => 'Empresa',
+                'empresaId' => 'ID Empresa',
+                'agencia' => 'Agencia',
+                'agenciaId' => 'ID Agencia',
+                'usuario' => 'Usuario que atendio',
+                'rolTercero' => 'Rol del tercero',
+                'evento' => 'Evento',
+                'metodo' => 'Metodo',
+                'tipoMovimiento' => 'Tipo movimiento',
+            ];
+            // Claves internas/redundantes que no aportan al oficial.
+            $ctxOcultar = ['sistema', 'identificacion', 'contexto', 'resultadoConsulta'];
+            $ctxConocidas = collect($ctxLabels)
+                ->filter(fn ($label, $key) => filled($ctx[$key] ?? null))
+                ->map(fn ($label, $key) => ['label' => $label, 'valor' => $ctx[$key]]);
+            $ctxOtras = collect($ctx)
+                ->reject(fn ($v, $k) => array_key_exists($k, $ctxLabels) || in_array($k, $ctxOcultar, true) || blank($v))
+                ->map(fn ($v, $k) => ['label' => \Illuminate\Support\Str::headline($k), 'valor' => $v]);
+            $ctxItems = $ctxConocidas->concat($ctxOtras);
+        @endphp
+        @if($ctxItems->isNotEmpty())
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white">
+                <h6 class="mb-0"><i class="fas fa-circle-info text-primary me-1"></i> Contexto de la operacion</h6>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    @foreach($ctxItems as $item)
+                    <div class="col-md-4">
+                        <div class="text-muted small text-uppercase">{{ $item['label'] }}</div>
+                        <div class="fw-semibold">{{ $item['valor'] }}</div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+        @endif
+
         {{-- Coincidencia en listas --}}
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-white">
