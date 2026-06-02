@@ -28,6 +28,7 @@ class SistemaConsumidor extends Model
         'db_tabla',
         'db_filtro_sistema_origen',
         'db_ultima_lectura_at',
+        'db_ultimo_id',
     ];
 
     protected $hidden = [
@@ -39,6 +40,7 @@ class SistemaConsumidor extends Model
     {
         return [
             'db_ultima_lectura_at' => 'datetime',
+            'db_ultimo_id' => 'integer',
         ];
     }
 

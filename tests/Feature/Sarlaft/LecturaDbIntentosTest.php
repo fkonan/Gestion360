@@ -82,12 +82,12 @@ class LecturaDbIntentosTest extends TestCase
         $this->assertSame($intento->id, $alerta->intento_id);
     }
 
-    public function test_no_duplica_intentos_ya_registrados_por_referencia(): void
+    public function test_no_reprocesa_la_misma_fila_en_corridas_sucesivas(): void
     {
         $sistema = $this->crearSistemaDb();
 
         $this->insertarOperacionExterna([
-            'REFERENCIA' => 'REF-DUP-1',
+            'REFERENCIA' => null,
             'SISTEMA_ORIGEN' => 'Logtrans',
         ]);
 
@@ -95,9 +95,77 @@ class LecturaDbIntentosTest extends TestCase
         $sistema->refresh();
         $segunda = $this->service->ejecutarLecturaDb($sistema);
 
+        // La fila se procesa una sola vez aunque el comando corra de nuevo,
+        // gracias al control por ID (db_ultimo_id), no por referencia.
         $this->assertSame(1, $primera);
         $this->assertSame(0, $segunda);
         $this->assertSame(1, IntentoOperacion::query()->count());
+    }
+
+    public function test_conserva_todos_los_intentos_repetidos_del_usuario(): void
+    {
+        $sistema = $this->crearSistemaDb();
+
+        // Misma persona intenta 3 veces (3 filas distintas, sin referencia).
+        foreach (range(1, 3) as $i) {
+            $this->insertarOperacionExterna([
+                'REFERENCIA' => null,
+                'NUMERO_DOCUMENTO' => '900123456-7',
+                'SISTEMA_ORIGEN' => 'Logtrans',
+            ]);
+        }
+
+        $registrados = $this->service->ejecutarLecturaDb($sistema);
+
+        // Los 3 intentos quedan: son filas distintas (IDs distintos), no duplicados falsos.
+        $this->assertSame(3, $registrados);
+        $this->assertSame(3, IntentoOperacion::query()->count());
+    }
+
+    public function test_clasifica_vinculante_por_nombre_de_lista_aunque_tipo_lista_sea_generico(): void
+    {
+        config([
+            'listas' => [
+                'ofac_sdn' => [
+                    'nombre' => 'OFAC SDN',
+                    'url' => 'https://ejemplo.local/ofac.xml',
+                    'parser' => 'ofac',
+                ],
+            ],
+        ]);
+
+        $sistema = $this->crearSistemaDb();
+
+        // tipo_lista generico ('persona') pero lista_nombre es OFAC (vinculante).
+        $this->insertarOperacionExterna([
+            'REFERENCIA' => null,
+            'TIPO_LISTA' => 'persona',
+            'LISTA_NOMBRE' => 'OFAC SDN',
+            'SISTEMA_ORIGEN' => 'Logtrans',
+        ]);
+
+        $this->service->ejecutarLecturaDb($sistema);
+
+        $alerta = Alerta::query()->first();
+        $this->assertNotNull($alerta);
+        $this->assertSame('vinculante', $alerta->nivel_riesgo);
+    }
+
+    public function test_solo_lee_filas_con_id_mayor_al_ultimo_procesado(): void
+    {
+        $sistema = $this->crearSistemaDb();
+
+        $this->insertarOperacionExterna(['REFERENCIA' => null, 'SISTEMA_ORIGEN' => 'Logtrans']);
+        $this->service->ejecutarLecturaDb($sistema);
+        $sistema->refresh();
+
+        // Llega una fila nueva (ID mayor) despues de la primera corrida.
+        $this->insertarOperacionExterna(['REFERENCIA' => null, 'SISTEMA_ORIGEN' => 'Logtrans']);
+
+        $registrados = $this->service->ejecutarLecturaDb($sistema);
+
+        $this->assertSame(1, $registrados);
+        $this->assertSame(2, IntentoOperacion::query()->count());
     }
 
     public function test_filtra_por_sistema_origen_cuando_la_tabla_es_compartida(): void
@@ -197,6 +265,7 @@ class LecturaDbIntentosTest extends TestCase
             $table->string('db_tabla', 150)->nullable();
             $table->string('db_filtro_sistema_origen', 100)->nullable();
             $table->timestamp('db_ultima_lectura_at')->nullable();
+            $table->unsignedBigInteger('db_ultimo_id')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

@@ -142,43 +142,43 @@ class IntentoOperacionService
             return 0;
         }
 
+        // Respaldo por fecha: se acota la ventana ademas del control por ID.
         $filtroFechaDesde = $fechaDesde
             ?? $sistema->db_ultima_lectura_at?->toDateTimeString()
             ?? now()->subDay()->toDateTimeString();
         $filtroFechaHasta = $fechaHasta ?? now()->toDateTimeString();
 
+        // Control principal: solo filas con ID mayor al ultimo procesado. Asi cada
+        // fila de origen se procesa una unica vez (los intentos repetidos del usuario
+        // son filas distintas con IDs distintos: se conservan todos).
+        $ultimoId = (int) ($sistema->db_ultimo_id ?? 0);
+
         try {
             $query = DB::connection($sistema->db_conexion)
                 ->table($sistema->db_tabla)
+                ->where('ID', '>', $ultimoId)
                 ->whereBetween('CREATED_AT', [$filtroFechaDesde, $filtroFechaHasta]);
 
             if (is_string($sistema->db_filtro_sistema_origen) && trim($sistema->db_filtro_sistema_origen) !== '') {
                 $query->where('SISTEMA_ORIGEN', trim($sistema->db_filtro_sistema_origen));
             }
 
-            $filas = $query->orderBy('CREATED_AT')->get();
+            $filas = $query->orderBy('ID')->get();
             $registrados = 0;
+            $maxId = $ultimoId;
 
             foreach ($filas as $fila) {
-                $datos = $this->mapearFilaDb((array) $fila);
+                $filaArray = (array) $fila;
+                $filaId = (int) ($filaArray['ID'] ?? $filaArray['id'] ?? 0);
+                $maxId = max($maxId, $filaId);
+
+                $datos = $this->mapearFilaDb($filaArray);
 
                 if (! $this->tieneCamposMinimos($datos)) {
                     continue;
                 }
 
                 DB::connection('mysql-sarlaft')->transaction(function () use ($datos, $sistema, &$registrados): void {
-                    $referencia = $this->normalizarReferencia($datos['referencia'] ?? null);
-
-                    $intentoExistente = $this->buscarIntentoExistente(
-                        sistema: $sistema,
-                        modoIntegracion: 'db',
-                        referencia: $referencia,
-                    );
-
-                    if ($intentoExistente !== null) {
-                        return;
-                    }
-
                     $intento = $this->crearIntento(
                         datos: $datos,
                         sistema: $sistema,
@@ -192,7 +192,10 @@ class IntentoOperacionService
                 });
             }
 
-            $sistema->forceFill(['db_ultima_lectura_at' => now()])->save();
+            $sistema->forceFill([
+                'db_ultimo_id' => $maxId,
+                'db_ultima_lectura_at' => now(),
+            ])->save();
 
             return $registrados;
         } catch (\Throwable $e) {
@@ -274,10 +277,53 @@ class IntentoOperacionService
         ]);
     }
 
-    private function generarAlerta(IntentoOperacion $intento): void
+    /**
+     * Determina si la coincidencia es contra una lista vinculante (ONU, OFAC, UE).
+     * Considera tanto el tipo_lista explicito como el nombre de la lista comparado
+     * con las listas vinculantes declaradas en config/listas.php, porque algunos
+     * sistemas graban tipo_lista generico (ej. 'persona') aunque la lista sea OFAC.
+     */
+    private function esCoincidenciaVinculante(IntentoOperacion $intento): bool
     {
         $tipoLista = strtolower(trim((string) $intento->tipo_lista));
-        $nivelRiesgo = str_contains($tipoLista, 'vinculante') ? 'vinculante' : 'restrictiva';
+
+        if (str_contains($tipoLista, 'vinculante')) {
+            return true;
+        }
+
+        $listaNombre = strtolower(trim((string) $intento->lista_nombre));
+
+        if ($listaNombre === '') {
+            return false;
+        }
+
+        foreach ($this->nombresListasVinculantes() as $nombreVinculante) {
+            if ($listaNombre === $nombreVinculante || str_contains($listaNombre, $nombreVinculante)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Nombres (en minuscula) de las listas vinculantes definidas en config/listas.php.
+     *
+     * @return array<int, string>
+     */
+    private function nombresListasVinculantes(): array
+    {
+        return collect(config('listas'))
+            ->filter(static fn (mixed $item): bool => is_array($item) && isset($item['nombre'], $item['parser']))
+            ->map(static fn (array $item): string => strtolower(trim((string) $item['nombre'])))
+            ->filter(static fn (string $nombre): bool => $nombre !== '')
+            ->values()
+            ->all();
+    }
+
+    private function generarAlerta(IntentoOperacion $intento): void
+    {
+        $nivelRiesgo = $this->esCoincidenciaVinculante($intento) ? 'vinculante' : 'restrictiva';
 
         Alerta::create([
             'intento_id' => $intento->id,
