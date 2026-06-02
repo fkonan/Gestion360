@@ -238,6 +238,64 @@
 
     {{-- Columna lateral --}}
     <div class="col-lg-4">
+        {{-- Decision de servicio --}}
+        @php
+            $esVinculanteAlerta = in_array(strtolower(trim((string) $alerta->nivel_riesgo)), ['vinculante', 'alto'], true);
+            $servicioPermitido = $alerta->estado === 'atendida';
+        @endphp
+        <div class="card shadow-sm mb-4 border-{{ $servicioPermitido ? 'success' : 'danger' }}">
+            <div class="card-header bg-white">
+                <h6 class="mb-0"><i class="fas fa-gavel text-{{ $servicioPermitido ? 'success' : 'danger' }} me-1"></i> Decision de servicio</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <span class="text-muted small text-uppercase d-block">Estado del servicio</span>
+                    @if($servicioPermitido)
+                        <span class="badge bg-success"><i class="fas fa-check"></i> Servicio permitido</span>
+                    @else
+                        <span class="badge bg-danger"><i class="fas fa-ban"></i> Servicio bloqueado</span>
+                    @endif
+                </div>
+
+                @unless($servicioPermitido)
+                <p class="small text-muted">
+                    Por defecto la operacion esta <strong>bloqueada</strong>. Si tras la revision decide
+                    permitir el servicio, indique el motivo. Esto retirara a la persona
+                    (documento {{ $alerta->numero_documento }}) de la
+                    {{ $esVinculanteAlerta ? 'lista vinculante (estado removido)' : 'lista restrictiva (retiro)' }},
+                    dejando de bloquearse en los sistemas externos.
+                </p>
+
+                <button class="btn btn-outline-success w-100" type="button" data-bs-toggle="collapse" data-bs-target="#formPermitirServicio">
+                    <i class="fas fa-unlock"></i> Permitir servicio
+                </button>
+
+                <div class="collapse mt-3" id="formPermitirServicio">
+                    <form action="{{ route('sarlaft.alertas.permitir-servicio', $alerta) }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+                        <div class="mb-3">
+                            <label for="motivo_servicio" class="form-label">Motivo <span class="text-danger">*</span></label>
+                            <textarea name="motivo" id="motivo_servicio" rows="3" class="form-control @error('motivo') is-invalid @enderror" placeholder="Justificacion de la decision..." required>{{ old('motivo') }}</textarea>
+                            @error('motivo') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label for="evidencias_servicio" class="form-label">Soportes (opcional)</label>
+                            <input type="file" name="evidencias[]" id="evidencias_servicio" class="form-control @error('evidencias.*') is-invalid @enderror" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx" multiple>
+                            @error('evidencias.*') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                        </div>
+                        <button type="submit" class="btn btn-success w-100" onclick="return confirm('Confirma permitir el servicio? Se retiraran los registros de lista del documento {{ $alerta->numero_documento }}.')">
+                            <i class="fas fa-check"></i> Confirmar y permitir
+                        </button>
+                    </form>
+                </div>
+                @else
+                <p class="small text-muted mb-0">
+                    El servicio fue permitido. Los registros de lista del documento fueron retirados.
+                </p>
+                @endunless
+            </div>
+        </div>
+
         {{-- Atender alerta --}}
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-white">

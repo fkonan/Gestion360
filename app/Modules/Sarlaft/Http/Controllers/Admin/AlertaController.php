@@ -7,8 +7,10 @@ namespace App\Modules\Sarlaft\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Modules\Sarlaft\Http\Requests\Admin\AtenderAlertaRequest;
 use App\Modules\Sarlaft\Http\Requests\Admin\FilterAlertasRequest;
+use App\Modules\Sarlaft\Http\Requests\Admin\PermitirServicioRequest;
 use App\Modules\Sarlaft\Models\Alerta;
 use App\Modules\Sarlaft\Services\AlertaEvidenciaService;
+use App\Modules\Sarlaft\Services\DecisionServicioService;
 use App\Modules\Sarlaft\Services\GestionAlertaService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -20,6 +22,7 @@ class AlertaController extends Controller
     public function __construct(
         private readonly GestionAlertaService $gestionAlertaService,
         private readonly AlertaEvidenciaService $alertaEvidenciaService,
+        private readonly DecisionServicioService $decisionServicioService,
     ) {}
 
     public function index(FilterAlertasRequest $request): View
@@ -144,6 +147,41 @@ class AlertaController extends Controller
         return redirect()
             ->route('sarlaft.alertas.show', $alerta)
             ->with('success', 'Alerta actualizada correctamente.');
+    }
+
+    public function permitirServicio(PermitirServicioRequest $request, Alerta $alerta): RedirectResponse
+    {
+        $userId = auth()->id() !== null ? (int) auth()->id() : null;
+        $motivo = (string) $request->validated()['motivo'];
+
+        $evidenciasGuardadas = [];
+        $archivos = $request->file('evidencias', []);
+        if (is_array($archivos) && $archivos !== []) {
+            $evidenciasGuardadas = $this->alertaEvidenciaService->guardarArchivos(
+                $alerta,
+                $archivos,
+                $userId,
+            );
+        }
+
+        try {
+            $afectados = $this->decisionServicioService->permitirServicio(
+                $alerta,
+                $motivo,
+                $evidenciasGuardadas,
+                $userId ?? 0,
+            );
+        } catch (\Throwable $throwable) {
+            if ($evidenciasGuardadas !== []) {
+                $this->alertaEvidenciaService->eliminarArchivos($evidenciasGuardadas);
+            }
+
+            throw $throwable;
+        }
+
+        return redirect()
+            ->route('sarlaft.alertas.show', $alerta)
+            ->with('success', "Servicio permitido. Se retiraron {$afectados} registro(s) de la lista para el documento {$alerta->numero_documento}.");
     }
 
     public function descargarEvidencia(Alerta $alerta, string $evidencia): StreamedResponse

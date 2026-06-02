@@ -14,6 +14,7 @@ Route::middleware('auth')->prefix('sarlaft')->name('sarlaft.')->group(function (
     Route::get('/alertas', [AlertaController::class, 'index'])->name('alertas.index');
     Route::get('/alertas/{alerta}', [AlertaController::class, 'show'])->name('alertas.show');
     Route::patch('/alertas/{alerta}/atender', [AlertaController::class, 'atender'])->name('alertas.atender');
+    Route::post('/alertas/{alerta}/permitir-servicio', [AlertaController::class, 'permitirServicio'])->name('alertas.permitir-servicio');
     Route::get('/alertas/{alerta}/evidencias/{evidencia}', [AlertaController::class, 'descargarEvidencia'])
         ->name('alertas.evidencias.download');
 
