@@ -14,6 +14,10 @@ use Illuminate\Support\Facades\Log;
 
 class IntentoOperacionService
 {
+    public function __construct(
+        private readonly NotificacionAlertaService $notificacionAlertaService,
+    ) {}
+
     /**
      * Procesa un intento reportado via Push (el sistema externo nos llama).
      *
@@ -21,7 +25,9 @@ class IntentoOperacionService
      */
     public function registrarPush(array $datos, SistemaConsumidor $sistema, string $ip): IntentoOperacion
     {
-        return DB::connection('mysql-sarlaft')->transaction(function () use ($datos, $sistema, $ip): IntentoOperacion {
+        $alertaNueva = null;
+
+        $intento = DB::connection('mysql-sarlaft')->transaction(function () use ($datos, $sistema, $ip, &$alertaNueva): IntentoOperacion {
             $referencia = $this->normalizarReferencia($datos['referencia'] ?? null);
 
             $intentoExistente = $this->buscarIntentoExistente(
@@ -31,7 +37,7 @@ class IntentoOperacionService
             );
 
             if ($intentoExistente !== null) {
-                return $intentoExistente->load(['alertas']);
+                return $intentoExistente;
             }
 
             $intento = $this->crearIntento(
@@ -42,10 +48,19 @@ class IntentoOperacionService
                 sistemaOrigenExterno: null,
             );
 
-            $this->generarAlerta($intento);
+            $alertaNueva = $this->generarAlerta($intento);
 
-            return $intento->load(['alertas']);
+            return $intento;
         });
+
+        if ($alertaNueva !== null) {
+            $this->notificacionAlertaService->notificarResumen(
+                collect([$alertaNueva]),
+                $this->etiquetaOrigen($sistema),
+            );
+        }
+
+        return $intento->load(['alertas']);
     }
 
     /**
@@ -84,14 +99,14 @@ class IntentoOperacionService
             }
 
             $intentos = $response->json('data') ?? $response->json() ?? [];
-            $registrados = 0;
+            $alertasGeneradas = collect();
 
             foreach ($intentos as $item) {
                 if (! is_array($item) || ! $this->tieneCamposMinimos($item)) {
                     continue;
                 }
 
-                DB::connection('mysql-sarlaft')->transaction(function () use ($item, $sistema, &$registrados): void {
+                DB::connection('mysql-sarlaft')->transaction(function () use ($item, $sistema, $alertasGeneradas): void {
                     $referencia = $this->normalizarReferencia($item['referencia'] ?? null);
 
                     $intentoExistente = $this->buscarIntentoExistente(
@@ -112,12 +127,16 @@ class IntentoOperacionService
                         sistemaOrigenExterno: $item['sistema_origen'] ?? null,
                     );
 
-                    $this->generarAlerta($intento);
-                    $registrados++;
+                    $alertasGeneradas->push($this->generarAlerta($intento));
                 });
             }
 
-            return $registrados;
+            $this->notificacionAlertaService->notificarResumen(
+                $alertasGeneradas,
+                $this->etiquetaOrigen($sistema),
+            );
+
+            return $alertasGeneradas->count();
         } catch (\Throwable $e) {
             Log::error('SARLAFT Pull: error al consultar sistema', [
                 'sistema' => $sistema->codigo,
@@ -169,7 +188,7 @@ class IntentoOperacionService
             }
 
             $filas = $query->orderBy('ID')->get();
-            $registrados = 0;
+            $alertasGeneradas = collect();
             $maxId = $ultimoId;
 
             foreach ($filas as $fila) {
@@ -183,7 +202,7 @@ class IntentoOperacionService
                     continue;
                 }
 
-                DB::connection('mysql-sarlaft')->transaction(function () use ($datos, $sistema, &$registrados): void {
+                DB::connection('mysql-sarlaft')->transaction(function () use ($datos, $sistema, $alertasGeneradas): void {
                     $intento = $this->crearIntento(
                         datos: $datos,
                         sistema: $sistema,
@@ -192,8 +211,7 @@ class IntentoOperacionService
                         sistemaOrigenExterno: $datos['sistema_origen'] ?? null,
                     );
 
-                    $this->generarAlerta($intento);
-                    $registrados++;
+                    $alertasGeneradas->push($this->generarAlerta($intento));
                 });
             }
 
@@ -202,7 +220,12 @@ class IntentoOperacionService
                 'db_ultima_lectura_at' => now(),
             ])->save();
 
-            return $registrados;
+            $this->notificacionAlertaService->notificarResumen(
+                $alertasGeneradas,
+                $this->etiquetaOrigen($sistema),
+            );
+
+            return $alertasGeneradas->count();
         } catch (\Throwable $e) {
             Log::error('SARLAFT Lectura DB: error al leer tabla de operaciones', [
                 'sistema' => $sistema->codigo,
@@ -369,11 +392,11 @@ class IntentoOperacionService
             ->all();
     }
 
-    private function generarAlerta(IntentoOperacion $intento): void
+    private function generarAlerta(IntentoOperacion $intento): Alerta
     {
         $nivelRiesgo = $this->esCoincidenciaVinculante($intento) ? 'vinculante' : 'restrictiva';
 
-        Alerta::create([
+        return Alerta::create([
             'intento_id' => $intento->id,
             'tipo' => 'intento_operacion_'.$intento->modo_integracion,
             'nivel_riesgo' => $nivelRiesgo,
@@ -470,6 +493,16 @@ class IntentoOperacionService
         $referencia = trim($valor);
 
         return $referencia !== '' ? $referencia : null;
+    }
+
+    /**
+     * Etiqueta legible del origen de una corrida, para el correo resumen.
+     */
+    private function etiquetaOrigen(SistemaConsumidor $sistema): string
+    {
+        $nombre = trim((string) ($sistema->nombre ?? ''));
+
+        return $nombre !== '' ? $nombre : (string) ($sistema->codigo ?? 'Sistema consumidor');
     }
 
     private function buscarIntentoExistente(
