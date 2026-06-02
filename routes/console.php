@@ -18,3 +18,8 @@ Schedule::command('sarlaft:pull-intentos')
     ->dailyAt('06:00')
     ->withoutOverlapping()
     ->appendOutputTo(storage_path('logs/laravel.log'));
+
+Schedule::command('sarlaft:leer-intentos-db')
+    ->dailyAt('06:15')
+    ->withoutOverlapping()
+    ->appendOutputTo(storage_path('logs/laravel.log'));

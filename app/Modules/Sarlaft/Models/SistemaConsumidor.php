@@ -20,15 +20,27 @@ class SistemaConsumidor extends Model
         'codigo',
         'api_token',
         'estado',
+        'modo_integracion',
         'limite_requests_minuto',
         'pull_endpoint',
         'pull_token',
+        'db_conexion',
+        'db_tabla',
+        'db_filtro_sistema_origen',
+        'db_ultima_lectura_at',
     ];
 
     protected $hidden = [
         'api_token',
         'pull_token',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'db_ultima_lectura_at' => 'datetime',
+        ];
+    }
 
     public function intentos(): \Illuminate\Database\Eloquent\Relations\HasMany
     {

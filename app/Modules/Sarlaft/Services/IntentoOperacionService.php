@@ -128,6 +128,121 @@ class IntentoOperacionService
         }
     }
 
+    /**
+     * Lee directamente la tabla de operaciones de un sistema inhouse (modo db)
+     * y registra los intentos encontrados. No usa HTTP: consulta la conexion
+     * configurada en el sistema consumidor.
+     */
+    public function ejecutarLecturaDb(
+        SistemaConsumidor $sistema,
+        ?string $fechaDesde = null,
+        ?string $fechaHasta = null,
+    ): int {
+        if (! $sistema->db_conexion || ! $sistema->db_tabla) {
+            return 0;
+        }
+
+        $filtroFechaDesde = $fechaDesde
+            ?? $sistema->db_ultima_lectura_at?->toDateTimeString()
+            ?? now()->subDay()->toDateTimeString();
+        $filtroFechaHasta = $fechaHasta ?? now()->toDateTimeString();
+
+        try {
+            $query = DB::connection($sistema->db_conexion)
+                ->table($sistema->db_tabla)
+                ->whereBetween('CREATED_AT', [$filtroFechaDesde, $filtroFechaHasta]);
+
+            if (is_string($sistema->db_filtro_sistema_origen) && trim($sistema->db_filtro_sistema_origen) !== '') {
+                $query->where('SISTEMA_ORIGEN', trim($sistema->db_filtro_sistema_origen));
+            }
+
+            $filas = $query->orderBy('CREATED_AT')->get();
+            $registrados = 0;
+
+            foreach ($filas as $fila) {
+                $datos = $this->mapearFilaDb((array) $fila);
+
+                if (! $this->tieneCamposMinimos($datos)) {
+                    continue;
+                }
+
+                DB::connection('mysql-sarlaft')->transaction(function () use ($datos, $sistema, &$registrados): void {
+                    $referencia = $this->normalizarReferencia($datos['referencia'] ?? null);
+
+                    $intentoExistente = $this->buscarIntentoExistente(
+                        sistema: $sistema,
+                        modoIntegracion: 'db',
+                        referencia: $referencia,
+                    );
+
+                    if ($intentoExistente !== null) {
+                        return;
+                    }
+
+                    $intento = $this->crearIntento(
+                        datos: $datos,
+                        sistema: $sistema,
+                        modoIntegracion: 'db',
+                        ipOrigen: null,
+                        sistemaOrigenExterno: $datos['sistema_origen'] ?? null,
+                    );
+
+                    $this->generarAlerta($intento);
+                    $registrados++;
+                });
+            }
+
+            $sistema->forceFill(['db_ultima_lectura_at' => now()])->save();
+
+            return $registrados;
+        } catch (\Throwable $e) {
+            Log::error('SARLAFT Lectura DB: error al leer tabla de operaciones', [
+                'sistema' => $sistema->codigo,
+                'conexion' => $sistema->db_conexion,
+                'tabla' => $sistema->db_tabla,
+                'error' => $e->getMessage(),
+            ]);
+
+            return 0;
+        }
+    }
+
+    /**
+     * Normaliza una fila cruda de la tabla Oracle (columnas en mayuscula) al
+     * array de datos que espera crearIntento(). Los CLOB se castean a string.
+     *
+     * @param  array<string, mixed>  $fila
+     * @return array<string, mixed>
+     */
+    private function mapearFilaDb(array $fila): array
+    {
+        $get = static function (string $columna) use ($fila): mixed {
+            return $fila[$columna] ?? $fila[strtolower($columna)] ?? null;
+        };
+
+        $descripcion = $get('DESCRIPCION');
+        $contexto = $get('CONTEXTO');
+        $contextoTexto = is_string($contexto) ? trim($contexto) : null;
+        $contextoDecodificado = $contextoTexto !== null && $contextoTexto !== ''
+            ? json_decode($contextoTexto, true)
+            : null;
+
+        return [
+            'tipo_documento' => $get('TIPO_DOCUMENTO'),
+            'numero_documento' => $get('NUMERO_DOCUMENTO'),
+            'nombre' => $get('NOMBRE'),
+            'tipo_lista' => $get('TIPO_LISTA'),
+            'lista_nombre' => $get('LISTA_NOMBRE'),
+            'tipo_operacion' => $get('TIPO_OPERACION'),
+            'referencia' => $get('REFERENCIA'),
+            'monto' => $get('MONTO'),
+            'descripcion' => is_string($descripcion) ? $descripcion : null,
+            'contexto' => is_array($contextoDecodificado) ? $contextoDecodificado : null,
+            'created_at' => $get('CREATED_AT'),
+            'sistema_origen' => $get('SISTEMA_ORIGEN'),
+        ];
+    }
+
     private function crearIntento(
         array $datos,
         SistemaConsumidor $sistema,

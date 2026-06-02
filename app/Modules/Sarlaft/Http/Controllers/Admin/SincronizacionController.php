@@ -135,18 +135,29 @@ class SincronizacionController extends Controller
 
         $sistemas = SistemaConsumidor::query()
             ->where('estado', 'activo')
-            ->whereNotNull('pull_endpoint')
+            ->where(function ($query): void {
+                $query->where(function ($pull): void {
+                    $pull->where('modo_integracion', 'pull')
+                        ->whereNotNull('pull_endpoint');
+                })->orWhere(function ($db): void {
+                    $db->where('modo_integracion', 'db')
+                        ->whereNotNull('db_conexion')
+                        ->whereNotNull('db_tabla');
+                });
+            })
             ->get();
 
         if ($sistemas->isEmpty()) {
             return redirect()
                 ->route('sarlaft.sincronizacion.index')
-                ->with('warning', 'No hay sistemas consumidores activos con Pull configurado.');
+                ->with('warning', 'No hay sistemas consumidores activos con Pull o lectura de BD configurada.');
         }
 
         $totalRegistrados = 0;
         foreach ($sistemas as $sistema) {
-            $totalRegistrados += $this->intentoOperacionService->ejecutarPull($sistema);
+            $totalRegistrados += $sistema->modo_integracion === 'db'
+                ? $this->intentoOperacionService->ejecutarLecturaDb($sistema)
+                : $this->intentoOperacionService->ejecutarPull($sistema);
         }
 
         $this->marcarSincronizacionIntentosEjecutada();
