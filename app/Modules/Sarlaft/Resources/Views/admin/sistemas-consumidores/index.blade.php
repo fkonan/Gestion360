@@ -266,7 +266,7 @@
 </div>
 @endsection
 
-@push('scripts')
+@push('script')
 <script>
     // --- Toggle modo integración (form alta) ---
     (function () {

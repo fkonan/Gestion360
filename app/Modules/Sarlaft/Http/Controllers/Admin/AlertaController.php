@@ -95,12 +95,26 @@ class AlertaController extends Controller
             'atendidaPor',
         ]);
 
-        return view('sarlaft::admin.alertas.show', compact('alerta'));
+        $relacionadasAbiertas = $this->gestionAlertaService->contarRelacionadasAbiertas($alerta);
+
+        return view('sarlaft::admin.alertas.show', compact('alerta', 'relacionadasAbiertas'));
     }
 
     public function atender(AtenderAlertaRequest $request, Alerta $alerta): RedirectResponse
     {
         $datos = $request->validated();
+        $userId = auth()->id() !== null ? (int) auth()->id() : null;
+
+        // Cierre masivo: aplicar estado y notas a todas las alertas abiertas del
+        // mismo documento. No procesa evidencias (decision de negocio).
+        if ($request->boolean('aplicar_relacionadas')) {
+            $afectadas = $this->gestionAlertaService->atenderRelacionadas($alerta, $datos, $userId);
+
+            return redirect()
+                ->route('sarlaft.alertas.show', $alerta)
+                ->with('success', "Se actualizaron {$afectadas} alerta(s) del documento {$alerta->numero_documento}.");
+        }
+
         $evidenciasGuardadas = [];
 
         $archivos = $request->file('evidencias', []);
@@ -108,7 +122,7 @@ class AlertaController extends Controller
             $evidenciasGuardadas = $this->alertaEvidenciaService->guardarArchivos(
                 $alerta,
                 $archivos,
-                auth()->id() !== null ? (int) auth()->id() : null,
+                $userId,
             );
             $datos['evidencias'] = $evidenciasGuardadas;
         }
@@ -117,7 +131,7 @@ class AlertaController extends Controller
             $this->gestionAlertaService->atender(
                 $alerta,
                 $datos,
-                auth()->id() !== null ? (int) auth()->id() : null,
+                $userId,
             );
         } catch (\Throwable $throwable) {
             if ($evidenciasGuardadas !== []) {

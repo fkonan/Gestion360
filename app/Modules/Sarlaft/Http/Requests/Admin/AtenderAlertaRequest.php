@@ -21,6 +21,7 @@ class AtenderAlertaRequest extends FormRequest
         return [
             'estado' => 'required|string|in:pendiente,en_revision,atendida,descartada',
             'notas' => 'nullable|string|max:2000',
+            'aplicar_relacionadas' => 'nullable|boolean',
             'evidencias' => 'nullable|array|max:5',
             'evidencias.*' => 'file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:10240',
         ];

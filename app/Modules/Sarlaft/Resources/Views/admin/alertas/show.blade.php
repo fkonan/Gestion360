@@ -116,17 +116,15 @@
             // Etiquetas legibles para las claves conocidas; el orden define la prioridad de despliegue.
             $ctxLabels = [
                 'empresa' => 'Empresa',
-                'empresaId' => 'ID Empresa',
+                'empresaId' => 'Documento',
                 'agencia' => 'Agencia',
-                'agenciaId' => 'ID Agencia',
                 'usuario' => 'Usuario que atendio',
                 'rolTercero' => 'Rol del tercero',
                 'evento' => 'Evento',
                 'metodo' => 'Metodo',
-                'tipoMovimiento' => 'Tipo movimiento',
             ];
             // Claves internas/redundantes que no aportan al oficial.
-            $ctxOcultar = ['sistema', 'identificacion', 'contexto', 'resultadoConsulta'];
+            $ctxOcultar = ['sistema', 'identificacion', 'contexto', 'resultadoConsulta', 'agenciaId', 'tipoMovimiento'];
             $ctxConocidas = collect($ctxLabels)
                 ->filter(fn ($label, $key) => filled($ctx[$key] ?? null))
                 ->map(fn ($label, $key) => ['label' => $label, 'valor' => $ctx[$key]]);
@@ -268,7 +266,7 @@
                         <textarea name="notas" id="notas" rows="4" class="form-control" placeholder="Observaciones...">{{ old('notas', $alerta->notas) }}</textarea>
                         @error('notas') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                     </div>
-                    <div class="mb-3">
+                    <div class="mb-3" id="bloque-evidencias">
                         <label for="evidencias" class="form-label">Adjuntar evidencias</label>
                         <input
                             type="file"
@@ -284,6 +282,22 @@
                         @error('evidencias') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                         @error('evidencias.*') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                     </div>
+
+                    @if(($relacionadasAbiertas ?? 1) >= 2)
+                    <div class="alert alert-info py-2 px-3 mb-3">
+                        <div class="form-check mb-1">
+                            <input class="form-check-input" type="checkbox" name="aplicar_relacionadas" value="1" id="aplicar_relacionadas">
+                            <label class="form-check-label fw-semibold" for="aplicar_relacionadas">
+                                Aplicar a las {{ $relacionadasAbiertas }} alertas abiertas de este documento
+                            </label>
+                        </div>
+                        <small class="text-muted d-block">
+                            Mismo documento ({{ $alerta->numero_documento }}). Aplica el estado y las notas a todas las
+                            pendientes o en revision. No adjunta evidencias en bloque.
+                        </small>
+                    </div>
+                    @endif
+
                     <button type="submit" class="btn btn-success w-100">
                         <i class="fas fa-check"></i> Guardar
                     </button>
@@ -293,3 +307,24 @@
     </div>
 </div>
 @endsection
+
+@push('script')
+<script>
+    (function () {
+        const checkbox = document.getElementById('aplicar_relacionadas');
+        const bloqueEvidencias = document.getElementById('bloque-evidencias');
+
+        if (!checkbox || !bloqueEvidencias) {
+            return;
+        }
+
+        const sincronizar = () => {
+            // El cierre masivo no procesa evidencias: se ocultan para no confundir.
+            bloqueEvidencias.classList.toggle('d-none', checkbox.checked);
+        };
+
+        checkbox.addEventListener('change', sincronizar);
+        sincronizar();
+    })();
+</script>
+@endpush
