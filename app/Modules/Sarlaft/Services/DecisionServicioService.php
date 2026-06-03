@@ -18,6 +18,10 @@ class DecisionServicioService
 
     public const NIVEL_RESTRICTIVA = 'restrictiva';
 
+    public function __construct(
+        private readonly NovedadExportacionService $novedadExportacionService,
+    ) {}
+
     /**
      * Permite el servicio a la persona de la alerta: remueve/inactiva TODOS los
      * registros activos de ese documento en la lista correspondiente segun el
@@ -57,33 +61,63 @@ class DecisionServicioService
     }
 
     /**
-     * Marca como 'removido' todos los registros vinculantes activos del documento.
+     * Marca como 'removido' todos los registros vinculantes activos del documento
+     * y registra la novedad de 'salida' para que la exportacion por novedades
+     * propague el delta a los sistemas externos.
      */
     private function removerVinculantes(string $documento): int
     {
-        return RegistroLista::query()
+        $registros = RegistroLista::query()
+            ->with('lista')
             ->where('identificacion', $documento)
             ->where('estado', 'activo')
-            ->update(['estado' => 'removido']);
+            ->get();
+
+        foreach ($registros as $registro) {
+            $registro->update([
+                'estado' => 'removido',
+                'novedad' => 'salida',
+            ]);
+
+            $this->novedadExportacionService->registrarNovedadVinculante(
+                registro: $registro,
+                tipoNovedad: 'salida',
+                nombreLista: (string) ($registro->lista?->nombre ?? 'Lista vinculante'),
+            );
+        }
+
+        return $registros->count();
     }
 
     /**
      * Inactiva (retira) todos los registros restrictivos activos del documento,
-     * documentando el motivo, la evidencia y el responsable del retiro.
+     * documentando el motivo, la evidencia y el responsable del retiro, y
+     * registra la novedad de 'salida' para la exportacion por novedades.
      *
      * @param  array<int, array<string, mixed>>  $evidencia
      */
     private function retirarRestrictivas(string $documento, string $motivo, array $evidencia, int $userId): int
     {
-        return ListaNegraInterna::query()
+        $registros = ListaNegraInterna::query()
             ->where('numero_documento', $documento)
             ->where('estado', 'activo')
-            ->update([
+            ->get();
+
+        foreach ($registros as $registro) {
+            $registro->update([
                 'estado' => 'inactivo',
                 'motivo_retiro' => $motivo,
                 'evidencia_retiro' => $evidencia !== [] ? $evidencia : null,
                 'retirado_por' => $userId,
                 'retirado_at' => now(),
             ]);
+
+            $this->novedadExportacionService->registrarNovedadInterna(
+                registro: $registro,
+                tipoNovedad: 'salida',
+            );
+        }
+
+        return $registros->count();
     }
 }

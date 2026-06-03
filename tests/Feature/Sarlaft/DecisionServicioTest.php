@@ -6,6 +6,7 @@ namespace Tests\Feature\Sarlaft;
 
 use App\Modules\Sarlaft\Models\Alerta;
 use App\Modules\Sarlaft\Models\ListaNegraInterna;
+use App\Modules\Sarlaft\Models\NovedadExportacion;
 use App\Modules\Sarlaft\Models\RegistroLista;
 use App\Modules\Sarlaft\Services\DecisionServicioService;
 use Illuminate\Database\Schema\Blueprint;
@@ -71,6 +72,18 @@ class DecisionServicioTest extends TestCase
         $this->assertSame('Cliente verificado', $registro->motivo_retiro);
         $this->assertSame(9, (int) $registro->retirado_por);
         $this->assertNotNull($registro->retirado_at);
+    }
+
+    public function test_permitir_servicio_genera_novedad_de_salida_para_exportacion(): void
+    {
+        $this->crearRegistroVinculante('900111', 'activo');
+
+        $alerta = $this->crearAlerta('900111', 'vinculante');
+
+        app(DecisionServicioService::class)->permitirServicio($alerta, 'Validado', [], 7);
+
+        // Debe existir la novedad de salida para que el modo "novedades" propague el delta.
+        $this->assertSame(1, NovedadExportacion::where('tipo_novedad', 'salida')->where('origen_lista', 'vinculante')->count());
     }
 
     public function test_no_afecta_registros_ya_removidos(): void
@@ -147,6 +160,19 @@ class DecisionServicioTest extends TestCase
             $table->string('estado', 20)->default('activo');
             $table->timestamps();
             $table->softDeletes();
+        });
+
+        Schema::connection('mysql-sarlaft')->create('sarlaft_novedades_exportacion', static function (Blueprint $table): void {
+            $table->id();
+            $table->string('origen_lista', 20);
+            $table->string('tipo_novedad', 20);
+            $table->unsignedBigInteger('registro_lista_id')->nullable();
+            $table->unsignedBigInteger('lista_negra_id')->nullable();
+            $table->unsignedBigInteger('sincronizacion_log_id')->nullable();
+            $table->unsignedBigInteger('lista_id')->nullable();
+            $table->string('nombre_lista', 150)->nullable();
+            $table->text('datos')->nullable();
+            $table->timestamp('created_at')->nullable();
         });
 
         Schema::connection('mysql-sarlaft')->create('sarlaft_lista_negra_interna', static function (Blueprint $table): void {
