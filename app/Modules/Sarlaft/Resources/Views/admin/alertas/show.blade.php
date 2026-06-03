@@ -241,23 +241,27 @@
         {{-- Decision de servicio --}}
         @php
             $esVinculanteAlerta = in_array(strtolower(trim((string) $alerta->nivel_riesgo)), ['vinculante', 'alto'], true);
-            $servicioPermitido = $alerta->estado === 'atendida';
+            $decision = $alerta->decision_servicio; // 'permitido', 'bloqueado' o null
+            $decisionColor = $decision === 'permitido' ? 'success' : 'danger';
         @endphp
-        <div class="card shadow-sm mb-4 border-{{ $servicioPermitido ? 'success' : 'danger' }}">
+        <div class="card shadow-sm mb-4 border-{{ $decisionColor }}">
             <div class="card-header bg-white">
-                <h6 class="mb-0"><i class="fas fa-gavel text-{{ $servicioPermitido ? 'success' : 'danger' }} me-1"></i> Decision de servicio</h6>
+                <h6 class="mb-0"><i class="fas fa-gavel text-{{ $decisionColor }} me-1"></i> Decision de servicio</h6>
             </div>
             <div class="card-body">
                 <div class="mb-3">
                     <span class="text-muted small text-uppercase d-block">Estado del servicio</span>
-                    @if($servicioPermitido)
+                    @if($decision === 'permitido')
                         <span class="badge bg-success"><i class="fas fa-check"></i> Servicio permitido</span>
+                    @elseif($decision === 'bloqueado')
+                        <span class="badge bg-danger"><i class="fas fa-ban"></i> Servicio bloqueado (decision)</span>
                     @else
-                        <span class="badge bg-danger"><i class="fas fa-ban"></i> Servicio bloqueado</span>
+                        <span class="badge bg-danger"><i class="fas fa-ban"></i> Servicio bloqueado (por defecto)</span>
                     @endif
                 </div>
 
-                @unless($servicioPermitido)
+                @if($decision === null)
+                {{-- Sin decision aun: mostrar ambos botones --}}
                 <p class="small text-muted">
                     Por defecto la operacion esta <strong>bloqueada</strong>. Si tras la revision decide
                     permitir el servicio, indique el motivo. Esto retirara a la persona
@@ -266,9 +270,14 @@
                     dejando de bloquearse en los sistemas externos.
                 </p>
 
-                <button class="btn btn-outline-success w-100" type="button" data-bs-toggle="collapse" data-bs-target="#formPermitirServicio">
-                    <i class="fas fa-unlock"></i> Permitir servicio
-                </button>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-success" type="button" data-bs-toggle="collapse" data-bs-target="#formPermitirServicio" aria-expanded="false" aria-controls="formPermitirServicio">
+                        <i class="fas fa-unlock"></i> Permitir servicio
+                    </button>
+                    <button class="btn btn-outline-danger" type="button" data-bs-toggle="collapse" data-bs-target="#formMantenerBloqueo" aria-expanded="false" aria-controls="formMantenerBloqueo">
+                        <i class="fas fa-ban"></i> Mantener bloqueo
+                    </button>
+                </div>
 
                 <div class="collapse mt-3" id="formPermitirServicio">
                     <form action="{{ route('sarlaft.alertas.permitir-servicio', $alerta) }}" method="POST" enctype="multipart/form-data">
@@ -288,11 +297,41 @@
                         </button>
                     </form>
                 </div>
+
+                <div class="collapse mt-3" id="formMantenerBloqueo">
+                    <form action="{{ route('sarlaft.alertas.mantener-bloqueo', $alerta) }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+                        <div class="mb-3">
+                            <label for="motivo_bloqueo" class="form-label">Motivo <span class="text-danger">*</span></label>
+                            <textarea name="motivo" id="motivo_bloqueo" rows="3" class="form-control @error('motivo') is-invalid @enderror" placeholder="Justificacion de la decision de bloqueo..." required>{{ old('motivo') }}</textarea>
+                            @error('motivo') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label for="evidencias_bloqueo" class="form-label">Soportes (opcional)</label>
+                            <input type="file" name="evidencias[]" id="evidencias_bloqueo" class="form-control @error('evidencias.*') is-invalid @enderror" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx" multiple>
+                            @error('evidencias.*') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                        </div>
+                        <button type="submit" class="btn btn-danger w-100" onclick="return confirm('Confirma mantener el bloqueo? La persona ({{ $alerta->numero_documento }}) seguira sin poder operar.')">
+                            <i class="fas fa-ban"></i> Confirmar bloqueo
+                        </button>
+                    </form>
+                </div>
+
                 @else
-                <p class="small text-muted mb-0">
-                    El servicio fue permitido. Los registros de lista del documento fueron retirados.
-                </p>
-                @endunless
+                {{-- Ya hay decision registrada: mostrar estado y motivo --}}
+                @if($alerta->notas)
+                <div class="mb-2">
+                    <span class="text-muted small text-uppercase d-block">Motivo</span>
+                    <p class="small mb-0">{{ $alerta->notas }}</p>
+                </div>
+                @endif
+                @if($alerta->decision_at)
+                <div>
+                    <span class="text-muted small text-uppercase d-block">Fecha de decision</span>
+                    <span class="small">{{ \Illuminate\Support\Carbon::parse($alerta->decision_at)->format('d/m/Y H:i') }}</span>
+                </div>
+                @endif
+                @endif
             </div>
         </div>
 

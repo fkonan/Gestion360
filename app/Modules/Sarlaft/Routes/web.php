@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Sarlaft\Http\Controllers\Admin\AlertaController;
+use App\Modules\Sarlaft\Http\Controllers\Admin\DecisionController;
 use App\Modules\Sarlaft\Http\Controllers\Admin\ListaNegraController;
 use App\Modules\Sarlaft\Http\Controllers\Admin\SincronizacionController;
 use App\Modules\Sarlaft\Http\Controllers\Admin\SistemaConsumidorController;
@@ -11,10 +12,14 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth')->prefix('sarlaft')->name('sarlaft.')->group(function (): void {
     Route::get('/', [AlertaController::class, 'index'])->name('dashboard');
 
+    Route::get('/decisiones', [DecisionController::class, 'index'])->name('decisiones.index');
+    Route::get('/decisiones/exportar', [DecisionController::class, 'exportar'])->name('decisiones.exportar');
+
     Route::get('/alertas', [AlertaController::class, 'index'])->name('alertas.index');
     Route::get('/alertas/{alerta}', [AlertaController::class, 'show'])->name('alertas.show');
     Route::patch('/alertas/{alerta}/atender', [AlertaController::class, 'atender'])->name('alertas.atender');
     Route::post('/alertas/{alerta}/permitir-servicio', [AlertaController::class, 'permitirServicio'])->name('alertas.permitir-servicio');
+    Route::post('/alertas/{alerta}/mantener-bloqueo', [AlertaController::class, 'mantenerBloqueo'])->name('alertas.mantener-bloqueo');
     Route::get('/alertas/{alerta}/evidencias/{evidencia}', [AlertaController::class, 'descargarEvidencia'])
         ->name('alertas.evidencias.download');
 

@@ -47,9 +47,11 @@ class DecisionServicioService
                 ? $this->removerVinculantes($documento)
                 : $this->retirarRestrictivas($documento, $motivo, $evidencia, $userId);
 
-            // La alerta queda atendida con la decision documentada.
+            // La alerta queda atendida con la decision de permitir servicio documentada.
             $alerta->update([
                 'estado' => 'atendida',
+                'decision_servicio' => 'permitido',
+                'decision_at' => now(),
                 'notas' => $motivo,
                 'atendida_por' => $userId,
                 'fecha_atencion' => now(),
@@ -58,6 +60,26 @@ class DecisionServicioService
 
             return $afectados;
         });
+    }
+
+    /**
+     * Registra la decision explicita de MANTENER el bloqueo de servicio. No toca
+     * las listas (la persona sigue bloqueada por defecto); solo documenta la
+     * decision y el motivo para el reporte de decisiones.
+     *
+     * @param  array<int, array<string, mixed>>  $evidencia
+     */
+    public function mantenerBloqueo(Alerta $alerta, string $motivo, array $evidencia, int $userId): void
+    {
+        $alerta->update([
+            'estado' => 'atendida',
+            'decision_servicio' => 'bloqueado',
+            'decision_at' => now(),
+            'notas' => $motivo,
+            'atendida_por' => $userId,
+            'fecha_atencion' => now(),
+            'evidencias' => $evidencia !== [] ? $evidencia : $alerta->evidencias,
+        ]);
     }
 
     /**

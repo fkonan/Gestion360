@@ -25,14 +25,23 @@ class AlertaController extends Controller
         private readonly DecisionServicioService $decisionServicioService,
     ) {}
 
+    /**
+     * Estados que componen cada pestania del panel.
+     */
+    private const ESTADOS_PENDIENTES = ['pendiente', 'en_revision'];
+
+    private const ESTADOS_CERRADAS = ['atendida', 'descartada'];
+
     public function index(FilterAlertasRequest $request): View
     {
         $filters = $request->validated();
+        $tab = $filters['tab'] ?? 'pendientes';
+        $estadosTab = $tab === 'cerradas' ? self::ESTADOS_CERRADAS : self::ESTADOS_PENDIENTES;
 
         $statsBaseQuery = Alerta::query();
         $stats = [
             'coincidencias_pendientes' => (clone $statsBaseQuery)
-                ->whereIn('estado', ['pendiente', 'en_revision'])
+                ->whereIn('estado', self::ESTADOS_PENDIENTES)
                 ->count(),
             'resueltas_hoy' => (clone $statsBaseQuery)
                 ->whereNotNull('fecha_atencion')
@@ -41,6 +50,12 @@ class AlertaController extends Controller
             'escaladas_automaticas' => (clone $statsBaseQuery)
                 ->where('escalada_automatica', true)
                 ->count(),
+        ];
+
+        // Conteos por pestania para los badges de las tabs.
+        $tabs = [
+            'pendientes' => (clone $statsBaseQuery)->whereIn('estado', self::ESTADOS_PENDIENTES)->count(),
+            'cerradas' => (clone $statsBaseQuery)->whereIn('estado', self::ESTADOS_CERRADAS)->count(),
         ];
 
         $alertas = Alerta::query()
@@ -74,6 +89,7 @@ class AlertaController extends Controller
                     }
                 });
             })
+            ->whereIn('estado', $estadosTab)
             ->when(isset($filters['estado']), function (Builder $query) use ($filters): void {
                 $query->where('estado', $filters['estado']);
             })
@@ -88,6 +104,8 @@ class AlertaController extends Controller
             'alertas' => $alertas,
             'stats' => $stats,
             'filters' => $filters,
+            'tab' => $tab,
+            'tabs' => $tabs,
         ]);
     }
 
@@ -182,6 +200,41 @@ class AlertaController extends Controller
         return redirect()
             ->route('sarlaft.alertas.show', $alerta)
             ->with('success', "Servicio permitido. Se retiraron {$afectados} registro(s) de la lista para el documento {$alerta->numero_documento}.");
+    }
+
+    public function mantenerBloqueo(PermitirServicioRequest $request, Alerta $alerta): RedirectResponse
+    {
+        $userId = auth()->id() !== null ? (int) auth()->id() : null;
+        $motivo = (string) $request->validated()['motivo'];
+
+        $evidenciasGuardadas = [];
+        $archivos = $request->file('evidencias', []);
+        if (is_array($archivos) && $archivos !== []) {
+            $evidenciasGuardadas = $this->alertaEvidenciaService->guardarArchivos(
+                $alerta,
+                $archivos,
+                $userId,
+            );
+        }
+
+        try {
+            $this->decisionServicioService->mantenerBloqueo(
+                $alerta,
+                $motivo,
+                $evidenciasGuardadas,
+                $userId ?? 0,
+            );
+        } catch (\Throwable $throwable) {
+            if ($evidenciasGuardadas !== []) {
+                $this->alertaEvidenciaService->eliminarArchivos($evidenciasGuardadas);
+            }
+
+            throw $throwable;
+        }
+
+        return redirect()
+            ->route('sarlaft.alertas.show', $alerta)
+            ->with('success', 'Decision registrada: el servicio permanece bloqueado.');
     }
 
     public function descargarEvidencia(Alerta $alerta, string $evidencia): StreamedResponse

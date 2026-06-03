@@ -22,6 +22,8 @@ class Alerta extends Model
         'tipo',
         'nivel_riesgo',
         'estado',
+        'decision_servicio',
+        'decision_at',
         'tipo_documento',
         'numero_documento',
         'escalada_automatica',
@@ -45,6 +47,7 @@ class Alerta extends Model
             'escalada_automatica' => 'boolean',
             'escalada_automatica_at' => 'datetime',
             'fecha_atencion' => 'datetime',
+            'decision_at' => 'datetime',
         ];
     }
 

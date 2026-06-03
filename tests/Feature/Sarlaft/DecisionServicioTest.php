@@ -86,6 +86,32 @@ class DecisionServicioTest extends TestCase
         $this->assertSame(1, NovedadExportacion::where('tipo_novedad', 'salida')->where('origen_lista', 'vinculante')->count());
     }
 
+    public function test_permitir_servicio_marca_la_decision_en_la_alerta(): void
+    {
+        $this->crearRegistroVinculante('900111', 'activo');
+        $alerta = $this->crearAlerta('900111', 'vinculante');
+
+        app(DecisionServicioService::class)->permitirServicio($alerta, 'Validado', [], 7);
+
+        $alerta->refresh();
+        $this->assertSame('permitido', $alerta->decision_servicio);
+        $this->assertNotNull($alerta->decision_at);
+    }
+
+    public function test_mantener_bloqueo_registra_decision_sin_tocar_listas(): void
+    {
+        $this->crearRegistroVinculante('900111', 'activo');
+        $alerta = $this->crearAlerta('900111', 'vinculante');
+
+        app(DecisionServicioService::class)->mantenerBloqueo($alerta, 'Riesgo confirmado', [], 7);
+
+        $alerta->refresh();
+        $this->assertSame('bloqueado', $alerta->decision_servicio);
+        $this->assertNotNull($alerta->decision_at);
+        // No se toca la lista: el registro sigue activo.
+        $this->assertSame(1, RegistroLista::where('identificacion', '900111')->where('estado', 'activo')->count());
+    }
+
     public function test_no_afecta_registros_ya_removidos(): void
     {
         $this->crearRegistroVinculante('900111', 'removido');
@@ -138,6 +164,8 @@ class DecisionServicioTest extends TestCase
             $table->string('tipo')->nullable();
             $table->string('nivel_riesgo', 20)->nullable();
             $table->string('estado', 20)->default('pendiente');
+            $table->string('decision_servicio', 20)->nullable();
+            $table->timestamp('decision_at')->nullable();
             $table->string('tipo_documento')->nullable();
             $table->string('numero_documento')->nullable();
             $table->text('datos_persona')->nullable();
