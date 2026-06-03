@@ -17,17 +17,16 @@
 
 @section('content')
 @php
-    $estadoOptions = [
-        'pendiente' => 'Pendiente',
-        'en_revision' => 'En revision',
-        'atendida' => 'Atendida',
-        'descartada' => 'Descartada',
-    ];
+    $tabActiva = $tab ?? 'pendientes';
+    // El select de estado ofrece solo los estados de la pestania activa.
+    $estadoOptions = $tabActiva === 'cerradas'
+        ? ['atendida' => 'Atendida', 'descartada' => 'Descartada']
+        : ['pendiente' => 'Pendiente', 'en_revision' => 'En revision'];
     $riesgoOptions = [
         'vinculante'  => 'Lista Vinculante',
         'restrictiva' => 'Lista Restrictiva',
     ];
-    $hasFilters = collect($filters)->filter(static fn ($value): bool => filled($value))->isNotEmpty();
+    $hasFilters = collect(collect($filters)->except('tab'))->filter(static fn ($value): bool => filled($value))->isNotEmpty();
 @endphp
 
 <div class="sarlaft-alerts-page">
@@ -83,10 +82,29 @@
         </div>
     </div>
 
-    <div class="card shadow-sm sarlaft-alerts-card">
+    {{-- Pestanias por estado --}}
+    <ul class="nav nav-tabs mb-0">
+        <li class="nav-item">
+            <a class="nav-link {{ $tabActiva === 'pendientes' ? 'active' : '' }}"
+               href="{{ route('sarlaft.alertas.index', ['tab' => 'pendientes']) }}">
+                <i class="fas fa-clock me-1"></i> Pendientes
+                <span class="badge bg-danger ms-1">{{ $tabs['pendientes'] ?? 0 }}</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {{ $tabActiva === 'cerradas' ? 'active' : '' }}"
+               href="{{ route('sarlaft.alertas.index', ['tab' => 'cerradas']) }}">
+                <i class="fas fa-check-circle me-1"></i> Atendidas / Descartadas
+                <span class="badge bg-secondary ms-1">{{ $tabs['cerradas'] ?? 0 }}</span>
+            </a>
+        </li>
+    </ul>
+
+    <div class="card shadow-sm sarlaft-alerts-card border-top-0 rounded-top-0">
         <div class="card-body p-0">
             <div class="sarlaft-filter-shell">
                 <form action="{{ route('sarlaft.alertas.index') }}" method="GET">
+                    <input type="hidden" name="tab" value="{{ $tabActiva }}">
                     <div class="row g-3 align-items-end">
                         <div class="col-xl-5">
                             <label for="search" class="form-label">Busqueda</label>

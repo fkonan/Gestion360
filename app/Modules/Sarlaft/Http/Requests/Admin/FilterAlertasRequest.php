@@ -18,11 +18,13 @@ class FilterAlertasRequest extends FormRequest
         $search = trim((string) $this->input('search', ''));
         $estado = trim((string) $this->input('estado', ''));
         $riesgo = trim((string) $this->input('riesgo', ''));
+        $tab = trim((string) $this->input('tab', ''));
 
         $this->merge([
             'search' => $search !== '' ? $search : null,
             'estado' => $estado !== '' ? $estado : null,
             'riesgo' => $riesgo !== '' ? $riesgo : null,
+            'tab' => in_array($tab, ['pendientes', 'cerradas'], true) ? $tab : 'pendientes',
         ]);
     }
 
@@ -35,6 +37,7 @@ class FilterAlertasRequest extends FormRequest
             'search' => 'nullable|string|max:120',
             'estado' => 'nullable|string|in:pendiente,en_revision,atendida,descartada',
             'riesgo' => 'nullable|string|in:bajo,medio,alto,critico,vinculante,restrictiva',
+            'tab' => 'nullable|string|in:pendientes,cerradas',
         ];
     }
 
