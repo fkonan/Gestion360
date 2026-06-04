@@ -85,7 +85,7 @@
                     </div>
                     <div class="col-md-4">
                         <div class="text-muted small text-uppercase">Tipo de operacion</div>
-                        <div class="fw-semibold">{{ ucfirst((string) $intento->tipo_operacion) ?: '-' }}</div>
+                        <div class="fw-semibold">{{ \Illuminate\Support\Str::headline(\Illuminate\Support\Str::lower((string) $intento->tipo_operacion)) ?: '-' }}</div>
                     </div>
                     <div class="col-md-4">
                         <div class="text-muted small text-uppercase">Referencia</div>

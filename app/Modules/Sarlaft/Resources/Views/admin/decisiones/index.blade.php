@@ -76,16 +76,23 @@
         </div>
         @else
         <div class="table-responsive">
-            <table class="table table-sm table-hover align-middle mb-0">
-                <thead class="table-light">
+            <table
+                id="tablaDecisiones"
+                class="table table-sm table-hover align-middle mb-0"
+                data-toggle="table"
+                data-detail-view="true"
+                data-detail-formatter="detalleDecision"
+                data-locale="es-ES">
+                <thead class="table-primary">
                     <tr>
-                        <th>Fecha</th>
-                        <th>Decision</th>
-                        <th>Tipo</th>
-                        <th>Documento</th>
-                        <th>Persona</th>
-                        <th>Motivo</th>
-                        <th>Oficial</th>
+                        <th data-field="fecha">Fecha</th>
+                        <th data-field="decision">Decision</th>
+                        <th data-field="tipo">Tipo</th>
+                        <th data-field="documento">Documento</th>
+                        <th data-field="persona">Persona</th>
+                        <th data-field="oficial">Oficial</th>
+                        {{-- El motivo (largo) se muestra en el detalle expandible --}}
+                        <th data-field="motivo">Motivo</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -100,6 +107,8 @@
                             ? trim(($oficial->PerNombres ?? '') . ' ' . ($oficial->PerApellidos ?? ''))
                             : '-';
                         $nombreOficial = $nombreOficial !== '' ? $nombreOficial : '-';
+
+                        $esVinculante = strtolower(trim((string) $alerta->nivel_riesgo)) === 'vinculante';
                     @endphp
                     <tr>
                         <td class="text-nowrap">
@@ -113,22 +122,14 @@
                             @endif
                         </td>
                         <td>
-                            @if(strtolower(trim((string) $alerta->nivel_riesgo)) === 'vinculante')
-                                <span class="badge bg-danger">Lista Vinculante</span>
-                            @else
-                                <span class="badge bg-secondary">Lista Restrictiva</span>
-                            @endif
+                            <span class="badge bg-{{ $esVinculante ? 'danger' : 'secondary' }}">
+                                {{ $esVinculante ? 'Lista Vinculante' : 'Lista Restrictiva' }}
+                            </span>
                         </td>
                         <td class="text-nowrap">{{ $alerta->numero_documento ?? '-' }}</td>
                         <td>{{ $nombrePersona }}</td>
-                        <td>
-                            @if($alerta->notas)
-                                <span title="{{ $alerta->notas }}">{{ \Illuminate\Support\Str::limit($alerta->notas, 60) }}</span>
-                            @else
-                                <span class="text-muted">-</span>
-                            @endif
-                        </td>
                         <td>{{ $nombreOficial }}</td>
+                        <td>{{ $alerta->notas ?: '-' }}</td>
                     </tr>
                     @endforeach
                 </tbody>
@@ -144,3 +145,19 @@
 </div>
 
 @endsection
+
+@pushOnce('script')
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof window.initTablaBootstrapTable !== 'function') {
+            return;
+        }
+        // 'documento' y 'decision' quedan siempre visibles; 'motivo' va al detalle expandible.
+        window.initTablaBootstrapTable(
+            '#tablaDecisiones',
+            { protegidas: ['documento', 'decision'], ocultas: ['motivo'] },
+            'detalleDecision'
+        );
+    });
+</script>
+@endpushOnce

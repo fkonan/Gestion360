@@ -365,7 +365,7 @@
 }
 
 .sarlaft-date-block span {
-    font-weight: 700;
+    font-weight: 400;
 }
 
 .sarlaft-date-block small,
@@ -377,7 +377,7 @@
 
 .sarlaft-person-name {
     font-size: 0.92rem;
-    font-weight: 700;
+    font-weight: 400;
     color: #111827;
 }
 

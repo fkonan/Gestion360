@@ -226,12 +226,12 @@
                                 $origenAtencion = 'auto_sla';
                             }
 
-                            $tipoOperacion = \Illuminate\Support\Str::headline((string) ($contexto['tipo_operacion'] ?? $alerta->intento?->tipo_operacion ?? $alerta->tipo));
+                            $tipoOperacion = \Illuminate\Support\Str::headline(\Illuminate\Support\Str::lower((string) ($contexto['tipo_operacion'] ?? $alerta->intento?->tipo_operacion ?? $alerta->tipo)));
 
                             $sistemaOrigen = null;
 
                             if (is_string($alerta->intento?->sistema_origen) && trim((string) $alerta->intento?->sistema_origen) !== '') {
-                                $sistemaOrigen = \Illuminate\Support\Str::headline((string) $alerta->intento->sistema_origen);
+                                $sistemaOrigen = \Illuminate\Support\Str::headline(\Illuminate\Support\Str::lower((string) $alerta->intento->sistema_origen));
                             } elseif (is_string($alerta->intento?->sistema?->nombre) && trim((string) $alerta->intento?->sistema?->nombre) !== '') {
                                 $sistemaOrigen = (string) $alerta->intento->sistema->nombre;
                             }
@@ -266,7 +266,7 @@
                         @endphp
                         <tr>
                             <td>
-                                <span class="sarlaft-row-id">#AL-{{ $alerta->id }}</span>
+                                <span>#AL-{{ $alerta->id }}</span>
                             </td>
                             <td>
                                 <div class="sarlaft-date-block">
@@ -275,7 +275,7 @@
                                 </div>
                             </td>
                             <td>
-                                <span class="sarlaft-operation-pill {{ $operationClass }}">{{ $tipoOperacion }}</span>
+                                <span>{{ $tipoOperacion }}</span>
                                 <div class="sarlaft-cell-meta">{{ $sistemaOrigen ?? 'Operacion SARLAFT' }}</div>
                             </td>
                             <td>
