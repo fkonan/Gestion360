@@ -2,6 +2,7 @@
 
 namespace App\Modules\GestionWeb\Http\Controllers;
 
+use App\Services\DocumentalStorageService;
 use App\Http\Controllers\Controller;
 use App\Modules\GestionWeb\Models\RecursosDigitales;
 use App\Modules\GestionWeb\Models\TipoImagenes;
@@ -23,9 +24,13 @@ class RecursosDigitalesAdminController extends Controller
 
     private const STORAGE_BASE_DIRECTORY = 'gestionweb/appmovil';
 
+    private const CDN_BANNER_DEFAULT_RELATIVE_PATH = 'cdn/app/banner/img';
+
+    private const CDN_DOCS_DEFAULT_RELATIVE_PATH = 'cdn/app/docs';
+
     private const MEDIA_TYPE_IDS = [1, 2];
 
-    private const LINK_TYPE_IDS = [11, 12, 13, 14];
+    private const LINK_TYPE_IDS = [11, 12, 13, 14, 16, 17];
 
     private const IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
 
@@ -103,6 +108,7 @@ class RecursosDigitalesAdminController extends Controller
         $currentType = $this->findManagedTypeOrFail($tipo);
         $typeId = (int) $currentType->IdTipoRecurso;
         $typeConfig = $currentType->type_config;
+        $textoAuxiliar = $this->nullableTrimmedValue($request->input('textoAuxiliar'));
         $validator = $this->resourceValidator($request, false, $typeId, $typeConfig);
 
         if ($validator->fails()) {
@@ -115,17 +121,17 @@ class RecursosDigitalesAdminController extends Controller
 
         try {
             if ($typeConfig['allows_file_upload'] && $request->hasFile('archivo')) {
-                $uploadedFileUrl = $this->storeResourceFile($request->file('archivo'), $typeId);
+                $uploadedFileUrl = $this->storeResourceFile($request->file('archivo'), $typeId, $textoAuxiliar);
             }
 
             $orden = $this->normalizeRequestedOrder($typeId, (int) $request->input('orden'), false);
             $url = $uploadedFileUrl ?: $this->nullableTrimmedValue($request->input('url_externa'));
 
-            DB::connection($this->connectionName())->transaction(function () use ($request, $typeId, $orden, $url) {
+            DB::connection($this->connectionName())->transaction(function () use ($request, $typeId, $orden, $url, $textoAuxiliar) {
                 $this->shiftOrdersForCreate($typeId, $orden);
 
                 RecursosDigitales::create([
-                    'TextoAuxiliar' => $this->nullableTrimmedValue($request->input('textoAuxiliar')),
+                    'TextoAuxiliar' => $textoAuxiliar,
                     'URL' => $url,
                     'Tipo' => $typeId,
                     'Orden' => $orden,
@@ -166,6 +172,7 @@ class RecursosDigitalesAdminController extends Controller
         $typeId = (int) $recurso->Tipo;
         $currentType = $this->findManagedTypeOrFail($typeId);
         $typeConfig = $currentType->type_config;
+        $textoAuxiliar = $this->nullableTrimmedValue($request->input('textoAuxiliar'));
         $validator = $this->resourceValidator($request, true, $typeId, $typeConfig);
 
         if ($validator->fails()) {
@@ -179,7 +186,7 @@ class RecursosDigitalesAdminController extends Controller
 
         try {
             if ($typeConfig['allows_file_upload'] && $request->hasFile('archivo')) {
-                $uploadedFileUrl = $this->storeResourceFile($request->file('archivo'), $typeId);
+                $uploadedFileUrl = $this->storeResourceFile($request->file('archivo'), $typeId, $textoAuxiliar);
             }
 
             $shouldUpdateUrl = ($typeConfig['allows_file_upload'] && $request->hasFile('archivo'))
@@ -187,11 +194,11 @@ class RecursosDigitalesAdminController extends Controller
             $newUrl = $uploadedFileUrl ?: $this->nullableTrimmedValue($request->input('url_externa'));
             $nuevoOrden = $this->normalizeRequestedOrder($typeId, (int) $request->input('orden'), true);
 
-            DB::connection($this->connectionName())->transaction(function () use ($request, $recurso, $typeId, $shouldUpdateUrl, $newUrl, $nuevoOrden, &$previousUrl) {
+            DB::connection($this->connectionName())->transaction(function () use ($request, $recurso, $typeId, $shouldUpdateUrl, $newUrl, $nuevoOrden, &$previousUrl, $textoAuxiliar) {
                 $this->shiftOrdersForUpdate($typeId, $recurso, $nuevoOrden);
 
                 $payload = [
-                    'TextoAuxiliar' => $this->nullableTrimmedValue($request->input('textoAuxiliar')),
+                    'TextoAuxiliar' => $textoAuxiliar,
                     'Orden' => $nuevoOrden,
                     'Estado' => $this->normalizeEstado($request->input('estado')),
                 ];
@@ -254,31 +261,270 @@ class RecursosDigitalesAdminController extends Controller
         }
     }
 
+    public function reordenar(Request $request, int $tipo)
+    {
+        $currentType = $this->findManagedTypeOrFail($tipo);
+        $typeId = (int) $currentType->IdTipoRecurso;
+        $typeConfig = $currentType->type_config;
+
+        if (($typeConfig['detail_layout'] ?? '') !== 'gallery') {
+            return response()->json([
+                'message' => 'Este tipo de recurso no permite reordenamiento visual.',
+                'type' => 'danger',
+            ], 422);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'orden' => 'required|array|min:1',
+            'orden.*' => 'required|integer|distinct',
+        ], [
+            'orden.required' => 'Debe indicar el nuevo orden de los recursos.',
+            'orden.array' => 'El formato del orden enviado no es valido.',
+            'orden.min' => 'Debe enviar al menos un recurso para reordenar.',
+            'orden.*.integer' => 'El identificador del recurso debe ser numerico.',
+            'orden.*.distinct' => 'El nuevo orden contiene recursos duplicados.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'No fue posible validar el nuevo orden.',
+                'type' => 'danger',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $orderedIds = array_values(array_map('intval', (array) $request->input('orden', [])));
+        $currentIds = RecursosDigitales::query()
+            ->where('Tipo', $typeId)
+            ->orderBy('Orden')
+            ->orderBy('IdRecurso')
+            ->pluck('IdRecurso')
+            ->map(fn ($id) => (int) $id)
+            ->values()
+            ->all();
+
+        $expectedIds = $currentIds;
+        $receivedIds = $orderedIds;
+        sort($expectedIds);
+        sort($receivedIds);
+
+        if (count($orderedIds) !== count($currentIds) || $expectedIds !== $receivedIds) {
+            return response()->json([
+                'message' => 'El nuevo orden no coincide con los recursos disponibles en pantalla.',
+                'type' => 'danger',
+            ], 422);
+        }
+
+        if ($orderedIds === $currentIds) {
+            return response()->json([
+                'message' => 'El orden de '.$typeConfig['plural_label'].' ya se encuentra actualizado.',
+                'type' => 'success',
+            ]);
+        }
+
+        try {
+            DB::connection($this->connectionName())->transaction(function () use ($typeId, $orderedIds) {
+                foreach ($orderedIds as $index => $resourceId) {
+                    RecursosDigitales::query()
+                        ->where('Tipo', $typeId)
+                        ->where('IdRecurso', $resourceId)
+                        ->update(['Orden' => $index + 1]);
+                }
+            });
+
+            return response()->json([
+                'message' => 'Orden de '.$typeConfig['plural_label'].' actualizado correctamente.',
+                'type' => 'success',
+            ]);
+        } catch (Exception $e) {
+            Log::error('Error al reordenar recursos digitales de app movil: '.$e->getMessage());
+
+            return response()->json([
+                'message' => 'No fue posible guardar el nuevo orden.',
+                'type' => 'danger',
+            ], 500);
+        }
+    }
+
     private function buildFormData(?RecursosDigitales $recurso = null, ?int $typeId = null): array
     {
         $selectedTypeId = $recurso ? (int) $recurso->Tipo : (int) $typeId;
         $currentType = $this->findManagedTypeOrFail($selectedTypeId);
         $typeConfig = $currentType->type_config;
         $placeholderPreview = $this->placeholderPreviewUrl($selectedTypeId);
+        $isEdit = $recurso !== null;
 
         if ($recurso) {
             $recurso = $this->decorateResource($recurso, $typeConfig);
         }
 
+        $defaultOrder = $recurso ? (int) $recurso->Orden : $this->nextOrder($selectedTypeId);
+        $rutaDetalleTipo = route('recursos-digitales.show', ['tipo' => $selectedTypeId]);
+
         return [
             'currentType' => $currentType,
-            'modo' => $recurso ? 'editar' : 'crear',
+            'modo' => $isEdit ? 'editar' : 'crear',
             'placeholderPreview' => $placeholderPreview,
             'previewUrl' => $recurso?->preview_url ?? $placeholderPreview,
             'recurso' => $recurso,
             'selectedTypeId' => $selectedTypeId,
-            'siguienteOrden' => $recurso ? (int) $recurso->Orden : $this->nextOrder($selectedTypeId),
+            'siguienteOrden' => $defaultOrder,
             'typeConfig' => $typeConfig,
             'formAction' => $recurso
                 ? route('recursos-digitales.update', ['id' => $recurso->IdRecurso])
                 : route('recursos-digitales.store', ['tipo' => $selectedTypeId]),
-            'httpMethod' => $recurso ? 'PUT' : 'POST',
+            'httpMethod' => $isEdit ? 'PUT' : 'POST',
             'urlActual' => $recurso?->URL,
+            'esEdicion' => $isEdit,
+            'rutaIndice' => route('recursos-digitales.index'),
+            'rutaDetalleTipo' => $rutaDetalleTipo,
+            'tituloAccion' => $isEdit ? $typeConfig['form_edit_title'] : $typeConfig['form_create_title'],
+            'descripcionAccion' => $isEdit ? $typeConfig['form_edit_description'] : $typeConfig['form_create_description'],
+            'textoBoton' => $isEdit ? 'Guardar cambios' : $typeConfig['create_label'],
+            'iconoBoton' => $isEdit ? 'fa-save' : 'fa-plus-circle',
+            ...$this->buildFormPresentationData($recurso, $typeConfig, $selectedTypeId, $defaultOrder, $isEdit),
+        ];
+    }
+
+    private function buildFormPresentationData(
+        ?RecursosDigitales $recurso,
+        array $typeConfig,
+        int $selectedTypeId,
+        int $defaultOrder,
+        bool $isEdit
+    ): array {
+        $previewMode = (string) $typeConfig['preview_mode'];
+        $defaultText = trim((string) ($recurso?->TextoAuxiliar ?? ''));
+        $previewKind = $recurso?->preview_kind ?? $this->defaultPreviewKindByMode($previewMode);
+        $previewLabel = $recurso?->preview_label ?? $this->defaultPreviewLabelByMode($previewMode);
+
+        return [
+            'textoAuxiliar' => $defaultText,
+            'ordenDefault' => $defaultOrder,
+            'estadoDefault' => $this->normalizeEstado($recurso?->Estado),
+            'urlActualTexto' => $recurso?->URL ?? 'La URL se definira cuando cargues el archivo o escribas una URL externa.',
+            'previewKind' => $previewKind,
+            'previewIcon' => $recurso?->preview_icon ?? $this->defaultPreviewIconByMode($previewMode),
+            'previewIconType' => $recurso?->preview_icon_type ?? ($previewKind === 'pdf' ? 'image' : 'font'),
+            'previewIconAsset' => $recurso?->preview_icon_asset ?? ($previewKind === 'pdf' ? asset('img/verPDF.png') : null),
+            'previewLabel' => $previewLabel,
+            'initialSourceText' => $this->buildInitialSourceText($isEdit, $previewKind, $previewMode),
+            'acceptTypes' => $this->resolveAcceptTypes($previewMode),
+            'previewDisplayName' => $defaultText !== '' ? $defaultText : ucfirst($typeConfig['singular_label']).' sin nombre',
+            'defaultDocumentName' => ucfirst($typeConfig['singular_label']).' sin nombre',
+            'alertaFormulario' => $this->buildFormAlertMessage($isEdit, $typeConfig),
+            'notas' => $this->buildFormNotes($typeConfig, $selectedTypeId),
+        ];
+    }
+
+    private function defaultPreviewKindByMode(string $previewMode): string
+    {
+        if ($previewMode === 'image') {
+            return 'image';
+        }
+
+        if ($previewMode === 'link') {
+            return 'link';
+        }
+
+        return 'file';
+    }
+
+    private function defaultPreviewIconByMode(string $previewMode): string
+    {
+        if ($previewMode === 'image') {
+            return 'fa-image';
+        }
+
+        if ($previewMode === 'link') {
+            return 'fa-link';
+        }
+
+        return 'fa-file-alt';
+    }
+
+    private function defaultPreviewLabelByMode(string $previewMode): string
+    {
+        if ($previewMode === 'image') {
+            return 'Imagen';
+        }
+
+        if ($previewMode === 'link') {
+            return 'Enlace';
+        }
+
+        return 'Archivo';
+    }
+
+    private function buildInitialSourceText(bool $isEdit, string $previewKind, string $previewMode): string
+    {
+        if ($isEdit) {
+            if ($previewKind === 'image') {
+                return 'Imagen actualmente configurada';
+            }
+
+            if ($previewKind === 'link') {
+                return 'Enlace actualmente configurado';
+            }
+
+            return 'Archivo actualmente configurado';
+        }
+
+        if ($previewMode === 'image') {
+            return 'Aun no se ha seleccionado una imagen';
+        }
+
+        if ($previewMode === 'link') {
+            return 'Aun no se ha configurado un enlace';
+        }
+
+        return 'Aun no se ha seleccionado un archivo';
+    }
+
+    private function resolveAcceptTypes(string $previewMode): string
+    {
+        if ($previewMode === 'image') {
+            return 'image/png,image/jpeg,image/jpg,image/webp,image/gif';
+        }
+
+        return '.pdf,image/png,image/jpeg,image/jpg,image/webp';
+    }
+
+    private function buildFormAlertMessage(bool $isEdit, array $typeConfig): string
+    {
+        if ($isEdit) {
+            return 'Si no cambias '.($typeConfig['allows_file_upload'] ? 'el archivo ni ' : '').'la URL, se conserva el '.$typeConfig['singular_label'].' actual.';
+        }
+
+        if ($typeConfig['allows_file_upload']) {
+            return 'Debes elegir una de estas opciones: cargar un archivo o indicar una URL externa.';
+        }
+
+        return 'Debes indicar la URL que la app movil usara para este enlace.';
+    }
+
+    private function buildFormNotes(array $typeConfig, int $selectedTypeId): array
+    {
+        if ($typeConfig['resource_family'] === 'media') {
+            return [
+                'Estas gestionando el tipo '.$selectedTypeId.' ('.$typeConfig['description'].').',
+                'La app movil usa la columna URL para cargar el recurso visual correspondiente.',
+                'El estado permite ocultar el recurso sin eliminarlo de la tabla.',
+            ];
+        }
+
+        if ($typeConfig['resource_family'] === 'link') {
+            return [
+                'Estas gestionando el tipo '.$selectedTypeId.' ('.$typeConfig['description'].').',
+                'Este grupo solo utiliza enlaces; no requiere carga de archivos.',
+                'La app movil redirige al usuario a la URL configurada en este recurso.',
+            ];
+        }
+
+        return [
+            'Estas gestionando el tipo '.$selectedTypeId.' ('.$typeConfig['description'].').',
+            'La app movil usa la columna URL para abrir el documento configurado.',
+            'Si el recurso es PDF o imagen, el listado lo mostrara dentro del grupo documental.',
         ];
     }
 
@@ -620,11 +866,20 @@ class RecursosDigitalesAdminController extends Controller
         };
     }
 
-    private function storeResourceFile(UploadedFile $file, int $typeId): string
+    private function storeResourceFile(UploadedFile $file, int $typeId, ?string $textAuxiliar = null): string
     {
         $typeConfig = $this->typeConfig($typeId);
         $extension = strtolower($file->getClientOriginalExtension() ?: $file->extension() ?: 'bin');
-        $filename = $typeConfig['storage_prefix'].'_'.now()->format('Ymd_His').'_'.Str::random(8).'.'.$extension;
+        $filename = $this->buildResourceFilename($typeId, $typeConfig, $extension, $textAuxiliar);
+
+        if ($this->shouldStoreBannerInCdn($typeConfig)) {
+            return $this->storeBannerFileInCdn($file, $filename, $typeId);
+        }
+
+        if ($this->shouldStoreDocumentInCdn($typeConfig)) {
+            return $this->storeDocumentFileInCdn($file, $filename, $typeId);
+        }
+
         $path = $file->storeAs(
             trim(self::STORAGE_BASE_DIRECTORY.'/'.$typeConfig['storage_directory'], '/'),
             $filename,
@@ -632,6 +887,353 @@ class RecursosDigitalesAdminController extends Controller
         );
 
         return $this->resolvePreviewUrl(Storage::disk('public')->url($path), $typeId);
+    }
+
+    private function buildResourceFilename(int $typeId, array $typeConfig, string $extension, ?string $textAuxiliar = null): string
+    {
+        if ($typeConfig['is_banner'] ?? false) {
+            return $this->buildBannerFilename($typeId, $typeConfig, $extension);
+        }
+
+        if (($typeConfig['resource_family'] ?? '') === 'document') {
+            return $this->buildDocumentFilename($typeId, $extension, $textAuxiliar);
+        }
+
+        return $typeConfig['storage_prefix'].'_'.now()->format('Ymd_His').'_'.Str::random(8).'.'.$extension;
+    }
+
+    private function buildBannerFilename(int $typeId, array $typeConfig, string $extension): string
+    {
+        $baseName = $this->bannerTypeBaseName((string) ($typeConfig['storage_prefix'] ?? 'banner'));
+        $nextSequence = $this->nextBannerSequenceNumber($typeId, $baseName);
+
+        return $baseName.'_'.$nextSequence.'.'.$extension;
+    }
+
+    private function bannerTypeBaseName(string $text): string
+    {
+        $normalized = (string) Str::of($text)
+            ->ascii()
+            ->lower()
+            ->replaceMatches('/[^a-z0-9]+/', '_')
+            ->trim('_');
+
+        return $normalized !== '' ? $normalized : 'banner';
+    }
+
+    private function nextBannerSequenceNumber(int $typeId, string $baseName): int
+    {
+        $pattern = '/^'.preg_quote($baseName, '/').'_(\d+)\.[a-z0-9]+$/i';
+        $maxMatchedSequence = 0;
+
+        $resourceUrls = RecursosDigitales::query()
+            ->where('Tipo', $typeId)
+            ->pluck('URL');
+
+        foreach ($resourceUrls as $resourceUrl) {
+            $path = (string) parse_url((string) $resourceUrl, PHP_URL_PATH);
+            $fileName = basename($path);
+
+            if (preg_match($pattern, $fileName, $matches) === 1) {
+                $maxMatchedSequence = max($maxMatchedSequence, (int) $matches[1]);
+            }
+        }
+
+        if ($maxMatchedSequence > 0) {
+            return $maxMatchedSequence + 1;
+        }
+
+        return ((int) RecursosDigitales::query()
+            ->where('Tipo', $typeId)
+            ->count()) + 1;
+    }
+
+    private function buildDocumentFilename(int $typeId, string $extension, ?string $textAuxiliar = null): string
+    {
+        $baseName = $this->documentFileBaseName((string) $textAuxiliar);
+        if ($baseName === '') {
+            return 'documento_tipo_'.$typeId.'_'.now()->format('Ymd_His').'_'.Str::random(8).'.'.$extension;
+        }
+
+        $nextSequence = $this->nextDocumentSequenceNumber($typeId, $baseName);
+
+        if ($nextSequence <= 1) {
+            return $baseName.'.'.$extension;
+        }
+
+        return $baseName.'_'.$nextSequence.'.'.$extension;
+    }
+
+    private function documentFileBaseName(string $text): string
+    {
+        return (string) Str::of($text)
+            ->ascii()
+            ->lower()
+            ->replaceMatches('/[^a-z0-9]+/', '_')
+            ->trim('_');
+    }
+
+    private function nextDocumentSequenceNumber(int $typeId, string $baseName): int
+    {
+        $pattern = '/^'.preg_quote($baseName, '/').'(?:_(\d+))?\.[a-z0-9]+$/i';
+        $maxSequence = 0;
+
+        $resourceUrls = RecursosDigitales::query()
+            ->where('Tipo', $typeId)
+            ->pluck('URL');
+
+        foreach ($resourceUrls as $resourceUrl) {
+            $path = (string) parse_url((string) $resourceUrl, PHP_URL_PATH);
+            $fileName = basename($path);
+
+            if (preg_match($pattern, $fileName, $matches) !== 1) {
+                continue;
+            }
+
+            $sequence = isset($matches[1]) && $matches[1] !== ''
+                ? (int) $matches[1]
+                : 1;
+            $maxSequence = max($maxSequence, $sequence);
+        }
+
+        return $maxSequence + 1;
+    }
+
+    private function shouldStoreBannerInCdn(array $typeConfig): bool
+    {
+        if (! ($typeConfig['is_banner'] ?? false)) {
+            return false;
+        }
+
+        if (! config('recursos_digitales.cdn.banner_upload_enabled', false)) {
+            return false;
+        }
+
+        $relativePath = $this->cdnStorageRelativePath(
+            'recursos_digitales.cdn.banner_relative_path',
+            self::CDN_BANNER_DEFAULT_RELATIVE_PATH
+        );
+
+        if ($this->shouldUseDocumentalDiskForCdn()) {
+            return $this->documentalDiskNameForCdn() !== '' && $relativePath !== '';
+        }
+
+        return $this->cdnRootPath() !== '' && $relativePath !== '';
+    }
+
+    private function storeBannerFileInCdn(UploadedFile $file, string $filename, int $typeId): string
+    {
+        $relativePath = $this->cdnStorageRelativePath(
+            'recursos_digitales.cdn.banner_relative_path',
+            self::CDN_BANNER_DEFAULT_RELATIVE_PATH
+        );
+
+        return $this->storeFileInCdnRelativePath(
+            $file,
+            $filename,
+            $relativePath,
+            $typeId,
+            'No fue posible crear el directorio de destino para banners.'
+        );
+    }
+
+    private function shouldStoreDocumentInCdn(array $typeConfig): bool
+    {
+        if (($typeConfig['resource_family'] ?? '') !== 'document') {
+            return false;
+        }
+
+        if (! config('recursos_digitales.cdn.docs_upload_enabled', true)) {
+            return false;
+        }
+
+        $relativePath = $this->cdnStorageRelativePath(
+            'recursos_digitales.cdn.docs_relative_path',
+            self::CDN_DOCS_DEFAULT_RELATIVE_PATH
+        );
+
+        if ($this->shouldUseDocumentalDiskForCdn()) {
+            return $this->documentalDiskNameForCdn() !== '' && $relativePath !== '';
+        }
+
+        return $this->cdnRootPath() !== '' && $relativePath !== '';
+    }
+
+    private function storeDocumentFileInCdn(UploadedFile $file, string $filename, int $typeId): string
+    {
+        $baseDocsRelativePath = $this->cdnStorageRelativePath(
+            'recursos_digitales.cdn.docs_relative_path',
+            self::CDN_DOCS_DEFAULT_RELATIVE_PATH
+        );
+        $documentFolder = $this->resolveDocumentFolderByType($typeId);
+        $relativePath = trim($baseDocsRelativePath.'/'.$documentFolder, '/');
+
+        return $this->storeFileInCdnRelativePath(
+            $file,
+            $filename,
+            $relativePath,
+            $typeId,
+            'No fue posible crear el directorio de destino para documentos.'
+        );
+    }
+
+    private function resolveDocumentFolderByType(int $typeId): string
+    {
+        $defaultFolder = $this->sanitizeDocsFolderName((string) config('recursos_digitales.cdn.docs_default_folder', 'politicas'));
+        if ($defaultFolder === '') {
+            $defaultFolder = 'politicas';
+        }
+
+        $folderMap = (array) config('recursos_digitales.cdn.docs_by_type', []);
+        $mappedFolder = $this->sanitizeDocsFolderName((string) ($folderMap[$typeId] ?? ''));
+        $selectedFolder = $mappedFolder !== '' ? $mappedFolder : $defaultFolder;
+
+        $allowedFolders = [];
+        foreach ((array) config('recursos_digitales.cdn.docs_allowed_folders', []) as $folder) {
+            $normalized = $this->sanitizeDocsFolderName((string) $folder);
+            if ($normalized !== '') {
+                $allowedFolders[$normalized] = true;
+            }
+        }
+
+        if (! empty($allowedFolders) && ! isset($allowedFolders[$selectedFolder])) {
+            return $defaultFolder;
+        }
+
+        return $selectedFolder;
+    }
+
+    private function sanitizeDocsFolderName(string $value): string
+    {
+        return (string) Str::of($value)
+            ->ascii()
+            ->lower()
+            ->replaceMatches('/[^a-z0-9]+/', '')
+            ->trim();
+    }
+
+    private function storeFileInCdnRelativePath(
+        UploadedFile $file,
+        string $filename,
+        string $relativePath,
+        int $typeId,
+        string $directoryErrorMessage
+    ): string {
+        $normalizedRelativePath = trim(str_replace('\\', '/', $relativePath), '/');
+
+        if ($normalizedRelativePath === '') {
+            throw new Exception('No hay una ruta CDN valida configurada para almacenar el recurso.');
+        }
+
+        if ($this->shouldUseDocumentalDiskForCdn()) {
+            $diskName = $this->documentalDiskNameForCdn();
+            if ($diskName === '') {
+                throw new Exception('No hay un disco documental configurado para almacenar el recurso.');
+            }
+
+            $targetFilePath = trim($normalizedRelativePath.'/'.$filename, '/');
+            $stream = fopen($file->getRealPath(), 'rb');
+            if ($stream === false) {
+                throw new Exception('No fue posible abrir el archivo temporal para carga.');
+            }
+
+            try {
+                $stored = Storage::disk($diskName)->writeStream($targetFilePath, $stream);
+            } finally {
+                if (is_resource($stream)) {
+                    fclose($stream);
+                }
+            }
+
+            if (! $stored) {
+                throw new Exception('No fue posible guardar el archivo en el servidor SFTP configurado.');
+            }
+
+            return $this->buildCdnFilePublicUrl($targetFilePath, $typeId);
+        }
+
+        $rootPath = $this->cdnRootPath();
+        if ($rootPath === '') {
+            throw new Exception('No hay una ruta CDN valida configurada para almacenar el recurso.');
+        }
+
+        $targetDirectory = $rootPath.'/'.$normalizedRelativePath;
+        if (! is_dir($targetDirectory) && ! mkdir($targetDirectory, 0755, true) && ! is_dir($targetDirectory)) {
+            throw new Exception($directoryErrorMessage);
+        }
+
+        $file->move($targetDirectory, $filename);
+
+        return $this->buildCdnFilePublicUrl($normalizedRelativePath.'/'.$filename, $typeId);
+    }
+
+    private function buildCdnFilePublicUrl(string $relativeFilePath, int $typeId): string
+    {
+        $publicBaseUrl = $this->cdnPublicBaseUrl();
+        $normalizedFilePath = ltrim($relativeFilePath, '/');
+
+        if ($publicBaseUrl === '') {
+            return $this->resolvePreviewUrl('/'.$normalizedFilePath, $typeId);
+        }
+
+        return $publicBaseUrl.'/'.$normalizedFilePath;
+    }
+
+    private function cdnRootPath(): string
+    {
+        return rtrim(str_replace('\\', '/', (string) config('recursos_digitales.cdn.root_path', '')), '/');
+    }
+
+    private function cdnPublicBaseUrl(): string
+    {
+        if ($this->shouldUseDocumentalDiskForCdn()) {
+            return trim($this->documentalStorageService()->obtenerPublicBaseUrlConfigurada(), '/');
+        }
+
+        return trim((string) config('recursos_digitales.cdn.public_base_url', ''), '/');
+    }
+
+    private function cdnRelativePath(string $configKey, string $default): string
+    {
+        return trim((string) config($configKey, $default), " \t\n\r\0\x0B/\\");
+    }
+
+    private function cdnStorageRelativePath(string $configKey, string $default): string
+    {
+        $relativePath = $this->cdnRelativePath($configKey, $default);
+        if ($relativePath === '' || ! $this->shouldUseDocumentalDiskForCdn()) {
+            return $relativePath;
+        }
+
+        $baseDirectory = trim($this->documentalStorageService()->obtenerBaseDirectoryConfigurada(), '/');
+        if ($baseDirectory === '') {
+            return $relativePath;
+        }
+
+        if ($relativePath === $baseDirectory || str_starts_with($relativePath, $baseDirectory.'/')) {
+            return $relativePath;
+        }
+
+        return trim($baseDirectory.'/'.$relativePath, '/');
+    }
+
+    private function shouldUseDocumentalDiskForCdn(): bool
+    {
+        return (bool) config('recursos_digitales.cdn.use_documental_disk', false);
+    }
+
+    private function documentalDiskNameForCdn(): string
+    {
+        if (! $this->shouldUseDocumentalDiskForCdn()) {
+            return '';
+        }
+
+        return trim((string) config('services.documental.disk', ''));
+    }
+
+    private function documentalStorageService(): DocumentalStorageService
+    {
+        return app(DocumentalStorageService::class);
     }
 
     private function deleteLocalResourceFile(?string $url): void
@@ -643,16 +1245,72 @@ class RecursosDigitalesAdminController extends Controller
         }
 
         $normalizedPath = trim(str_replace('\\', '/', $path), '/');
-
-        if (! str_starts_with($normalizedPath, 'storage/'.self::STORAGE_BASE_DIRECTORY.'/')) {
+        if ($normalizedPath === '') {
             return;
         }
 
-        $relativePath = Str::after($normalizedPath, 'storage/');
+        if (str_starts_with($normalizedPath, 'storage/'.self::STORAGE_BASE_DIRECTORY.'/')) {
+            $relativePath = Str::after($normalizedPath, 'storage/');
 
-        if (Storage::disk('public')->exists($relativePath)) {
-            Storage::disk('public')->delete($relativePath);
+            if (Storage::disk('public')->exists($relativePath)) {
+                Storage::disk('public')->delete($relativePath);
+            }
         }
+
+        $this->deleteFileFromCdnIfManaged($normalizedPath);
+    }
+
+    private function deleteFileFromCdnIfManaged(string $normalizedPath): void
+    {
+        foreach ($this->managedCdnRelativePrefixes() as $relativePrefix) {
+            if (! str_starts_with($normalizedPath, $relativePrefix.'/')) {
+                continue;
+            }
+
+            if ($this->shouldUseDocumentalDiskForCdn()) {
+                $diskName = $this->documentalDiskNameForCdn();
+                if ($diskName !== '' && Storage::disk($diskName)->exists($normalizedPath)) {
+                    Storage::disk($diskName)->delete($normalizedPath);
+                }
+
+                return;
+            }
+
+            $rootPath = $this->cdnRootPath();
+            if ($rootPath === '') {
+                return;
+            }
+
+            $absolutePath = $rootPath.'/'.$normalizedPath;
+            if (is_file($absolutePath)) {
+                @unlink($absolutePath);
+            }
+
+            return;
+        }
+    }
+
+    private function managedCdnRelativePrefixes(): array
+    {
+        $prefixes = [
+            $this->cdnStorageRelativePath(
+                'recursos_digitales.cdn.banner_relative_path',
+                self::CDN_BANNER_DEFAULT_RELATIVE_PATH
+            ),
+            $this->cdnStorageRelativePath(
+                'recursos_digitales.cdn.docs_relative_path',
+                self::CDN_DOCS_DEFAULT_RELATIVE_PATH
+            ),
+        ];
+
+        $filtered = [];
+        foreach ($prefixes as $prefix) {
+            if ($prefix !== '') {
+                $filtered[$prefix] = $prefix;
+            }
+        }
+
+        return array_values($filtered);
     }
 
     private function nullableTrimmedValue(mixed $value): ?string
@@ -770,6 +1428,7 @@ class RecursosDigitalesAdminController extends Controller
                 'detail_layout' => 'gallery',
                 'storage_directory' => $isBanner ? 'banners' : 'imagenes/tipo-'.$typeId,
                 'storage_prefix' => $isBanner ? 'banner' : 'imagen_tipo_'.$typeId,
+                'is_banner' => $isBanner,
                 'selector_badge' => 'Tipo '.$typeId,
             ];
         }

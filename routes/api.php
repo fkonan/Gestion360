@@ -20,4 +20,5 @@ Route::middleware(['web', 'auth'])->group(function () {
         ->name('api.fingerprint.verifyDetailed');
 });
 
+require __DIR__.'/../app/Modules/GestionRRHH/Routes/api.php';
 require __DIR__.'/../app/Modules/Sarlaft/Routes/api.php';

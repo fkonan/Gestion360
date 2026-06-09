@@ -17,8 +17,13 @@ class IncapacidadMaxima implements ValidationRule
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        $fechaInicio = Carbon::parse($this->fechaInicio);
-        $fechaFin = Carbon::parse($value);
+        try {
+            $fechaInicio = Carbon::parse($this->fechaInicio);
+            $fechaFin = Carbon::parse($value);
+        } catch (\Throwable) {
+            return;
+        }
+
         $maxFechaFin = $fechaInicio->copy()->addMonths(3);
 
         if ($fechaFin->greaterThan($maxFechaFin)) {

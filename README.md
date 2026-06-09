@@ -1,5 +1,9 @@
 # Guia del proyecto autogestion2
 
+## Documentacion funcional
+
+- Integracion API Novedades RRHH: [docs/gestionrrhh-api-novedades.md](docs/gestionrrhh-api-novedades.md)
+
 ## Resumen
 
 Este repositorio contiene una aplicacion Laravel 12 orientada a autogestion interna, con arquitectura modular en `app/Modules` y varias integraciones con bases de datos legadas y servicios externos.

@@ -1,48 +1,3 @@
-@php
-  $esEdicion = $modo === 'editar';
-  $rutaIndice = route('recursos-digitales.index');
-  $rutaDetalleTipo = route('recursos-digitales.show', ['tipo' => $selectedTypeId]);
-  $tituloAccion = $esEdicion ? $typeConfig['form_edit_title'] : $typeConfig['form_create_title'];
-  $descripcionAccion = $esEdicion ? $typeConfig['form_edit_description'] : $typeConfig['form_create_description'];
-  $textoBoton = $esEdicion ? 'Guardar cambios' : $typeConfig['create_label'];
-  $iconoBoton = $esEdicion ? 'fa-save' : 'fa-plus-circle';
-  $textoAuxiliar = $recurso?->TextoAuxiliar ?? '';
-  $orden = old('orden', $recurso?->Orden ?? $siguienteOrden);
-  $estado = old('estado', $recurso?->Estado ?? 'ACTIVO');
-  $urlActualTexto = $urlActual ?? 'La URL se definira cuando cargues el archivo o escribas una URL externa.';
-  $previewKind = $recurso?->preview_kind ?? ($typeConfig['preview_mode'] === 'image' ? 'image' : ($typeConfig['preview_mode'] === 'link' ? 'link' : 'file'));
-  $previewIcon = $recurso?->preview_icon ?? ($typeConfig['preview_mode'] === 'image' ? 'fa-image' : ($typeConfig['preview_mode'] === 'link' ? 'fa-link' : 'fa-file-alt'));
-  $previewIconType = $recurso?->preview_icon_type ?? ($previewKind === 'pdf' ? 'image' : 'font');
-  $previewIconAsset = $recurso?->preview_icon_asset ?? ($previewKind === 'pdf' ? asset('img/verPDF.png') : null);
-  $previewLabel = $recurso?->preview_label ?? ($typeConfig['preview_mode'] === 'image' ? 'Imagen' : ($typeConfig['preview_mode'] === 'link' ? 'Enlace' : 'Archivo'));
-  $initialSourceText = $esEdicion
-    ? ($previewKind === 'image' ? 'Imagen actualmente configurada' : ($previewKind === 'link' ? 'Enlace actualmente configurado' : 'Archivo actualmente configurado'))
-    : ($typeConfig['preview_mode'] === 'image' ? 'Aun no se ha seleccionado una imagen' : ($typeConfig['preview_mode'] === 'link' ? 'Aun no se ha configurado un enlace' : 'Aun no se ha seleccionado un archivo'));
-  $acceptTypes = $typeConfig['preview_mode'] === 'image'
-    ? 'image/png,image/jpeg,image/jpg,image/webp,image/gif'
-    : '.pdf,image/png,image/jpeg,image/jpg,image/webp';
-  $previewDisplayName = trim((string) $textoAuxiliar) !== ''
-    ? $textoAuxiliar
-    : ucfirst($typeConfig['singular_label']).' sin nombre';
-  $notas = match ($typeConfig['resource_family']) {
-    'media' => [
-      'Estas gestionando el tipo '.$selectedTypeId.' ('.$typeConfig['description'].').',
-      'La app movil usa la columna URL para cargar el recurso visual correspondiente.',
-      'El estado permite ocultar el recurso sin eliminarlo de la tabla.',
-    ],
-    'link' => [
-      'Estas gestionando el tipo '.$selectedTypeId.' ('.$typeConfig['description'].').',
-      'Este grupo solo utiliza enlaces; no requiere carga de archivos.',
-      'La app movil redirige al usuario a la URL configurada en este recurso.',
-    ],
-    default => [
-      'Estas gestionando el tipo '.$selectedTypeId.' ('.$typeConfig['description'].').',
-      'La app movil usa la columna URL para abrir el documento configurado.',
-      'Si el recurso es PDF o imagen, el listado lo mostrara dentro del grupo documental.',
-    ],
-  };
-@endphp
-
 @extends('layouts.dashboard')
 
 @section('title', 'Gestion appmovil')
@@ -139,15 +94,7 @@
           </div>
 
           <div class="alert alert-light border mt-4 mb-4">
-            @if($esEdicion)
-              Si no cambias {{ $typeConfig['allows_file_upload'] ? 'el archivo ni ' : '' }}la URL, se conserva el {{ $typeConfig['singular_label'] }} actual.
-            @else
-              @if($typeConfig['allows_file_upload'])
-                Debes elegir una de estas opciones: cargar un archivo o indicar una URL externa.
-              @else
-                Debes indicar la URL que la app movil usara para este enlace.
-              @endif
-            @endif
+            {{ $alertaFormulario }}
           </div>
 
           <div class="row g-3">
@@ -159,7 +106,7 @@
                 id="orden"
                 name="orden"
                 min="1"
-                value="{{ $orden }}"
+                value="{{ old('orden', $ordenDefault) }}"
                 required>
               <span class="error text-danger fw-bold" id="error-orden"></span>
               <div class="form-text">Si el orden ya existe, los otros recursos del mismo tipo se ajustan automaticamente.</div>
@@ -168,8 +115,8 @@
             <div class="col-md-6">
               <label for="estado" class="form-label">Estado</label>
               <select class="form-select form-select-sm" id="estado" name="estado" required>
-                <option value="ACTIVO" @selected($estado === 'ACTIVO')>ACTIVO</option>
-                <option value="INACTIVO" @selected($estado === 'INACTIVO')>INACTIVO</option>
+                <option value="ACTIVO" @selected(old('estado', $estadoDefault) === 'ACTIVO')>ACTIVO</option>
+                <option value="INACTIVO" @selected(old('estado', $estadoDefault) === 'INACTIVO')>INACTIVO</option>
               </select>
               <span class="error text-danger fw-bold" id="error-estado"></span>
             </div>
@@ -280,7 +227,7 @@
     const initialPreviewLabel = @json($previewLabel);
     const initialSourceText = @json($initialSourceText);
     const initialUrlText = @json($urlActualTexto);
-    const defaultDocumentName = @json(ucfirst($typeConfig['singular_label']).' sin nombre');
+    const defaultDocumentName = @json($defaultDocumentName);
     const pdfIconUrl = @json(asset('img/verPDF.png'));
 
     const updateCounter = (input, counterEl, max) => {

@@ -21,6 +21,7 @@ use Throwable;
 
 class RegistrarEventoEmpleadoService
 {
+  private const MINUTOS_ANTIDUPLICADO_EVENTO_MANUAL_DEFAULT = 2;
   private const MINUTOS_ANTIDUPLICADO_OVERRIDE_NOVEDAD_DEFAULT = 25;
   private const MINUTOS_NOVEDAD_ANTES_DEFAULT = 5;
   private const MINUTOS_NOVEDAD_DESPUES_DEFAULT = 20;
@@ -45,10 +46,14 @@ class RegistrarEventoEmpleadoService
     ?Carbon $fechaEvento = null,
     ?string $documentoUsuario = null,
     ?int $usuarioNotificacion = null,
-    ?string $origen = 'huella'
+    ?string $origen = 'huella',
+    ?string $observacion = null
   ): array {
     $identificacion = trim($identificacion);
     $origenEvento = $this->normalizarOrigen($origen);
+    $observacionEvento = $origenEvento === 'manual'
+      ? trim((string) $observacion)
+      : null;
     if ($identificacion === '') {
       $this->decisionLogger()->warning('Asistencia evento rechazado', [
         'identificacion' => $identificacion,
@@ -74,6 +79,17 @@ class RegistrarEventoEmpleadoService
     $cargoDetalle = $contratoPersona->cargoDetallado();
     $cargoNombre = $this->resolverNombreCargo($cargoDetalle);
     $centroCostoDescripcion = $this->resolverCentroCostoDescripcion($cargoDetalle);
+    $empresaCentroCostoId = $this->resolverEmpresaCentroCostoId($cargoDetalle);
+    if ($empresaCentroCostoId === null) {
+      $this->decisionLogger()->warning('Asistencia evento rechazado', [
+        'identificacion' => $identificacion,
+        'motivo' => 'No se pudo determinar la empresa del centro de costo activo.',
+        'origen' => $origenEvento,
+      ]);
+
+      return $this->respuestaRechazada('No se pudo determinar la empresa del centro de costo activo.');
+    }
+
     $cargoId = $cargoNombre
       ? $this->resolverCargoId($cargoNombre, $centroCostoDescripcion)
       : null;
@@ -94,7 +110,9 @@ class RegistrarEventoEmpleadoService
         $usuarioNotificacion,
         $nombre,
         $cargoNombre,
-        $origenEvento
+        $empresaCentroCostoId,
+        $origenEvento,
+        $observacionEvento
       ) {
         $this->bloquearEventosDelDia($identificacion);
 
@@ -156,7 +174,10 @@ class RegistrarEventoEmpleadoService
           $identificacion,
           $eventoCodigo,
           $fecha,
-          $usuarioPerPersonasId
+          $usuarioPerPersonasId,
+          $empresaCentroCostoId,
+          $origenEvento,
+          $observacionEvento !== '' ? $observacionEvento : null
         );
 
         $this->decisionLogger()->info('Asistencia evento registrado', $this->contextoDecisionLog(
@@ -255,6 +276,30 @@ class RegistrarEventoEmpleadoService
           $cargoId,
           ((int) $cargoId === 3),
           ['modo' => 'manual', 'evento_manual' => $eventoManual]
+        );
+      }
+
+      $minutosAntiduplicadoManual = $this->obtenerMinutosAntiduplicadoEventoManual();
+      if ($this->existeEventoManualReciente(
+        $identificacion,
+        $eventoManual,
+        $fecha,
+        $minutosAntiduplicadoManual
+      )) {
+        $ventanaTexto = $this->formatearVentanaAntiduplicado($minutosAntiduplicadoManual);
+        $motivoDuplicado = $eventoManual === 2
+          ? 'ya existe un ingreso registrado recientemente. espere ' . $ventanaTexto . ' antes de repetir el mismo evento'
+          : 'ya existe una salida registrada recientemente. espere ' . $ventanaTexto . ' antes de repetir el mismo evento';
+
+        return DecisionEventoDTO::rechazado(
+          $motivoDuplicado,
+          $cargoId,
+          ((int) $cargoId === 3),
+          [
+            'modo' => 'manual',
+            'evento_manual' => $eventoManual,
+            'antiduplicado_minutos' => $minutosAntiduplicadoManual,
+          ]
         );
       }
 
@@ -463,6 +508,16 @@ class RegistrarEventoEmpleadoService
     $descripcion = $cargoDetalle->centro_costo_descripcion ?? null;
 
     return is_string($descripcion) ? trim($descripcion) : null;
+  }
+
+  private function resolverEmpresaCentroCostoId(mixed $cargoDetalle): ?int
+  {
+    $empresaId = $cargoDetalle->centro_costo_persona_id ?? null;
+    if (!is_numeric($empresaId) || (int) $empresaId <= 0) {
+      return null;
+    }
+
+    return (int) $empresaId;
   }
 
   private function resolverCargoId(string $cargoNombre, ?string $centroCostoDescripcion = null): ?int
@@ -803,7 +858,10 @@ class RegistrarEventoEmpleadoService
     string $identificacion,
     int $eventoCodigo,
     Carbon $fechaEvento,
-    ?int $usuarioPerPersonasId
+    ?int $usuarioPerPersonasId,
+    int $empresaCentroCostoId,
+    string $origenEvento,
+    ?string $observacion
   ): void {
     $personaId = PerPersonas::query()
       ->where('identificacion', $identificacion)
@@ -815,8 +873,14 @@ class RegistrarEventoEmpleadoService
 
     $esEntrada = $eventoCodigo === 2;
     $codigoEvento = $esEntrada ? 49 : 50;
-    $anotacion = $esEntrada ? 'ENTRADA POR HUELLERO' : 'SALIDA POR HUELLERO';
+    $anotacion = $origenEvento === 'huella'
+      ? ($esEntrada ? 'ENTRADA POR HUELLERO' : 'SALIDA POR HUELLERO')
+      : ($esEntrada ? 'REGISTRO DE ENTRADA' : 'REGISTRO DE SALIDA');
     $fechaSistema = now();
+    $usuarioAuditoriaId = $this->resolverUsuarioAuditoriaPerPersonas(
+      $usuarioPerPersonasId,
+      (int) $personaId
+    );
 
     $eventoPersona = new PerPersonasEventos();
     $eventoPersona->pe_id = (int) $personaId;
@@ -824,15 +888,27 @@ class RegistrarEventoEmpleadoService
     $eventoPersona->evento = $codigoEvento;
     $eventoPersona->anotacion = $anotacion;
     $eventoPersona->fecmodifica = $fechaSistema;
-    $eventoPersona->usrmodifica = $usuarioPerPersonasId;
+    $eventoPersona->usrmodifica = $usuarioAuditoriaId;
     $eventoPersona->rolmodifica = 60;
-    $eventoPersona->empmodifica = 6761;
+    $eventoPersona->empmodifica = $empresaCentroCostoId;
     $eventoPersona->estborrado = 0;
     $eventoPersona->feccreacion = $fechaSistema;
-    $eventoPersona->usrcreacion = $usuarioPerPersonasId;
-    $eventoPersona->empcreacion = 6761;
-    $eventoPersona->tiporegistro = 0;
+    $eventoPersona->usrcreacion = $usuarioAuditoriaId;
+    $eventoPersona->empcreacion = $empresaCentroCostoId;
+    $eventoPersona->tiporegistro = $origenEvento === 'manual'
+      ? PerPersonasEventos::TIPO_MANUAL
+      : PerPersonasEventos::TIPO_AUTOMATICO;
+    $eventoPersona->observacion = $observacion;
     $eventoPersona->save();
+  }
+
+  private function resolverUsuarioAuditoriaPerPersonas(?int $usuarioPerPersonasId, int $personaId): int
+  {
+    if ($usuarioPerPersonasId !== null && $usuarioPerPersonasId > 0) {
+      return $usuarioPerPersonasId;
+    }
+
+    return $personaId;
   }
 
   private function registrarNotificacionEventoEmpleado(
@@ -874,6 +950,18 @@ class RegistrarEventoEmpleadoService
       $bodyPush = $isSalida
         ? 'Hasta luego. Tu salida se registro a las ' . $fechaEvento . '.'
         : 'Bienvenido. Tu ingreso se registro a las ' . $fechaEvento . '.';
+      // Reescribe mensajes para que la notificacion sea mas natural y consistente.
+      if ($isSalida) {
+        $titulo = 'Salida registrada';
+        $bodyPush = 'Tu salida quedo registrada a las ' . $fechaEvento . '.';
+      } elseif ($llegadaTarde) {
+        $titulo = 'Ingreso registrado con tardanza';
+        $bodyPush = 'Tu ingreso quedo registrado a las ' . $fechaEvento . ' y fue marcado con tardanza.';
+      } else {
+        $titulo = 'Ingreso registrado';
+        $bodyPush = 'Tu ingreso quedo registrado a las ' . $fechaEvento . '. Bienvenido.';
+      }
+
       $destino = json_encode(['usuarios' => [(int) $usuario->IdUsuario]]);
 
       Notificaciones::create([
@@ -1060,6 +1148,39 @@ class RegistrarEventoEmpleadoService
       ->exists();
   }
 
+  private function existeEventoManualReciente(
+    string $identificacion,
+    int $evento,
+    Carbon $fecha,
+    int $minutosAntiduplicado
+  ): bool {
+    $fechaInicioVentana = $fecha->copy()->subMinutes($minutosAntiduplicado);
+
+    return PrsHuellaEventos::query()
+      ->where('identificacion', $identificacion)
+      ->where('evento', $evento)
+      ->where('fecha_creacion', '>', $fechaInicioVentana)
+      ->where('fecha_creacion', '<=', $fecha)
+      ->exists();
+  }
+
+  private function obtenerMinutosAntiduplicadoEventoManual(): int
+  {
+    $minutos = (int) env(
+      'ASISTENCIA_MANUAL_MINUTOS_ANTIDUPLICADO',
+      self::MINUTOS_ANTIDUPLICADO_EVENTO_MANUAL_DEFAULT
+    );
+
+    return $minutos > 0
+      ? $minutos
+      : self::MINUTOS_ANTIDUPLICADO_EVENTO_MANUAL_DEFAULT;
+  }
+
+  private function formatearVentanaAntiduplicado(int $minutos): string
+  {
+    return $minutos === 1 ? '1 minuto' : $minutos . ' minutos';
+  }
+
   private function obtenerMinutosAntiduplicadoOverrideNovedad(): int
   {
     $minutos = (int) env(
@@ -1119,6 +1240,9 @@ class RegistrarEventoEmpleadoService
     }
     if ($valor === 'api') {
       return 'api';
+    }
+    if ($valor === 'manual') {
+      return 'manual';
     }
 
     return 'huella';

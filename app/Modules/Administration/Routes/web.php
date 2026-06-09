@@ -2,7 +2,6 @@
 
 use App\Constants\Permisos;
 use App\Modules\Administration\Http\Controllers\GestionPasajesController;
-use App\Modules\Administration\Http\Controllers\EmpleadosController;
 use App\Modules\Administration\Http\Controllers\PermisosController;
 use App\Modules\Administration\Http\Controllers\PersonaController;
 use App\Modules\Administration\Http\Controllers\ReportesController;
@@ -38,13 +37,6 @@ Route::prefix('administracion')->middleware(['auth', 'permisos:'.Permisos::ADMIN
         Route::post('/{id}/cambiar-estado', [PersonaController::class, 'cambiarEstado'])->middleware('soloAJAX')->name('personas.cambiarEstado');
     });
 
-    // Submodulo Empleados
-    Route::prefix('empleados')->middleware(['permisos:'.Permisos::ADMINISTRACION_EMPLEADOS_ACCEDER, 'submodulo.activo:25'])->group(function () {
-        Route::get('/', [EmpleadosController::class, 'index'])->name('empleados.index');
-        Route::get('/novedades', [EmpleadosController::class, 'novedades'])->name('empleados.novedades');
-        Route::put('/novedades/{id}/horas', [EmpleadosController::class, 'actualizarHoras'])->name('empleados.novedades.horas.update');
-    });
-
     // Submodulo Usuarios
     Route::prefix('usuarios')->middleware(['permisos:'.Permisos::ADMINISTRACION_USUARIOS_ACCEDER, 'submodulo.activo:20'])->group(function () {
         Route::get('/', [UserController::class, 'index'])->name('usuarios.index');
@@ -68,6 +60,7 @@ Route::prefix('administracion')->middleware(['auth', 'permisos:'.Permisos::ADMIN
         Route::get('/reportes/{area}', [ReportesController::class, 'reportesPorArea'])->name('reportes.area');
         Route::get('/{id}/formulario', [ReportesController::class, 'mostrarFormulario'])->name('reportes.formulario');
         Route::get('/api/reportes', [ReportesController::class, 'data'])->name('reportes.data');
+        Route::get('/api/reportes/exportar-csv', [ReportesController::class, 'exportarCsv'])->name('reportes.exportarCsv');
 
         // Reportes Personas
         Route::prefix('personas')->middleware(['permisos:'.Permisos::ADMINISTRACION_REPORTES_EMPLEADOS])->group(function () {

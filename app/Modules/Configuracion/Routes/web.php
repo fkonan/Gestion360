@@ -3,6 +3,7 @@
 use App\Constants\Permisos;
 use App\Modules\Administration\Http\Controllers\RolController;
 use App\Modules\Configuracion\Http\Controllers\ModuloController;
+use App\Modules\Configuracion\Http\Controllers\PermisosController;
 use App\Modules\Configuracion\Http\Controllers\SubModuloController;
 use Illuminate\Support\Facades\Route;
 
@@ -37,6 +38,13 @@ Route::prefix('configuracion')->middleware(['auth', 'permisos:'.Permisos::CONFIG
             Route::post('/', [RolController::class, 'store'])->name('store');
             Route::get('/{id}/permisos', [RolController::class, 'permisosRol'])->name('permisos');
             Route::put('/{id}/permisos', [RolController::class, 'updatePermisos'])->name('permisos.update');
+        });
+
+        Route::prefix('administracion-permisos')->name('gestion-permisos.')->group(function () {
+            Route::get('/', [PermisosController::class, 'index'])->name('index');
+            Route::get('/cargarDatos', [PermisosController::class, 'cargarDatos'])->middleware('soloAJAX')->name('cargarDatos');
+            Route::get('/{id}', [PermisosController::class, 'edit'])->middleware('soloAJAX')->name('edit');
+            Route::put('/{id}', [PermisosController::class, 'update'])->name('update');
         });
     });
 });

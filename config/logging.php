@@ -82,6 +82,29 @@ return [
             'replace_placeholders' => true,
         ],
 
+        'pagos_recaudos_api' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/pagos-recaudos-api/pagos-recaudos-api.log'),
+            'level' => env('PAGOS_RECAUDOS_API_LOG_LEVEL', 'info'),
+            'days' => env('PAGOS_RECAUDOS_API_LOG_DAYS', 60),
+            'replace_placeholders' => true,
+        ],
+
+        'pagos_recaudos_api_respuestas' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/pagos-recaudos/pagos-recaudos-api-respuestas.log'),
+            'level' => env('PAGOS_RECAUDOS_API_RESPUESTAS_LOG_LEVEL', 'info'),
+            'replace_placeholders' => true,
+        ],
+
+        'rrhh_novedades' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/gestionrrhh/novedades/rrhh-novedades.log'),
+            'level' => env('RRHH_NOVEDADES_LOG_LEVEL', env('RRHH_CONSUMOS_LOG_LEVEL', 'info')),
+            'days' => (int) env('RRHH_NOVEDADES_LOG_DAYS', env('RRHH_CONSUMOS_LOG_DAYS', 31)),
+            'replace_placeholders' => true,
+        ],
+
         'slack' => [
             'driver' => 'slack',
             'url' => env('LOG_SLACK_WEBHOOK_URL'),

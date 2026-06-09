@@ -26,6 +26,7 @@
   border: 1px solid var(--app-border);
   background: var(--app-surface);
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+  container-type: inline-size;
 }
 
 .enroll-progress-bar {
@@ -41,6 +42,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 0.75rem;
   padding: 0.7rem 0.9rem;
   border-radius: 0.75rem;
@@ -50,13 +52,14 @@
 
 .enroll-stepper {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.75rem;
 }
 
 .enroll-stepper .step-item {
   justify-content: center;
   gap: 0.5rem;
+  min-width: 0;
   border-radius: 0.8rem;
   border-color: rgba(148, 163, 184, 0.4) !important;
   background: rgba(148, 163, 184, 0.08);
@@ -81,17 +84,25 @@
 .enroll-stepper .step-copy {
   display: flex;
   flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
   gap: 0.1rem;
 }
 
 .enroll-stepper .step-title {
   font-size: 0.9rem;
+  line-height: 1.2;
+  white-space: normal;
+  overflow-wrap: break-word;
 }
 
 .enroll-stepper .step-subtitle {
   font-size: 0.75rem;
   color: var(--bs-secondary-color);
   font-weight: 500;
+  line-height: 1.2;
+  white-space: normal;
+  overflow-wrap: break-word;
 }
 
 .enroll-stepper .step-item.active {
@@ -380,19 +391,6 @@
   -webkit-mask: var(--huellero-fingerprint-mask) no-repeat center / contain;
   mask: var(--huellero-fingerprint-mask) no-repeat center / contain;
   filter: drop-shadow(0 4px 10px rgba(15, 23, 42, 0.18));
-}
-
-.huellero-kiosk-fingerprint-gif {
-  width: 170%;
-  height: 170%;
-  border-radius: 100%;
-  object-fit: contain;
-  display: block;
-}
-
-.huellero-kiosk-fingerprint-gif.is-active + .huellero-kiosk-fingerprint-icon,
-.huellero-kiosk-fingerprint-gif.is-active ~ .huellero-kiosk-fingerprint-icon {
-  display: none;
 }
 
 .huellero-kiosk-status {
@@ -744,6 +742,23 @@
   color: #f8fafc;
 }
 
+@container (min-width: 34rem) {
+  .enroll-stepper {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@container (max-width: 23rem) {
+  .enroll-step-hint {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .enroll-stepper {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 @media (max-width: 576px) {
   .huellero-kiosk-fingerprint {
     width: 96px;
@@ -758,8 +773,23 @@
     max-width: 150px;
   }
 
-  .enroll-stepper {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .enroll-stepper .step-item {
+    flex-direction: column;
+    justify-content: flex-start;
+    padding: 0.65rem 0.55rem;
+    text-align: center;
+  }
+
+  .enroll-stepper .step-copy {
+    width: 100%;
+    align-items: center;
+  }
+
+  .enroll-stepper .step-icon {
+    min-width: 32px;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
   }
 }
 

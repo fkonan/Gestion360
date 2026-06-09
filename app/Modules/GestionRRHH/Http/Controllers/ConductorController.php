@@ -7,7 +7,7 @@ use App\Modules\Administration\Models\Cargos;
 use App\Modules\Administration\Models\ParametrosPasajes;
 use App\Modules\GestionRRHH\Models\Preoperacionales;
 use App\Modules\GestionRRHH\Models\Tripulantes;
-use App\Modules\GestionRRHH\Services\CopLevantamientoService;
+use App\Modules\GestionRRHH\Services\BloqueoService;
 use App\Modules\GestionRRHH\Services\DescansosService;
 use Exception;
 use Illuminate\Http\Request;
@@ -154,13 +154,16 @@ class ConductorController extends Controller
         return view('gestionrrhh::conductores.revisionPreoperacional');
     }
 
-    public function novedadPreoperacional(Request $request, CopLevantamientoService $service)
+    public function novedadPreoperacional(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'identificacion' => ['required', 'regex:/^\d{1,15}$/'],
+            'observacion' => ['required', 'string', 'max:500'],
         ], [
             'identificacion.regex' => 'El campo identificacion no tiene un formato valido.',
             'identificacion.required' => 'El campo identificacion es obligatorio.',
+            'observacion.required' => 'La observacion es obligatoria.',
+            'observacion.max' => 'La observacion no puede superar 500 caracteres.',
         ]);
 
         if ($validator->fails()) {
@@ -170,41 +173,31 @@ class ConductorController extends Controller
         }
 
         try {
-            $tipoBloqueo = $service->buscarTipoPorCodigo(35);
-            if (! $tipoBloqueo) {
-                return toastModal('No existe configuracion activa para el bloqueo preoperacional.', 'error', route('gestion-incapacidades.index'));
+            $resultadoDesbloqueo = BloqueoService::levantarBloqueoPreoperacional((string) $request->identificacion);
+            $estadoDesbloqueo = $resultadoDesbloqueo['status'] ?? 'error';
+            $mensajeDesbloqueo = $resultadoDesbloqueo['message'] ?? null;
+
+            if ($estadoDesbloqueo === 'unlocked') {
+                $preoperacional = new Preoperacionales;
+                $preoperacional->documento = (string) $request->identificacion;
+                $preoperacional->observacion = trim((string) $request->observacion);
+                $preoperacional->save();
+
+                return toastModal($mensajeDesbloqueo ?: 'Se levanto el bloqueo correctamente', 'success', route('gestion-incapacidades.index'));
             }
 
-            $resultado = $service->ejecutar($tipoBloqueo, (string) $request->identificacion, [
-                'observacion' => $request->observacion,
+            if ($estadoDesbloqueo === 'no_blocks') {
+                return toastModal($mensajeDesbloqueo ?: 'El conductor no presenta ningun bloqueo activo', 'info', route('gestion-incapacidades.index'));
+            }
+
+            Log::warning('No fue posible levantar la novedad de preoperacional', [
+                'identificacion' => (string) $request->identificacion,
+                'status' => $estadoDesbloqueo,
+                'http_status' => $resultadoDesbloqueo['http_status'] ?? null,
+                'message' => $mensajeDesbloqueo,
             ]);
 
-            if (($resultado['status'] ?? null) === 'validation_error') {
-                return response()->json([
-                    'errors' => $resultado['errors'] ?? [],
-                ], 422);
-            }
-
-            $toastType = match ($resultado['status'] ?? 'failed') {
-                'success' => 'success',
-                'partial' => 'warning',
-                'no_blocks' => 'info',
-                default => 'error',
-            };
-
-            if (($resultado['status'] ?? null) === 'failed') {
-                Log::warning('No fue posible levantar la novedad de preoperacional', [
-                    'identificacion' => (string) $request->identificacion,
-                    'status' => $resultado['status'] ?? 'failed',
-                    'message' => $resultado['message'] ?? null,
-                ]);
-            }
-
-            return toastModal(
-                $resultado['message'] ?? 'Error al levantar la novedad de preoperacional',
-                $toastType,
-                route('gestion-incapacidades.index')
-            );
+            return toastModal($mensajeDesbloqueo ?: 'Error al levantar la novedad de preoperacional', 'error', route('gestion-incapacidades.index'));
         } catch (Exception $e) {
             Log::error('Error al levantar la novedad de preoperacional '.$e->getMessage(), [
                 'identificacion' => (string) $request->identificacion,

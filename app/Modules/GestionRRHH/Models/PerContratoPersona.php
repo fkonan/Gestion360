@@ -46,7 +46,7 @@ class PerContratoPersona extends Model
     $ca = (new PerCargos)->getTable();
 
     return PerCargos::from("$ca as ca")
-      ->selectRaw('ca.*, ct.descripcion as centro_costo_descripcion')
+      ->selectRaw('ca.*, ct.descripcion as centro_costo_descripcion, ct.pe_id as centro_costo_persona_id')
       ->join('per_cargoccostos as cc', 'cc.ca_codigo', '=', 'ca.codigo')
       ->join('per_empresapersonas as ep', 'ep.cc_id', '=', 'cc.id')
       ->join('per_centrocostos as ct', 'ct.codigo', '=', 'cc.ct_codigo')

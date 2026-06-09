@@ -41,8 +41,6 @@
 
                 <div class="card-body text-center huellero-kiosk-body">
                     <div class="huellero-kiosk-fingerprint mx-auto mb-3" style="--huellero-fingerprint-mask: url('{{ asset('svg/huella.svg') }}');" aria-hidden="true">
-                        <img id="vipFingerprintGif" class="huellero-kiosk-fingerprint-gif d-none" src="{{ asset('img/trump-donald-trump.gif') }}" alt="" aria-hidden="true">
-                        <img id="vipFingerprintMaduro" class="huellero-kiosk-fingerprint-gif d-none" src="{{ asset('img/maduro-presidente.jpg') }}" alt="" aria-hidden="true">
                         <span class="huellero-kiosk-fingerprint-icon" aria-hidden="true"></span>
                     </div>
 
@@ -150,6 +148,17 @@
                     <input type="datetime-local" class="form-control" id="manualFecha">
                     <div class="form-text">Si se deja vacio, se usa la hora actual.</div>
                 </div>
+
+                <div class="mb-3">
+                    <label for="manualObservacion" class="form-label">Observacion</label>
+                    <textarea
+                        id="manualObservacion"
+                        class="form-control"
+                        rows="3"
+                        maxlength="500"
+                        required
+                    ></textarea>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
@@ -190,9 +199,7 @@
             progressBar: document.getElementById('progressBar'),
             qualityText: document.getElementById('qualityText'),
             kioskLoader: document.getElementById('kioskLoader'),
-            manualTrigger: document.getElementById('manualTrigger'),
-            vipGif: document.getElementById('vipFingerprintGif'),
-            maduroGif: document.getElementById('vipFingerprintMaduro')
+            manualTrigger: document.getElementById('manualTrigger')
         };
 
         var client = new FingerprintClient();
@@ -220,6 +227,7 @@
         var manualModal = document.getElementById('manualEventModal');
         var manualPersonSelect = document.getElementById('manualPersonSelect');
         var manualFecha = document.getElementById('manualFecha');
+        var manualObservacion = document.getElementById('manualObservacion');
         var manualSubmit = document.getElementById('manualSubmit');
         var manualSelectedPerson = null;
         var latestEventsModal = document.getElementById('latestEventsModal');
@@ -232,6 +240,9 @@
         var latestEventsInFlight = false;
         var activeReader = null;
         var readerRefreshing = null;
+        var sessionKeepaliveTimer = null;
+        var sessionKeepaliveInFlight = false;
+        var sessionKeepaliveMs = 60000;
 
         function isSalidaEvent() {
             if (automaticMode) {
@@ -356,6 +367,42 @@
             }, 4000);
         }
 
+        async function pingSessionKeepalive() {
+            if (sessionKeepaliveInFlight) return;
+            sessionKeepaliveInFlight = true;
+
+            try {
+                var response = await fetch('{{ route("fingerprint.session-keepalive") }}', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'same-origin',
+                    cache: 'no-store'
+                });
+
+                if (response.status === 401 || response.status === 419 || response.redirected) {
+                    showAlert('warning', 'La sesion expiro. Recargando...');
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 1200);
+                }
+            } catch (error) {
+                // Un fallo temporal de red no debe interrumpir el funcionamiento del huellero.
+            } finally {
+                sessionKeepaliveInFlight = false;
+            }
+        }
+
+        function startSessionKeepalive() {
+            if (automaticMode || sessionKeepaliveTimer) return;
+
+            pingSessionKeepalive();
+            sessionKeepaliveTimer = window.setInterval(function() {
+                pingSessionKeepalive();
+            }, sessionKeepaliveMs);
+        }
+
         function normalizeText(value) {
             return String(value || '').trim();
         }
@@ -399,6 +446,15 @@
             }
             if (motivo.indexOf('ya existe salida registrada hoy') !== -1) {
                 return 'Ya tienes una salida registrada hoy. Si necesitas ajuste, solicita apoyo al area administrativa.';
+            }
+            if (motivo.indexOf('antes de repetir el mismo evento') !== -1) {
+                var minutosMatch = motivoRaw.match(/espere\s+(\d+)\s+minuto/i);
+                if (minutosMatch && minutosMatch[1]) {
+                    var minutos = Number(minutosMatch[1]);
+                    var etiquetaMinutos = minutos === 1 ? '1 minuto' : (String(minutos) + ' minutos');
+                    return 'Ya existe un registro reciente del mismo tipo. Espera ' + etiquetaMinutos + ' antes de volver a marcar.';
+                }
+                return 'Ya existe un registro reciente del mismo tipo. Espera un momento antes de volver a marcar.';
             }
             if (motivo.indexOf('reingreso bloqueado por 7 horas') !== -1) {
                 var match = motivoRaw.match(/habilitado desde ([^)]+)/i);
@@ -513,16 +569,6 @@
         function updateIdentificacionBox() {
             if (ui.empleadoIdentificacion) {
                 ui.empleadoIdentificacion.textContent = identificacion ? 'C.C. ' + identificacion : '-';
-            }
-            if (ui.vipGif) {
-                var isVip = identificacion === '1095913073';
-                ui.vipGif.classList.toggle('d-none', !isVip);
-                ui.vipGif.classList.toggle('is-active', isVip);
-            }
-            if (ui.maduroGif) {
-                var isMaduro = identificacion === '1098643625';
-                ui.maduroGif.classList.toggle('d-none', !isMaduro);
-                ui.maduroGif.classList.toggle('is-active', isMaduro);
             }
         }
 
@@ -1145,6 +1191,14 @@
                 showAlert('warning', 'Seleccione una persona.');
                 return;
             }
+            var observacionManual = manualObservacion ? manualObservacion.value.trim() : '';
+            if (!observacionManual) {
+                showAlert('warning', 'La observacion es obligatoria.');
+                if (manualObservacion) {
+                    manualObservacion.focus();
+                }
+                return;
+            }
 
             stopCaptureSafely();
             clearDisplay();
@@ -1163,7 +1217,9 @@
             var payload = {
                 evento: Number(manualValue),
                 descripcion: manualEventDescription(),
-                identificacion: manualId
+                identificacion: manualId,
+                registro_manual: true,
+                observacion: observacionManual
             };
             var manualEventTime = manualFecha && manualFecha.value ? parseLocalDateTime(manualFecha.value) : null;
             if (manualFecha && manualFecha.value) {
@@ -1260,6 +1316,9 @@
               if (manualFecha) {
                   manualFecha.value = '';
               }
+              if (manualObservacion) {
+                  manualObservacion.value = '';
+              }
               autoCaptureEnabled = true;
               setStatus('connected');
               scheduleAutoCapture();
@@ -1325,7 +1384,7 @@
         initManualPersonSelect();
         updateIdentificacionBox();
         updateProgress();
+        startSessionKeepalive();
     });
 </script>
 @endpush
-

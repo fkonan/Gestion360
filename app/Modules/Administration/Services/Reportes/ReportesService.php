@@ -25,11 +25,11 @@ class ReportesService
     }
 
     /**
-     * Solicita datos de un reporte via API y aplica formato especial.
+     * Solicita datos de un reporte local y aplica formato especial.
      */
     public function obtenerDatosReporte(array $params)
     {
-        // Normalizamos el id para la API
+        // Normalizamos el id para el servicio de reportes
         if (isset($params['id'])) {
             $params['idReporte'] = $params['id'];
             unset($params['id']);
@@ -40,7 +40,7 @@ class ReportesService
         $reporte = Reporteador::findOrFail($params['idReporte']);
         $inicio = microtime(true);
 
-        // Consultar API
+        // Consultar servicio de reportes
         $data = $this->apiReportes->obtenerReporte($params);
 
         if (! $data) {
@@ -81,6 +81,143 @@ class ReportesService
         ]);
 
         return $data;
+    }
+
+    /**
+     * Solicita una vista previa limitada para reportes muy grandes.
+     */
+    public function obtenerDatosReporteLimitado(array $params, int $limit): array
+    {
+        if (isset($params['id'])) {
+            $params['idReporte'] = $params['id'];
+            unset($params['id']);
+        }
+
+        $this->validarParametrosObligatorios($params);
+
+        $reporte = Reporteador::findOrFail($params['idReporte']);
+        $inicio = microtime(true);
+
+        $data = $this->apiReportes->obtenerReporteLimitado($params, $limit);
+
+        if (! $data) {
+            Log::build([
+                'driver' => 'daily',
+                'path' => storage_path('logs/reportes/apiReportes.log'),
+                'days' => 7,
+            ])->info('Reporte limitado sin datos o error al obtener', [
+                'id_reporte' => $reporte->id,
+                'area' => $reporte->area,
+                'user_id' => Auth::id(),
+                'limit' => $limit,
+                'duration_ms' => round((microtime(true) - $inicio) * 1000, 2),
+            ]);
+
+            return [];
+        }
+
+        $data = $this->formatoEspecialReporte($reporte->id, $data);
+
+        Log::build([
+            'driver' => 'daily',
+            'path' => storage_path('logs/reportes/apiReportes.log'),
+            'days' => 7,
+        ])->info('Reporte consultado (limitado)', [
+            'id_reporte' => $reporte->id,
+            'area' => $reporte->area,
+            'user_id' => Auth::id(),
+            'rows' => is_array($data) ? count($data) : 0,
+            'limit' => $limit,
+            'duration_ms' => round((microtime(true) - $inicio) * 1000, 2),
+        ]);
+
+        return $data;
+    }
+
+    /**
+     * Retorna un iterable de filas para exportacion de archivos grandes.
+     */
+    public function obtenerCursorReporte(array $params)
+    {
+        if (isset($params['id'])) {
+            $params['idReporte'] = $params['id'];
+            unset($params['id']);
+        }
+
+        $this->validarParametrosObligatorios($params);
+
+        return $this->apiReportes->obtenerReporteCursor($params);
+    }
+
+    /**
+     * Solicita datos paginados de un reporte local.
+     */
+    public function obtenerDatosReportePaginado(array $params, int $limit, int $offset): array
+    {
+        if (isset($params['id'])) {
+            $params['idReporte'] = $params['id'];
+            unset($params['id']);
+        }
+
+        $this->validarParametrosObligatorios($params);
+
+        $reporte = Reporteador::findOrFail($params['idReporte']);
+        $inicio = microtime(true);
+
+        $resultado = $this->apiReportes->obtenerReportePaginado($params, $limit, $offset);
+
+        if (! $resultado || ! is_array($resultado)) {
+            Log::build([
+                'driver' => 'daily',
+                'path' => storage_path('logs/reportes/apiReportes.log'),
+                'days' => 7,
+            ])->info('Reporte paginado sin datos o error al obtener', [
+                'id_reporte' => $reporte->id,
+                'area' => $reporte->area,
+                'user_id' => Auth::id(),
+                'limit' => $limit,
+                'offset' => $offset,
+                'duration_ms' => round((microtime(true) - $inicio) * 1000, 2),
+            ]);
+
+            return ['total' => 0, 'rows' => []];
+        }
+
+        $rows = is_array($resultado['rows'] ?? null) ? $resultado['rows'] : [];
+        $total = (int) ($resultado['total'] ?? count($rows));
+
+        // Formatos especiales por reporte (aplicados a la pagina actual)
+        $rows = $this->formatoEspecialReporte($reporte->id, $rows);
+
+        if ($total < count($rows)) {
+            $total = count($rows);
+        }
+
+        try {
+            $reporte->increment('total_consultas');
+        } catch (\Throwable $e) {
+            // Silenciar si falla el write; no debe afectar al usuario
+        }
+
+        Log::build([
+            'driver' => 'daily',
+            'path' => storage_path('logs/reportes/apiReportes.log'),
+            'days' => 7,
+        ])->info('Reporte consultado (paginado)', [
+            'id_reporte' => $reporte->id,
+            'area' => $reporte->area,
+            'user_id' => Auth::id(),
+            'rows' => count($rows),
+            'total' => $total,
+            'limit' => $limit,
+            'offset' => $offset,
+            'duration_ms' => round((microtime(true) - $inicio) * 1000, 2),
+        ]);
+
+        return [
+            'total' => $total,
+            'rows' => $rows,
+        ];
     }
 
     /**

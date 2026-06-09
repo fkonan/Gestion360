@@ -4,6 +4,7 @@ namespace App\Modules\Huellero\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Huellero\Services\RegistrarEventoEmpleadoService;
+use App\Services\Asistencia\LiveAsistenciaEventFeedService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -11,7 +12,8 @@ use Illuminate\Support\Facades\Validator;
 class EventoEmpleadoApiController extends Controller
 {
   public function __construct(
-    private readonly RegistrarEventoEmpleadoService $registrarEventoEmpleadoService
+    private readonly RegistrarEventoEmpleadoService $registrarEventoEmpleadoService,
+    private readonly LiveAsistenciaEventFeedService $liveAsistenciaEventFeedService
   ) {
   }
 
@@ -78,6 +80,12 @@ class EventoEmpleadoApiController extends Controller
         ], $esErrorTecnico ? max($httpStatus, 500) : 200);
       }
 
+      $this->publicarEventoEnFeed(
+        $identificaciones[0],
+        $resultado,
+        $origen
+      );
+
       return response()->json([
         'ok' => true,
         'status' => $resultado['status'] ?? 'OK',
@@ -113,6 +121,11 @@ class EventoEmpleadoApiController extends Controller
 
       if (($resultado['ok'] ?? false) === true) {
         $exitosos++;
+        $this->publicarEventoEnFeed(
+          $identificacion,
+          $resultado,
+          $origen
+        );
         continue;
       }
 
@@ -161,5 +174,32 @@ class EventoEmpleadoApiController extends Controller
       ->unique()
       ->values()
       ->all();
+  }
+
+  private function publicarEventoEnFeed(string $identificacion, array $resultado, string $origen): void
+  {
+    try {
+      $fechaEvento = null;
+      if (!empty($resultado['fecha_evento'])) {
+        try {
+          $fechaEvento = Carbon::parse((string) $resultado['fecha_evento']);
+        } catch (\Throwable $e) {
+          $fechaEvento = null;
+        }
+      }
+
+      $this->liveAsistenciaEventFeedService->publish([
+        'evento_id' => $resultado['data']['id'] ?? null,
+        'identificacion' => $identificacion,
+        'nombre' => $resultado['data']['nombre'] ?? null,
+        'evento' => isset($resultado['evento']) ? (int) $resultado['evento'] : 0,
+        'descripcion' => null,
+        'fecha_evento' => $fechaEvento ? $fechaEvento->toIso8601String() : null,
+        'hora_evento' => $fechaEvento ? $fechaEvento->format('g:i a') : null,
+        'origen' => $origen !== '' ? $origen : 'api',
+      ]);
+    } catch (\Throwable $e) {
+      // El feed en vivo no debe romper el flujo principal de registro.
+    }
   }
 }

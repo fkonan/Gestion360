@@ -42,26 +42,47 @@ return [
       'synchronous' => null,
     ],
 
-    //Conexion base de datos GESTION ADMIN
-    'mysql-gestion-admin' => [
-      'driver' => 'mysql',
-      'url' => env('DB_URL'),
-      'host' => env('DB_HOST', '127.0.0.1'),
-      'port' => env('DB_PORT', '3306'),
-      'database' => env('DB_DATABASE', 'laravel'),
-      'username' => env('DB_USERNAME', 'root'),
-      'password' => env('DB_PASSWORD', ''),
-      'unix_socket' => env('DB_SOCKET', ''),
-      'charset' => env('DB_CHARSET', 'utf8mb4'),
-      'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
-      'prefix' => '',
-      'prefix_indexes' => true,
-      'strict' => true,
-      'engine' => null,
-      'options' => extension_loaded('pdo_mysql') ? array_filter([
-        PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
-      ]) : [],
-    ],
+        //Conexion base de datos GESTION ADMIN
+        'mysql-gestion-admin' => [
+            'driver' => 'mysql',
+            'url' => env('DB_URL'),
+            'host' => env('DB_HOST', '127.0.0.1'),
+            'port' => env('DB_PORT', '3306'),
+            'database' => env('DB_DATABASE', 'laravel'),
+            'username' => env('DB_USERNAME', 'root'),
+            'password' => env('DB_PASSWORD', ''),
+            'unix_socket' => env('DB_SOCKET', ''),
+            'charset' => env('DB_CHARSET', 'utf8mb4'),
+            'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+            ]) : [],
+        ],
+
+        // Conexion base de datos GESTION ADMIN (reportes siempre produccion)
+        'mysql-gestion-admin-reportes' => [
+            'driver' => 'mysql',
+            'url' => env('REPORTES_DB_URL_ADMIN'),
+            'host' => env('REPORTES_DB_HOST_ADMIN', '172.16.48.99'),
+            'port' => env('REPORTES_DB_PORT_ADMIN', '3306'),
+            'database' => env('REPORTES_DB_DATABASE_ADMIN', 'gestion_admin'),
+            'username' => env('REPORTES_DB_USERNAME_ADMIN', 'desarrollo'),
+            'password' => env('REPORTES_DB_PASSWORD_ADMIN', ''),
+            'unix_socket' => env('REPORTES_DB_SOCKET_ADMIN', ''),
+            'charset' => env('REPORTES_DB_CHARSET_ADMIN', 'utf8mb4'),
+            'collation' => env('REPORTES_DB_COLLATION_ADMIN', 'utf8mb4_unicode_ci'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+            ]) : [],
+        ],
 
     //Conexion base de datos GESTION HUMANA
     'mysql-gestion-humana' => [
@@ -85,43 +106,81 @@ return [
     ],
 
 
-    //Conexion base de datos GESTION PASAJES
-    'mysql-gestion-pasajes' => [
-      'driver' => 'mysql',
-      'url' => env('DB_URL'),
-      'host' => env('DB_HOST_3', '127.0.0.1'),
-      'port' => env('DB_PORT_3', '3306'),
-      'database' => env('DB_DATABASE_3', 'laravel'),
-      'username' => env('DB_USERNAME_3', 'root'),
-      'password' => env('DB_PASSWORD_3', ''),
-      'unix_socket' => env('DB_SOCKET', ''),
-      'charset' => env('DB_CHARSET', 'utf8mb4'),
-      'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
-      'prefix' => '',
-      'prefix_indexes' => true,
-      'strict' => true,
-      'engine' => null,
-      'options' => extension_loaded('pdo_mysql') ? array_filter([
-        PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
-      ]) : [],
-    ],
+        //Conexion base de datos GESTION PASAJES
+        'mysql-gestion-pasajes' => [
+            'driver' => 'mysql',
+            'url' => env('DB_URL'),
+            'host' => env('DB_HOST_3', '127.0.0.1'),
+            'port' => env('DB_PORT_3', '3306'),
+            'database' => env('DB_DATABASE_3', 'laravel'),
+            'username' => env('DB_USERNAME_3', 'root'),
+            'password' => env('DB_PASSWORD_3', ''),
+            'unix_socket' => env('DB_SOCKET', ''),
+            'charset' => env('DB_CHARSET', 'utf8mb4'),
+            'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+            ]) : [],
+        ],
 
-    //Conexion base de datos ORACLE logtrans
-    'oracle' => [
-      'driver' => 'oracle',
-      'tns' => '',
-      'host' => env('DB_HOST_4', '172.16.50.51'),
-      'port' => env('DB_PORT_4', '1521'),
-      'database' => env('DB_DATABASE_4', 'PRUEBAS'),
-      'username' => env('DB_USERNAME_4', 'LOGTRANSPRO'),
-      'password' => env('DB_PASSWORD_4'),
-      'charset' => 'AL32UTF8',
-      'prefix' => '',
-      'prefix_schema' => '',
-      'options' => [
-        PDO::ATTR_AUTOCOMMIT => false,
-      ]
-    ],
+        // Conexion base de datos GESTION PASAJES (reportes siempre produccion)
+        'mysql-gestion-pasajes-reportes' => [
+            'driver' => 'mysql',
+            'url' => env('REPORTES_DB_URL_PASAJES'),
+            'host' => env('REPORTES_DB_HOST_PASAJES', '172.16.48.99'),
+            'port' => env('REPORTES_DB_PORT_PASAJES', '3306'),
+            'database' => env('REPORTES_DB_DATABASE_PASAJES', 'gestion_pasajes'),
+            'username' => env('REPORTES_DB_USERNAME_PASAJES', 'desarrollo'),
+            'password' => env('REPORTES_DB_PASSWORD_PASAJES', ''),
+            'unix_socket' => env('REPORTES_DB_SOCKET_PASAJES', ''),
+            'charset' => env('REPORTES_DB_CHARSET_PASAJES', 'utf8mb4'),
+            'collation' => env('REPORTES_DB_COLLATION_PASAJES', 'utf8mb4_unicode_ci'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+            ]) : [],
+        ],
+
+        //Conexion base de datos ORACLE logtrans
+        'oracle' => [
+            'driver' => 'oracle',
+            'tns' => '',
+            'host' => env('DB_HOST_4', '172.16.50.51'),
+            'port' => env('DB_PORT_4', '1521'),
+            'database' => env('DB_DATABASE_4', 'PRUEBAS'),
+            'username' => env('DB_USERNAME_4', 'LOGTRANSPRO'),
+            'password' => env('DB_PASSWORD_4'),
+            'charset' => 'AL32UTF8',
+            'prefix' => '',
+            'prefix_schema' => '',
+            'options' => [
+                PDO::ATTR_AUTOCOMMIT => false,
+            ]
+        ],
+
+        // Conexion ORACLE LOGTRANS (reportes siempre produccion)
+        'oracle-reportes' => [
+            'driver' => 'oracle',
+            'tns' => '',
+            'host' => env('REPORTES_DB_HOST_LOGTRANS', '172.16.50.61'),
+            'port' => env('REPORTES_DB_PORT_LOGTRANS', '1521'),
+            'database' => env('REPORTES_DB_DATABASE_LOGTRANS', 'logtrans'),
+            'username' => env('REPORTES_DB_USERNAME_LOGTRANS', 'SCARRILLO'),
+            'password' => env('REPORTES_DB_PASSWORD_LOGTRANS'),
+            'charset' => env('REPORTES_DB_CHARSET_LOGTRANS', 'AL32UTF8'),
+            'prefix' => '',
+            'prefix_schema' => '',
+            'options' => [
+                PDO::ATTR_AUTOCOMMIT => false,
+            ]
+        ],
 
     //CONEXION SQLSERVER GESTION PASAJES
     'sqlsrv' => [
@@ -139,21 +198,37 @@ return [
       // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
     ],
 
-    //CONEXION SQLSERVER GESTION PASAJES (SOLO LECTURA)
-    'sqlsrv-lectura' => [
-      'driver' => 'sqlsrv',
-      'url' => env('DB_URL_7'),
-      'host' => env('DB_HOST_7', '172.16.48.108'),
-      'port' => env('DB_PORT_7', '1433'),
-      'database' => env('DB_DATABASE_7', 'WF_COPE_TEST'),
-      'username' => env('DB_USERNAME_7', 'Gestion_Pasajes'),
-      'password' => env('DB_PASSWORD_7'),
-      'charset' => env('DB_CHARSET_7', 'utf8'),
-      'prefix' => '',
-      'prefix_indexes' => true,
-      // 'encrypt' => env('DB_ENCRYPT', 'yes'),
-      // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
-    ],
+        //CONEXION SQLSERVER GESTION PASAJES (SOLO LECTURA)
+         'sqlsrv-lectura' => [
+            'driver' => 'sqlsrv',
+            'url' => env('DB_URL_7'),
+            'host' => env('DB_HOST_7', '172.16.48.108'),
+            'port' => env('DB_PORT_7', '1433'),
+            'database' => env('DB_DATABASE_7', 'WF_COPE_TEST'),
+            'username' => env('DB_USERNAME_7', 'Gestion_Pasajes'),
+            'password' => env('DB_PASSWORD_7'),
+            'charset' => env('DB_CHARSET_7', 'utf8'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            // 'encrypt' => env('DB_ENCRYPT', 'yes'),
+            // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
+        ],
+
+        // CONEXION SQLSERVER GESTION PASAJES SOLO LECTURA (reportes siempre produccion)
+         'sqlsrv-lectura-reportes' => [
+            'driver' => 'sqlsrv',
+            'url' => env('REPORTES_DB_URL_FICS_LECTURA'),
+            'host' => env('REPORTES_DB_HOST_FICS_LECTURA', '172.16.48.108'),
+            'port' => env('REPORTES_DB_PORT_FICS_LECTURA', '1433'),
+            'database' => env('REPORTES_DB_DATABASE_FICS_LECTURA', 'WF_COPE'),
+            'username' => env('REPORTES_DB_USERNAME_FICS_LECTURA', 'Gestion_Pasajes'),
+            'password' => env('REPORTES_DB_PASSWORD_FICS_LECTURA'),
+            'charset' => env('REPORTES_DB_CHARSET_FICS_LECTURA', 'utf8'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            // 'encrypt' => env('DB_ENCRYPT', 'yes'),
+            // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
+        ],
 
     //Conexion base de datos ORACLE logtrans
     'oracle-360' => [

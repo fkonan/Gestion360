@@ -32,22 +32,28 @@ ensureMediapipeAssets();
 export default defineConfig({
 
     /* Pruebas */
-    /* base: '/gestion/autogestion2/public/build/', */
+    base: '/gestion/autogestion2/public/build/',
 
     /* Produccion */
-    base: '/gestion360/public/build/',
+    /* base: '/gestion360/public/build/', */
 
     plugins: [
         laravel({
             input: ['resources/css/app.css',
                     'resources/js/notificaciones.js',
                     'resources/css/custom.css',
+                    'resources/css/gestionrrhh/novedades-radicar.css',
+                    'resources/css/gestionrrhh/novedades-lista.css',
+                    'resources/css/gestionrrhh/novedades-documentos.css',
+                    'resources/css/gestionrrhh/incapacidades-radicar.css',
+                    'resources/css/gestionweb/recursosdigitales-show.css',
                     'resources/css/huellero.css',
                     'resources/css/mobile.css',
                     'resources/js/app.js',
                     'resources/js/cargarModal.js',
                     'resources/js/camara/enroll.js',
                     'resources/js/camara/recognize.js',
+                    'resources/css/camara/ip-preview.css',
                     'resources/js/camara/verify.js',
                 ],
             refresh: true,

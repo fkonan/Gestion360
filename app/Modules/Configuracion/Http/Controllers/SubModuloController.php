@@ -140,10 +140,15 @@ class SubModuloController extends Controller
             $submoduloNombreAntes = normalizarNombre($submodulo->SubModNom);
             $submoduloNombreDespues = normalizarNombre($request->SubModNom);
 
-            if (is_null($submodulo->SubModPermiso)) {
-                $submodulo->SubModPermiso = $request->SubModPermiso;
+            $permisoSolicitado = trim((string) $request->input('SubModPermiso', ''));
+            $permisoActual = trim((string) ($submodulo->SubModPermiso ?? ''));
+
+            if ($permisoSolicitado === '') {
+                $submodulo->SubModPermiso = null;
+            } elseif ($permisoSolicitado !== $permisoActual) {
+                $submodulo->SubModPermiso = $permisoSolicitado;
             } else {
-                $submodulo->SubModPermiso = str_replace($submoduloNombreAntes, $submoduloNombreDespues, $submodulo->SubModPermiso);
+                $submodulo->SubModPermiso = str_replace($submoduloNombreAntes, $submoduloNombreDespues, $permisoActual);
             }
 
             $submodulo->fill($request->except('SubModPermiso'));

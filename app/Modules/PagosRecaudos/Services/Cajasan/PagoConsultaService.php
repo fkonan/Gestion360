@@ -6,6 +6,7 @@ use App\Modules\Administration\Models\TipoDocumento;
 use App\Modules\GestionRRHH\Models\PerPersonas;
 use App\Modules\GestionWeb\Models\GenMunicipios;
 use App\Modules\PagosRecaudos\Services\PagosRecaudosLogger;
+use App\Modules\Sarlaft\Services\ValidacionListaNegraService;
 use App\Services\UsuarioService;
 use Exception;
 use Illuminate\Support\Facades\Cache;
@@ -37,6 +38,10 @@ class PagoConsultaService
         'SV',
         'PT',
     ];
+
+    public function __construct(
+        private readonly ValidacionListaNegraService $validacionListaNegraService,
+    ) {}
 
     /**
      * Consultar saldo disponible y preparar datos de cliente
@@ -72,7 +77,23 @@ class PagoConsultaService
                     'duration_ms' => PagosRecaudosLogger::elapsedMs($startedAt),
                 ]);
 
-                return ['error' => true, 'message' => 'Verifique el documento. Si es primer pago, registre la persona.'];
+                return ['error' => true, 'message' => 'No es posible procesar la solicitud en este momento. La información del beneficiario no está disponible aún.'];
+            }
+
+            $sigla = $this->resolverTipoIdentificacion($cliente);
+
+            if (! $sigla) {
+                PagosRecaudosLogger::warning('Tipo de identificacion no valido para consulta de saldo', [
+                    'operation' => 'consulta_saldo',
+                    'identificacion_cliente' => $identificacion,
+                    'tipo_documento' => $cliente->tipdocumento ?? null,
+                    'duration_ms' => PagosRecaudosLogger::elapsedMs($startedAt),
+                ]);
+
+                return [
+                    'error' => true,
+                    'message' => 'No fue posible validar la identificacion del usuario.',
+                ];
             }
 
             // 2. Obtener caja activa
@@ -100,25 +121,6 @@ class PagoConsultaService
                     'duration_ms' => PagosRecaudosLogger::elapsedMs($startedAt),
                 ]);
                 return ['error' => true, 'message' => 'No fue posible resolver la ubicacion de la caja activa.'];
-            }
-
-            // 4. Tipo de identificacion
-            if ($cliente) {
-                $sigla = $this->resolverTipoIdentificacion($cliente);
-
-                if (! $sigla) {
-                    PagosRecaudosLogger::warning('Tipo de identificacion no valido para consulta de saldo', [
-                        'operation' => 'consulta_saldo',
-                        'identificacion_cliente' => $identificacion,
-                        'tipo_documento' => $cliente->tipdocumento ?? null,
-                        'duration_ms' => PagosRecaudosLogger::elapsedMs($startedAt),
-                    ]);
-
-                    return [
-                        'error' => true,
-                        'message' => 'No fue posible validar la identificacion del usuario.',
-                    ];
-                }
             }
 
             $clienteData = [
@@ -149,8 +151,61 @@ class PagoConsultaService
                 ];
             }
 
-            // 5. Validar saldo
+            // 5. Validar listas restrictivas con saldo de respuesta API
             $saldo = $respuesta['additionalData']['saldo'] ?? 0;
+
+            $validacionListas = $this->validacionListaNegraService->consultarPorIdentificacion(
+                numeroIdentificacion: (string) $cliente->identificacion,
+                tipoDocumento: $sigla,
+            );
+
+            if (($validacionListas['en_lista_negra'] ?? false) === true) {
+                $listasCoincidentes = is_array($validacionListas['listas'] ?? null)
+                    ? $validacionListas['listas']
+                    : [];
+
+                $this->validacionListaNegraService->registrarIntentoOperacionPrimeraCoincidencia(
+                    resultadoValidacion: $validacionListas,
+                    datosOperacion: [
+                        'sistema_origen' => 'pagos_recaudos_cajasan',
+                        'modo_integracion' => 'push',
+                        'tipo_documento' => $sigla,
+                        'numero_documento' => (string) $cliente->identificacion,
+                        'nombre' => $cliente->nombreCompleto(),
+                        'tipo_operacion' => 'pago',
+                        'referencia' => null,
+                        'referencia_externa' => null,
+                        'fecha_operacion' => now(),
+                        'monto' => $saldo,
+                        'moneda' => 'COP',
+                        'descripcion' => 'Intento bloqueado por coincidencia en lista negra durante consulta de saldo Cajasan.',
+                        'contexto' => [
+                            'modulo' => 'pagos_recaudos',
+                            'proceso' => 'consulta_saldo_cajasan',
+                            'saldo_api' => $saldo,
+                            'agencia' => $this->resolverNombreAgencia($cajaActiva),
+                        ],
+                        'ip_origen' => request()?->ip(),
+                    ],
+                );
+
+                PagosRecaudosLogger::warning('Cliente bloqueado por coincidencia en listas restrictivas', [
+                    'operation' => 'consulta_saldo',
+                    'identificacion_cliente' => $identificacion,
+                    'tipo_documento' => $sigla,
+                    'listas_coincidentes' => $listasCoincidentes,
+                    'saldo' => $saldo,
+                    'duration_ms' => PagosRecaudosLogger::elapsedMs($startedAt),
+                ]);
+
+                return [
+                    'error' => true,
+                    'message' => 'Por el momento no es posible continuar con el pago debido a un problema con la validación de los datos personales suministrados.',
+                    'listas' => $listasCoincidentes,
+                ];
+            }
+
+            // 6. Validar saldo
             if ($saldo <= 0) {
                 PagosRecaudosLogger::info('Consulta de saldo sin fondos disponibles', [
                     'operation' => 'consulta_saldo',
@@ -165,7 +220,7 @@ class PagoConsultaService
                 ];
             }
 
-            // 6. Guardar en cache
+            // 7. Guardar en cache
             $uuid = Str::uuid()->toString();
             $contextoPago = $this->crearContextoPago($cajaActiva, $userId);
             $datosCifrados = Crypt::encrypt(compact('clienteData', 'respuesta', 'cajaActiva', 'contextoPago'));
@@ -234,8 +289,10 @@ class PagoConsultaService
         return [(string) $ubicacion['departamento'], (string) $ubicacion['municipio']];
     }
 
+
     private function buscarMunicipioConFallback(int|string|null $codigoMunicipio): GenMunicipios
     {
+
         $codigoOriginal = trim((string) $codigoMunicipio);
         $municipio = GenMunicipios::where('codigo', $codigoOriginal)->first();
 
@@ -244,11 +301,16 @@ class PagoConsultaService
         }
 
         if (! $municipio) {
+            $municipio = GenMunicipios::where('id', $codigoOriginal)->first();
+        }
+
+        if (! $municipio) {
             $municipio = GenMunicipios::where('codigo', $codigoOriginal)->firstOrFail();
         }
 
         return $municipio;
     }
+
 
     private function normalizarCodigoUbicacion(mixed $codigo, int $longitud): string
     {
@@ -351,5 +413,28 @@ class PagoConsultaService
         return in_array($nomenclatura, self::TIPOS_DOCUMENTO_SOPORTADOS, true)
             ? $nomenclatura
             : null;
+    }
+
+    private function resolverNombreAgencia(object $cajaActiva): ?string
+    {
+        $candidatos = [
+            $cajaActiva->NOMSUCURSAL ?? null,
+            $cajaActiva->nomsucursal ?? null,
+            $cajaActiva->nomSucursal ?? null,
+            $cajaActiva->nombre_sucursal ?? null,
+        ];
+
+        foreach ($candidatos as $candidato) {
+            if (! is_string($candidato)) {
+                continue;
+            }
+
+            $valor = trim($candidato);
+            if ($valor !== '') {
+                return $valor;
+            }
+        }
+
+        return isset($cajaActiva->idsucursal) ? (string) $cajaActiva->idsucursal : null;
     }
 }

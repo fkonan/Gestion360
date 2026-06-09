@@ -9,6 +9,9 @@ class Permisos
     const GESTION_RRHH_GESTION_EMPLEADO_CREAR = 'gestion_rrhh.gestion_empleado.crear';
     const GESTION_RRHH_GESTION_EMPLEADO_ACCEDER = 'gestion_rrhh.gestion_empleado.acceder';
     const GESTION_RRHH_GESTION_EMPLEADO_ACTUALIZAR = 'gestion_rrhh.gestion_empleado.actualizar';
+    const GESTION_RRHH_GESTION_EMPLEADO_PERMISOS_RRHH = 'gestion_rrhh.gestion_empleado.permisosRRHH';
+    const GESTION_RRHH_PERMISOS_PERMISOS_RRHH = 'gestion_rrhh.permisos.permisosRRHH';
+    const GESTION_RRHH_PERMISOS_NOVEDADES = 'gestion_rrhh.permisos.novedades';
 
     // CONFIGURACIÓN
     const CONFIGURACION_ACCEDER = 'configuracion.acceder';
@@ -64,6 +67,9 @@ class Permisos
     // GESTIÓN WEB
     const GESTION_WEB_ACCEDER = 'gestion_web.acceder';
     const GESTION_WEB_GESTION_APP_MOVIL_ACCEDER = 'gestion_web.gestion_app_movil.acceder';
+    const GESTION_WEB_GESTION_APP_MOVIL_NOTIFICACIONES = 'gestion_web.gestion_app_movil.notificaciones';
+    const GESTION_WEB_GESTION_APP_MOVIL_RECURSOS_DIGITALES = 'gestion_web.gestion_app_movil.recursos_digitales';
+    const GESTION_WEB_GESTION_APP_MOVIL_USUARIOS = 'gestion_web.gestion_app_movil.usuarios';
 
     // PAGOS Y RECAUDOS
     const PAGOS_Y_RECAUDOS_ACCEDER = 'pagos_y_recaudos.acceder';

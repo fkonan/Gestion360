@@ -6,10 +6,32 @@ use App\Modules\PagosRecaudos\Services\PagosRecaudosLogger;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class ApiAsopagos
 {
+  private const API_LOG_CHANNEL = 'pagos_recaudos_api';
+
+  private const API_RESPONSE_ARCHIVE_CHANNEL = 'pagos_recaudos_api_respuestas';
+
+  private const API_SENSITIVE_KEYS = [
+    'password',
+    'auth_password',
+    'client_secret',
+    'token',
+    'access_token',
+    'refresh_token',
+    'authorization',
+    'secret',
+  ];
+
+  private const CITY_CODE_OVERRIDES = [
+    '68233' => '68081',  //Dagota no existe en DIVIPOLA, se usa municipio vecino (Barrancabermeja)
+    '20430' => '20250',   //Municipio vecino
+    '76892' => '76001'  //Municipio vecino
+  ];
+
   private const TRANSACTION_TYPE_CONSULTA = '10';
 
   private const TRANSACTION_TYPE_RETIRO = '01';
@@ -46,14 +68,15 @@ class ApiAsopagos
         });
       }
 
-      $response = $request->post(config('apiAsopagos.token_url'), [
+      $tokenPayload = [
         'username' => config('apiAsopagos.credentials.auth_username'),
         'password' => config('apiAsopagos.credentials.auth_password'),
         'grant_type' => 'password',
         'client_id' => config('apiAsopagos.credentials.client_id'),
         'client_secret' => config('apiAsopagos.credentials.client_secret'),
         'scope' => config('apiAsopagos.credentials.scope'),
-      ]);
+      ];
+      $response = $request->post(config('apiAsopagos.token_url'), $tokenPayload);
 
       if ($response->successful()) {
         $data = $this->decodificarJson($response);
@@ -125,6 +148,7 @@ class ApiAsopagos
 
   private function ejecutarTransaccion(array $datos, ?int $transactionId = null, ?int $sequenceId = null): array
   {
+    $startedAt = microtime(true);
     $tokenResponse = $this->obtenerToken();
     if (isset($tokenResponse['error'])) {
       return [
@@ -154,12 +178,40 @@ class ApiAsopagos
     ], $datos);
 
     try {
+      $this->logApi('transaction.request', [
+        'url' => config('apiAsopagos.base_url'),
+        'payload' => $payload,
+      ]);
+      $this->logApiResponseArchive('transaction.request', [
+        'transactionType' => $payload['transactionType'] ?? null,
+        'transactionId' => $payload['transactionId'] ?? null,
+        'sequenceId' => $payload['sequenceId'] ?? null,
+        'payload' => $payload,
+      ]);
+
       $response = Http::withToken($token)
         ->withHeaders(['Content-Type' => 'application/json'])
         ->timeout($this->transactionTimeoutSeconds())
         ->post(config('apiAsopagos.base_url'), $payload);
 
       $data = $this->decodificarJson($response);
+      $this->logApi('transaction.response', [
+        'url' => config('apiAsopagos.base_url'),
+        'http_status' => $response->status(),
+        'transactionType' => $payload['transactionType'] ?? null,
+        'transactionId' => $payload['transactionId'] ?? null,
+        'sequenceId' => $payload['sequenceId'] ?? null,
+        'response' => $data,
+      ]);
+      $this->logApiResponseArchive('transaction.response', [
+        'http_status' => $response->status(),
+        'transactionType' => $payload['transactionType'] ?? null,
+        'transactionId' => $payload['transactionId'] ?? null,
+        'sequenceId' => $payload['sequenceId'] ?? null,
+        'duration_ms' => PagosRecaudosLogger::elapsedMs($startedAt),
+        'payload' => $payload,
+        'response' => $data,
+      ]);
 
       if (! $data || ! is_array($data)) {
         PagosRecaudosLogger::error('Respuesta invalida de Asopagos', [
@@ -216,6 +268,15 @@ class ApiAsopagos
         $response->body()
       );
     } catch (ConnectionException $e) {
+      $this->logApi('transaction.exception', [
+        'url' => config('apiAsopagos.base_url'),
+        'transactionType' => $payload['transactionType'] ?? null,
+        'transactionId' => $payload['transactionId'] ?? null,
+        'sequenceId' => $payload['sequenceId'] ?? null,
+        'exception_class' => $e::class,
+        'exception_message' => $e->getMessage(),
+      ], 'error');
+
       PagosRecaudosLogger::exception('Excepcion de transporte al ejecutar transaccion con Asopagos', $e, [
         'operation' => 'api_asopagos',
         'stage' => 'transaction_request',
@@ -229,6 +290,15 @@ class ApiAsopagos
         'No fue posible confirmar el estado final de la transaccion con Asopagos.'
       );
     } catch (Throwable $e) {
+      $this->logApi('transaction.exception', [
+        'url' => config('apiAsopagos.base_url'),
+        'transactionType' => $payload['transactionType'] ?? null,
+        'transactionId' => $payload['transactionId'] ?? null,
+        'sequenceId' => $payload['sequenceId'] ?? null,
+        'exception_class' => $e::class,
+        'exception_message' => $e->getMessage(),
+      ], 'error');
+
       PagosRecaudosLogger::exception('Excepcion al ejecutar transaccion con Asopagos', $e, [
         'operation' => 'api_asopagos',
         'stage' => 'transaction_request',
@@ -250,7 +320,7 @@ class ApiAsopagos
       'transactionType' => self::TRANSACTION_TYPE_CONSULTA,
       'currencyCode' => null,
       'state' => $departamento,
-      'city' => $ciudad,
+      'city' => $this->normalizarCiudadParaApi($ciudad),
       'identificationType' => $tipoDoc,
       'identification' => $documento,
     ]);
@@ -262,7 +332,7 @@ class ApiAsopagos
       'transactionType' => self::TRANSACTION_TYPE_RETIRO,
       'amountTran' => $monto,
       'state' => $departamento,
-      'city' => $ciudad,
+      'city' => $this->normalizarCiudadParaApi($ciudad),
       'identificationType' => $tipoDoc,
       'identification' => $documento,
     ], $transactionId, $sequenceId);
@@ -343,7 +413,7 @@ class ApiAsopagos
       'transactionType' => self::TRANSACTION_TYPE_REVERSO,
       'amountTran' => $monto,
       'state' => $departamento,
-      'city' => $ciudad,
+      'city' => $this->normalizarCiudadParaApi($ciudad),
       'identificationType' => $tipoDoc,
       'identification' => $documento,
     ], $transactionId, $sequenceId);
@@ -355,7 +425,7 @@ class ApiAsopagos
       'transactionType' => self::TRANSACTION_TYPE_REVERSO,
       'amountTran' => $monto,
       'state' => $departamento,
-      'city' => $ciudad,
+      'city' => $this->normalizarCiudadParaApi($ciudad),
       'identificationType' => $tipoDoc,
       'identification' => $documento,
     ], $transactionId, $sequenceId);
@@ -543,5 +613,218 @@ class ApiAsopagos
   private function tokenRetrySleepMs(): int
   {
     return (int) config('apiAsopagos.token_retry_sleep_ms', 200);
+  }
+
+  private function normalizarCiudadParaApi(int|string $ciudad): string
+  {
+    $codigo = trim((string) $ciudad);
+
+    return self::CITY_CODE_OVERRIDES[$codigo] ?? $codigo;
+  }
+
+  private function logApi(string $event, array $context = [], string $level = 'info'): void
+  {
+    $context = $this->sanitizeContext($context);
+
+    Log::channel(self::API_LOG_CHANNEL)->{$level}($event, array_filter([
+      'module' => 'pagos_recaudos',
+      'request_id' => request()?->attributes->get('pagos_recaudos_request_id'),
+      'route' => request()?->route()?->getName(),
+      'method' => request()?->method(),
+      'event' => $event,
+      'context' => $context,
+    ], fn($value) => $value !== null));
+  }
+
+  //Ajustes de la generacion del log de archivo paralelo para evitar incluir datos sensibles o demasiado verbosos.
+  private function logApiResponseArchive(string $event, array $context = [], string $level = 'info'): void
+  {
+    try {
+      $context = $this->sanitizeContext($context);
+      $entry = $this->buildArchiveEntry($event, $context);
+
+      Log::channel(self::API_RESPONSE_ARCHIVE_CHANNEL)->{$level}(
+        $this->buildArchiveMessage($entry),
+        $entry
+      );
+    } catch (Throwable) {
+      // Este archivo paralelo es solo auxiliar y nunca debe afectar la operacion.
+    }
+  }
+
+  private function buildArchiveEntry(string $event, array $context): array
+  {
+    $payload = is_array($context['payload'] ?? null) ? $context['payload'] : [];
+    $response = is_array($context['response'] ?? null) ? $context['response'] : [];
+    $direction = $this->resolveArchiveDirection($event);
+    $action = $this->resolveTransactionName($context['transactionType'] ?? null);
+    $transmissionDateTime = $direction === 'solicitud'
+      ? ($payload['transmissionDateTime'] ?? null)
+      : ($response['transmissionDateTime'] ?? ($payload['transmissionDateTime'] ?? null));
+    $entry = [
+      'proceso' => [
+        'modulo' => 'pagos_recaudos',
+        'accion' => $action,
+        'direccion' => $direction,
+        'resultado' => $direction === 'solicitud'
+          ? 'enviada'
+          : $this->resolveArchiveResult($context, $response),
+      ],
+      'trazabilidad' => [
+        'request_id' => request()?->attributes->get('pagos_recaudos_request_id'),
+        'route' => request()?->route()?->getName(),
+        'method' => request()?->method(),
+      ],
+      'transaccion' => [
+        'transaction_id' => $context['transactionId'] ?? ($response['transactionId'] ?? $payload['transactionId'] ?? null),
+        'sequence_id' => $context['sequenceId'] ?? ($response['sequenceId'] ?? $payload['sequenceId'] ?? null),
+        'fecha_transmision' => $transmissionDateTime,
+        'duration_ms' => $context['duration_ms'] ?? null,
+      ],
+      'solicitud' => [
+        'tipo_identificacion' => $payload['identificationType'] ?? null,
+        'identificacion' => $payload['identification'] ?? null,
+        'valor' => $payload['amountTran'] ?? null,
+        'departamento' => $payload['state'] ?? null,
+        'ciudad' => $payload['city'] ?? null,
+      ],
+    ];
+
+    if ($direction === 'solicitud') {
+      return $this->filterArchiveNulls($entry);
+    }
+
+    $entry['respuesta'] = [
+      'http_status' => $context['http_status'] ?? null,
+      'response_code' => array_key_exists('responseCode', $response) ? (bool) $response['responseCode'] : null,
+      'authorization_code' => $response['authorizationRspCode'] ?? null,
+      'error_id' => $response['errorID'] ?? ($response['errorId'] ?? null),
+      'mensaje' => $this->resolveArchiveMessage($response),
+      'saldo' => $response['additionalData']['saldo'] ?? null,
+    ];
+
+    return $this->filterArchiveNulls($entry);
+  }
+
+  private function buildArchiveMessage(array $entry): string
+  {
+    $parts = [
+      'Cajasan',
+      $entry['proceso']['accion'] ?? 'transaccion',
+      $entry['proceso']['direccion'] ?? 'evento',
+    ];
+
+    if (! empty($entry['proceso']['resultado'])) {
+      $parts[] = $entry['proceso']['resultado'];
+    }
+
+    return implode(' ', $parts);
+  }
+
+  private function resolveArchiveDirection(string $event): string
+  {
+    if (str_ends_with($event, '.request')) {
+      return 'solicitud';
+    }
+
+    if (str_ends_with($event, '.response')) {
+      return 'respuesta';
+    }
+
+    return 'evento';
+  }
+
+  private function resolveTransactionName(?string $transactionType): string
+  {
+    return match ((string) $transactionType) {
+      self::TRANSACTION_TYPE_CONSULTA => 'consulta_saldo',
+      self::TRANSACTION_TYPE_RETIRO => 'retiro',
+      self::TRANSACTION_TYPE_REVERSO => 'reverso',
+      default => 'transaccion',
+    };
+  }
+
+  private function resolveArchiveResult(array $context, array $response): string
+  {
+    $httpStatus = $context['http_status'] ?? null;
+
+    if (($response['responseCode'] ?? null) === true) {
+      return 'ok';
+    }
+
+    if (($response['responseCode'] ?? null) === false) {
+      return 'rechazada';
+    }
+
+    if (is_numeric($httpStatus) && (int) $httpStatus >= 500) {
+      return 'error_http';
+    }
+
+    if (is_numeric($httpStatus) && (int) $httpStatus >= 400) {
+      return 'error_cliente';
+    }
+
+    return 'sin_respuesta_clara';
+  }
+
+  private function resolveArchiveMessage(array $response): ?string
+  {
+    $message = $this->extraerMensajeError($response, null);
+
+    if ($message !== 'Error desconocido') {
+      return $message;
+    }
+
+    if (($response['responseCode'] ?? null) === true) {
+      return 'Transaccion aprobada';
+    }
+
+    return null;
+  }
+
+  private function filterArchiveNulls(array $context): array
+  {
+    foreach ($context as $key => $value) {
+      if (is_array($value)) {
+        $value = $this->filterArchiveNulls($value);
+      }
+
+      if ($value === null || $value === '' || $value === []) {
+        unset($context[$key]);
+        continue;
+      }
+
+      $context[$key] = $value;
+    }
+
+    return $context;
+  }
+
+  private function sanitizeContext(array $context): array
+  {
+    foreach ($context as $key => $value) {
+      if (is_array($value)) {
+        $context[$key] = $this->sanitizeContext($value);
+        continue;
+      }
+
+      if ($this->isSensitiveKey((string) $key)) {
+        $context[$key] = '[redacted]';
+      }
+    }
+
+    return $context;
+  }
+
+  private function isSensitiveKey(string $key): bool
+  {
+    $normalized = strtolower(trim($key));
+    if (in_array($normalized, self::API_SENSITIVE_KEYS, true)) {
+      return true;
+    }
+
+    return str_contains($normalized, 'token')
+      || str_contains($normalized, 'password')
+      || str_contains($normalized, 'secret');
   }
 }

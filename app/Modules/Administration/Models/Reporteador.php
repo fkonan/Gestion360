@@ -20,7 +20,12 @@ class Reporteador extends Model
         'descripcion',
         'sql_base',
         'parametros',
+        'max_meses_consulta',
         'origen_db',
         'total_consultas',
+    ];
+
+    protected $casts = [
+        'max_meses_consulta' => 'integer',
     ];
 }
