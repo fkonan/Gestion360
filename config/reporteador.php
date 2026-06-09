@@ -12,10 +12,9 @@ return [
         ],
     ],
 
-    // Configuracion de rango de fechas para el reporteador.
-    // - default_meses: limite por defecto para cualquier reporte no listado.
-    // - sin_limite: reportes sin restriccion de rango.
-    // - max_meses_por_reporte: overrides por id de reporte.
+    // Configuracion de respaldo para rango de fechas del reporteador.
+    // - default_meses: limite global mientras el reporte no tenga max_meses_consulta en BD.
+    // - sin_limite y max_meses_por_reporte: compatibilidad temporal con configuracion legacy.
     'reportes_rango_fechas' => [
         'default_meses' => 1,
         'sin_limite' => [9],

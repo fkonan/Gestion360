@@ -15,11 +15,7 @@
 <div class="container-fluid p-0 border rounded sidebar-dark-primary tableContainer" style="min-height:150px;">
   <x-sectionHeader titulo="Prueba camara IP" rutaVolver="{{ route('reconocimientoFacial.index') }}" :crear="false" />
 
-  <div class="p-4">
-    <div class="alert alert-info mb-3">
-      Esta vista es de prueba y no utiliza el flujo actual de webcam/reconocimiento facial.
-    </div>
-
+  <div class="p-4 ip-preview-page">
     @if(empty($cameras))
       <div class="alert alert-warning mb-0">
         No hay camaras IP habilitadas en <code>CAMERAS_JSON</code>.
@@ -28,56 +24,39 @@
       <div id="ipCameraRoutes" class="d-none"
         data-snapshot-url="{{ route('camera.ip.snapshot') }}"
         data-mjpeg-url="{{ route('camera.ip.mjpeg') }}"
-        data-diagnostic-url="{{ route('camera.ip.diagnostic') }}"
+        data-events-stream-url="{{ route('camera.ultimos-eventos-stream') }}"
         data-default-camera="{{ $defaultCameraId }}"></div>
 
-      <div class="card">
-        <div class="card-body d-flex flex-column gap-3">
-          <div class="row g-3 align-items-end">
-            <div class="col-12 col-lg-5">
-              <label class="form-label" for="ipCameraSelect">Camara</label>
-              <select id="ipCameraSelect" class="form-select">
+      <div class="row g-3">
+        <div class="col-12 col-xl-8">
+          <div class="card h-100">
+            <div class="card-body d-flex flex-column gap-3">
+              <select id="ipCameraSelect" class="d-none">
                 @foreach($cameras as $camera)
-                  <option value="{{ $camera['id'] }}"
-                    data-name="{{ $camera['name'] }}"
-                    data-width="{{ $camera['width'] ?? '' }}"
-                    data-height="{{ $camera['height'] ?? '' }}"
-                    data-distance="{{ $camera['max_face_distance_meters'] ?? '' }}">
+                  <option value="{{ $camera['id'] }}">
                     {{ $camera['name'] }} ({{ $camera['id'] }})
                   </option>
                 @endforeach
               </select>
-            </div>
 
-            <div class="col-12 col-lg-auto">
-              <button id="ipCameraRefreshBtn" class="btn btn-outline-primary w-100" type="button">
-                Reconectar stream
-              </button>
-            </div>
-
-            <div class="col-12 col-lg-auto">
-              <button id="ipCameraDiagBtn" class="btn btn-outline-secondary w-100" type="button">
-                Diagnosticar
-              </button>
-            </div>
-
-            <div class="col-12 col-lg">
-              <div class="d-flex justify-content-lg-end">
-                <span id="ipCameraStatus" class="badge rounded-pill bg-secondary">Sin cargar</span>
+              <div class="ratio ratio-16x9 bg-dark rounded overflow-hidden">
+                <img id="ipCameraFrame" class="w-100 h-100 object-fit-cover" alt="Vista camara IP" />
               </div>
             </div>
           </div>
+        </div>
 
-          <div class="ratio ratio-16x9 bg-dark rounded overflow-hidden">
-            <img id="ipCameraFrame" class="w-100 h-100 object-fit-cover" alt="Vista camara IP" />
+        <div class="col-12 col-xl-4">
+          <div class="card h-100 recognize-list-panel">
+            <div class="card-body d-flex flex-column gap-2">
+              <div class="d-flex align-items-center justify-content-between">
+                <div class="fw-semibold">Personas reconocidas</div>
+                <span id="ipRecognizedCount" class="badge rounded-pill bg-secondary">0</span>
+              </div>
+              <div id="ipRecognizedEmpty" class="text-muted small">Sin reconocimientos recientes.</div>
+              <ul id="ipRecognizedList" class="list-group list-group-flush overflow-auto camara-recognize-list" style="max-height: 560px;"></ul>
+            </div>
           </div>
-
-          <div class="d-flex flex-wrap justify-content-between gap-2">
-            <div id="ipCameraMeta" class="small text-muted"></div>
-            <div class="small text-muted">Streaming MJPEG en vivo.</div>
-          </div>
-
-          <div id="ipCameraError" class="alert alert-danger py-2 px-3 mb-0 d-none"></div>
         </div>
       </div>
     @endif
@@ -85,51 +64,320 @@
 </div>
 @endsection
 
+@push('css')
+  @vite('resources/css/camara/ip-preview.css')
+@endpush
+
 @push('script')
   @if(!empty($cameras))
     <script>
       (() => {
         const routes = document.getElementById('ipCameraRoutes');
         const select = document.getElementById('ipCameraSelect');
-        const refreshBtn = document.getElementById('ipCameraRefreshBtn');
-        const diagBtn = document.getElementById('ipCameraDiagBtn');
-        const status = document.getElementById('ipCameraStatus');
         const frame = document.getElementById('ipCameraFrame');
-        const meta = document.getElementById('ipCameraMeta');
-        const errorBox = document.getElementById('ipCameraError');
+        const recognizedListEl = document.getElementById('ipRecognizedList');
+        const recognizedEmptyEl = document.getElementById('ipRecognizedEmpty');
+        const recognizedCountEl = document.getElementById('ipRecognizedCount');
         const mjpegUrl = routes?.dataset?.mjpegUrl || '';
-        const diagnosticUrl = routes?.dataset?.diagnosticUrl || '';
+        const eventsStreamUrl = routes?.dataset?.eventsStreamUrl || '';
         const defaultCamera = routes?.dataset?.defaultCamera || '';
+        const LIST_TTL_MS = 5000;
+        const SEEN_KEYS_RETENTION_MS = 10 * 60 * 1000;
+        const MAX_RENDERED_EVENTS = 40;
+        const STREAM_RECONNECT_MS = 1500;
 
         let currentStreamUrl = '';
+        let eventsPruneTimer = null;
+        let eventSource = null;
+        let eventStreamEnabled = false;
+        let reconnectStreamTimer = null;
+        let lastStreamId = 0;
+        let renderedEvents = [];
+        const seenEventKeys = new Map();
 
-        const setStatus = (label, cssClass) => {
-          status.className = `badge rounded-pill ${cssClass}`;
-          status.textContent = label;
+        const escapeHtml = (value) => {
+          return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
         };
 
-        const showError = (message) => {
-          if (!message) {
-            errorBox.classList.add('d-none');
-            errorBox.textContent = '';
+        const getEventVisual = (eventCode) => {
+          const isSalida = Number(eventCode) === 1;
+          return {
+            label: isSalida ? 'Salida' : 'Ingreso',
+            badgeClass: isSalida ? 'bg-danger' : 'bg-success',
+          };
+        };
+
+        const getEventKey = (item) => {
+          const streamId = item?.stream_id !== undefined && item?.stream_id !== null
+            ? String(item.stream_id).trim()
+            : '';
+          if (streamId !== '') {
+            return `stream:${streamId}`;
+          }
+
+          const eventId = item?.evento_id !== undefined && item?.evento_id !== null
+            ? String(item.evento_id).trim()
+            : '';
+          if (eventId !== '') {
+            return `id:${eventId}`;
+          }
+
+          const identification = String(item?.identificacion ?? '').trim();
+          const eventCode = String(item?.evento ?? '').trim();
+          const timestamp = String(item?.fecha_evento ?? item?.hora_evento ?? '').trim();
+          const description = String(item?.descripcion ?? '').trim();
+          const fallback = `${identification}|${eventCode}|${timestamp}|${description}`;
+          return fallback === '|||' ? '' : `fallback:${fallback}`;
+        };
+
+        const normalizeEventItem = (item) => {
+          if (!item || typeof item !== 'object') {
+            return null;
+          }
+          const key = getEventKey(item);
+          if (!key) {
+            return null;
+          }
+          let formattedDate = '';
+          const rawDate = String(item.fecha_evento ?? '').trim();
+          if (rawDate) {
+            const dateObj = new Date(rawDate);
+            if (!Number.isNaN(dateObj.getTime())) {
+              formattedDate = new Intl.DateTimeFormat('es-CO', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+              }).format(dateObj);
+            }
+          }
+
+          let formattedTime = String(item.hora_evento ?? '').trim();
+          if (!formattedTime && rawDate) {
+            const dateObj = new Date(rawDate);
+            if (!Number.isNaN(dateObj.getTime())) {
+              formattedTime = new Intl.DateTimeFormat('es-CO', {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true,
+              }).format(dateObj);
+            }
+          }
+
+          return {
+            key,
+            identificacion: String(item.identificacion ?? '').trim(),
+            nombre: String(item.nombre ?? '').trim() || 'Sin nombre',
+            fechaEvento: formattedDate,
+            horaEvento: formattedTime,
+            evento: Number(item.evento ?? 0),
+          };
+        };
+
+        const renderRecognizedEvents = () => {
+          if (!recognizedListEl || !recognizedEmptyEl) {
             return;
           }
 
-          errorBox.textContent = message;
-          errorBox.classList.remove('d-none');
-        };
+          recognizedListEl.innerHTML = '';
+          if (recognizedCountEl) {
+            recognizedCountEl.textContent = String(renderedEvents.length);
+          }
 
-        const updateMeta = () => {
-          const option = select.options[select.selectedIndex];
-          if (!option) {
-            meta.textContent = '';
+          if (renderedEvents.length === 0) {
+            recognizedEmptyEl.classList.remove('d-none');
             return;
           }
 
-          const width = option.dataset.width || '-';
-          const height = option.dataset.height || '-';
-          const maxDistance = option.dataset.distance || '-';
-          meta.textContent = `${option.dataset.name || option.text} | ${width}x${height} | Distancia max: ${maxDistance}m`;
+          recognizedEmptyEl.classList.add('d-none');
+          const fragment = document.createDocumentFragment();
+
+          renderedEvents.forEach((item) => {
+            const eventVisual = getEventVisual(item.evento);
+            const docText = item.identificacion ? `CC ${escapeHtml(item.identificacion)}` : '';
+            const dateText = escapeHtml(item.fechaEvento || '--');
+            const timeText = escapeHtml(item.horaEvento || '--');
+            const li = document.createElement('li');
+            li.className = 'list-group-item';
+            li.innerHTML = `
+              <div class="recognize-card-head">
+                <div class="recognize-card-ident">
+                  <div class="recognize-card-name">${escapeHtml(item.nombre)}</div>
+                  ${docText ? `<div class="recognize-card-doc">${docText}</div>` : ''}
+                </div>
+                <span class="badge ${eventVisual.badgeClass} recognize-event-badge">${eventVisual.label}</span>
+              </div>
+              <div class="recognize-meta-grid">
+                <div class="recognize-meta-pill recognize-meta-pill-date">
+                  <span class="recognize-meta-label">Fecha:</span>
+                  <span class="recognize-meta-value">${dateText}</span>
+                </div>
+                <div class="recognize-meta-pill recognize-meta-pill-time">
+                  <span class="recognize-meta-label"><i class="far fa-clock"></i> Hora:</span>
+                  <span class="recognize-meta-value">${timeText}</span>
+                </div>
+              </div>
+            `;
+            fragment.appendChild(li);
+          });
+
+          recognizedListEl.appendChild(fragment);
+        };
+
+        const pruneRenderedEvents = () => {
+          const cutoff = Date.now() - LIST_TTL_MS;
+          const next = renderedEvents.filter((item) => (item.seenAt || 0) >= cutoff);
+          if (next.length === renderedEvents.length) {
+            return;
+          }
+          renderedEvents = next;
+          renderRecognizedEvents();
+        };
+
+        const pruneSeenKeys = () => {
+          const cutoff = Date.now() - SEEN_KEYS_RETENTION_MS;
+          for (const [key, seenAt] of seenEventKeys.entries()) {
+            if (seenAt < cutoff) {
+              seenEventKeys.delete(key);
+            }
+          }
+        };
+
+        const clearRecognizedEvents = () => {
+          lastStreamId = 0;
+          renderedEvents = [];
+          seenEventKeys.clear();
+          renderRecognizedEvents();
+        };
+
+        const addIncomingEvent = (payload, eventId = '') => {
+          const normalized = normalizeEventItem(payload);
+          if (!normalized) {
+            return;
+          }
+
+          const now = Date.now();
+          if (eventId && /^\d+$/.test(eventId)) {
+            lastStreamId = Math.max(lastStreamId, Number(eventId));
+          }
+          if (seenEventKeys.has(normalized.key)) {
+            return;
+          }
+
+          seenEventKeys.set(normalized.key, now);
+          renderedEvents.unshift({
+            ...normalized,
+            seenAt: now,
+          });
+
+          if (renderedEvents.length > MAX_RENDERED_EVENTS) {
+            renderedEvents = renderedEvents.slice(0, MAX_RENDERED_EVENTS);
+          }
+
+          renderRecognizedEvents();
+          pruneRenderedEvents();
+          pruneSeenKeys();
+        };
+
+        const handleStreamMessage = (event) => {
+          if (!event?.data) {
+            return;
+          }
+          let payload = null;
+          try {
+            payload = JSON.parse(event.data);
+          } catch (error) {
+            payload = null;
+          }
+          if (!payload || typeof payload !== 'object') {
+            return;
+          }
+          const origin = String(payload.origen || '').trim().toLowerCase();
+          if (origin && origin !== 'api' && origin !== 'camara') {
+            return;
+          }
+          addIncomingEvent(payload, String(event.lastEventId || ''));
+        };
+
+        const scheduleStreamReconnect = () => {
+          if (!eventStreamEnabled) {
+            return;
+          }
+          if (reconnectStreamTimer) {
+            return;
+          }
+          reconnectStreamTimer = window.setTimeout(() => {
+            reconnectStreamTimer = null;
+            connectRecognizedStream();
+          }, STREAM_RECONNECT_MS);
+        };
+
+        const connectRecognizedStream = () => {
+          if (!eventStreamEnabled) {
+            return;
+          }
+          if (!eventsStreamUrl || typeof window.EventSource !== 'function') {
+            return;
+          }
+
+          if (eventSource) {
+            eventSource.close();
+            eventSource = null;
+          }
+
+          const streamUrl = new URL(eventsStreamUrl, window.location.origin);
+          if (lastStreamId > 0) {
+            streamUrl.searchParams.set('last_event_id', String(lastStreamId));
+          }
+          streamUrl.searchParams.set('_', Date.now().toString());
+          eventSource = new EventSource(streamUrl.toString(), { withCredentials: true });
+
+          eventSource.addEventListener('recognized', handleStreamMessage);
+          eventSource.onmessage = handleStreamMessage;
+          eventSource.onerror = () => {
+            if (eventSource) {
+              eventSource.close();
+              eventSource = null;
+            }
+            scheduleStreamReconnect();
+          };
+        };
+
+        const startRecognizedStream = () => {
+          eventStreamEnabled = true;
+          if (reconnectStreamTimer) {
+            clearTimeout(reconnectStreamTimer);
+            reconnectStreamTimer = null;
+          }
+          connectRecognizedStream();
+          if (!eventsPruneTimer) {
+            eventsPruneTimer = window.setInterval(() => {
+              pruneRenderedEvents();
+            }, 300);
+          }
+        };
+
+        const stopRecognizedStream = ({ clear = false } = {}) => {
+          eventStreamEnabled = false;
+          if (reconnectStreamTimer) {
+            clearTimeout(reconnectStreamTimer);
+            reconnectStreamTimer = null;
+          }
+          if (eventSource) {
+            eventSource.close();
+            eventSource = null;
+          }
+          if (eventsPruneTimer) {
+            clearInterval(eventsPruneTimer);
+            eventsPruneTimer = null;
+          }
+          if (clear) {
+            clearRecognizedEvents();
+          }
         };
 
         const stopStream = () => {
@@ -140,97 +388,46 @@
           frame.onerror = null;
           frame.src = '';
           currentStreamUrl = '';
+          stopRecognizedStream({ clear: true });
         };
 
         const startStream = () => {
           if (!mjpegUrl) {
-            showError('No se encontro la URL de stream MJPEG.');
+            stopRecognizedStream({ clear: true });
             return;
           }
 
-          const cameraId = select.value || '';
+          const cameraId = select?.value || '';
           if (!cameraId) {
-            setStatus('Sin camara', 'bg-warning');
-            showError('Selecciona una camara para iniciar la prueba.');
+            stopRecognizedStream({ clear: true });
             return;
           }
 
           stopStream();
-          showError('');
-          updateMeta();
-          setStatus('Conectando...', 'bg-warning');
 
           const requestUrl = new URL(mjpegUrl, window.location.origin);
           requestUrl.searchParams.set('camera_id', cameraId);
           requestUrl.searchParams.set('_', Date.now().toString());
 
           currentStreamUrl = requestUrl.toString();
-
-          frame.onload = () => {
-            setStatus('En vivo', 'bg-success');
-          };
+          startRecognizedStream();
 
           frame.onerror = () => {
-            setStatus('Sin senal', 'bg-danger');
-            showError('No se pudo abrir el stream en vivo. Usa "Diagnosticar" para ver el detalle.');
+            console.warn('[camera-ip] No se pudo abrir el stream en vivo.');
           };
 
           frame.src = currentStreamUrl;
         };
 
-        if (defaultCamera) {
+        if (defaultCamera && select) {
           select.value = defaultCamera;
         }
 
-        select.addEventListener('change', () => {
-          startStream();
-        });
-
-        refreshBtn.addEventListener('click', () => {
-          startStream();
-        });
-
-        diagBtn.addEventListener('click', async () => {
-          if (!diagnosticUrl) {
-            return;
-          }
-
-          const cameraId = select.value || '';
-          if (!cameraId) {
-            showError('Selecciona una camara para ejecutar diagnostico.');
-            return;
-          }
-
-          const requestUrl = new URL(diagnosticUrl, window.location.origin);
-          requestUrl.searchParams.set('camera_id', cameraId);
-          requestUrl.searchParams.set('_', Date.now().toString());
-
-          try {
-            const response = await fetch(requestUrl.toString(), {
-              method: 'GET',
-              cache: 'no-store',
-              headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-              },
-            });
-
-            const payload = await response.json().catch(() => null);
-            if (!response.ok || !payload) {
-              throw new Error('No se pudo ejecutar el diagnostico.');
-            }
-
-            console.info('[camera-ip][diagnostic]', payload);
-            window.alert(
-              `Diagnostico ejecutado.\\n\\n` +
-              `TCP socket: ${payload?.tcp_check?.ok ? 'OK' : 'FALLO'}\\n` +
-              `FFMPEG TCP: ${payload?.ffmpeg_check_tcp?.ok ? 'OK' : 'FALLO'}\\n` +
-              `FFMPEG UDP: ${payload?.ffmpeg_check_udp?.ok ? 'OK' : 'FALLO'}\\n\\n` +
-              `Revisa la consola (F12) para el detalle completo.`
-            );
-          } catch (error) {
-            window.alert(error instanceof Error ? error.message : 'No se pudo ejecutar el diagnostico.');
-          }
-        });
+        if (select) {
+          select.addEventListener('change', () => {
+            startStream();
+          });
+        }
 
         document.addEventListener('visibilitychange', () => {
           if (document.hidden) {
@@ -245,6 +442,7 @@
           stopStream();
         });
 
+        renderRecognizedEvents();
         startStream();
       })();
     </script>

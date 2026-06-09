@@ -18,7 +18,7 @@ class DocumentalTestCommand extends Command
     public function handle(DocumentalStorageService $documentalStorageService): int
     {
         $diskName = $documentalStorageService->obtenerDiscoConfigurado();
-        $defaultPath = trim((string) config('services.documental.base_directory', 'ArchivoDigital'), '/');
+        $defaultPath = trim($documentalStorageService->obtenerBaseDirectoryConfigurada(), '/');
         $path = trim((string) ($this->argument('ruta') ?: $defaultPath), '/');
         $diskConfig = (array) config('filesystems.disks.'.$diskName, []);
 
@@ -29,7 +29,8 @@ class DocumentalTestCommand extends Command
         $this->line('Puerto: <info>'.($diskConfig['port'] ?? 'N/D').'</info>');
         $this->line('Root: <info>'.($diskConfig['root'] ?? 'N/D').'</info>');
         $this->line('Base directory: <info>'.($defaultPath !== '' ? $defaultPath : '/').'</info>');
-        $this->line('Base URL: <info>'.((string) config('services.documental.public_base_url', 'N/D')).'</info>');
+        $baseUrl = $documentalStorageService->obtenerPublicBaseUrlConfigurada();
+        $this->line('Base URL: <info>'.($baseUrl !== '' ? $baseUrl : 'N/D').'</info>');
         $this->line('Ruta a validar: <info>'.($path !== '' ? $path : '/').'</info>');
         $this->newLine();
 

@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\Schema;
 class EmpleadoNovedadService
 {
     private const CONNECTION = 'oracle-360';
+    private const AREA_PARAMETROS_EPS = 'GENERAL-EPS';
+    private const AREA_PARAMETROS_ARL = 'GENERAL-ARL';
     private const TIPO_CACHE_KEY = 'gestion_rrhh_novedades_tipos_indexados';
     private const CACHE_TTL = 300;
 
@@ -288,6 +290,148 @@ class EmpleadoNovedadService
                 't.tabla as tipo_tabla_db',
             ])
             ->first();
+    }
+
+    public function obtenerTrazabilidadNovedad(string $idNovedad): ?array
+    {
+        $novedad = $this->obtenerNovedad($idNovedad);
+        if (! $novedad) {
+            return null;
+        }
+
+        $estadoActual = strtoupper(trim((string) ($novedad->estado ?? '')));
+        $tipoCodigo = $this->normalizarTipoCodigo(
+            (string) ($novedad->tipo_tabla_db ?? ''),
+            (string) ($novedad->tipo_descripcion ?? '')
+        );
+        $documentoEmpleado = trim((string) ($novedad->id_persona ?? ''));
+        $radicador = $this->permisoService->obtenerRadicadoresPorNovedades([$idNovedad])[$idNovedad] ?? [];
+
+        $historial = DB::connection(self::CONNECTION)
+            ->table('EMP_NOVEDADES_HISTORIAL')
+            ->where('id_novedad', $idNovedad)
+            ->select([
+                'estado_anterior',
+                'estado_nuevo',
+                'fecha_cambio',
+                'usuario_accion',
+                'observacion',
+                'tipo_evento',
+            ])
+            ->orderBy('fecha_cambio')
+            ->get();
+
+        $documentosActores = [];
+        foreach ($historial as $item) {
+            $metadatos = $this->parsearObservacionTrazabilidad((string) ($item->observacion ?? ''));
+            $documentoActor = trim((string) ($item->usuario_accion ?? ''));
+            $documentoCreadoPor = trim((string) ($metadatos['CREADO_POR_DOCUMENTO'] ?? ''));
+
+            if ($documentoActor !== '') {
+                $documentosActores[$documentoActor] = true;
+            }
+
+            if ($documentoCreadoPor !== '') {
+                $documentosActores[$documentoCreadoPor] = true;
+            }
+        }
+
+        $documentoRadicador = trim((string) ($radicador['documento'] ?? ''));
+        if ($documentoRadicador !== '') {
+            $documentosActores[$documentoRadicador] = true;
+        }
+
+        $personasActores = $this->obtenerPersonasPorDocumentos(array_keys($documentosActores));
+        $personaEmpleado = $this->obtenerPersonasPorDocumentos([$documentoEmpleado]);
+        $eventos = [];
+        $estadosRegistrados = [];
+        $notas = [];
+
+        foreach ($historial as $item) {
+            $estadoNuevo = strtoupper(trim((string) ($item->estado_nuevo ?? '')));
+            if ($estadoNuevo === '' || isset($estadosRegistrados[$estadoNuevo])) {
+                continue;
+            }
+
+            $metadatos = $this->parsearObservacionTrazabilidad((string) ($item->observacion ?? ''));
+            $documentoActor = trim((string) ($item->usuario_accion ?? ''));
+            if ($estadoNuevo === EmpleadoPermisoService::ESTADO_RADICADO && $documentoRadicador !== '') {
+                $documentoActor = $documentoRadicador;
+            }
+            if ($documentoActor === '') {
+                $documentoActor = trim((string) ($metadatos['CREADO_POR_DOCUMENTO'] ?? ''));
+            }
+
+            $nombreActor = $estadoNuevo === EmpleadoPermisoService::ESTADO_RADICADO
+                ? trim((string) ($radicador['nombre'] ?? ''))
+                : '';
+            if ($nombreActor === '') {
+                $nombreActor = trim((string) ($metadatos['CREADO_POR_NOMBRE'] ?? ''));
+            }
+            if ($nombreActor === '' && $documentoActor !== '') {
+                $nombreActor = trim((string) data_get($personasActores, $documentoActor.'.nombre', ''));
+            }
+
+            $eventos[] = [
+                'estado' => $estadoNuevo,
+                'estado_label' => $this->resolverEtiquetaEstadoTrazabilidad($estadoNuevo),
+                'fecha' => $this->formatearFechaTrazabilidad($item->fecha_cambio ?? null),
+                'actor_documento' => $documentoActor !== '' ? $documentoActor : null,
+                'actor_nombre' => $nombreActor !== '' ? $nombreActor : null,
+                'detalle' => $this->resolverDetalleEventoTrazabilidad(
+                    $estadoNuevo,
+                    (string) ($item->tipo_evento ?? ''),
+                    (string) ($item->observacion ?? ''),
+                    $metadatos
+                ),
+                'es_estado_actual' => $estadoNuevo === $estadoActual,
+            ];
+
+            $estadosRegistrados[$estadoNuevo] = true;
+        }
+
+        if (! isset($estadosRegistrados[EmpleadoPermisoService::ESTADO_RADICADO])) {
+            array_unshift($eventos, [
+                'estado' => EmpleadoPermisoService::ESTADO_RADICADO,
+                'estado_label' => $this->resolverEtiquetaEstadoTrazabilidad(EmpleadoPermisoService::ESTADO_RADICADO),
+                'fecha' => $this->formatearFechaTrazabilidad($novedad->fecha_creacion ?? null),
+                'actor_documento' => $documentoRadicador !== '' ? $documentoRadicador : null,
+                'actor_nombre' => trim((string) ($radicador['nombre'] ?? '')) !== '' ? trim((string) ($radicador['nombre'] ?? '')) : null,
+                'detalle' => null,
+                'es_estado_actual' => $estadoActual === EmpleadoPermisoService::ESTADO_RADICADO,
+            ]);
+            $estadosRegistrados[EmpleadoPermisoService::ESTADO_RADICADO] = true;
+            $notas[] = 'La fecha de radicacion se tomo desde la solicitud porque el historial no registraba ese paso.';
+        }
+
+        if ($estadoActual !== '' && ! isset($estadosRegistrados[$estadoActual])) {
+            $eventos[] = [
+                'estado' => $estadoActual,
+                'estado_label' => $this->resolverEtiquetaEstadoTrazabilidad($estadoActual),
+                'fecha' => null,
+                'actor_documento' => null,
+                'actor_nombre' => null,
+                'detalle' => null,
+                'es_estado_actual' => true,
+            ];
+            $notas[] = 'El historial no tiene la fecha exacta del estado actual; se muestra el estado vigente como referencia.';
+        }
+
+        return [
+            'id_novedad' => $idNovedad,
+            'tipo_codigo' => $tipoCodigo,
+            'tipo_label' => trim((string) ($novedad->tipo_descripcion ?? '')) !== ''
+                ? trim((string) ($novedad->tipo_descripcion ?? ''))
+                : $tipoCodigo,
+            'estado_actual' => $estadoActual,
+            'estado_actual_label' => $this->resolverEtiquetaEstadoTrazabilidad($estadoActual),
+            'empleado' => [
+                'documento' => $documentoEmpleado,
+                'nombre' => trim((string) data_get($personaEmpleado, $documentoEmpleado.'.nombre', '')),
+            ],
+            'eventos' => $eventos,
+            'notas' => array_values(array_filter($notas)),
+        ];
     }
 
     public function obtenerRutaGestionPorNovedad(object $novedad): ?string
@@ -698,16 +842,30 @@ class EmpleadoNovedadService
             ->table('EMP_INCAPACIDADES as i')
             ->leftJoin('EMP_CAUSAS_INCAPACIDAD as c', 'c.id', '=', 'i.id_causa_incapacidad')
             ->leftJoin('EMP_DIAGNOSTICOS as d', 'd.id', '=', 'i.id_diagnostico')
-            ->leftJoin('EMP_EPS as e', 'e.id', '=', 'i.id_eps')
-            ->leftJoin('EMP_ARL as a', 'a.id', '=', 'i.id_arl')
+            ->leftJoin('PAR_PARAMETROS as e', function ($join) {
+                $join->on('e.parametro_id', '=', 'i.id_eps')
+                    ->where('e.area_id', self::AREA_PARAMETROS_EPS)
+                    ->where(function ($query) {
+                        $query->whereNull('e.activo')
+                            ->orWhere('e.activo', 1);
+                    });
+            })
+            ->leftJoin('PAR_PARAMETROS as a', function ($join) {
+                $join->on('a.parametro_id', '=', 'i.id_arl')
+                    ->where('a.area_id', self::AREA_PARAMETROS_ARL)
+                    ->where(function ($query) {
+                        $query->whereNull('a.activo')
+                            ->orWhere('a.activo', 1);
+                    });
+            })
             ->whereIn('i.id', $idsOrigen)
             ->select([
                 'i.*',
                 'c.causa',
                 DB::raw('d.CodigoCie as diagnostico_codigo'),
                 DB::raw('d.DescCie as diagnostico_descripcion'),
-                DB::raw('e.EPSNombre as eps_nombre'),
-                DB::raw('a.ARLNombre as arl_nombre'),
+                DB::raw('e.parametro_valor as eps_nombre'),
+                DB::raw('a.parametro_valor as arl_nombre'),
             ])
             ->get()
             ->keyBy(fn ($item) => trim((string) ($item->id ?? '')))
@@ -784,6 +942,132 @@ class EmpleadoNovedadService
     private function tablaPorTipo(string $tipo): ?string
     {
         return NovedadTipoResolver::tablaPorTipo($tipo);
+    }
+
+    private function resolverEtiquetaEstadoTrazabilidad(string $estado): string
+    {
+        return match (strtoupper(trim($estado))) {
+            EmpleadoPermisoService::ESTADO_RADICADO => 'Radicado',
+            EmpleadoPermisoService::ESTADO_JEFE_APROBADO => 'Jefe aprobado',
+            EmpleadoPermisoService::ESTADO_APROBADO => 'Aprobado',
+            EmpleadoPermisoService::ESTADO_RECHAZADO => 'Rechazado',
+            EmpleadoPermisoService::ESTADO_ANULADO => 'Anulado',
+            default => trim($estado) !== '' ? trim($estado) : 'Sin estado',
+        };
+    }
+
+    private function formatearFechaTrazabilidad(mixed $fecha): ?string
+    {
+        if ($fecha === null || $fecha === '') {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($fecha)->format('d/m/Y h:i A');
+        } catch (\Throwable) {
+            $texto = trim((string) $fecha);
+
+            return $texto !== '' ? $texto : null;
+        }
+    }
+
+    private function resolverDetalleEventoTrazabilidad(
+        string $estadoNuevo,
+        string $tipoEvento,
+        string $observacion,
+        array $metadatos
+    ): ?string {
+        $estadoNuevo = strtoupper(trim($estadoNuevo));
+        $tipoEvento = strtoupper(trim($tipoEvento));
+
+        if ($estadoNuevo === EmpleadoPermisoService::ESTADO_RECHAZADO) {
+            $motivoRechazo = $this->normalizarTextoTrazabilidad($metadatos['RECHAZO_MOTIVO'] ?? null);
+
+            return $motivoRechazo ?? $this->normalizarTextoTrazabilidad($observacion);
+        }
+
+        if ($estadoNuevo === EmpleadoPermisoService::ESTADO_ANULADO) {
+            $motivoAnulacion = $this->normalizarTextoTrazabilidad($metadatos['ANULACION_MOTIVO'] ?? null);
+
+            return $motivoAnulacion ?? $this->normalizarTextoTrazabilidad($observacion);
+        }
+
+        if ($tipoEvento === 'SEGUIMIENTO_RRHH') {
+            return $this->normalizarTextoTrazabilidad($observacion);
+        }
+
+        $observacionLimpia = $this->limpiarObservacionTrazabilidad($observacion);
+
+        return $observacionLimpia;
+    }
+
+    private function limpiarObservacionTrazabilidad(?string $observacion): ?string
+    {
+        $texto = $this->normalizarTextoTrazabilidad($observacion);
+        if ($texto === null) {
+            return null;
+        }
+
+        $segmentos = collect(explode('|', $texto))
+            ->map(fn ($segmento) => trim((string) $segmento))
+            ->filter()
+            ->values();
+
+        if ($segmentos->isEmpty()) {
+            return null;
+        }
+
+        $segmentosSinMetadatos = $segmentos
+            ->reject(function (string $segmento) {
+                if (! str_contains($segmento, '=')) {
+                    return false;
+                }
+
+                [$clave] = explode('=', $segmento, 2);
+                $clave = strtoupper(trim((string) $clave));
+
+                return $clave !== '' && preg_match('/^[A-Z0-9_]+$/', $clave) === 1;
+            })
+            ->values();
+
+        if ($segmentosSinMetadatos->isEmpty()) {
+            return null;
+        }
+
+        return $segmentosSinMetadatos->implode(' | ');
+    }
+
+    private function parsearObservacionTrazabilidad(string $observacion): array
+    {
+        $metadatos = [];
+
+        foreach (explode('|', $observacion) as $segmento) {
+            $segmento = trim($segmento);
+            if ($segmento === '' || ! str_contains($segmento, '=')) {
+                continue;
+            }
+
+            [$clave, $valor] = explode('=', $segmento, 2);
+            $clave = strtoupper(trim((string) $clave));
+            if ($clave === '') {
+                continue;
+            }
+
+            $metadatos[$clave] = trim((string) $valor);
+        }
+
+        return $metadatos;
+    }
+
+    private function normalizarTextoTrazabilidad(mixed $valor): ?string
+    {
+        if ($valor === null) {
+            return null;
+        }
+
+        $texto = trim((string) $valor);
+
+        return $texto !== '' ? $texto : null;
     }
 
     private function esDocumentoSistema(string $documento): bool

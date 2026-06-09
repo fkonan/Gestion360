@@ -17,6 +17,8 @@ class EmpleadoIncapacidadService
 {
     private const CONNECTION = 'oracle-360';
     private const CACHE_TTL_SECONDS = 900;
+    private const AREA_PARAMETROS_EPS = 'GENERAL-EPS';
+    private const AREA_PARAMETROS_ARL = 'GENERAL-ARL';
 
     public const ESTADO_RADICADO = 'RADICADO';
     public const ESTADO_APROBADO = 'APROBADO';
@@ -718,12 +720,17 @@ class EmpleadoIncapacidadService
     {
         return Cache::remember('empleados_incapacidades_eps_oracle', self::CACHE_TTL_SECONDS, function () {
             return DB::connection(self::CONNECTION)
-                ->table('EMP_EPS')
-                ->where('estado', 'ACTIVO')
-                ->orderBy('EPSNombre')
+                ->table('PAR_PARAMETROS')
+                ->where('area_id', self::AREA_PARAMETROS_EPS)
+                ->where(function ($query) {
+                    $query->whereNull('activo')
+                        ->orWhere('activo', 1);
+                })
+                ->orderByRaw('NVL(parametro_orden, 999999)')
+                ->orderBy('parametro_valor')
                 ->get([
-                    'id',
-                    DB::raw('EPSNombre as eps_nombre'),
+                    DB::raw('parametro_id as id'),
+                    DB::raw('parametro_valor as eps_nombre'),
                 ])
                 ->mapWithKeys(function ($item) {
                     $id = trim((string) ($item->id ?? ''));
@@ -743,12 +750,17 @@ class EmpleadoIncapacidadService
     {
         return Cache::remember('empleados_incapacidades_arl_oracle', self::CACHE_TTL_SECONDS, function () {
             return DB::connection(self::CONNECTION)
-                ->table('EMP_ARL')
-                ->where('estado', 'ACTIVO')
-                ->orderBy('ARLNombre')
+                ->table('PAR_PARAMETROS')
+                ->where('area_id', self::AREA_PARAMETROS_ARL)
+                ->where(function ($query) {
+                    $query->whereNull('activo')
+                        ->orWhere('activo', 1);
+                })
+                ->orderByRaw('NVL(parametro_orden, 999999)')
+                ->orderBy('parametro_valor')
                 ->get([
-                    'id',
-                    DB::raw('ARLNombre as arl_nombre'),
+                    DB::raw('parametro_id as id'),
+                    DB::raw('parametro_valor as arl_nombre'),
                 ])
                 ->mapWithKeys(function ($item) {
                     $id = trim((string) ($item->id ?? ''));
@@ -987,8 +999,22 @@ class EmpleadoIncapacidadService
             ->join('EMP_INCAPACIDADES as i', 'i.id', '=', 'n.id_origen')
             ->leftJoin('EMP_CAUSAS_INCAPACIDAD as c', 'c.id', '=', 'i.id_causa_incapacidad')
             ->leftJoin('EMP_DIAGNOSTICOS as d', 'd.id', '=', 'i.id_diagnostico')
-            ->leftJoin('EMP_EPS as e', 'e.id', '=', 'i.id_eps')
-            ->leftJoin('EMP_ARL as a', 'a.id', '=', 'i.id_arl')
+            ->leftJoin('PAR_PARAMETROS as e', function ($join) {
+                $join->on('e.parametro_id', '=', 'i.id_eps')
+                    ->where('e.area_id', self::AREA_PARAMETROS_EPS)
+                    ->where(function ($query) {
+                        $query->whereNull('e.activo')
+                            ->orWhere('e.activo', 1);
+                    });
+            })
+            ->leftJoin('PAR_PARAMETROS as a', function ($join) {
+                $join->on('a.parametro_id', '=', 'i.id_arl')
+                    ->where('a.area_id', self::AREA_PARAMETROS_ARL)
+                    ->where(function ($query) {
+                        $query->whereNull('a.activo')
+                            ->orWhere('a.activo', 1);
+                    });
+            })
             ->leftJoin('EMP_NOVEDADES_TIPO as t', 't.id', '=', 'n.id_tipo_novedad')
             ->where(function ($query) {
                 $query->whereRaw("UPPER(NVL(t.tabla, '')) = ?", ['EMP_INCAPACIDADES'])
@@ -1014,10 +1040,10 @@ class EmpleadoIncapacidadService
                 'c.causa',
                 DB::raw('d.CodigoCie as diagnostico_codigo'),
                 DB::raw('d.DescCie as diagnostico_descripcion'),
-                DB::raw('e.EPSNombre as eps_nombre'),
-                DB::raw('e.EPSNit as eps_nit'),
-                DB::raw('a.ARLNombre as arl_nombre'),
-                DB::raw('a.ARLNit as arl_nit'),
+                DB::raw('e.parametro_valor as eps_nombre'),
+                DB::raw('NULL as eps_nit'),
+                DB::raw('a.parametro_valor as arl_nombre'),
+                DB::raw('NULL as arl_nit'),
                 DB::raw('NVL(t.requiere_bloqueo, 0) as requiere_bloqueo_tipo'),
                 DB::raw('NVL(t.id_bloqueo_logtrans, 0) as id_bloqueo_logtrans_tipo'),
                 DB::raw('NVL(t.id_bloqueo_fics, 0) as id_bloqueo_fics_tipo'),
@@ -1145,4 +1171,3 @@ class EmpleadoIncapacidadService
         $this->documentalStorage->eliminarMultiplesSiExisten($rutas);
     }
 }
-

@@ -67,6 +67,9 @@ class Permisos
     // GESTIÓN WEB
     const GESTION_WEB_ACCEDER = 'gestion_web.acceder';
     const GESTION_WEB_GESTION_APP_MOVIL_ACCEDER = 'gestion_web.gestion_app_movil.acceder';
+    const GESTION_WEB_GESTION_APP_MOVIL_NOTIFICACIONES = 'gestion_web.gestion_app_movil.notificaciones';
+    const GESTION_WEB_GESTION_APP_MOVIL_RECURSOS_DIGITALES = 'gestion_web.gestion_app_movil.recursos_digitales';
+    const GESTION_WEB_GESTION_APP_MOVIL_USUARIOS = 'gestion_web.gestion_app_movil.usuarios';
 
     // PAGOS Y RECAUDOS
     const PAGOS_Y_RECAUDOS_ACCEDER = 'pagos_y_recaudos.acceder';

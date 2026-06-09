@@ -74,6 +74,20 @@ return [
             'report' => false,
         ],
 
+        'documental_sftp_alt' => [
+            'driver' => 'sftp',
+            'host' => env('DOCUMENTAL_ALT_SFTP_HOST'),
+            'username' => env('DOCUMENTAL_ALT_SFTP_USERNAME'),
+            'password' => env('DOCUMENTAL_ALT_SFTP_PASSWORD'),
+            'port' => (int) env('DOCUMENTAL_ALT_SFTP_PORT', 22),
+            'root' => env('DOCUMENTAL_ALT_SFTP_ROOT', '/var/www/html'),
+            'privateKey' => ($privateKeyAlt = trim((string) env('DOCUMENTAL_ALT_SFTP_PRIVATE_KEY', ''))) !== '' ? $privateKeyAlt : null,
+            'passphrase' => ($passphraseAlt = trim((string) env('DOCUMENTAL_ALT_SFTP_PASSPHRASE', ''))) !== '' ? $passphraseAlt : null,
+            'timeout' => (int) env('DOCUMENTAL_ALT_SFTP_TIMEOUT', 30),
+            'throw' => false,
+            'report' => false,
+        ],
+
     ],
 
     /*

@@ -135,22 +135,8 @@ class EmpleadoSolicitudController extends Controller
         $novedades = $this->novedadService->obtenerNovedadesPaginadas($filtros, 25);
 
         $puedeGestionarRrhh = $this->puedeGestionarPermisosRrhh($request->user());
-        $novedades->getCollection()->transform(function ($novedad) use ($puedeGestionarRrhh) {
-            $novedad->inicio_fecha = $this->formatearFechaSolo($novedad->fecha_inicio);
-            $novedad->inicio_hora = $this->formatearHora12DesdeValor($novedad->fecha_inicio);
-            $novedad->fin_fecha = $this->formatearFechaSolo($novedad->fecha_fin);
-            $novedad->fin_hora = $this->formatearHora12DesdeValor($novedad->fecha_fin);
-            $novedad->hora_inicio_24 = $this->formatearHora24DesdeValor($novedad->fecha_inicio);
-            $novedad->hora_fin_24 = $this->formatearHora24DesdeValor($novedad->fecha_fin);
-            $tipo = strtoupper(trim((string) ($novedad->tipo_codigo ?? '')));
-            $estado = strtoupper(trim((string) ($novedad->estado ?? '')));
-            $novedad->puede_ver_gestion = $puedeGestionarRrhh
-                && $tipo === 'INCAPACIDAD'
-                && $estado === 'APROBADO'
-                && ! empty($novedad->origen_gestion_url);
-
-            return $novedad;
-        });
+        $this->prepararBanderasListadoGlobal($novedades, $puedeGestionarRrhh);
+        $this->prepararNovedadesListado($novedades, self::ESTADOS_LISTA_SOLO_APROBADAS, 'global');
 
         return view('gestionrrhh::novedades.novedades_lista', [
             'novedades' => $novedades,
@@ -244,44 +230,8 @@ class EmpleadoSolicitudController extends Controller
 
         $novedades = $this->novedadService->obtenerMisSolicitudesPaginadas($identificadoresActor, $filtros, 20);
 
-        $novedades->getCollection()->transform(function ($novedad) use ($request) {
-            $estado = (string) ($novedad->estado ?? '');
-            $tipo = strtoupper(trim((string) ($novedad->tipo_codigo ?? '')));
-            $usuario = $request->user();
-            $documentoActor = $this->permisoService->obtenerDocumentoUsuario($usuario);
-            $documentoPersona = trim((string) ($novedad->documento_persona ?? ''));
-
-            $puedeAnularPermiso = $tipo === 'PERMISO'
-                && $this->permisoService->puedeAnular($usuario, $documentoPersona, $estado);
-            $puedeAnularPermisoPermanente = $tipo === 'PERMISO_PERMANENTE'
-                && $documentoActor !== ''
-                && $documentoActor === $documentoPersona
-                && ! in_array($estado, [
-                    EmpleadoPermisoPermanenteService::ESTADO_APROBADO,
-                    EmpleadoPermisoPermanenteService::ESTADO_RECHAZADO,
-                    EmpleadoPermisoPermanenteService::ESTADO_ANULADO,
-                ], true);
-            $puedeAnularVacacion = $tipo === 'VACACION'
-                && $documentoActor !== ''
-                && $documentoActor === $documentoPersona
-                && ! in_array($estado, [
-                    EmpleadoVacacionService::ESTADO_APROBADO,
-                    EmpleadoVacacionService::ESTADO_RECHAZADO,
-                    EmpleadoVacacionService::ESTADO_ANULADO,
-                ], true);
-            $puedeAnularIncapacidad = $tipo === 'INCAPACIDAD'
-                && $documentoActor !== ''
-                && $documentoActor === $documentoPersona
-                && ! in_array($estado, [
-                    EmpleadoIncapacidadService::ESTADO_APROBADO,
-                    EmpleadoIncapacidadService::ESTADO_RECHAZADO,
-                    EmpleadoIncapacidadService::ESTADO_ANULADO,
-                ], true);
-
-            $novedad->puede_anular = $puedeAnularPermiso || $puedeAnularPermisoPermanente || $puedeAnularVacacion || $puedeAnularIncapacidad;
-
-            return $novedad;
-        });
+        $this->prepararBanderasMisSolicitudes($novedades, $request->user(), $documentoActor);
+        $this->prepararNovedadesListado($novedades, self::ESTADOS_LISTA_NO_APROBADAS, 'mis');
 
         return view('gestionrrhh::novedades.novedades_lista', [
             'novedades' => $novedades,
@@ -312,6 +262,7 @@ class EmpleadoSolicitudController extends Controller
         ];
 
         $novedades = $this->novedadService->obtenerMisNovedadesPaginadas($documentoActor, $filtros, 20);
+        $this->prepararNovedadesListado($novedades, self::ESTADOS_LISTA_SOLO_APROBADAS, 'mis_novedades');
 
         return view('gestionrrhh::novedades.novedades_lista', [
             'novedades' => $novedades,
@@ -349,44 +300,8 @@ class EmpleadoSolicitudController extends Controller
         $usuario = $request->user();
         $documentoActor = trim((string) ($actor['documento'] ?? ''));
         $esSuperAdmin = (bool) ($actor['es_super_admin'] ?? false);
-        $novedades->getCollection()->transform(function ($novedad) use ($usuario, $documentoActor, $esSuperAdmin) {
-            $estadoFlujo = (string) ($novedad->estado ?? '');
-            $documentoEmpleado = trim((string) ($novedad->documento_persona ?? $novedad->id_persona ?? ''));
-            $tipoCodigo = strtoupper(trim((string) ($novedad->tipo_codigo ?? '')));
-            $esPermiso = $tipoCodigo === 'PERMISO';
-            $esPermisoPermanente = $tipoCodigo === 'PERMISO_PERMANENTE';
-            $esVacacion = $tipoCodigo === 'VACACION';
-            $puedeAprobarPermiso = $esPermiso
-                && $this->permisoService->puedeAprobarJefe($usuario, $documentoEmpleado, $estadoFlujo);
-            $puedeRechazarPermiso = $esPermiso
-                && $this->permisoService->puedeRechazarJefe($usuario, $documentoEmpleado, $estadoFlujo);
-            $puedeGestionarPermisoPermanente = $esPermisoPermanente
-                && $estadoFlujo === EmpleadoPermisoPermanenteService::ESTADO_RADICADO
-                && ($esSuperAdmin || $this->permisoService->puedeAprobarJefe($usuario, $documentoEmpleado, $estadoFlujo));
-
-            $tipoAprobadorVacacion = strtoupper(trim((string) ($novedad->tipo_aprobador ?? 'JEFE')));
-            $documentoAprobadorVacacion = trim((string) ($novedad->documento_aprobador ?? ''));
-            $puedeGestionarVacacionInicial = $esVacacion
-                && $estadoFlujo === EmpleadoVacacionService::ESTADO_RADICADO
-                && (
-                    $esSuperAdmin
-                    || (
-                        $tipoAprobadorVacacion === 'ASOCIADO'
-                        && $documentoActor !== ''
-                        && $documentoAprobadorVacacion !== ''
-                        && $documentoActor === $documentoAprobadorVacacion
-                    )
-                    || (
-                        $tipoAprobadorVacacion !== 'ASOCIADO'
-                        && $this->permisoService->puedeAprobarJefe($usuario, $documentoEmpleado, $estadoFlujo)
-                    )
-                );
-
-            $novedad->puede_aprobar_jefe = $puedeAprobarPermiso || $puedeGestionarPermisoPermanente || $puedeGestionarVacacionInicial;
-            $novedad->puede_rechazar_jefe = $puedeRechazarPermiso || $puedeGestionarPermisoPermanente || $puedeGestionarVacacionInicial;
-
-            return $novedad;
-        });
+        $this->prepararBanderasSolicitudesJefe($novedades, $usuario, $documentoActor, $esSuperAdmin);
+        $this->prepararNovedadesListado($novedades, self::ESTADOS_LISTA_NO_APROBADAS, 'jefe');
 
         return view('gestionrrhh::novedades.novedades_lista', [
             'novedades' => $novedades,
@@ -420,25 +335,8 @@ class EmpleadoSolicitudController extends Controller
         $novedades = $this->novedadService->obtenerNovedadesPaginadas($filtros, 20);
 
         $puedeGestionarRrhh = (bool) ($actor['puede_gestionar_permisos_rrhh'] ?? false);
-        $novedades->getCollection()->transform(function ($novedad) use ($puedeGestionarRrhh) {
-            $estadoFlujo = (string) ($novedad->estado ?? '');
-            $tipo = strtoupper(trim((string) ($novedad->tipo_codigo ?? '')));
-            $novedad->puede_aprobar_rrhh = $puedeGestionarRrhh && (
-                ($tipo === 'PERMISO' && $estadoFlujo === EmpleadoPermisoService::ESTADO_JEFE_APROBADO)
-                || ($tipo === 'PERMISO_PERMANENTE' && $estadoFlujo === EmpleadoPermisoPermanenteService::ESTADO_JEFE_APROBADO)
-                || ($tipo === 'VACACION' && $estadoFlujo === EmpleadoVacacionService::ESTADO_JEFE_APROBADO)
-                || ($tipo === 'INCAPACIDAD' && $estadoFlujo === 'RADICADO')
-            );
-            $novedad->puede_rechazar_rrhh = $puedeGestionarRrhh && (
-                ($tipo === 'PERMISO' && $estadoFlujo === EmpleadoPermisoService::ESTADO_JEFE_APROBADO)
-                || ($tipo === 'PERMISO_PERMANENTE' && $estadoFlujo === EmpleadoPermisoPermanenteService::ESTADO_JEFE_APROBADO)
-                || ($tipo === 'VACACION' && $estadoFlujo === EmpleadoVacacionService::ESTADO_JEFE_APROBADO)
-                || ($tipo === 'INCAPACIDAD' && $estadoFlujo === 'RADICADO')
-            );
-            $novedad->puede_ver_gestion = $tipo === 'INCAPACIDAD' && ! empty($novedad->origen_gestion_url);
-
-            return $novedad;
-        });
+        $this->prepararBanderasSolicitudesRrhh($novedades, $puedeGestionarRrhh);
+        $this->prepararNovedadesListado($novedades, self::ESTADOS_LISTA_RRHH, 'rrhh');
         return view('gestionrrhh::novedades.novedades_lista', [
             'novedades' => $novedades,
             'filtros' => $filtros,
@@ -796,6 +694,29 @@ class EmpleadoSolicitudController extends Controller
         return $this->redirigirConResultado($resultado, 'No fue posible anular el permiso.', 'Permiso anulado correctamente.');
     }
 
+    public function trazabilidad(Request $request, string $idNovedad)
+    {
+        $trazabilidad = $this->novedadService->obtenerTrazabilidadNovedad($idNovedad);
+        if (! $trazabilidad) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'No se encontro la solicitud.',
+            ], 404);
+        }
+
+        if (! $this->novedadService->usuarioPuedeConsultarNovedad($request->user(), $idNovedad)) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'No tienes autorizacion para consultar la trazabilidad de esta solicitud.',
+            ], 403);
+        }
+
+        return response()->json([
+            'ok' => true,
+            'data' => $trazabilidad,
+        ]);
+    }
+
     public function seguimiento(Request $request, string $idNovedad)
     {
         $seguimiento = $this->permisoService->obtenerSeguimientoPermiso($idNovedad);
@@ -1020,6 +941,229 @@ class EmpleadoSolicitudController extends Controller
         );
     }
 
+    private function prepararBanderasListadoGlobal($novedades, bool $puedeGestionarRrhh): void
+    {
+        $novedades->getCollection()->transform(function ($novedad) use ($puedeGestionarRrhh) {
+            $tipoCodigo = strtoupper(trim((string) ($novedad->tipo_codigo ?? '')));
+            $estado = strtoupper(trim((string) ($novedad->estado ?? '')));
+
+            $novedad->puede_ver_gestion = $puedeGestionarRrhh
+                && $tipoCodigo === 'INCAPACIDAD'
+                && $estado === EmpleadoPermisoService::ESTADO_APROBADO
+                && ! empty($novedad->origen_gestion_url);
+
+            return $novedad;
+        });
+    }
+
+    private function prepararBanderasMisSolicitudes($novedades, mixed $usuario, string $documentoActor): void
+    {
+        $novedades->getCollection()->transform(function ($novedad) use ($usuario, $documentoActor) {
+            $novedad->puede_anular = $this->puedeAnularNovedadListado($novedad, $usuario, $documentoActor);
+
+            return $novedad;
+        });
+    }
+
+    private function prepararBanderasSolicitudesJefe($novedades, mixed $usuario, string $documentoActor, bool $esSuperAdmin): void
+    {
+        $novedades->getCollection()->transform(function ($novedad) use ($usuario, $documentoActor, $esSuperAdmin) {
+            $estadoFlujo = (string) ($novedad->estado ?? '');
+            $documentoEmpleado = trim((string) ($novedad->documento_persona ?? $novedad->id_persona ?? ''));
+            $tipoCodigo = strtoupper(trim((string) ($novedad->tipo_codigo ?? '')));
+            $puedeAprobarPermiso = $tipoCodigo === 'PERMISO'
+                && $this->permisoService->puedeAprobarJefe($usuario, $documentoEmpleado, $estadoFlujo);
+            $puedeRechazarPermiso = $tipoCodigo === 'PERMISO'
+                && $this->permisoService->puedeRechazarJefe($usuario, $documentoEmpleado, $estadoFlujo);
+            $puedeGestionarPermisoPermanente = $tipoCodigo === 'PERMISO_PERMANENTE'
+                && $estadoFlujo === EmpleadoPermisoPermanenteService::ESTADO_RADICADO
+                && ($esSuperAdmin || $this->permisoService->puedeAprobarJefe($usuario, $documentoEmpleado, $estadoFlujo));
+
+            $tipoAprobadorVacacion = strtoupper(trim((string) ($novedad->tipo_aprobador ?? 'JEFE')));
+            $documentoAprobadorVacacion = trim((string) ($novedad->documento_aprobador ?? ''));
+            $puedeGestionarVacacionInicial = $tipoCodigo === 'VACACION'
+                && $estadoFlujo === EmpleadoVacacionService::ESTADO_RADICADO
+                && (
+                    $esSuperAdmin
+                    || (
+                        $tipoAprobadorVacacion === 'ASOCIADO'
+                        && $documentoActor !== ''
+                        && $documentoAprobadorVacacion !== ''
+                        && $documentoActor === $documentoAprobadorVacacion
+                    )
+                    || (
+                        $tipoAprobadorVacacion !== 'ASOCIADO'
+                        && $this->permisoService->puedeAprobarJefe($usuario, $documentoEmpleado, $estadoFlujo)
+                    )
+                );
+
+            $novedad->puede_aprobar_jefe = $puedeAprobarPermiso || $puedeGestionarPermisoPermanente || $puedeGestionarVacacionInicial;
+            $novedad->puede_rechazar_jefe = $puedeRechazarPermiso || $puedeGestionarPermisoPermanente || $puedeGestionarVacacionInicial;
+
+            return $novedad;
+        });
+    }
+
+    private function prepararBanderasSolicitudesRrhh($novedades, bool $puedeGestionarRrhh): void
+    {
+        $novedades->getCollection()->transform(function ($novedad) use ($puedeGestionarRrhh) {
+            $puedeGestionar = $this->puedeGestionarSolicitudRrhh($novedad, $puedeGestionarRrhh);
+
+            $novedad->puede_aprobar_rrhh = $puedeGestionar;
+            $novedad->puede_rechazar_rrhh = $puedeGestionar;
+            $novedad->puede_ver_gestion = strtoupper(trim((string) ($novedad->tipo_codigo ?? ''))) === 'INCAPACIDAD'
+                && ! empty($novedad->origen_gestion_url);
+
+            return $novedad;
+        });
+    }
+
+    private function prepararNovedadesListado($novedades, array $estadosDisponibles, string $modoVista): void
+    {
+        $novedades->getCollection()->transform(function ($novedad) use ($estadosDisponibles, $modoVista) {
+            return $this->decorarNovedadListado($novedad, $estadosDisponibles, $modoVista);
+        });
+    }
+
+    private function decorarNovedadListado(object $novedad, array $estadosDisponibles, string $modoVista): object
+    {
+        $tipoCodigo = strtoupper(trim((string) ($novedad->tipo_codigo ?? '')));
+        $detalle = trim((string) ($novedad->detalle_descripcion ?? ''));
+        $radicadoPorDocumento = trim((string) ($novedad->radicado_por_documento ?? $novedad->documento_radica ?? ''));
+        $radicadoPorNombre = trim((string) ($novedad->radicado_por_nombre ?? ''));
+        $detalleJornadaLabel = $this->resolverLabelJornadaListado($novedad->jornada ?? '');
+        $detalleResumen = $this->resolverDetalleResumenListado($novedad, $tipoCodigo, $detalle);
+        $documentoPersona = trim((string) ($novedad->documento_persona ?? $novedad->id_persona ?? ''));
+
+        $novedad->vista_tipo_codigo = $tipoCodigo;
+        $novedad->vista_tipo = trim((string) ($novedad->tipo_label ?? '')) !== '' ? trim((string) $novedad->tipo_label) : $tipoCodigo;
+        $novedad->vista_documento = $documentoPersona !== '' ? $documentoPersona : 'N/A';
+        $novedad->vista_empleado = trim((string) ($novedad->persona_nombre ?? '')) !== '' ? trim((string) $novedad->persona_nombre) : 'Sin nombre';
+        $novedad->vista_radicado_por = $radicadoPorNombre !== '' ? $radicadoPorNombre : ($radicadoPorDocumento !== '' ? $radicadoPorDocumento : 'N/A');
+        $novedad->vista_radicado_por_documento = $radicadoPorNombre !== '' && $radicadoPorDocumento !== '' ? $radicadoPorDocumento : '';
+        $novedad->vista_detalle = $detalleResumen;
+        $novedad->vista_motivo = $tipoCodigo === 'PERMISO' ? trim((string) ($novedad->motivo ?? '')) : '';
+        $novedad->vista_otro_motivo = $tipoCodigo === 'PERMISO' ? trim((string) ($novedad->otro_motivo ?? '')) : '';
+        $novedad->vista_jornada = $tipoCodigo === 'PERMISO_PERMANENTE' ? $detalleJornadaLabel : '';
+        $novedad->vista_horario_fijo = $tipoCodigo === 'PERMISO_PERMANENTE'
+            ? ((int) ($novedad->horario_fijo ?? 0) === 1 ? 'SI' : 'NO')
+            : '';
+        $novedad->vista_horario_j1 = $tipoCodigo === 'PERMISO_PERMANENTE' && trim((string) ($novedad->hora_salida_j1 ?? '')) !== ''
+            ? trim((string) $novedad->hora_salida_j1).' - '.trim((string) ($novedad->hora_ingreso_j1 ?? ''))
+            : '';
+        $novedad->vista_horario_j2 = $tipoCodigo === 'PERMISO_PERMANENTE' && trim((string) ($novedad->hora_salida_j2 ?? '')) !== ''
+            ? trim((string) $novedad->hora_salida_j2).' - '.trim((string) ($novedad->hora_ingreso_j2 ?? ''))
+            : '';
+        $novedad->vista_causa = $tipoCodigo === 'INCAPACIDAD' ? trim((string) ($novedad->causa ?? '')) : '';
+        $novedad->vista_diagnostico = $tipoCodigo === 'INCAPACIDAD' && trim((string) ($novedad->diagnostico_codigo ?? '')) !== ''
+            ? trim((string) $novedad->diagnostico_codigo).' - '.trim((string) ($novedad->diagnostico_descripcion ?? ''))
+            : '';
+        $novedad->vista_eps = $tipoCodigo === 'INCAPACIDAD' ? trim((string) ($novedad->eps_nombre ?? '')) : '';
+        $novedad->vista_arl = $tipoCodigo === 'INCAPACIDAD' ? trim((string) ($novedad->arl_nombre ?? '')) : '';
+        $novedad->vista_adjuntos = (string) ((int) ($novedad->adjuntos_count ?? 0));
+        $novedad->vista_fecha_inicio = $this->formatearFechaHoraListado($novedad->fecha_inicio);
+        $novedad->vista_fecha_fin = $this->formatearFechaHoraListado($novedad->fecha_fin);
+        $novedad->vista_estado = (string) ($estadosDisponibles[$novedad->estado] ?? $novedad->estado);
+        $novedad->vista_puede_rechazar_actual = $modoVista === 'jefe'
+            ? !empty($novedad->puede_rechazar_jefe)
+            : !empty($novedad->puede_rechazar_rrhh);
+        $novedad->vista_es_incapacidad_gestion_rrhh = $modoVista === 'rrhh' && $tipoCodigo === 'INCAPACIDAD';
+
+        return $novedad;
+    }
+
+    private function resolverDetalleResumenListado(object $novedad, string $tipoCodigo, string $detalle): string
+    {
+        if ($detalle !== '') {
+            return $detalle;
+        }
+
+        if ($tipoCodigo === 'INCAPACIDAD') {
+            $tipoIncapacidad = trim((string) ($novedad->tipo_incapacidad ?? ''));
+
+            return $tipoIncapacidad !== '' ? $tipoIncapacidad : 'N/A';
+        }
+
+        return 'N/A';
+    }
+
+    private function resolverLabelJornadaListado(mixed $jornada): string
+    {
+        $jornadaTexto = trim((string) $jornada);
+        $jornadaNormalizada = strtoupper(Str::ascii($jornadaTexto));
+
+        return match ($jornadaNormalizada) {
+            '1' => 'Jornada 1 (manana)',
+            '2' => 'Jornada 2 (tarde)',
+            '1,2' => 'Ambas jornadas',
+            'MANANA', 'MAÑANA', 'MAÃ‘ANA' => 'Manana (Jornada 1)',
+            'TARDE' => 'Tarde (Jornada 2)',
+            'AMBAS' => 'Ambas jornadas',
+            default => $jornadaTexto,
+        };
+    }
+
+    private function formatearFechaHoraListado(mixed $fecha): string
+    {
+        try {
+            return $fecha ? Carbon::parse($fecha)->format('d/m/Y h:i A') : 'N/A';
+        } catch (\Throwable) {
+            return 'N/A';
+        }
+    }
+
+    private function puedeAnularNovedadListado(object $novedad, mixed $usuario, string $documentoActor): bool
+    {
+        $estado = (string) ($novedad->estado ?? '');
+        $tipoCodigo = strtoupper(trim((string) ($novedad->tipo_codigo ?? '')));
+        $documentoPersona = trim((string) ($novedad->documento_persona ?? ''));
+
+        if ($tipoCodigo === 'PERMISO') {
+            return $this->permisoService->puedeAnular($usuario, $documentoPersona, $estado);
+        }
+
+        if ($documentoActor === '' || $documentoActor !== $documentoPersona) {
+            return false;
+        }
+
+        return match ($tipoCodigo) {
+            'PERMISO_PERMANENTE' => ! in_array($estado, [
+                EmpleadoPermisoPermanenteService::ESTADO_APROBADO,
+                EmpleadoPermisoPermanenteService::ESTADO_RECHAZADO,
+                EmpleadoPermisoPermanenteService::ESTADO_ANULADO,
+            ], true),
+            'VACACION' => ! in_array($estado, [
+                EmpleadoVacacionService::ESTADO_APROBADO,
+                EmpleadoVacacionService::ESTADO_RECHAZADO,
+                EmpleadoVacacionService::ESTADO_ANULADO,
+            ], true),
+            'INCAPACIDAD' => ! in_array($estado, [
+                EmpleadoIncapacidadService::ESTADO_APROBADO,
+                EmpleadoIncapacidadService::ESTADO_RECHAZADO,
+                EmpleadoIncapacidadService::ESTADO_ANULADO,
+            ], true),
+            default => false,
+        };
+    }
+
+    private function puedeGestionarSolicitudRrhh(object $novedad, bool $puedeGestionarRrhh): bool
+    {
+        if (! $puedeGestionarRrhh) {
+            return false;
+        }
+
+        $estadoFlujo = (string) ($novedad->estado ?? '');
+        $tipoCodigo = strtoupper(trim((string) ($novedad->tipo_codigo ?? '')));
+
+        return match ($tipoCodigo) {
+            'PERMISO' => $estadoFlujo === EmpleadoPermisoService::ESTADO_JEFE_APROBADO,
+            'PERMISO_PERMANENTE' => $estadoFlujo === EmpleadoPermisoPermanenteService::ESTADO_JEFE_APROBADO,
+            'VACACION' => $estadoFlujo === EmpleadoVacacionService::ESTADO_JEFE_APROBADO,
+            'INCAPACIDAD' => $estadoFlujo === 'RADICADO',
+            default => false,
+        };
+    }
+
     private function enviarCorreoNotificacionPendienteRrhhVacacion(string $idNovedad, array $actor): bool
     {
         return $this->notificacionService->enviarPendienteRrhhVacacion(
@@ -1131,30 +1275,4 @@ class EmpleadoSolicitudController extends Controller
         return $ttl;
     }
 
-    private function formatearFechaSolo(mixed $fecha): string
-    {
-        try {
-            return $fecha ? Carbon::parse($fecha)->format('d/m/Y') : 'N/A';
-        } catch (\Throwable) {
-            return 'N/A';
-        }
-    }
-
-    private function formatearHora12DesdeValor(mixed $fecha): string
-    {
-        try {
-            return $fecha ? Carbon::parse($fecha)->format('h:i A') : 'N/A';
-        } catch (\Throwable) {
-            return 'N/A';
-        }
-    }
-
-    private function formatearHora24DesdeValor(mixed $fecha): string
-    {
-        try {
-            return $fecha ? Carbon::parse($fecha)->format('H:i') : '';
-        } catch (\Throwable) {
-            return '';
-        }
-    }
 }

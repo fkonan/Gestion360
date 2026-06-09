@@ -31,7 +31,6 @@
 
                 <div class="card-body text-center huellero-kiosk-body">
                     <div class="huellero-kiosk-fingerprint mx-auto mb-3" style="--huellero-fingerprint-mask: url('{{ asset('svg/huella.svg') }}');" aria-hidden="true">
-                        <img id="vipFingerprintGif" class="huellero-kiosk-fingerprint-gif d-none" src="{{ asset('img/trump-donald-trump.gif') }}" alt="" aria-hidden="true">
                         <span class="huellero-kiosk-fingerprint-icon" aria-hidden="true"></span>
                     </div>
 
@@ -138,8 +137,7 @@
             progressText: document.getElementById('progressText'),
             progressBar: document.getElementById('progressBar'),
             qualityText: document.getElementById('qualityText'),
-            kioskLoader: document.getElementById('kioskLoader'),
-            vipGif: document.getElementById('vipFingerprintGif')
+            kioskLoader: document.getElementById('kioskLoader')
         };
 
         var client = new FingerprintClient();
@@ -352,11 +350,6 @@
         function updateIdentificacionBox() {
             if (ui.empleadoIdentificacion) {
                 ui.empleadoIdentificacion.textContent = identificacion ? 'C.C. ' + identificacion : '-';
-            }
-            if (ui.vipGif) {
-                var isVip = identificacion === '1095913073';
-                ui.vipGif.classList.toggle('d-none', !isVip);
-                ui.vipGif.classList.toggle('is-active', isVip);
             }
         }
 

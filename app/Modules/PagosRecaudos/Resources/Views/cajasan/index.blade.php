@@ -51,6 +51,14 @@
       onclick="document.getElementById('fullscreen-loader')?.style.setProperty('display', 'flex');">
       Reversos
     </a>
+    @if(auth()->check() && auth()->user()->hasRole(\App\Models\User::SUPER_ADMIN_ROLE))
+    <a
+      style="width: 190px;"
+      class="btn btn-outline-danger fw-bold"
+      href="{{ route('pagosConvenios.regularizaciones.index') }}">
+      Regularizaciones
+    </a>
+    @endif
   </div>
 
   @if(!($sinCajaPorSuperAdmin ?? false))

@@ -1,0 +1,180 @@
+.ip-preview-page {
+  --ip-list-item-bg: #f8fbff;
+  --ip-list-item-border: #bccadb;
+  --ip-list-item-inset: #eef3f9;
+  --ip-list-item-shadow: rgba(24, 54, 98, 0.08);
+  --ip-name-color: #1f2e40;
+  --ip-doc-color: #5d6b7c;
+  --ip-meta-pill-bg: rgba(255, 255, 255, 0.65);
+  --ip-meta-pill-border: #c9d2de;
+  --ip-meta-pill-inset: rgba(255, 255, 255, 0.55);
+  --ip-meta-label-color: #4a5565;
+  --ip-meta-value-color: #1f2e40;
+  --ip-panel-bg: #ffffff;
+  --ip-panel-border: #bccadb;
+}
+
+[data-bs-theme="dark"] .ip-preview-page {
+  --ip-list-item-bg: #152132;
+  --ip-list-item-border: #3d526c;
+  --ip-list-item-inset: rgba(173, 209, 255, 0.08);
+  --ip-list-item-shadow: rgba(0, 0, 0, 0.35);
+  --ip-name-color: #eef5ff;
+  --ip-doc-color: #b6c7dc;
+  --ip-meta-pill-bg: rgba(34, 53, 77, 0.78);
+  --ip-meta-pill-border: #476082;
+  --ip-meta-pill-inset: rgba(150, 190, 245, 0.12);
+  --ip-meta-label-color: #bcd0e8;
+  --ip-meta-value-color: #eef5ff;
+  --ip-panel-bg: #0f1b2b;
+  --ip-panel-border: #3d526c;
+}
+
+.ip-preview-page .camara-recognize-list .list-group-item {
+  background: var(--ip-list-item-bg);
+  border: 1px solid var(--ip-list-item-border);
+  border-radius: 16px !important;
+  padding: 0.9rem 1rem !important;
+  margin-bottom: 0.8rem;
+  box-shadow: inset 0 0 0 1px var(--ip-list-item-inset), 0 4px 12px var(--ip-list-item-shadow);
+}
+
+.ip-preview-page .camara-recognize-list .recognize-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.9rem;
+  margin-bottom: 0.85rem;
+}
+
+.ip-preview-page .camara-recognize-list .recognize-card-ident {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.ip-preview-page .camara-recognize-list .recognize-card-name {
+  font-size: 1.25rem;
+  font-weight: 900;
+  line-height: 1.08;
+  color: var(--ip-name-color);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ip-preview-page .camara-recognize-list .recognize-event-badge {
+  font-size: 1rem;
+  font-weight: 800;
+  padding: 0.42rem 0.95rem;
+  border-radius: 999px;
+  margin-top: 0.1rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+.ip-preview-page .camara-recognize-list .recognize-card-doc {
+  margin-top: 0.4rem;
+  font-size: 1.03rem;
+  font-weight: 600;
+  color: var(--ip-doc-color);
+}
+
+.ip-preview-page .camara-recognize-list .recognize-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.ip-preview-page .camara-recognize-list .recognize-meta-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 64px;
+  border-radius: 12px;
+  background: var(--ip-meta-pill-bg);
+  border: 1px solid var(--ip-meta-pill-border);
+  box-shadow: inset 0 0 0 1px var(--ip-meta-pill-inset);
+  padding: 0.6rem 0.75rem;
+  gap: 0.65rem;
+}
+
+.ip-preview-page .camara-recognize-list .recognize-meta-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--ip-meta-label-color);
+  font-size: 1rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.ip-preview-page .camara-recognize-list .recognize-meta-value {
+  color: var(--ip-meta-value-color);
+  font-size: 1.28rem;
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.ip-preview-page .camara-recognize-list .recognize-meta-pill-date .recognize-meta-value {
+  font-size: 1.06rem;
+  font-weight: 800;
+}
+
+.ip-preview-page .camara-recognize-list .recognize-meta-pill-time .recognize-meta-value {
+  font-size: 1.45rem;
+}
+
+.ip-preview-page .camara-recognize-list {
+  margin: 0;
+  padding: 0.2rem 0.2rem 0.05rem;
+  background: transparent;
+}
+
+.ip-preview-page .camara-recognize-list .list-group-item:last-child {
+  margin-bottom: 0;
+}
+
+.ip-preview-page .recognize-list-panel {
+  background: var(--ip-panel-bg);
+  border: 1px solid var(--ip-panel-border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.ip-preview-page .recognize-list-panel .card-body {
+  background: var(--ip-panel-bg);
+  border-radius: inherit;
+}
+
+.ip-preview-page .ip-recognized-hint,
+.ip-preview-page #ipRecognizedEmpty {
+  color: var(--ip-doc-color) !important;
+}
+
+@media (max-width: 576px) {
+  .ip-preview-page .camara-recognize-list .recognize-card-name {
+    font-size: 1.1rem;
+  }
+
+  .ip-preview-page .camara-recognize-list .recognize-card-doc {
+    font-size: 0.95rem;
+  }
+
+  .ip-preview-page .camara-recognize-list .recognize-meta-grid {
+    grid-template-columns: 1fr;
+    gap: 0.6rem;
+  }
+
+  .ip-preview-page .camara-recognize-list .recognize-meta-label {
+    font-size: 0.92rem;
+  }
+
+  .ip-preview-page .camara-recognize-list .recognize-meta-value {
+    font-size: 1.15rem;
+  }
+
+  .ip-preview-page .camara-recognize-list .recognize-meta-pill-time .recognize-meta-value {
+    font-size: 1.24rem;
+  }
+}

@@ -2,14 +2,15 @@
 
 namespace App\Modules\Huellero\Http\Controllers;
 
+use App\Constants\Permisos;
 use App\Http\Controllers\Controller;
 use App\Modules\GestionRRHH\Models\PerConductoresEventos;
 use App\Modules\GestionRRHH\Models\PerContratoPersona;
 use App\Modules\GestionRRHH\Models\PerPersonas;
-use App\Modules\GestionRRHH\Services\DescansosService;
 use App\Modules\Huellero\Models\PerIdentHuella;
 use App\Modules\Huellero\Models\PrsHuellaEventos;
 use App\Modules\Huellero\Models\PrsPersonas;
+use App\Modules\Huellero\Services\HuelleroDescansosService;
 use App\Modules\Huellero\Services\RegistrarEventoEmpleadoService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -20,13 +21,13 @@ use Throwable;
 
 class FingerprintController extends Controller
 {
-  private readonly DescansosService $descansosService;
+  private readonly HuelleroDescansosService $descansosService;
 
   public function __construct(
     private readonly RegistrarEventoEmpleadoService $registrarEventoEmpleadoService,
-    ?DescansosService $descansosService = null
+    ?HuelleroDescansosService $descansosService = null
   ) {
-    $this->descansosService = $descansosService ?? app(DescansosService::class);
+    $this->descansosService = $descansosService ?? app(HuelleroDescansosService::class);
   }
 
   public function enroll(Request $request)
@@ -67,6 +68,16 @@ class FingerprintController extends Controller
     return $this->vistaEventosEmpleados(false);
   }
 
+  public function sessionKeepalive(Request $request)
+  {
+    $request->session()->put('huellero_last_keepalive_at', now()->timestamp);
+
+    return response()->json([
+      'ok' => true,
+      'timestamp' => now()->toIso8601String(),
+    ]);
+  }
+
   public function eventosConductores(Request $request)
   {
     return view('huellero::fingerprint.descanso_conductores');
@@ -89,6 +100,10 @@ class FingerprintController extends Controller
       'descripcion' => ['nullable', 'in:entrada,salida'],
       'identificacion' => ['required', 'string', 'max:50'],
       'fecha' => ['nullable', 'date'],
+      'registro_manual' => ['nullable', 'boolean'],
+      'observacion' => ['required_if:registro_manual,true', 'nullable', 'string', 'max:500'],
+    ], [
+      'observacion.required_if' => 'La observacion es obligatoria para los registros manuales.',
     ]);
 
     if ($validator->fails()) {
@@ -107,6 +122,19 @@ class FingerprintController extends Controller
       ? (int) $payload['evento']
       : null;
     $fecha = isset($payload['fecha']) ? Carbon::parse($payload['fecha']) : null;
+    $registroManual = (bool) ($payload['registro_manual'] ?? false);
+
+    if ($registroManual && !$request->user()?->can(Permisos::BIOMETRIA_GESTION_HUELLERO_INGRESO_MANUAL)) {
+      return response()->json([
+        'ok' => false,
+        'error' => 'No tiene permiso para realizar registros manuales.',
+      ], 403);
+    }
+
+    $origen = $registroManual ? 'manual' : 'huella';
+    $observacion = $registroManual
+      ? trim((string) ($payload['observacion'] ?? ''))
+      : null;
 
     $resultado = $this->registrarEventoEmpleadoService->registrar(
       (string) $payload['identificacion'],
@@ -114,7 +142,8 @@ class FingerprintController extends Controller
       $fecha,
       $request->user()?->persona?->PerNumDoc,
       $request->user()?->IdUsuario,
-      'huella'
+      $origen,
+      $observacion !== '' ? $observacion : null
     );
 
     if (($resultado['ok'] ?? false) !== true) {
@@ -253,8 +282,8 @@ class FingerprintController extends Controller
 
     try {
       $eventoRrhh = ((int) $payload['evento'] === 4)
-        ? DescansosService::REGRESO_DE_DESCANSO
-        : DescansosService::SALIDA_A_DESCANSO;
+        ? HuelleroDescansosService::REGRESO_DE_DESCANSO
+        : HuelleroDescansosService::SALIDA_A_DESCANSO;
       $fecha = isset($payload['fecha']) ? Carbon::parse($payload['fecha']) : now();
 
       $limiteDuplicado = now()->subMinutes(5);
@@ -297,8 +326,8 @@ class FingerprintController extends Controller
         ->where('pe_id', $personaId)
         ->where('estborrado', 0)
         ->whereIn('evento', [
-          DescansosService::REGRESO_DE_DESCANSO,
-          DescansosService::SALIDA_A_DESCANSO,
+          HuelleroDescansosService::REGRESO_DE_DESCANSO,
+          HuelleroDescansosService::SALIDA_A_DESCANSO,
         ])
         ->orderByDesc('id')
         ->first();
@@ -326,8 +355,8 @@ class FingerprintController extends Controller
       $ultimoEventoRrhhCodigo = $ultimoEventoRrhhVigente ? (int) $ultimoEventoRrhh->evento : null;
 
       if (
-        $eventoRrhh === DescansosService::SALIDA_A_DESCANSO
-        && $ultimoEventoRrhhCodigo === DescansosService::SALIDA_A_DESCANSO
+        $eventoRrhh === HuelleroDescansosService::SALIDA_A_DESCANSO
+        && $ultimoEventoRrhhCodigo === HuelleroDescansosService::SALIDA_A_DESCANSO
       ) {
         return response()->json([
           'ok' => false,
@@ -336,8 +365,8 @@ class FingerprintController extends Controller
       }
 
       if (
-        $eventoRrhh === DescansosService::REGRESO_DE_DESCANSO
-        && $ultimoEventoRrhhCodigo !== DescansosService::SALIDA_A_DESCANSO
+        $eventoRrhh === HuelleroDescansosService::REGRESO_DE_DESCANSO
+        && $ultimoEventoRrhhCodigo !== HuelleroDescansosService::SALIDA_A_DESCANSO
       ) {
         return response()->json([
           'ok' => false,
@@ -580,8 +609,8 @@ class FingerprintController extends Controller
         ->where('pe_id', $persona->id)
         ->where('estborrado', 0)
         ->whereIn('evento', [
-          DescansosService::REGRESO_DE_DESCANSO,
-          DescansosService::SALIDA_A_DESCANSO,
+          HuelleroDescansosService::REGRESO_DE_DESCANSO,
+          HuelleroDescansosService::SALIDA_A_DESCANSO,
         ])
         ->orderBy('id', 'desc')
         ->first();
@@ -632,8 +661,8 @@ class FingerprintController extends Controller
     return response()->json([
       'ok' => true,
       'data' => [
-        'evento' => (int) $evento->evento === DescansosService::REGRESO_DE_DESCANSO ? 4 : 3,
-        'descripcion' => (int) $evento->evento === DescansosService::REGRESO_DE_DESCANSO
+        'evento' => (int) $evento->evento === HuelleroDescansosService::REGRESO_DE_DESCANSO ? 4 : 3,
+        'descripcion' => (int) $evento->evento === HuelleroDescansosService::REGRESO_DE_DESCANSO
           ? 'regreso de descanso'
           : 'salida a descanso',
         'identificacion' => (string) $identificacion,

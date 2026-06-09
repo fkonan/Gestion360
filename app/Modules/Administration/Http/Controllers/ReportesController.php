@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Administration\Models\Reporteador;
 use App\Modules\Administration\Services\Reportes\ReporteActDatosService as ReportesReporteActDatosService;
 use App\Modules\Administration\Services\Reportes\ReportePoliticasService;
+use App\Modules\Administration\Services\Reportes\ReporteRangoFechasService;
 use App\Modules\Administration\Services\Reportes\ReportesService;
 use App\Modules\GestionWeb\Models\FitTipoVehiculos;
 use Carbon\Carbon;
@@ -15,18 +16,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use InvalidArgumentException;
 
 class ReportesController extends Controller
 {
-    private const REPORTES_RANGO_MAXIMO_MESES = [
-        7 => 6,
-        99 => 1,
-    ];
-
-    private const REPORTES_SIN_LIMITE_FECHAS = [
-        9,
-    ];
-
     private const REPORTES_VISTA_LIMITADA = [
         21 => 3000,
         99 => 3000,
@@ -38,38 +31,30 @@ class ReportesController extends Controller
     ];
 
     // vista general para el formulario de reportes, aca se genera el formulario en base a los parametros
-    public function mostrarFormulario($id)
+    public function mostrarFormulario($id, ReporteRangoFechasService $reporteRangoFechasService)
     {
-        $reporte = Reporteador::select('parametros', 'origen_db')->findOrFail($id);
+        $reporte = Reporteador::select('id', 'parametros', 'origen_db', 'max_meses_consulta')->findOrFail($id);
         $origen_db = $reporte->origen_db;
 
-        // Decodificar parámetros
+        // Decodificar parametros
         $parametrosArray = json_decode($reporte->parametros, true) ?? [];
 
         // Indexar por nombre
         $parametros = collect($parametrosArray)->keyBy('nombre');
 
-        // Hay algún parámetro activo
+        // Hay algun parametro activo
         $tieneFechaInicio = isset($parametros['paramFechaInicio']);
         $tieneFechaFin = isset($parametros['paramFechaFin']);
-        $limiteMeses = $this->obtenerLimiteMesesReporte((int) $id);
-
         $hayParametros = $parametros->isNotEmpty();
 
-        // Mensaje de cabecera reporte
-        if (! $tieneFechaInicio && ! $tieneFechaFin) {
-            $mensajeCabecera = $hayParametros
-              ? 'Este reporte no requiere de un rango de fechas.'
-              : 'Este reporte no requiere parámetros.';
-        } elseif ($limiteMeses === null) {
-            $mensajeCabecera = 'Este reporte no tiene restriccion maxima en el rango de fechas.';
-        } elseif ($limiteMeses > 1) {
-            $mensajeCabecera = "El rango de fechas no puede ser mayor a {$limiteMeses} meses.";
-        } else {
-            $mensajeCabecera = 'El rango de fechas no puede ser mayor a 30 días.';
-        }
+        $mensajeCabecera = $reporteRangoFechasService->construirMensajeCabecera(
+            $tieneFechaInicio,
+            $tieneFechaFin,
+            $hayParametros,
+            $reporte
+        );
 
-        // ======== CATEGORÍAS VEHÍCULO ========
+        // ======== CATEGORIAS VEHICULO ========
         $categorias = isset($parametros['paramCategoriaVehiculo'])
           ? FitTipoVehiculos::select('servicio')
               ->whereIn('descripcion', ['BUS', 'BUSETA', 'MICROBUS'])
@@ -124,91 +109,75 @@ class ReportesController extends Controller
     }
 
     // bootstrap table con los resultados del reporte
-    public function show(Request $request, ReportesService $reportesService)
-    {
-        // Validacion campos obligatorios
-        $validator = Validator::make($request->all(), [
-            'id' => 'required|exists:reporteador,id',
-            'fechaInicio' => 'date',
-            'fechaFin' => 'date|after_or_equal:fechaInicio',
-        ], [
-            'id.required' => 'El reporte es obligatorio.',
-            'id.exists' => 'El reporte no existe.',
-            'fechaInicio.date' => 'La fecha de inicio debe ser una fecha válida.',
-            'fechaFin.date' => 'La fecha de fin debe ser una fecha válida.',
-            'fechaFin.after_or_equal' => 'La fecha de fin debe ser igual o posterior a la fecha de inicio.',
-        ]);
+    public function show(
+        Request $request,
+        ReportesService $reportesService,
+        ReporteRangoFechasService $reporteRangoFechasService
+    ) {
+        $input = $this->normalizarInputReporte($request->all());
+        $validator = $this->crearValidadorSolicitudReporte($input);
 
         if ($validator->fails()) {
             return sweetAlert($validator->errors()->first(), 'error');
         }
 
-        // Validar rango de fechas segun la configuracion del reporte
-        $id = $request->input('id');
+        $id = (int) $input['id'];
         $reporte = Reporteador::findOrFail($id);
-        $limiteMeses = $this->obtenerLimiteMesesReporte((int) $id);
 
-        $fechaInicio = Carbon::parse($request->fechaInicio);
-        $fechaFin = Carbon::parse($request->fechaFin);
-
-        if ($limiteMeses !== null) {
-            $fechaMaxima = $fechaInicio->copy()->addMonthsNoOverflow($limiteMeses);
-
-            if ($fechaInicio->diffInMonths($fechaFin) > $limiteMeses || $fechaFin->gt($fechaMaxima)) {
-                $mensajeRango = $limiteMeses > 1 ? "{$limiteMeses} meses" : '1 mes';
-
-                return sweetAlert("El rango entre las fechas no puede ser mayor a {$mensajeRango}.", 'error');
-            }
+        try {
+            [$fechaInicio, $fechaFin] = $this->normalizarFechasReporte(
+                $input,
+                $reporte,
+                $reporteRangoFechasService
+            );
+        } catch (InvalidArgumentException $e) {
+            return sweetAlert($e->getMessage(), 'error');
         }
 
         $nombreReporte = $reporte->nombre;
         $nombreDocExcel = normalizarNombre($nombreReporte);
 
-        $params = $request->all();
-        $params['fechaInicio'] = $fechaInicio->toDateString();
-        $params['fechaFin'] = $fechaFin->toDateString();
+        $params = $input;
+        $this->aplicarFechasNormalizadas($params, $fechaInicio, $fechaFin);
 
         // Area del reporte
         $areaReporte = $reporte->area;
 
-        // Busca slug y ruta a partir del nombre de área almacenado en BD
+        // Busca slug y ruta a partir del nombre de area almacenado en BD
         $rutaArea = $reportesService->obtenerRutaAreaPorNombre($areaReporte);
         $ruta = $rutaArea['ruta'] ?? url()->previous();
 
         return view('administration::reportes.tabla', compact('id', 'nombreReporte', 'nombreDocExcel', 'params', 'ruta'));
     }
 
-    private function obtenerLimiteMesesReporte(int $reporteId): ?int
-    {
-        $sinLimite = array_map('intval', (array) config(
-            'reporteador.reportes_rango_fechas.sin_limite',
-            self::REPORTES_SIN_LIMITE_FECHAS
-        ));
-
-        if (in_array($reporteId, $sinLimite, true)) {
-            return null;
-        }
-
-        $maxMesesPorReporte = (array) config(
-            'reporteador.reportes_rango_fechas.max_meses_por_reporte',
-            self::REPORTES_RANGO_MAXIMO_MESES
-        );
-
-        $limiteDefault = max(1, (int) config('reporteador.reportes_rango_fechas.default_meses', 1));
-        $limite = $maxMesesPorReporte[$reporteId] ?? $limiteDefault;
-
-        return max(1, (int) $limite);
-    }
-
     // Cargar datos de los reportes con la API
-    public function data(Request $request, ReportesService $reportesService)
-    {
+    public function data(
+        Request $request,
+        ReportesService $reportesService,
+        ReporteRangoFechasService $reporteRangoFechasService
+    ) {
         try {
             @set_time_limit(300);
-            // Obtener todos los parámetros dinámicos que no sean null
-            $params = collect($request->all())
+
+            $input = $this->normalizarInputReporte($request->all());
+            $validator = $this->crearValidadorSolicitudReporte($input);
+
+            if ($validator->fails()) {
+                return response()->json(['errors' => $validator->errors()], 422);
+            }
+
+            $reporte = Reporteador::findOrFail((int) $input['id']);
+            [$fechaInicio, $fechaFin] = $this->normalizarFechasReporte(
+                $input,
+                $reporte,
+                $reporteRangoFechasService
+            );
+
+            // Obtener todos los parametros dinamicos que no sean null
+            $params = collect($input)
                 ->reject(fn ($value) => $value === null || $value === 'null')
                 ->toArray();
+            $this->aplicarFechasNormalizadas($params, $fechaInicio, $fechaFin);
 
             $idReporte = (int) ($params['id'] ?? $params['idReporte'] ?? 0);
             if (isset(self::REPORTES_VISTA_LIMITADA[$idReporte])) {
@@ -230,6 +199,10 @@ class ReportesController extends Controller
                 'total' => count($data),
                 'rows' => $data,
             ], 200, [], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+        } catch (InvalidArgumentException $e) {
+            return response()->json([
+                'errors' => ['general' => [$e->getMessage()]],
+            ], 422);
         } catch (\Throwable $e) {
             Log::error('Error al obtener el reporte '.($request->id ?? '-').': '.$e->getMessage());
 
@@ -239,13 +212,36 @@ class ReportesController extends Controller
         }
     }
 
-    public function exportarCsv(Request $request, ReportesService $reportesService)
-    {
+    public function exportarCsv(
+        Request $request,
+        ReportesService $reportesService,
+        ReporteRangoFechasService $reporteRangoFechasService
+    ) {
         @set_time_limit(0);
 
-        $params = collect($request->all())
+        $input = $this->normalizarInputReporte($request->all());
+        $validator = $this->crearValidadorSolicitudReporte($input);
+
+        if ($validator->fails()) {
+            abort(422, $validator->errors()->first());
+        }
+
+        $reporte = Reporteador::findOrFail((int) $input['id']);
+
+        try {
+            [$fechaInicio, $fechaFin] = $this->normalizarFechasReporte(
+                $input,
+                $reporte,
+                $reporteRangoFechasService
+            );
+        } catch (InvalidArgumentException $e) {
+            abort(422, $e->getMessage());
+        }
+
+        $params = collect($input)
             ->reject(fn ($value) => $value === null || $value === 'null')
             ->toArray();
+        $this->aplicarFechasNormalizadas($params, $fechaInicio, $fechaFin);
 
         $idReporte = (int) ($params['id'] ?? $params['idReporte'] ?? 0);
         if (! in_array($idReporte, self::REPORTES_EXPORTACION_STREAM, true)) {
@@ -407,8 +403,8 @@ class ReportesController extends Controller
             'fechaInicio' => 'date',
             'fechaFin' => 'date|after_or_equal:fechaInicio',
         ], [
-            'fechaInicio.date' => 'La fecha de inicio debe ser una fecha válida.',
-            'fechaFin.date' => 'La fecha de fin debe ser una fecha válida.',
+            'fechaInicio.date' => 'La fecha de inicio debe ser una fecha valida.',
+            'fechaFin.date' => 'La fecha de fin debe ser una fecha valida.',
             'fechaFin.after_or_equal' => 'La fecha de fin debe ser igual o posterior a la fecha de inicio.',
         ]);
 
@@ -440,5 +436,57 @@ class ReportesController extends Controller
     public function cargarDataFirmaPoliticas()
     {
         return session('firmas') ?? [];
+    }
+
+    private function crearValidadorSolicitudReporte(array $input)
+    {
+        return Validator::make($input, [
+            'id' => 'required|exists:reporteador,id',
+            'fechaInicio' => 'date',
+            'fechaFin' => 'date|after_or_equal:fechaInicio',
+        ], [
+            'id.required' => 'El reporte es obligatorio.',
+            'id.exists' => 'El reporte no existe.',
+            'fechaInicio.date' => 'La fecha de inicio debe ser una fecha valida.',
+            'fechaFin.date' => 'La fecha de fin debe ser una fecha valida.',
+            'fechaFin.after_or_equal' => 'La fecha de fin debe ser igual o posterior a la fecha de inicio.',
+        ]);
+    }
+
+    private function normalizarInputReporte(array $input): array
+    {
+        if (! isset($input['id']) && isset($input['idReporte'])) {
+            $input['id'] = $input['idReporte'];
+        }
+
+        return $input;
+    }
+
+    private function normalizarFechasReporte(
+        array $input,
+        Reporteador $reporte,
+        ReporteRangoFechasService $reporteRangoFechasService
+    ): array {
+        $fechaInicio = $reporteRangoFechasService->normalizarFecha($input['fechaInicio'] ?? null);
+        $fechaFin = $reporteRangoFechasService->normalizarFecha($input['fechaFin'] ?? null);
+
+        $reporteRangoFechasService->validarRango($reporte, $fechaInicio, $fechaFin);
+
+        return [$fechaInicio, $fechaFin];
+    }
+
+    private function aplicarFechasNormalizadas(array &$params, ?Carbon $fechaInicio, ?Carbon $fechaFin): void
+    {
+        if ($fechaInicio) {
+            $params['fechaInicio'] = $fechaInicio->toDateString();
+        } else {
+            unset($params['fechaInicio']);
+        }
+
+        if ($fechaFin) {
+            $params['fechaFin'] = $fechaFin->toDateString();
+        } else {
+            unset($params['fechaFin']);
+        }
     }
 }

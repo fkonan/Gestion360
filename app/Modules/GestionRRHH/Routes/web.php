@@ -123,6 +123,7 @@ Route::prefix('gestionRRHH')->middleware(['auth', 'modulo.activo:2', 'rrhh.consu
             Route::post('/{idNovedad}/aprobar-rrhh', [EmpleadoSolicitudController::class, 'aprobarRrhh'])->name('aprobar-rrhh');
             Route::post('/{idNovedad}/rechazar', [EmpleadoSolicitudController::class, 'rechazar'])->name('rechazar');
             Route::post('/{idNovedad}/anular', [EmpleadoSolicitudController::class, 'anular'])->name('anular');
+            Route::get('/{idNovedad}/trazabilidad', [EmpleadoSolicitudController::class, 'trazabilidad'])->name('trazabilidad');
             Route::get('/{idNovedad}/seguimiento', [EmpleadoSolicitudController::class, 'seguimiento'])->name('seguimiento');
             Route::get('/{idNovedad}/pdf', [EmpleadoSolicitudController::class, 'pdf'])->name('pdf');
             Route::get('/{idNovedad}/documentos', [EmpleadoSolicitudController::class, 'documentos'])->name('documentos');
