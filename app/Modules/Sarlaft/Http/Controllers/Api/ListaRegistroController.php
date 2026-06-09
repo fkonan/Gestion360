@@ -5,18 +5,40 @@ declare(strict_types=1);
 namespace App\Modules\Sarlaft\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Sarlaft\Http\Requests\Api\ConsultarListaRequest;
 use App\Modules\Sarlaft\Http\Requests\Api\ExportarListasRequest;
 use App\Modules\Sarlaft\Models\ListaNegraInterna;
 use App\Modules\Sarlaft\Models\NovedadExportacion;
 use App\Modules\Sarlaft\Models\RegistroLista;
 use App\Modules\Sarlaft\Services\NovedadExportacionService;
+use App\Modules\Sarlaft\Services\ValidacionListaNegraService;
 use Illuminate\Http\JsonResponse;
 
 class ListaRegistroController extends Controller
 {
     public function __construct(
         private readonly NovedadExportacionService $novedadExportacionService,
+        private readonly ValidacionListaNegraService $validacionListaNegraService,
     ) {}
+
+    /**
+     * Consulta puntual: indica si un documento esta en alguna lista (vinculante
+     * o restrictiva). Verificacion en tiempo real para sistemas externos.
+     * No registra intento ni alerta: es solo una consulta.
+     */
+    public function consultar(ConsultarListaRequest $request): JsonResponse
+    {
+        $datos = $request->validated();
+
+        $resultado = $this->validacionListaNegraService->consultarPorIdentificacion(
+            numeroIdentificacion: (string) $datos['numero_documento'],
+            tipoDocumento: (string) $datos['tipo_documento'],
+        );
+
+        return response()->json([
+            'en_lista' => (bool) ($resultado['en_lista_negra'] ?? false),
+        ]);
+    }
 
     /**
      * Exportacion de listas vinculantes e internas.
@@ -183,6 +205,3 @@ class ListaRegistroController extends Controller
         ];
     }
 }
-
-
-

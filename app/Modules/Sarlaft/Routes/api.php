@@ -34,6 +34,7 @@ Route::prefix('v1')
     ->middleware([AutenticarSistemaConsumidor::class, RateLimitSistema::class])
     ->group(function (): void {
         Route::get('/listas/registros', [ListaRegistroController::class, 'index']);
+        Route::post('/listas/consultar', [ListaRegistroController::class, 'consultar']);
 
         Route::post('/intentos-operacion', [IntentoOperacionController::class, 'store']);
     });
