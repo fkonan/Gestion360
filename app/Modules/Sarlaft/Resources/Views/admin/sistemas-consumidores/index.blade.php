@@ -3,6 +3,33 @@
 @section('title', 'Sistemas Consumidores')
 
 @section('content')
+
+{{-- Banner secret generado (se muestra una sola vez) --}}
+@if(session('nuevo_client_secret'))
+<div class="alert alert-warning border border-warning shadow mb-4" role="alert">
+    <h6 class="fw-bold mb-2">
+        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+        Guarde estas credenciales — el secret NO se volverá a mostrar
+    </h6>
+    <div class="mb-1">
+        <span class="fw-semibold">Client ID:</span>
+        <code id="banner-client-id">{{ session('nuevo_client_id') }}</code>
+    </div>
+    <div class="mb-2">
+        <span class="fw-semibold">Client Secret:</span>
+        <code id="banner-client-secret">{{ session('nuevo_client_secret') }}</code>
+        <button type="button" class="btn btn-sm btn-outline-dark ms-2" onclick="copiarSecret()">
+            <i class="bi bi-clipboard"></i> Copiar
+        </button>
+        <span id="banner-copiado" class="text-success ms-2 d-none small">¡Copiado!</span>
+    </div>
+    <p class="mb-0 small text-muted">
+        <i class="bi bi-shield-lock me-1"></i>
+        Entregue estas credenciales a la empresa por un canal seguro.
+    </p>
+</div>
+@endif
+
 <div class="row g-4">
     {{-- Formulario nuevo sistema --}}
     <div class="col-lg-4">
@@ -34,9 +61,10 @@
                     <div class="mb-3">
                         <label for="modo_integracion" class="form-label">Modo de integración <span class="text-danger">*</span></label>
                         <select name="modo_integracion" id="modo_integracion" class="form-select @error('modo_integracion') is-invalid @enderror" required>
-                            <option value="pull" {{ old('modo_integracion', 'pull') === 'pull' ? 'selected' : '' }}>Pull (HTTP)</option>
-                            <option value="push" {{ old('modo_integracion') === 'push' ? 'selected' : '' }}>Push (recibe datos)</option>
-                            <option value="db"   {{ old('modo_integracion') === 'db'   ? 'selected' : '' }}>Lectura directa de BD</option>
+                            <option value="pull"     {{ old('modo_integracion', 'pull') === 'pull'     ? 'selected' : '' }}>Pull (HTTP)</option>
+                            <option value="push"     {{ old('modo_integracion') === 'push'             ? 'selected' : '' }}>Push (recibe datos)</option>
+                            <option value="db"       {{ old('modo_integracion') === 'db'               ? 'selected' : '' }}>Lectura directa de BD</option>
+                            <option value="consulta" {{ old('modo_integracion') === 'consulta'         ? 'selected' : '' }}>Consulta (JWT)</option>
                         </select>
                         @error('modo_integracion') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
@@ -80,7 +108,26 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="btn btn-success w-100">
+                    {{-- Bloque Consulta (JWT) --}}
+                    <div id="bloque-consulta" class="d-none">
+                        <p class="text-muted small mb-2"><i class="bi bi-key"></i> Configuración Consulta JWT</p>
+                        <div class="mb-3">
+                            <label for="scopes" class="form-label">Scopes</label>
+                            <input type="text" name="scopes" id="scopes"
+                                   class="form-control @error('scopes') is-invalid @enderror"
+                                   value="{{ old('scopes', 'sarlaft.listas.consultar') }}"
+                                   placeholder="sarlaft.listas.consultar">
+                            <div class="form-text">Permisos separados por espacio. Para consulta de listas: <code>sarlaft.listas.consultar</code></div>
+                            @error('scopes') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+                        <div class="alert alert-info small mb-0 py-2">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Al crear el sistema se generará un <strong>client_secret</strong> que se mostrará
+                            <strong>una sola vez</strong>. El <strong>client_id</strong> será el código del sistema.
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100 mt-3">
                         <i class="bi bi-plus-lg"></i> Crear Sistema
                     </button>
                 </form>
@@ -106,6 +153,7 @@
                         </thead>
                         <tbody>
                             @forelse($sistemas as $sistema)
+                            @php $modo = $sistema->modo_integracion ?? 'pull'; @endphp
                             <tr>
                                 <td>
                                     <div class="fw-semibold">{{ $sistema->nombre }}</div>
@@ -121,9 +169,6 @@
                                     <code class="user-select-all small">{{ substr($sistema->api_token ?? '', 0, 16) }}...</code>
                                 </td>
                                 <td>
-                                    @php
-                                        $modo = $sistema->modo_integracion ?? 'pull';
-                                    @endphp
                                     @if($modo === 'push')
                                         <span class="badge bg-warning text-dark">
                                             <i class="bi bi-arrow-up-circle"></i> Push
@@ -132,6 +177,10 @@
                                         <span class="badge bg-info text-dark"
                                               title="{{ $sistema->db_conexion }}: {{ $sistema->db_tabla }}">
                                             <i class="bi bi-database"></i> BD
+                                        </span>
+                                    @elseif($modo === 'consulta')
+                                        <span class="badge bg-dark">
+                                            <i class="bi bi-key"></i> Consulta (JWT)
                                         </span>
                                     @else
                                         @if($sistema->pull_endpoint)
@@ -159,9 +208,21 @@
                                         data-db-conexion="{{ $sistema->db_conexion }}"
                                         data-db-tabla="{{ $sistema->db_tabla }}"
                                         data-db-filtro="{{ $sistema->db_filtro_sistema_origen }}"
+                                        data-scopes="{{ $sistema->scopes }}"
                                         title="Editar configuración">
                                         <i class="bi bi-pencil"></i>
                                     </button>
+
+                                    @if($modo === 'consulta')
+                                    <form action="{{ route('sarlaft.sistemas-consumidores.regenerar-secret', $sistema) }}" method="POST" class="d-inline"
+                                          onsubmit="return confirm('¿Regenerar el secret? El actual dejará de funcionar.')">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm btn-outline-warning me-1" title="Regenerar secret">
+                                            <i class="bi bi-arrow-repeat"></i>
+                                        </button>
+                                    </form>
+                                    @endif
+
                                     <form action="{{ route('sarlaft.sistemas-consumidores.destroy', $sistema) }}" method="POST" class="d-inline" onsubmit="return confirm('Eliminar sistema {{ $sistema->nombre }}?')">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
@@ -213,6 +274,7 @@
                             <option value="pull">Pull (HTTP)</option>
                             <option value="push">Push (recibe datos)</option>
                             <option value="db">Lectura directa de BD</option>
+                            <option value="consulta">Consulta (JWT)</option>
                         </select>
                     </div>
 
@@ -249,11 +311,28 @@
                         </div>
                     </div>
 
-                    <div class="alert alert-info small mb-0">
+                    {{-- Bloque Consulta (modal) --}}
+                    <div id="edit-bloque-consulta" class="d-none">
+                        <p class="text-muted small mb-2"><i class="bi bi-key"></i> Configuración Consulta JWT</p>
+                        <div class="mb-3">
+                            <label for="edit_scopes" class="form-label">Scopes</label>
+                            <input type="text" name="scopes" id="edit_scopes" class="form-control"
+                                   placeholder="sarlaft.listas.consultar">
+                            <div class="form-text">Permisos separados por espacio.</div>
+                        </div>
+                        <div class="alert alert-secondary small mb-0 py-2">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Para regenerar el secret usá el botón <strong>Regenerar secret</strong>
+                            (<i class="bi bi-arrow-repeat"></i>) en la tabla.
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info small mb-0 mt-3">
                         <i class="bi bi-info-circle"></i>
                         En modo <strong>Pull</strong>, el comando <code>sarlaft:pull-intentos</code> consultará el endpoint enviando
                         <code>?fecha_desde=…&fecha_hasta=…</code> y esperará <code>{ "data": [ ... ] }</code>.<br>
-                        En modo <strong>Lectura de BD</strong>, leerá directamente la tabla Oracle configurada (sin endpoint HTTP).
+                        En modo <strong>Lectura de BD</strong>, leerá directamente la tabla Oracle configurada (sin endpoint HTTP).<br>
+                        En modo <strong>Consulta (JWT)</strong>, la empresa autentica con client_id + client_secret para verificar listas.
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -268,16 +347,39 @@
 
 @push('script')
 <script>
+    // --- Copiar secret del banner ---
+    function copiarSecret() {
+        const secretEl = document.getElementById('banner-client-secret');
+        const copiadoEl = document.getElementById('banner-copiado');
+        if (!secretEl) { return; }
+        navigator.clipboard.writeText(secretEl.textContent.trim()).then(function () {
+            if (copiadoEl) {
+                copiadoEl.classList.remove('d-none');
+                setTimeout(function () { copiadoEl.classList.add('d-none'); }, 2500);
+            }
+        }).catch(function () {
+            // Fallback para contextos sin HTTPS
+            const range = document.createRange();
+            range.selectNode(secretEl);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
+            document.execCommand('copy');
+            window.getSelection().removeAllRanges();
+        });
+    }
+
     // --- Toggle modo integración (form alta) ---
     (function () {
-        const selectModo  = document.getElementById('modo_integracion');
-        const bloquePull  = document.getElementById('bloque-pull');
-        const bloqueDb    = document.getElementById('bloque-db');
+        const selectModo     = document.getElementById('modo_integracion');
+        const bloquePull     = document.getElementById('bloque-pull');
+        const bloqueDb       = document.getElementById('bloque-db');
+        const bloqueConsulta = document.getElementById('bloque-consulta');
 
         function toggleBloques(modo) {
-            if (!bloquePull || !bloqueDb) { return; }
-            bloquePull.classList.toggle('d-none', modo !== 'pull');
-            bloqueDb.classList.toggle('d-none',   modo !== 'db');
+            if (!bloquePull || !bloqueDb || !bloqueConsulta) { return; }
+            bloquePull.classList.toggle('d-none',     modo !== 'pull');
+            bloqueDb.classList.toggle('d-none',       modo !== 'db');
+            bloqueConsulta.classList.toggle('d-none', modo !== 'consulta');
         }
 
         if (selectModo) {
@@ -290,15 +392,17 @@
 
     // --- Modal editar sistema ---
     (function () {
-        const modal       = document.getElementById('modalEditarSistema');
-        const editModo    = document.getElementById('edit_modo');
-        const editPull    = document.getElementById('edit-bloque-pull');
-        const editDb      = document.getElementById('edit-bloque-db');
+        const modal            = document.getElementById('modalEditarSistema');
+        const editModo         = document.getElementById('edit_modo');
+        const editPull         = document.getElementById('edit-bloque-pull');
+        const editDb           = document.getElementById('edit-bloque-db');
+        const editConsulta     = document.getElementById('edit-bloque-consulta');
 
         function toggleModalBloques(modo) {
-            if (!editPull || !editDb) { return; }
-            editPull.classList.toggle('d-none', modo !== 'pull');
-            editDb.classList.toggle('d-none',   modo !== 'db');
+            if (!editPull || !editDb || !editConsulta) { return; }
+            editPull.classList.toggle('d-none',     modo !== 'pull');
+            editDb.classList.toggle('d-none',       modo !== 'db');
+            editConsulta.classList.toggle('d-none', modo !== 'consulta');
         }
 
         if (modal) {
@@ -328,6 +432,9 @@
                 if (dbConexionEl) { dbConexionEl.value = btn?.dataset.dbConexion || ''; }
                 if (dbTablaEl)    { dbTablaEl.value    = btn?.dataset.dbTabla    || ''; }
                 if (dbFiltroEl)   { dbFiltroEl.value   = btn?.dataset.dbFiltro   || ''; }
+
+                const editScopesEl = document.getElementById('edit_scopes');
+                if (editScopesEl) { editScopesEl.value = btn?.dataset.scopes || ''; }
 
                 toggleModalBloques(modo);
 

@@ -35,6 +35,7 @@ Route::middleware('auth')->prefix('sarlaft')->name('sarlaft.')->group(function (
     Route::post('/sistemas-consumidores', [SistemaConsumidorController::class, 'store'])->name('sistemas-consumidores.store');
     Route::patch('/sistemas-consumidores/{sistema_consumidor}', [SistemaConsumidorController::class, 'update'])->name('sistemas-consumidores.update');
     Route::delete('/sistemas-consumidores/{sistema_consumidor}', [SistemaConsumidorController::class, 'destroy'])->name('sistemas-consumidores.destroy');
+    Route::post('/sistemas-consumidores/{sistema_consumidor}/regenerar-secret', [SistemaConsumidorController::class, 'regenerarSecret'])->name('sistemas-consumidores.regenerar-secret');
 
     Route::get('/sincronizacion', [SincronizacionController::class, 'index'])->name('sincronizacion.index');
     Route::post('/sincronizacion/listas', [SincronizacionController::class, 'storeLista'])->name('sincronizacion.listas.store');
