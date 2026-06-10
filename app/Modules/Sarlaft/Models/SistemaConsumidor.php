@@ -19,6 +19,8 @@ class SistemaConsumidor extends Model
         'nombre',
         'codigo',
         'api_token',
+        'client_secret',
+        'scopes',
         'estado',
         'modo_integracion',
         'limite_requests_minuto',
@@ -34,6 +36,7 @@ class SistemaConsumidor extends Model
     protected $hidden = [
         'api_token',
         'pull_token',
+        'client_secret',
     ];
 
     protected function casts(): array
@@ -47,5 +50,26 @@ class SistemaConsumidor extends Model
     public function intentos(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(IntentoOperacion::class, 'sistema_id');
+    }
+
+    /**
+     * Scopes del cliente como arreglo (el campo se guarda separado por espacios).
+     *
+     * @return array<int, string>
+     */
+    public function scopesArray(): array
+    {
+        $scopes = trim((string) $this->scopes);
+
+        if ($scopes === '') {
+            return [];
+        }
+
+        return collect(preg_split('/\s+/', $scopes) ?: [])
+            ->map(static fn (string $scope): string => trim($scope))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
     }
 }

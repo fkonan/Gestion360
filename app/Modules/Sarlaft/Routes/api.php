@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Sarlaft\Http\Controllers\Api\AuthController;
 use App\Modules\Sarlaft\Http\Controllers\Api\IntentoOperacionController;
 use App\Modules\Sarlaft\Http\Controllers\Api\ListaRegistroController;
 use App\Modules\Sarlaft\Http\Controllers\Api\MockSistemaExternoController;
@@ -30,11 +31,22 @@ if (! app()->isProduction()) {
         });
 }
 
-Route::prefix('v1')
-    ->middleware([AutenticarSistemaConsumidor::class, RateLimitSistema::class])
-    ->group(function (): void {
-        Route::get('/listas/registros', [ListaRegistroController::class, 'index']);
-        Route::post('/listas/consultar', [ListaRegistroController::class, 'consultar']);
+Route::prefix('v1')->group(function (): void {
+    // Emision de token JWT (client_credentials). Valida client_id/secret contra
+    // la tabla de sistemas consumidores; sin auth previa, con rate limit basico.
+    Route::post('/auth/token', [AuthController::class, 'token'])
+        ->middleware('throttle:20,1')
+        ->name('sarlaft.api.auth.token');
 
-        Route::post('/intentos-operacion', [IntentoOperacionController::class, 'store']);
-    });
+    // Consulta puntual de coincidencia en listas: protegida con JWT + scope.
+    Route::post('/listas/consultar', [ListaRegistroController::class, 'consultar'])
+        ->middleware(['jwt.api:sarlaft.listas.consultar', 'throttle:60,1'])
+        ->name('sarlaft.api.listas.consultar');
+
+    // Endpoints existentes de sistemas Bearer (Logtrans/Odin): sin cambios.
+    Route::middleware([AutenticarSistemaConsumidor::class, RateLimitSistema::class])
+        ->group(function (): void {
+            Route::get('/listas/registros', [ListaRegistroController::class, 'index']);
+            Route::post('/intentos-operacion', [IntentoOperacionController::class, 'store']);
+        });
+});

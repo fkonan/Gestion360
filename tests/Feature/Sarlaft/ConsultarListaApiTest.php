@@ -10,18 +10,25 @@ use App\Modules\Sarlaft\Models\RegistroLista;
 use App\Modules\Sarlaft\Models\SistemaConsumidor;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class ConsultarListaApiTest extends TestCase
 {
-    private string $token = 'token-consulta-test';
+    private string $clientId = 'externa';
+
+    private string $clientSecret = 'secret-de-prueba';
 
     protected function setUp(): void
     {
         parent::setUp();
 
+        // Secret de firma JWT para el motor transversal.
         config([
+            'services.api_jwt.secret' => 'clave-de-firma-de-prueba-suficientemente-larga',
+            'services.api_jwt.issuer' => 'autogestion',
+            'services.api_jwt.audience' => 'autogestion-api',
             'database.connections.mysql-sarlaft' => [
                 'driver' => 'sqlite',
                 'database' => ':memory:',
@@ -36,12 +43,35 @@ class ConsultarListaApiTest extends TestCase
 
         SistemaConsumidor::query()->create([
             'nombre' => 'Empresa Externa',
-            'codigo' => 'externa',
-            'api_token' => $this->token,
+            'codigo' => $this->clientId,
+            'api_token' => 'no-bearer',
+            'client_secret' => Hash::make($this->clientSecret),
+            'scopes' => 'sarlaft.listas.consultar',
             'estado' => 'activo',
             'modo_integracion' => 'push',
             'limite_requests_minuto' => 1000,
         ]);
+    }
+
+    /**
+     * Pide un JWT valido al endpoint de token y lo devuelve.
+     */
+    private function obtenerJwt(): string
+    {
+        $respuesta = $this->postJson('/api/v1/auth/token', [
+            'client_id' => $this->clientId,
+            'client_secret' => $this->clientSecret,
+        ])->assertOk();
+
+        return (string) $respuesta->json('data.access_token');
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function authHeaders(): array
+    {
+        return ['Authorization' => 'Bearer '.$this->obtenerJwt()];
     }
 
     public function test_responde_true_si_el_documento_esta_en_lista_vinculante(): void
@@ -57,7 +87,7 @@ class ConsultarListaApiTest extends TestCase
         $this->postJson('/api/v1/listas/consultar', [
             'tipo_documento' => 'CC',
             'numero_documento' => '900111',
-        ], ['Authorization' => 'Bearer '.$this->token])
+        ], $this->authHeaders())
             ->assertOk()
             ->assertExactJson(['en_lista' => true]);
     }
@@ -76,7 +106,7 @@ class ConsultarListaApiTest extends TestCase
         $this->postJson('/api/v1/listas/consultar', [
             'tipo_documento' => 'CC',
             'numero_documento' => '800222',
-        ], ['Authorization' => 'Bearer '.$this->token])
+        ], $this->authHeaders())
             ->assertOk()
             ->assertExactJson(['en_lista' => true]);
     }
@@ -86,7 +116,7 @@ class ConsultarListaApiTest extends TestCase
         $this->postJson('/api/v1/listas/consultar', [
             'tipo_documento' => 'CC',
             'numero_documento' => '99999999',
-        ], ['Authorization' => 'Bearer '.$this->token])
+        ], $this->authHeaders())
             ->assertOk()
             ->assertExactJson(['en_lista' => false]);
     }
@@ -99,11 +129,30 @@ class ConsultarListaApiTest extends TestCase
         ])->assertUnauthorized();
     }
 
+    public function test_emite_token_con_credenciales_validas(): void
+    {
+        $this->postJson('/api/v1/auth/token', [
+            'client_id' => $this->clientId,
+            'client_secret' => $this->clientSecret,
+        ])
+            ->assertOk()
+            ->assertJsonPath('ok', true)
+            ->assertJsonStructure(['data' => ['access_token', 'expires_in', 'scope']]);
+    }
+
+    public function test_no_emite_token_con_secret_incorrecto(): void
+    {
+        $this->postJson('/api/v1/auth/token', [
+            'client_id' => $this->clientId,
+            'client_secret' => 'secret-malo',
+        ])->assertUnauthorized();
+    }
+
     public function test_valida_que_el_documento_es_obligatorio(): void
     {
         $this->postJson('/api/v1/listas/consultar', [
             'tipo_documento' => 'CC',
-        ], ['Authorization' => 'Bearer '.$this->token])
+        ], $this->authHeaders())
             ->assertStatus(422)
             ->assertJsonValidationErrorFor('numero_documento');
     }
@@ -121,7 +170,7 @@ class ConsultarListaApiTest extends TestCase
         $this->postJson('/api/v1/listas/consultar', [
             'tipo_documento' => 'CC',
             'numero_documento' => '900111',
-        ], ['Authorization' => 'Bearer '.$this->token])->assertOk();
+        ], $this->authHeaders())->assertOk();
 
         // La consulta no debe dejar rastro de intento ni alerta.
         $this->assertSame(0, DB::connection('mysql-sarlaft')->table('sarlaft_intentos_operacion')->count());
@@ -145,6 +194,8 @@ class ConsultarListaApiTest extends TestCase
             $table->string('nombre', 100);
             $table->string('codigo', 50);
             $table->string('api_token', 100)->nullable();
+            $table->string('client_secret', 255)->nullable();
+            $table->string('scopes', 500)->nullable();
             $table->string('estado', 20)->default('activo');
             $table->string('modo_integracion', 20)->default('push');
             $table->integer('limite_requests_minuto')->default(100);
