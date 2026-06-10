@@ -34,6 +34,12 @@ class ValidacionListaNegraService
 
         $coincidencias = [];
 
+        // Listas vinculantes (ONU/OFAC/UE): el match es SOLO por numero de
+        // documento. Estas listas usan ~118 tipos de identificacion internacionales
+        // (National ID No., Passport, C.U.I.T., etc.) NO mapeables a los tipos
+        // colombianos (CC/NIT/CE), y miles de registros sin tipo. Filtrar por tipo
+        // causaria falsos negativos masivos: en SARLAFT es preferible un falso
+        // positivo (se revisa) que dejar pasar a un sancionado (incumplimiento).
         $registrosVinculantes = RegistroLista::query()
             ->select(['lista_id', 'identificacion', 'nombres', 'alias', 'tipo_identificacion'])
             ->where('identificacion', $numeroIdentificacion)
@@ -74,6 +80,15 @@ class ValidacionListaNegraService
 
         foreach ($registrosInternos as $registroInterno) {
             $tipoDocumentoRegistro = strtoupper(trim((string) $registroInterno->tipo_documento));
+
+            // La lista interna es propia y usa tipos comparables (CC/NIT/CE). Si se
+            // consulta con un tipo y NO coincide con el del registro, no se considera
+            // coincidencia (evita falso positivo por mismo numero, distinto tipo).
+            if ($tipoDocumentoNormalizado !== null
+                && $tipoDocumentoRegistro !== ''
+                && $tipoDocumentoRegistro !== $tipoDocumentoNormalizado) {
+                continue;
+            }
 
             $coincidencias[] = [
                 'origen' => 'interna',
@@ -204,7 +219,6 @@ class ValidacionListaNegraService
     }
 
     /**
-     * @param  mixed  $coincidencias
      * @return array<string, mixed>|null
      */
     private function obtenerPrimeraCoincidencia(mixed $coincidencias): ?array

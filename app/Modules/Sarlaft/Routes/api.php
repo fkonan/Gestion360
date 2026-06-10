@@ -33,14 +33,16 @@ if (! app()->isProduction()) {
 
 Route::prefix('v1')->group(function (): void {
     // Emision de token JWT (client_credentials). Valida client_id/secret contra
-    // la tabla de sistemas consumidores; sin auth previa, con rate limit basico.
+    // la tabla de sistemas consumidores; sin auth previa. Rate limit por client_id
+    // (anti fuerza bruta) ademas de por IP.
     Route::post('/auth/token', [AuthController::class, 'token'])
-        ->middleware('throttle:20,1')
+        ->middleware('throttle:sarlaft-token')
         ->name('sarlaft.api.auth.token');
 
-    // Consulta puntual de coincidencia en listas: protegida con JWT + scope.
+    // Consulta puntual de coincidencia en listas: JWT + scope. El throttle va
+    // DESPUES del jwt.api para poder limitar por sistema (claim del token).
     Route::post('/listas/consultar', [ListaRegistroController::class, 'consultar'])
-        ->middleware(['jwt.api:sarlaft.listas.consultar', 'throttle:60,1'])
+        ->middleware(['jwt.api:sarlaft.listas.consultar', 'throttle:sarlaft-consulta'])
         ->name('sarlaft.api.listas.consultar');
 
     // Endpoints existentes de sistemas Bearer (Logtrans/Odin): sin cambios.

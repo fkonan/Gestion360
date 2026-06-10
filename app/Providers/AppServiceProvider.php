@@ -9,9 +9,12 @@ use App\Modules\Configuracion\Observers\ModuloObserver;
 use App\Modules\Configuracion\Observers\SubmoduloObserver;
 use App\Observers\PermisoObserver;
 use App\View\Composers\MenuComposer;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -40,6 +43,32 @@ class AppServiceProvider extends ServiceProvider
               && ! empty($permiso)
               && permisoExiste($permiso)
               && Auth::user()->can($permiso);
+        });
+
+        // Rate limiter de emision de token SARLAFT: por client_id (no solo IP),
+        // para frenar fuerza bruta del secret aunque se distribuya entre IPs.
+        RateLimiter::for('sarlaft-token', function (Request $request) {
+            $clientId = (string) $request->input('client_id', '');
+            $key = $clientId !== '' ? 'cid:'.$clientId : 'ip:'.$request->ip();
+
+            return [
+                Limit::perMinute(5)->by($key),
+                Limit::perMinute(20)->by('ip:'.$request->ip()),
+            ];
+        });
+
+        // Rate limiter de consulta de listas SARLAFT: por sistema (claim del JWT),
+        // para limitar enumeracion masiva de documentos.
+        RateLimiter::for('sarlaft-consulta', function (Request $request) {
+            $claims = $request->attributes->get('api_jwt_claims');
+            $sistemaId = is_array($claims) ? ($claims['sistema_id'] ?? null) : null;
+            // Prefijo de modulo en la key para no colisionar con otros throttles por IP.
+            $key = $sistemaId !== null ? 'sarlaft-sis:'.$sistemaId : 'sarlaft-ip:'.$request->ip();
+
+            return [
+                Limit::perMinute(60)->by($key),
+                Limit::perDay(2000)->by($key),
+            ];
         });
     }
 }

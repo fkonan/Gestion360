@@ -19,7 +19,7 @@ class TokenRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'grant_type' => 'nullable|string|in:client_credentials',
+            'grant_type' => 'required|string|in:client_credentials',
             'client_id' => 'required|string|max:120',
             'client_secret' => 'required|string|max:255',
             'scope' => 'nullable|string|max:1000',
@@ -34,6 +34,7 @@ class TokenRequest extends FormRequest
         return [
             'client_id.required' => 'El campo client_id es obligatorio.',
             'client_secret.required' => 'El campo client_secret es obligatorio.',
+            'grant_type.required' => 'El campo grant_type es obligatorio.',
             'grant_type.in' => 'El grant_type soportado es client_credentials.',
         ];
     }

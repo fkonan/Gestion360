@@ -28,12 +28,36 @@ class ListaRegistroController extends Controller
      */
     public function consultar(ConsultarListaRequest $request): JsonResponse
     {
+        // Defensa adicional: el motor JWT es transversal y un scope admin de otro
+        // modulo (ej. RRHH) podria pasar el middleware. Exigimos que el token sea
+        // de un sistema consumidor SARLAFT real (claim sistema_id presente).
+        $claims = $request->attributes->get('api_jwt_claims');
+        if (! is_array($claims) || empty($claims['sistema_id'])) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'Token no autorizado para este recurso.',
+            ], 403);
+        }
+
         $datos = $request->validated();
 
-        $resultado = $this->validacionListaNegraService->consultarPorIdentificacion(
-            numeroIdentificacion: (string) $datos['numero_documento'],
-            tipoDocumento: (string) $datos['tipo_documento'],
-        );
+        try {
+            $resultado = $this->validacionListaNegraService->consultarPorIdentificacion(
+                numeroIdentificacion: (string) $datos['numero_documento'],
+                tipoDocumento: (string) $datos['tipo_documento'],
+            );
+        } catch (\Throwable $e) {
+            // No exponer detalle del error; el consumidor NO debe interpretar un
+            // fallo tecnico como "no esta en lista" (en_lista:false).
+            \Illuminate\Support\Facades\Log::error('SARLAFT consulta lista: fallo la verificacion', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'ok' => false,
+                'message' => 'No fue posible verificar en este momento. Intente nuevamente.',
+            ], 503);
+        }
 
         return response()->json([
             'en_lista' => (bool) ($resultado['en_lista_negra'] ?? false),
