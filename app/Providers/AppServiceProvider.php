@@ -58,16 +58,21 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // Rate limiter de consulta de listas SARLAFT: por sistema (claim del JWT),
-        // para limitar enumeracion masiva de documentos.
+        // para limitar enumeracion masiva de documentos. Los topes son generosos
+        // porque un unico cliente (empresa) consulta por muchas sucursales; se
+        // pueden ajustar por .env sin tocar codigo.
         RateLimiter::for('sarlaft-consulta', function (Request $request) {
             $claims = $request->attributes->get('api_jwt_claims');
             $sistemaId = is_array($claims) ? ($claims['sistema_id'] ?? null) : null;
             // Prefijo de modulo en la key para no colisionar con otros throttles por IP.
             $key = $sistemaId !== null ? 'sarlaft-sis:'.$sistemaId : 'sarlaft-ip:'.$request->ip();
 
+            $porMinuto = (int) config('sarlaft.consulta_rate_minuto', 300);
+            $porDia = (int) config('sarlaft.consulta_rate_dia', 30000);
+
             return [
-                Limit::perMinute(60)->by($key),
-                Limit::perDay(2000)->by($key),
+                Limit::perMinute($porMinuto)->by($key),
+                Limit::perDay($porDia)->by($key),
             ];
         });
     }
