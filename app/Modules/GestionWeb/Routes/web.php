@@ -25,7 +25,10 @@ Route::prefix('gestion-web')->middleware(['auth', 'permisos:'.Permisos::GESTION_
         Route::get('/', [AppmovilController::class, 'indexGestionMovil'])->name('gestion-appmovil.index');
 
         // Notificaciones
-        Route::prefix('notificaciones')->name('notificaciones.')->group(function () {
+        Route::prefix('notificaciones')
+            ->middleware('permisos:'.Permisos::GESTION_WEB_GESTION_APP_MOVIL_NOTIFICACIONES)
+            ->name('notificaciones.')
+            ->group(function () {
             Route::get('/', [AppmovilController::class, 'notificaciones'])->name('index');
             Route::get('/crear', [AppmovilController::class, 'crearNotificacion'])->name('create');
             Route::post('/registrar', [AppmovilController::class, 'registrarNotificacion'])->name('registrar');
@@ -36,18 +39,25 @@ Route::prefix('gestion-web')->middleware(['auth', 'permisos:'.Permisos::GESTION_
             Route::put('/{id}', [AppmovilController::class, 'updateNotificacion'])->name('update');
         });
 
-        Route::prefix('personas')->name('personas-appmovil.')->group(function () {
+        Route::prefix('personas')
+            ->middleware('permisos:'.Permisos::GESTION_WEB_GESTION_APP_MOVIL_USUARIOS)
+            ->name('personas-appmovil.')
+            ->group(function () {
             Route::get('/', [PersonaAppmovilController::class, 'index'])->name('index');
             Route::get('/cargarDatos', [PersonaAppmovilController::class, 'cargarDatos'])->middleware('soloAJAX')->name('cargarDatos');
             Route::get('/{id}/edit', [PersonaAppmovilController::class, 'edit'])->name('edit');
             Route::put('/{id}', [PersonaAppmovilController::class, 'update'])->name('update');
         });
 
-        Route::prefix('recursos-digitales')->name('recursos-digitales.')->group(function () {
+        Route::prefix('recursos-digitales')
+            ->middleware('permisos:'.Permisos::GESTION_WEB_GESTION_APP_MOVIL_RECURSOS_DIGITALES)
+            ->name('recursos-digitales.')
+            ->group(function () {
             Route::get('/', [RecursosDigitalesAdminController::class, 'index'])->name('index');
             Route::get('/tipo/{tipo}', [RecursosDigitalesAdminController::class, 'show'])->name('show');
             Route::get('/tipo/{tipo}/crear', [RecursosDigitalesAdminController::class, 'create'])->name('create');
             Route::post('/tipo/{tipo}', [RecursosDigitalesAdminController::class, 'store'])->name('store');
+            Route::post('/tipo/{tipo}/reordenar', [RecursosDigitalesAdminController::class, 'reordenar'])->middleware('soloAJAX')->name('reordenar');
             Route::get('/{id}/edit', [RecursosDigitalesAdminController::class, 'edit'])->name('edit');
             Route::put('/{id}', [RecursosDigitalesAdminController::class, 'update'])->name('update');
             Route::post('/{id}/cambiar-estado', [RecursosDigitalesAdminController::class, 'cambiarEstado'])->middleware('soloAJAX')->name('cambiarEstado');

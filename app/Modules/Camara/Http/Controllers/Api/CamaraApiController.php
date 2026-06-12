@@ -9,6 +9,7 @@ use App\Modules\Camara\Http\Requests\RecognizeRequest;
 use App\Modules\Camara\Http\Requests\VerifyLiveRequest;
 use App\Modules\GestionRRHH\Models\PerPersonas;
 use App\Modules\Huellero\Services\RegistrarEventoEmpleadoService;
+use App\Services\Asistencia\LiveAsistenciaEventFeedService;
 use Carbon\Carbon;
 use App\Modules\Camara\Services\CameraService;
 use Illuminate\Http\Request;
@@ -21,7 +22,8 @@ class CamaraApiController extends Controller
 {
   public function __construct(
     private readonly CameraService $cameraService,
-    private readonly RegistrarEventoEmpleadoService $registrarEventoEmpleadoService
+    private readonly RegistrarEventoEmpleadoService $registrarEventoEmpleadoService,
+    private readonly LiveAsistenciaEventFeedService $liveAsistenciaEventFeedService
   ) {
   }
 
@@ -663,13 +665,22 @@ class CamaraApiController extends Controller
 
   public function ultimosEventos()
   {
+    $limit = (int) request()->query('limit', 10);
+    if ($limit <= 0) {
+      $limit = 10;
+    }
+    if ($limit > 100) {
+      $limit = 100;
+    }
+
     $rows = DB::connection('oracle-360')
       ->table('PRS_EVENTOS as e')
       ->leftJoin('PRS_PERSONAS as p', 'p.numero_documento', '=', 'e.identificacion')
       ->whereIn('e.evento', [1, 2])
       ->orderByDesc('e.fecha_creacion')
-      ->limit(10)
+      ->limit($limit)
       ->get([
+        'e.id as evento_id',
         'e.identificacion',
         'e.evento',
         'e.descripcion',
@@ -684,6 +695,78 @@ class CamaraApiController extends Controller
     return response()->json([
       'ok' => true,
       'data' => $data,
+    ]);
+  }
+
+  public function ultimosEventosStream(Request $request)
+  {
+    $rawLastEventId = trim((string) (
+      $request->header('Last-Event-ID')
+      ?? $request->query('last_event_id', '')
+    ));
+
+    $cursor = ctype_digit($rawLastEventId) ? (int) $rawLastEventId : 0;
+    if ($cursor < 0) {
+      $cursor = 0;
+    }
+
+    // Si es una conexion nueva sin cursor, arrancar desde "ahora"
+    // para enviar solo eventos nuevos y no backlog historico.
+    if ($cursor === 0) {
+      $cursor = $this->liveAsistenciaEventFeedService->latestId();
+    }
+
+    return response()->stream(function () use ($cursor) {
+      @ini_set('output_buffering', 'off');
+      @ini_set('zlib.output_compression', '0');
+      @set_time_limit(0);
+
+      $startedAt = microtime(true);
+      $maxWaitSeconds = 25;
+      $lastSentId = $cursor;
+      $loopSleepMicros = 500000;
+
+      while (!connection_aborted()) {
+        $batch = $this->liveAsistenciaEventFeedService->pullAfter($lastSentId, 50);
+        $events = is_array($batch['events'] ?? null) ? $batch['events'] : [];
+
+        if (!empty($events)) {
+          foreach ($events as $eventItem) {
+            $origenEvento = strtolower(trim((string) ($eventItem['origen'] ?? '')));
+            if ($origenEvento !== '' && !in_array($origenEvento, ['api', 'camara'], true)) {
+              continue;
+            }
+
+            $streamId = (int) ($eventItem['stream_id'] ?? 0);
+            if ($streamId <= 0) {
+              continue;
+            }
+
+            $lastSentId = max($lastSentId, $streamId);
+            echo 'id: ' . $streamId . "\n";
+            echo "event: recognized\n";
+            echo 'data: ' . json_encode($eventItem, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n\n";
+          }
+
+          @ob_flush();
+          flush();
+          return;
+        }
+
+        if ((microtime(true) - $startedAt) >= $maxWaitSeconds) {
+          echo ": keepalive\n\n";
+          @ob_flush();
+          flush();
+          return;
+        }
+
+        usleep($loopSleepMicros);
+      }
+    }, 200, [
+      'Content-Type' => 'text/event-stream',
+      'Cache-Control' => 'no-cache, no-transform',
+      'Connection' => 'keep-alive',
+      'X-Accel-Buffering' => 'no',
     ]);
   }
 
@@ -713,6 +796,7 @@ class CamaraApiController extends Controller
       ->orderByDesc('e.fecha_creacion')
       ->limit(30)
       ->get([
+        'e.id as evento_id',
         'e.identificacion',
         'e.evento',
         'e.descripcion',
@@ -747,10 +831,12 @@ class CamaraApiController extends Controller
       }
 
       return [
+        'evento_id' => isset($row->evento_id) ? (string) $row->evento_id : null,
         'identificacion' => (string) ($row->identificacion ?? ''),
         'nombre' => $nombre !== '' ? $nombre : 'Sin nombre',
         'descripcion' => (string) ($row->descripcion ?? ''),
         'hora_evento' => $horaEvento,
+        'fecha_evento' => !empty($row->fecha_creacion) ? (string) $row->fecha_creacion : null,
         'evento' => (int) ($row->evento ?? 0),
       ];
     })->values();

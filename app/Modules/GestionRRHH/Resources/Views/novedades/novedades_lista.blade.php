@@ -14,7 +14,6 @@
   $modoVista = $modoVista ?? 'global';
   $tituloVista = $tituloVista ?? 'Listado';
   $forzarAprobadas = !empty($forzarAprobadas);
-  $forzarNoAprobadas = !empty($forzarNoAprobadas);
 @endphp
 
 @section('content')
@@ -118,6 +117,17 @@
             <th data-field="empleado">Empleado</th>
             <th data-field="radicado_por">Radicado por</th>
             <th data-field="detalle">Detalle</th>
+            <th data-field="motivo">Motivo</th>
+            <th data-field="otro_motivo">Otro motivo</th>
+            <th data-field="jornada">Jornada</th>
+            <th data-field="horario_fijo">Horario fijo</th>
+            <th data-field="horario_j1">Horario J1</th>
+            <th data-field="horario_j2">Horario J2</th>
+            <th data-field="causa">Causa</th>
+            <th data-field="diagnostico">Diagnostico</th>
+            <th data-field="eps">EPS</th>
+            <th data-field="arl">ARL</th>
+            <th data-field="adjuntos">Adjuntos</th>
             <th data-field="fecha_inicio">Fecha inicio</th>
             <th data-field="fecha_fin">Fecha fin</th>
             <th data-field="estado">Estado</th>
@@ -126,74 +136,34 @@
         </thead>
         <tbody>
           @forelse($novedades as $novedad)
-          @php
-            $tipoCodigo = strtoupper(trim((string) ($novedad->tipo_codigo ?? '')));
-            $detalle = trim((string) ($novedad->detalle_descripcion ?? ''));
-            $radicadoPorDocumento = trim((string) ($novedad->radicado_por_documento ?? $novedad->documento_radica ?? ''));
-            $radicadoPorNombre = trim((string) ($novedad->radicado_por_nombre ?? ''));
-            $detalleJornadaLabel = match(trim((string) ($novedad->jornada ?? ''))) {
-              '1' => 'Jornada 1 (manana)',
-              '2' => 'Jornada 2 (tarde)',
-              '1,2' => 'Ambas jornadas',
-              'MANANA', 'MAÑANA' => 'Manana (Jornada 1)',
-              'TARDE' => 'Tarde (Jornada 2)',
-              'AMBAS' => 'Ambas jornadas',
-              default => trim((string) ($novedad->jornada ?? '')),
-            };
-            $detalleHtml = collect([
-              '<div><strong>Tipo:</strong> '.e((string) ($novedad->tipo_label ?? $tipoCodigo)).'</div>',
-              '<div><strong>Estado:</strong> '.e((string) ($estadosDisponibles[$novedad->estado] ?? $novedad->estado)).'</div>',
-              '<div><strong>Empleado:</strong> '.e((string) ($novedad->persona_nombre ?? 'Sin nombre')).' ('.e((string) ($novedad->documento_persona ?? $novedad->id_persona)).')</div>',
-              '<div><strong>Radicado por:</strong> '.e($radicadoPorNombre !== '' ? $radicadoPorNombre : ($radicadoPorDocumento !== '' ? $radicadoPorDocumento : 'N/A')).($radicadoPorNombre !== '' && $radicadoPorDocumento !== '' ? ' ('.e($radicadoPorDocumento).')' : '').'</div>',
-              '<div><strong>Fecha inicio:</strong> '.e($novedad->fecha_inicio?->format('d/m/Y h:i A') ?? 'N/A').'</div>',
-              '<div><strong>Fecha fin:</strong> '.e($novedad->fecha_fin?->format('d/m/Y h:i A') ?? 'N/A').'</div>',
-              $detalle !== '' ? '<div><strong>Detalle:</strong> '.e($detalle).'</div>' : null,
-              $tipoCodigo === 'PERMISO' ? '<div><strong>Motivo:</strong> '.e((string) ($novedad->motivo ?? 'N/A')).'</div>' : null,
-              $tipoCodigo === 'PERMISO' && trim((string) ($novedad->otro_motivo ?? '')) !== '' ? '<div><strong>Otro motivo:</strong> '.e((string) $novedad->otro_motivo).'</div>' : null,
-              $tipoCodigo === 'PERMISO_PERMANENTE' && $detalleJornadaLabel !== '' ? '<div><strong>Jornada:</strong> '.e($detalleJornadaLabel).'</div>' : null,
-              $tipoCodigo === 'PERMISO_PERMANENTE' ? '<div><strong>Horario fijo:</strong> '.((int) ($novedad->horario_fijo ?? 0) === 1 ? 'SI' : 'NO').'</div>' : null,
-              $tipoCodigo === 'PERMISO_PERMANENTE' && trim((string) ($novedad->hora_salida_j1 ?? '')) !== '' ? '<div><strong>Horario J1:</strong> '.e((string) $novedad->hora_salida_j1).' - '.e((string) ($novedad->hora_ingreso_j1 ?? '')).'</div>' : null,
-              $tipoCodigo === 'PERMISO_PERMANENTE' && trim((string) ($novedad->hora_salida_j2 ?? '')) !== '' ? '<div><strong>Horario J2:</strong> '.e((string) $novedad->hora_salida_j2).' - '.e((string) ($novedad->hora_ingreso_j2 ?? '')).'</div>' : null,
-              $tipoCodigo === 'INCAPACIDAD' && trim((string) ($novedad->causa ?? '')) !== '' ? '<div><strong>Causa:</strong> '.e((string) $novedad->causa).'</div>' : null,
-              $tipoCodigo === 'INCAPACIDAD' && trim((string) ($novedad->diagnostico_codigo ?? '')) !== '' ? '<div><strong>Diagnóstico:</strong> '.e((string) $novedad->diagnostico_codigo).' - '.e((string) ($novedad->diagnostico_descripcion ?? '')).'</div>' : null,
-              $tipoCodigo === 'INCAPACIDAD' && trim((string) ($novedad->eps_nombre ?? '')) !== '' ? '<div><strong>EPS:</strong> '.e((string) $novedad->eps_nombre).'</div>' : null,
-              $tipoCodigo === 'INCAPACIDAD' && trim((string) ($novedad->arl_nombre ?? '')) !== '' ? '<div><strong>ARL:</strong> '.e((string) $novedad->arl_nombre).'</div>' : null,
-              '<div><strong>Adjuntos:</strong> '.((int) ($novedad->adjuntos_count ?? 0)).'</div>',
-            ])->filter()->implode('');
-            $puedeRechazarActual = $modoVista === 'jefe'
-              ? !empty($novedad->puede_rechazar_jefe)
-              : !empty($novedad->puede_rechazar_rrhh);
-            $esIncapacidadGestionRrhh = $modoVista === 'rrhh' && $tipoCodigo === 'INCAPACIDAD';
-          @endphp
           <tr>
-            <td class="text-nowrap">{{ $novedad->tipo_label ?? $tipoCodigo }}</td>
-            <td class="text-nowrap">{{ $novedad->documento_persona ?? $novedad->id_persona }}</td>
-            <td class="text-nowrap">{{ $novedad->persona_nombre ?? 'Sin nombre' }}</td>
+            <td class="text-nowrap">{{ $novedad->vista_tipo }}</td>
+            <td class="text-nowrap">{{ $novedad->vista_documento }}</td>
+            <td class="text-nowrap">{{ $novedad->vista_empleado }}</td>
             <td class="text-nowrap">
-              {{ $radicadoPorNombre !== '' ? $radicadoPorNombre : ($radicadoPorDocumento !== '' ? $radicadoPorDocumento : 'N/A') }}
-              @if($radicadoPorNombre !== '' && $radicadoPorDocumento !== '')
-              <div class="small text-muted">{{ $radicadoPorDocumento }}</div>
+              {{ $novedad->vista_radicado_por }}
+              @if($novedad->vista_radicado_por_documento !== '')
+              <div class="small text-muted">{{ $novedad->vista_radicado_por_documento }}</div>
               @endif
             </td>
-            <td>
-              @if($detalle !== '')
-              {{ $detalle }}
-              @elseif($tipoCodigo === 'INCAPACIDAD')
-              {{ trim((string) ($novedad->tipo_incapacidad ?? '')) !== '' ? $novedad->tipo_incapacidad : 'N/A' }}
-              @else
-              N/A
-              @endif
-            </td>
-            <td class="text-nowrap">
-              {{ $novedad->fecha_inicio?->format('d/m/Y h:i A') ?? 'N/A' }}
-            </td>
-            <td class="text-nowrap">
-              {{ $novedad->fecha_fin?->format('d/m/Y h:i A') ?? 'N/A' }}
-            </td>
-            <td class="text-nowrap">{{ $estadosDisponibles[$novedad->estado] ?? $novedad->estado }}</td>
+            <td>{{ $novedad->vista_detalle }}</td>
+            <td>{{ $novedad->vista_motivo }}</td>
+            <td>{{ $novedad->vista_otro_motivo }}</td>
+            <td>{{ $novedad->vista_jornada }}</td>
+            <td>{{ $novedad->vista_horario_fijo }}</td>
+            <td>{{ $novedad->vista_horario_j1 }}</td>
+            <td>{{ $novedad->vista_horario_j2 }}</td>
+            <td>{{ $novedad->vista_causa }}</td>
+            <td>{{ $novedad->vista_diagnostico }}</td>
+            <td>{{ $novedad->vista_eps }}</td>
+            <td>{{ $novedad->vista_arl }}</td>
+            <td>{{ $novedad->vista_adjuntos }}</td>
+            <td class="text-nowrap">{{ $novedad->vista_fecha_inicio }}</td>
+            <td class="text-nowrap">{{ $novedad->vista_fecha_fin }}</td>
+            <td class="text-nowrap">{{ $novedad->vista_estado }}</td>
             <td class="text-nowrap text-center">
               <div class="permiso-actions-group">
-                @if($tipoCodigo === 'PERMISO')
+                @if($novedad->vista_tipo_codigo === 'PERMISO')
                 <a
                   class="permiso-action-trigger d-inline-flex align-items-center justify-content-center p-0 border-0 bg-transparent text-decoration-none"
                   href="{{ route('gestionRRHH.permisos.pdf', ['idNovedad' => $novedad->id_novedad]) }}"
@@ -204,7 +174,7 @@
                 </a>
                 @endif
 
-                @unless($esIncapacidadGestionRrhh)
+                @unless($novedad->vista_es_incapacidad_gestion_rrhh)
                 <a
                   class="js-ver-adjuntos-permiso permiso-action-trigger d-inline-flex align-items-center justify-content-center p-0 border-0 bg-transparent text-decoration-none"
                   href="{{ route('gestionRRHH.permisos.documentos', ['idNovedad' => $novedad->id_novedad, 'return_to' => request()->fullUrl(), 'return_label' => $tituloVista]) }}"
@@ -216,14 +186,17 @@
                 </a>
                 @endunless
 
-                <button
-                  type="button"
-                  class="js-ver-detalle-solicitud permiso-action-trigger d-inline-flex align-items-center justify-content-center p-0 border-0 bg-transparent"
-                  title="Ver detalle solicitud"
-                  data-bs-toggle="tooltip"
-                  data-detalle-html="{{ $detalleHtml }}">
-                  <img src="{{ asset('img/edit.png') }}" alt="Detalle" class="permiso-action-icon">
-                </button>
+                @if($modoVista === 'mis')
+                <a
+                  class="js-ver-trazabilidad-novedad permiso-action-trigger d-inline-flex align-items-center justify-content-center p-0 border-0 bg-transparent text-decoration-none"
+                  href="{{ route('gestionRRHH.permisos.trazabilidad', ['idNovedad' => $novedad->id_novedad]) }}"
+                  data-trazabilidad-url="{{ route('gestionRRHH.permisos.trazabilidad', ['idNovedad' => $novedad->id_novedad]) }}"
+                  title="Ver trazabilidad"
+                  data-bs-toggle="tooltip">
+                  <img src="{{ asset('img/seguimiento.png') }}" alt="Trazabilidad" class="permiso-action-icon permiso-action-icon-seguimiento">
+                </a>
+                @endif
+
 
                 @if($modoVista === 'mis' && !empty($novedad->puede_anular))
                 <form method="POST" class="js-anular-permiso-form" action="{{ route('gestionRRHH.permisos.anular', ['idNovedad' => $novedad->id_novedad]) }}">
@@ -244,16 +217,16 @@
                 </form>
                 @endif
 
-                @if(in_array($modoVista, ['jefe', 'rrhh'], true) && $puedeRechazarActual && !$esIncapacidadGestionRrhh)
+                @if(in_array($modoVista, ['jefe', 'rrhh'], true) && $novedad->vista_puede_rechazar_actual && !$novedad->vista_es_incapacidad_gestion_rrhh)
                 <form
                   method="POST"
                   class="js-rechazar-permiso-form d-inline"
                   data-accion-loader="Rechazando solicitud"
-                  action="{{ $tipoCodigo === 'INCAPACIDAD'
+                  action="{{ $novedad->vista_tipo_codigo === 'INCAPACIDAD'
                     ? route('gestionRRHH.permisos.incapacidades.rechazar', ['idNovedad' => $novedad->id_novedad])
                     : route('gestionRRHH.permisos.rechazar', ['idNovedad' => $novedad->id_novedad]) }}">
                   @csrf
-                  @if($tipoCodigo !== 'INCAPACIDAD')
+                  @if($novedad->vista_tipo_codigo !== 'INCAPACIDAD')
                   <input type="hidden" name="nivel" value="{{ $modoVista === 'jefe' ? 'jefe' : 'rrhh' }}">
                   @endif
                   <input type="hidden" name="motivo_rechazo" value="">
@@ -263,12 +236,12 @@
                 </form>
                 @endif
 
-                @if($modoVista === 'rrhh' && !empty($novedad->puede_aprobar_rrhh) && !$esIncapacidadGestionRrhh)
+                @if($modoVista === 'rrhh' && !empty($novedad->puede_aprobar_rrhh) && !$novedad->vista_es_incapacidad_gestion_rrhh)
                 <form
                   method="POST"
                   class="js-aprobar-rrhh-permiso-form d-inline"
                   data-accion-loader="Aprobando solicitud"
-                  action="{{ $tipoCodigo === 'INCAPACIDAD'
+                  action="{{ $novedad->vista_tipo_codigo === 'INCAPACIDAD'
                     ? route('gestionRRHH.permisos.incapacidades.aprobar', ['idNovedad' => $novedad->id_novedad])
                     : route('gestionRRHH.permisos.aprobar-rrhh', ['idNovedad' => $novedad->id_novedad]) }}">
                   @csrf
@@ -292,7 +265,7 @@
           </tr>
           @empty
           <tr>
-            <td colspan="9" class="text-center py-3">
+            <td colspan="20" class="text-center py-3">
               {{ $forzarAprobadas ? 'No hay novedades aprobadas para la consulta.' : 'No hay solicitudes para la consulta.' }}
             </td>
           </tr>
@@ -396,15 +369,39 @@ document.addEventListener('DOMContentLoaded', function () {
     return true;
   };
 
+  const escapeHtml = function (value) {
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  };
+
   if (typeof initTablaBootstrapTable === 'function') {
-    const columnasOcultasFijas = (modoVistaActual === 'jefe' || modoVistaActual === 'rrhh' || modoVistaActual === 'mis' || forzarAprobadasActual)
-      ? ['acciones', 'detalle']
-      : ['acciones'];
+    const columnasOcultasFijas = [
+      'acciones',
+      'motivo',
+      'otro_motivo',
+      'jornada',
+      'horario_fijo',
+      'horario_j1',
+      'horario_j2',
+      'causa',
+      'diagnostico',
+      'eps',
+      'arl',
+      'adjuntos'
+    ];
+
+    if (modoVistaActual === 'jefe' || modoVistaActual === 'rrhh' || modoVistaActual === 'mis' || forzarAprobadasActual) {
+      columnasOcultasFijas.push('detalle');
+    }
 
     initTablaBootstrapTable(
       '#novedadesCentralTable',
       {
-        protegidas: ['tipo', 'documento', 'empleado', 'estado'],
+        protegidas: ['tipo', 'documento'],
         ocultas: columnasOcultasFijas,
         forzarDetalle: true
       },
@@ -448,15 +445,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  const escapeHtml = function (value) {
-    return String(value ?? '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
-  };
-
   const formatearFechaAdjunto = function (valor) {
     const texto = String(valor || '').trim();
     if (texto === '') {
@@ -480,10 +468,29 @@ document.addEventListener('DOMContentLoaded', function () {
   const globalModalElement = document.getElementById('globalModal');
   const globalModalTitle = document.getElementById('globalModalTitle');
   const globalModalContent = document.getElementById('globalModalContent');
+  const globalModalDialog = globalModalElement ? globalModalElement.querySelector('.modal-dialog') : null;
   const globalModal = (window.bootstrap && globalModalElement)
     ? window.bootstrap.Modal.getOrCreateInstance(globalModalElement)
     : null;
   const pdfIconUrl = @json(asset('img/descargarPDF.png'));
+
+  const aplicarModoGlobalModal = function (modo) {
+    if (!globalModalElement || !globalModalDialog) {
+      return;
+    }
+
+    globalModalElement.classList.remove('is-trazabilidad-modal', 'is-adjuntos-modal');
+    globalModalDialog.classList.remove('modal-xl', 'modal-lg');
+
+    if (modo === 'trazabilidad') {
+      globalModalElement.classList.add('is-trazabilidad-modal');
+      globalModalDialog.classList.add('modal-xl');
+      return;
+    }
+
+    globalModalElement.classList.add('is-adjuntos-modal');
+    globalModalDialog.classList.add('modal-lg');
+  };
 
   const renderTablaAdjuntosHtml = function (adjuntos, mensajeError = '') {
     const totalAdjuntos = Array.isArray(adjuntos) ? adjuntos.length : 0;
@@ -500,7 +507,7 @@ document.addEventListener('DOMContentLoaded', function () {
           const nombre = escapeHtml(adjunto.nombre_archivo || adjunto.ruta_documento || 'Archivo');
           const fecha = escapeHtml(formatearFechaAdjunto(adjunto.fecha_creacion) || 'N/A');
           const urlVer = String(adjunto.ver_documento_url || '').trim();
-            const accion = urlVer !== ''
+          const accion = urlVer !== ''
             ? `<a href="${escapeHtml(urlVer)}" target="_blank" class="d-inline-flex align-items-center justify-content-center" title="Ver PDF">
                 <img src="${escapeHtml(pdfIconUrl)}" alt="Ver PDF" class="permiso-action-icon">
               </a>`
@@ -543,6 +550,7 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
 
+    aplicarModoGlobalModal('adjuntos');
     globalModalTitle.textContent = 'Adjuntos de la solicitud';
     globalModalContent.innerHTML = `
       <div class="d-flex flex-column align-items-center justify-content-center py-4">
@@ -580,6 +588,286 @@ document.addEventListener('DOMContentLoaded', function () {
       });
   };
 
+  const renderTrazabilidadHtmlLegacy = function (trazabilidad, mensajeError = '') {
+    if (mensajeError !== '') {
+      return `
+        <div class="alert alert-danger mb-0">${escapeHtml(mensajeError)}</div>
+      `;
+    }
+
+    const data = trazabilidad && typeof trazabilidad === 'object' ? trazabilidad : {};
+    const empleado = data.empleado && typeof data.empleado === 'object' ? data.empleado : {};
+    const eventos = Array.isArray(data.eventos) ? data.eventos : [];
+    const notas = Array.isArray(data.notas)
+      ? data.notas.map(function (nota) { return String(nota || '').trim(); }).filter(Boolean)
+      : [];
+
+    const tipoLabel = String(data.tipo_label || data.tipo_codigo || 'Solicitud').trim();
+    const empleadoNombre = String(empleado.nombre || '').trim();
+    const empleadoDocumento = String(empleado.documento || '').trim();
+    const estadoActual = String(data.estado_actual_label || data.estado_actual || 'N/A').trim();
+    const estadoActualCodigo = String(data.estado_actual || '').trim().toUpperCase();
+    const encabezadoEmpleadoLegacy = empleadoNombre !== ''
+      ? `${escapeHtml(empleadoNombre)}${empleadoDocumento !== '' ? ` - ${escapeHtml(empleadoDocumento)}` : ''}`
+      : (empleadoDocumento !== '' ? escapeHtml(empleadoDocumento) : 'Sin persona asociada');
+    const primerEvento = eventos.length > 0 ? eventos[0] : null;
+    const ultimoEvento = eventos.length > 0 ? eventos[eventos.length - 1] : null;
+
+    const encabezadoEmpleado = empleadoNombre !== ''
+      ? `${escapeHtml(empleadoNombre)}${empleadoDocumento !== '' ? ` · ${escapeHtml(empleadoDocumento)}` : ''}`
+      : (empleadoDocumento !== '' ? escapeHtml(empleadoDocumento) : 'Sin persona asociada');
+
+    const notasHtml = notas.length > 0
+      ? `
+        <div class="alert alert-info py-2 px-3 mb-0">
+          ${notas.map(function (nota) {
+            return `<div>${escapeHtml(nota)}</div>`;
+          }).join('')}
+        </div>
+      `
+      : '';
+
+    const timelineHtml = eventos.length > 0
+      ? eventos.map(function (evento) {
+          const estadoLabel = String(evento.estado_label || evento.estado || 'Estado').trim();
+          const actor = String(evento.actor_nombre || evento.actor_documento || '').trim();
+          const fecha = String(evento.fecha || '').trim();
+          const detalle = String(evento.detalle || '').trim();
+          const metaPlano = [fecha || 'Fecha no disponible', actor || 'Actor no identificado'].join(' - ');
+          const meta = [fecha || 'Fecha no disponible', actor || 'Actor no identificado'].join(' · ');
+          const badgeHtml = evento.es_estado_actual
+            ? '<span class="badge text-bg-success">Actual</span>'
+            : '<span class="badge text-bg-light text-dark">Registrado</span>';
+
+          return `
+            <div class="trazabilidad-item ${evento.es_estado_actual ? 'is-current' : ''}">
+              <div class="trazabilidad-marker"></div>
+              <div class="trazabilidad-card">
+                <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+                  <div>
+                    <div class="fw-semibold">${escapeHtml(estadoLabel)}</div>
+                    <div class="small text-muted">${escapeHtml(metaPlano)}</div>
+                  </div>
+                  ${badgeHtml}
+                </div>
+                ${detalle !== '' ? `<div class="trazabilidad-detail">${escapeHtml(detalle)}</div>` : ''}
+              </div>
+            </div>
+          `;
+        }).join('')
+      : `
+        <div class="alert alert-light border mb-0">
+          No hay eventos de trazabilidad registrados para esta solicitud.
+        </div>
+      `;
+
+    return `
+      <div class="d-flex flex-column gap-3">
+        <div class="trazabilidad-summary">
+          <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+            <div>
+              <div class="fw-semibold">${escapeHtml(tipoLabel)}</div>
+              <div class="small text-muted">${encabezadoEmpleadoLegacy}</div>
+            </div>
+            <span class="badge text-bg-primary">${escapeHtml(estadoActual)}</span>
+          </div>
+        </div>
+        ${notasHtml}
+        <div class="trazabilidad-timeline">${timelineHtml}</div>
+      </div>
+    `;
+  };
+
+  const renderTrazabilidadClaraHtml = function (trazabilidad, mensajeError = '') {
+    if (mensajeError !== '') {
+      return `
+        <div class="alert alert-danger mb-0">${escapeHtml(mensajeError)}</div>
+      `;
+    }
+
+    const data = trazabilidad && typeof trazabilidad === 'object' ? trazabilidad : {};
+    const empleado = data.empleado && typeof data.empleado === 'object' ? data.empleado : {};
+    const eventos = Array.isArray(data.eventos) ? data.eventos : [];
+    const notas = Array.isArray(data.notas)
+      ? data.notas.map(function (nota) { return String(nota || '').trim(); }).filter(Boolean)
+      : [];
+
+    const tipoLabel = String(data.tipo_label || data.tipo_codigo || 'Solicitud').trim();
+    const empleadoNombre = String(empleado.nombre || '').trim();
+    const empleadoDocumento = String(empleado.documento || '').trim();
+    const estadoActual = String(data.estado_actual_label || data.estado_actual || 'N/A').trim();
+    const encabezadoEmpleado = empleadoNombre !== ''
+      ? `${escapeHtml(empleadoNombre)}${empleadoDocumento !== '' ? ` - ${escapeHtml(empleadoDocumento)}` : ''}`
+      : (empleadoDocumento !== '' ? escapeHtml(empleadoDocumento) : 'Sin persona asociada');
+    const primerEvento = eventos.length > 0 ? eventos[0] : null;
+    const ultimoEvento = eventos.length > 0 ? eventos[eventos.length - 1] : null;
+
+    const resolverClaseEstado = function (estado, esActual) {
+      const codigo = String(estado || '').trim().toUpperCase();
+      if (codigo === 'RECHAZADO') {
+        return 'rechazado';
+      }
+      if (codigo === 'ANULADO') {
+        return 'anulado';
+      }
+      if (esActual) {
+        return 'actual';
+      }
+      if (codigo === 'APROBADO') {
+        return 'aprobado';
+      }
+      if (codigo === 'JEFE_APROBADO') {
+        return 'intermedio';
+      }
+      return 'base';
+    };
+
+    const resolverIconoEstado = function (estado) {
+      const codigo = String(estado || '').trim().toUpperCase();
+      if (codigo === 'RADICADO') {
+        return 'far fa-file-alt';
+      }
+      if (codigo === 'JEFE_APROBADO') {
+        return 'fas fa-user-check';
+      }
+      if (codigo === 'APROBADO') {
+        return 'fas fa-check-circle';
+      }
+      if (codigo === 'RECHAZADO') {
+        return 'fas fa-times-circle';
+      }
+      if (codigo === 'ANULADO') {
+        return 'fas fa-ban';
+      }
+      return 'fas fa-circle';
+    };
+
+    const claseEstadoActual = resolverClaseEstado(data.estado_actual || '', true);
+    const resumenMeta = [
+      `Inicio: ${String(primerEvento?.fecha || 'Sin fecha registrada')}`,
+      `Ultimo movimiento: ${String(ultimoEvento?.fecha || 'Sin fecha registrada')}`,
+      `Eventos: ${String(eventos.length)}`
+    ];
+
+    const notasHtml = notas.length > 0
+      ? `
+        <div class="trazabilidad-notes">
+          <div class="trazabilidad-notes-title">Aclaraciones del historial</div>
+          ${notas.map(function (nota) {
+            return `<div class="trazabilidad-note-item">${escapeHtml(nota)}</div>`;
+          }).join('')}
+        </div>
+      `
+      : '';
+
+    const timelineHtml = eventos.length > 0
+      ? eventos.map(function (evento) {
+          const estadoLabel = String(evento.estado_label || evento.estado || 'Estado').trim();
+          const estadoCodigo = String(evento.estado || '').trim().toUpperCase();
+          const actor = String(evento.actor_nombre || evento.actor_documento || '').trim();
+          const fecha = String(evento.fecha || '').trim();
+          const detalle = String(evento.detalle || '').trim();
+          const claseEstado = resolverClaseEstado(estadoCodigo, !!evento.es_estado_actual);
+          const iconoEstado = resolverIconoEstado(estadoCodigo);
+          const metaPartes = [
+            `Fecha: ${fecha || 'Sin fecha registrada'}`,
+            `Responsable: ${actor || 'Sin actor registrado'}`
+          ];
+
+          return `
+            <div class="trazabilidad-item is-${claseEstado} ${evento.es_estado_actual ? 'is-current' : ''}">
+              <div class="trazabilidad-marker">
+                <i class="${iconoEstado}"></i>
+              </div>
+              <div class="trazabilidad-card">
+                <div class="trazabilidad-card-head">
+                  <h6 class="trazabilidad-step-title">${escapeHtml(estadoLabel)}</h6>
+                  ${evento.es_estado_actual ? '<span class="trazabilidad-pill is-actual">Actual</span>' : ''}
+                </div>
+                <div class="trazabilidad-meta-line">
+                  ${metaPartes.map(function (parte) {
+                    return `<span>${escapeHtml(parte)}</span>`;
+                  }).join('')}
+                </div>
+                ${detalle !== '' ? `
+                  <div class="trazabilidad-detail">${escapeHtml(detalle)}</div>
+                ` : ''}
+              </div>
+            </div>
+          `;
+        }).join('')
+      : `
+        <div class="alert alert-light border mb-0">
+          No hay eventos de trazabilidad registrados para esta solicitud.
+        </div>
+      `;
+
+    return `
+      <div class="trazabilidad-shell">
+        <div class="trazabilidad-summary">
+          <div class="trazabilidad-summary-main">
+            <h5 class="trazabilidad-title">${escapeHtml(tipoLabel)}</h5>
+            <p class="trazabilidad-subtitle mb-0">${encabezadoEmpleado}</p>
+            <div class="trazabilidad-summary-meta">
+              ${resumenMeta.map(function (item) {
+                return `<span>${escapeHtml(item)}</span>`;
+              }).join('')}
+            </div>
+          </div>
+          <div class="trazabilidad-summary-state">
+            <span class="trazabilidad-summary-label">Estado actual</span>
+            <span class="trazabilidad-pill is-${claseEstadoActual}">${escapeHtml(estadoActual)}</span>
+          </div>
+        </div>
+
+        ${notasHtml}
+        <div class="trazabilidad-timeline">${timelineHtml}</div>
+      </div>
+    `;
+  };
+
+  const abrirModalTrazabilidad = function (urlTrazabilidad) {
+    const destino = String(urlTrazabilidad || '').trim();
+    if (destino === '' || !globalModal || !globalModalTitle || !globalModalContent) {
+      return;
+    }
+
+    aplicarModoGlobalModal('trazabilidad');
+    globalModalTitle.textContent = 'Trazabilidad de la solicitud';
+    globalModalContent.innerHTML = `
+      <div class="d-flex flex-column align-items-center justify-content-center py-4">
+        <i class="fas fa-spinner fa-spin fa-2x mb-2 text-primary"></i>
+        <p class="mb-0 text-muted">Cargando trazabilidad...</p>
+      </div>
+    `;
+    globalModal.show();
+
+    window.fetch(destino, {
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'Accept': 'application/json'
+      },
+      credentials: 'same-origin'
+    })
+      .then(function (response) {
+        return response.json().then(function (data) {
+          return { status: response.status, ok: response.ok, data: data };
+        });
+      })
+      .then(function (result) {
+        if (!result.ok || !result.data || result.data.ok !== true) {
+          const msg = (result.data && result.data.message) ? result.data.message : 'No fue posible cargar la trazabilidad.';
+          throw new Error(msg);
+        }
+
+        globalModalContent.innerHTML = renderTrazabilidadClaraHtml(result.data.data);
+      })
+      .catch(function (error) {
+        const mensaje = (error && error.message) ? error.message : 'No fue posible cargar la trazabilidad.';
+        globalModalContent.innerHTML = renderTrazabilidadClaraHtml({}, mensaje);
+      });
+  };
+
   let rejectForm = null;
   let cancelForm = null;
   const rejectModalElement = document.getElementById('modalRechazoNovedad');
@@ -592,22 +880,12 @@ document.addEventListener('DOMContentLoaded', function () {
   const cancelError = document.getElementById('motivoAnulacionNovedadError');
 
   document.addEventListener('click', function (event) {
-    const botonDetalle = event.target.closest('.js-ver-detalle-solicitud');
-    if (botonDetalle) {
+    const linkTrazabilidad = event.target.closest('.js-ver-trazabilidad-novedad');
+    if (linkTrazabilidad) {
       event.preventDefault();
-      const detalleHtml = String(botonDetalle.dataset.detalleHtml || '').trim();
-      if (window.Swal && typeof window.Swal.fire === 'function') {
-        window.Swal.fire({
-          icon: 'info',
-          title: 'Detalle de solicitud',
-          html: detalleHtml !== '' ? `<div class="text-start">${detalleHtml}</div>` : 'Sin información detallada disponible.',
-          customClass: {
-            popup: 'swalAlert'
-          }
-        });
-      } else {
-        window.alert('Detalle de solicitud disponible en la tabla expandida.');
-      }
+      abrirModalTrazabilidad(
+        linkTrazabilidad.dataset.trazabilidadUrl || linkTrazabilidad.getAttribute('href') || ''
+      );
       return;
     }
 

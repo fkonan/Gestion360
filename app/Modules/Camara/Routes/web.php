@@ -61,6 +61,10 @@ Route::middleware(['auth', 'deny.mobile'])->group(function () {
         ->middleware('permisos:' . Permisos::BIOMETRIA_GESTION_CAMARA_RECONOCER)
         ->name('camera.ultimos-eventos');
 
+    Route::get('/camera/ultimos-eventos-stream', [CamaraApiController::class, 'ultimosEventosStream'])
+        ->middleware('permisos:' . Permisos::BIOMETRIA_GESTION_CAMARA_RECONOCER)
+        ->name('camera.ultimos-eventos-stream');
+
     Route::get('/camera/eventos-hoy', [CamaraApiController::class, 'eventosHoyPorIdentificacion'])
         ->middleware('permisos:' . Permisos::BIOMETRIA_GESTION_CAMARA_RECONOCER)
         ->name('camera.eventos-hoy');

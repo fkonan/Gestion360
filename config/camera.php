@@ -6,7 +6,35 @@ $parseIpCameras = static function (): array {
         return [];
     }
 
-    $decoded = json_decode($raw, true);
+    $decodeCandidates = [$raw];
+
+    // Some production environments keep literal wrapper quotes in env values.
+    $firstChar = substr($raw, 0, 1);
+    $lastChar = substr($raw, -1);
+    if (
+        ($firstChar === "'" && $lastChar === "'")
+        || ($firstChar === '"' && $lastChar === '"')
+    ) {
+        $unwrapped = trim($raw, "'\" \t\n\r\0\x0B");
+        if ($unwrapped !== '' && $unwrapped !== $raw) {
+            $decodeCandidates[] = $unwrapped;
+        }
+    }
+
+    $decoded = null;
+    foreach ($decodeCandidates as $candidate) {
+        $tryDecoded = json_decode($candidate, true);
+        if (! is_array($tryDecoded) && is_string($tryDecoded)) {
+            // Accept values serialized as a JSON string, e.g. "[{\"id\":\"cam1\"}]"
+            $tryDecoded = json_decode($tryDecoded, true);
+        }
+
+        if (is_array($tryDecoded)) {
+            $decoded = $tryDecoded;
+            break;
+        }
+    }
+
     if (! is_array($decoded)) {
         return [];
     }

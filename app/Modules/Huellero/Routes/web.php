@@ -38,6 +38,10 @@ Route::middleware('auth')->group(function () {
         ->middleware('permisos:' . Permisos::BIOMETRIA_GESTION_HUELLERO_ACCESO_PERSONAL)
         ->name('fingerprint.eventos.empleados.manual');
 
+    Route::get('/fingerprint/session-keepalive', [FingerprintController::class, 'sessionKeepalive'])
+        ->middleware('permisos:' . Permisos::BIOMETRIA_GESTION_HUELLERO_ACCESO_PERSONAL)
+        ->name('fingerprint.session-keepalive');
+
     Route::post('/fingerprint/eventos/empleados', [FingerprintController::class, 'storeEventoEmpleado'])
         ->middleware('permisos:' . Permisos::BIOMETRIA_GESTION_HUELLERO_ACCESO_PERSONAL)
         ->name('fingerprint.eventos.empleados.store');
@@ -100,7 +104,6 @@ Route::middleware('auth')->prefix('api/huellero')->name('api.huellero.')->group(
     // Dispositivos conectados
     Route::get('/dispositivos', [DashboardController::class, 'dispositivos'])->name('dispositivos');
 });
-
 
 
 

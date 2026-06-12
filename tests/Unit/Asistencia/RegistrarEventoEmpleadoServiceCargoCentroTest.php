@@ -253,6 +253,51 @@ class RegistrarEventoEmpleadoServiceCargoCentroTest extends TestCase
     $this->assertSame(1, $decision->evento);
   }
 
+  public function test_usuario_auditoria_per_personas_prefiere_el_usuario_provisto(): void
+  {
+    $service = new RegistrarEventoEmpleadoService(new DecidirEventoService());
+
+    $usuario = $this->invocarResolverUsuarioAuditoriaPerPersonas(
+      $service,
+      987654,
+      123456
+    );
+
+    $this->assertSame(987654, $usuario);
+  }
+
+  public function test_usuario_auditoria_per_personas_hace_fallback_a_persona_cuando_viene_null(): void
+  {
+    $service = new RegistrarEventoEmpleadoService(new DecidirEventoService());
+
+    $usuario = $this->invocarResolverUsuarioAuditoriaPerPersonas(
+      $service,
+      null,
+      123456
+    );
+
+    $this->assertSame(123456, $usuario);
+  }
+
+  public function test_empresa_evento_corresponde_a_la_persona_del_centro_de_costo(): void
+  {
+    $service = new RegistrarEventoEmpleadoService(new DecidirEventoService());
+    $cargoDetalle = (object) ['centro_costo_persona_id' => 8420];
+
+    $empresaId = $this->invocarResolverEmpresaCentroCostoId($service, $cargoDetalle);
+
+    $this->assertSame(8420, $empresaId);
+  }
+
+  public function test_empresa_evento_no_usa_un_valor_fijo_si_el_centro_no_tiene_persona(): void
+  {
+    $service = new RegistrarEventoEmpleadoService(new DecidirEventoService());
+
+    $empresaId = $this->invocarResolverEmpresaCentroCostoId($service, (object) []);
+
+    $this->assertNull($empresaId);
+  }
+
   private function invocarResolverCargoId(
     RegistrarEventoEmpleadoService $service,
     string $cargoNombre,
@@ -286,6 +331,27 @@ class RegistrarEventoEmpleadoServiceCargoCentroTest extends TestCase
     $method->setAccessible(true);
 
     return $method->invoke($service, $identificacion, $eventoManual, $cargoId, $fecha);
+  }
+
+  private function invocarResolverUsuarioAuditoriaPerPersonas(
+    RegistrarEventoEmpleadoService $service,
+    ?int $usuarioPerPersonasId,
+    int $personaId
+  ): int {
+    $method = new ReflectionMethod(RegistrarEventoEmpleadoService::class, 'resolverUsuarioAuditoriaPerPersonas');
+    $method->setAccessible(true);
+
+    return (int) $method->invoke($service, $usuarioPerPersonasId, $personaId);
+  }
+
+  private function invocarResolverEmpresaCentroCostoId(
+    RegistrarEventoEmpleadoService $service,
+    mixed $cargoDetalle
+  ): ?int {
+    $method = new ReflectionMethod(RegistrarEventoEmpleadoService::class, 'resolverEmpresaCentroCostoId');
+    $method->setAccessible(true);
+
+    return $method->invoke($service, $cargoDetalle);
   }
 
   private function configurarConexionOracle360Sqlite(): void

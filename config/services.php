@@ -97,6 +97,12 @@ return [
         'disk' => env('DOCUMENTAL_DISK', 'documental_sftp'),
         'base_directory' => env('DOCUMENTAL_BASE_DIRECTORY', 'ArchivoDigital'),
         'public_base_url' => env('DOCUMENTAL_PUBLIC_BASE_URL', 'https://cdn.copetran.com.co'),
+        'overrides' => [
+            'documental_sftp_alt' => [
+                'base_directory' => env('DOCUMENTAL_ALT_BASE_DIRECTORY'),
+                'public_base_url' => env('DOCUMENTAL_ALT_PUBLIC_BASE_URL'),
+            ],
+        ],
     ],
 
     'employee_incapacities' => [

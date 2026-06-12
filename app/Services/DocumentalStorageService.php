@@ -74,7 +74,7 @@ class DocumentalStorageService
             throw new RuntimeException('No fue posible construir la ruta documental por datos incompletos.');
         }
 
-        $baseDirectory = trim((string) config('services.documental.base_directory', 'ArchivoDigital'), '/');
+        $baseDirectory = $this->obtenerBaseDirectoryConfigurada();
         $year = $year ?: (int) now()->format('Y');
         $extension = $this->normalizarExtension($extension);
         $nombreArchivo = $this->normalizarNombreBase($nombreBase);
@@ -101,7 +101,7 @@ class DocumentalStorageService
             return $ruta;
         }
 
-        $baseUrl = rtrim((string) config('services.documental.public_base_url', ''), '/');
+        $baseUrl = $this->obtenerPublicBaseUrlConfigurada();
         if ($baseUrl === '') {
             return null;
         }
@@ -175,6 +175,16 @@ class DocumentalStorageService
         return trim((string) config('services.documental.disk', 'documental_sftp'));
     }
 
+    public function obtenerBaseDirectoryConfigurada(): string
+    {
+        return $this->obtenerConfiguracionDocumentalActiva()['base_directory'];
+    }
+
+    public function obtenerPublicBaseUrlConfigurada(): string
+    {
+        return $this->obtenerConfiguracionDocumentalActiva()['public_base_url'];
+    }
+
     public function eliminarSiExiste(?string $ruta): void
     {
         $ruta = trim((string) $ruta);
@@ -212,6 +222,29 @@ class DocumentalStorageService
         $extension = Str::of((string) $extension)->ascii()->lower()->replaceMatches('/[^a-z0-9]+/', '')->value();
 
         return $extension !== '' ? $extension : 'bin';
+    }
+
+    private function obtenerConfiguracionDocumentalActiva(): array
+    {
+        $diskName = $this->obtenerDiscoConfigurado();
+        $baseDirectory = trim((string) config('services.documental.base_directory', 'ArchivoDigital'));
+        $publicBaseUrl = trim((string) config('services.documental.public_base_url', ''));
+        $overrideConfig = (array) config('services.documental.overrides.'.$diskName, []);
+
+        $overrideBaseDirectory = trim((string) ($overrideConfig['base_directory'] ?? ''));
+        if ($overrideBaseDirectory !== '') {
+            $baseDirectory = $overrideBaseDirectory;
+        }
+
+        $overridePublicBaseUrl = trim((string) ($overrideConfig['public_base_url'] ?? ''));
+        if ($overridePublicBaseUrl !== '') {
+            $publicBaseUrl = $overridePublicBaseUrl;
+        }
+
+        return [
+            'base_directory' => trim($baseDirectory, '/'),
+            'public_base_url' => rtrim($publicBaseUrl, '/'),
+        ];
     }
 
     private function validarConfiguracion(): void

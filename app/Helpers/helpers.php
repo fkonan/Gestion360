@@ -55,7 +55,7 @@ if (! function_exists('toastModal')) {
             'title' => $message,
             'type' => $type,
             'redirect' => $redirect ?? '#',
-        ]);
+        ], 200, [], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
     }
 }
 

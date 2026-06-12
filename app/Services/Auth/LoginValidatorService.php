@@ -118,8 +118,7 @@ class LoginValidatorService
       }
       // return redirect()->intended('/dashboard');
     }
-
-    throw new Exception('Identificación o contraseña incorrectos');
+    return ['message' => 'Identificacion o contrasena incorrectos', 'type' => 'danger'];
   }
 
   private function checkSHA1Password($plainPassword, $hashedPassword)

@@ -90,6 +90,13 @@ return [
             'replace_placeholders' => true,
         ],
 
+        'pagos_recaudos_api_respuestas' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/pagos-recaudos/pagos-recaudos-api-respuestas.log'),
+            'level' => env('PAGOS_RECAUDOS_API_RESPUESTAS_LOG_LEVEL', 'info'),
+            'replace_placeholders' => true,
+        ],
+
         'rrhh_novedades' => [
             'driver' => 'daily',
             'path' => storage_path('logs/gestionrrhh/novedades/rrhh-novedades.log'),
