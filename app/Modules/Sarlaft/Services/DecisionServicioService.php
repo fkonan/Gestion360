@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Modules\Sarlaft\Services;
 
 use App\Modules\Sarlaft\Models\Alerta;
+use App\Modules\Sarlaft\Models\IntentoOperacion;
 use App\Modules\Sarlaft\Models\ListaNegraInterna;
 use App\Modules\Sarlaft\Models\RegistroLista;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
 class DecisionServicioService
@@ -17,6 +19,11 @@ class DecisionServicioService
     public const NIVEL_VINCULANTE = 'vinculante';
 
     public const NIVEL_RESTRICTIVA = 'restrictiva';
+
+    /**
+     * Estados de alerta que se consideran abiertos (pendientes de decision).
+     */
+    private const ESTADOS_ABIERTOS = ['pendiente', 'en_revision'];
 
     public function __construct(
         private readonly NovedadExportacionService $novedadExportacionService,
@@ -43,20 +50,15 @@ class DecisionServicioService
         $nivel = strtolower(trim((string) $alerta->nivel_riesgo));
 
         return DB::connection('mysql-sarlaft')->transaction(function () use ($alerta, $nivel, $documento, $motivo, $evidencia, $userId): int {
+            // Remocion/inactivacion en lista: es por documento (la persona deja de
+            // bloquearse en todos los escenarios; la lista no distingue escenario).
             $afectados = $nivel === self::NIVEL_VINCULANTE
                 ? $this->removerVinculantes($documento)
                 : $this->retirarRestrictivas($documento, $motivo, $evidencia, $userId);
 
-            // La alerta queda atendida con la decision de permitir servicio documentada.
-            $alerta->update([
-                'estado' => 'atendida',
-                'decision_servicio' => 'permitido',
-                'decision_at' => now(),
-                'notas' => $motivo,
-                'atendida_por' => $userId,
-                'fecha_atencion' => now(),
-                'evidencias' => $evidencia !== [] ? $evidencia : $alerta->evidencias,
-            ]);
+            // La marca de decision se propaga a TODAS las alertas abiertas del mismo
+            // documento Y mismo escenario (tipo_operacion), no solo a la actual.
+            $this->marcarAlertasDelEscenario($alerta, 'permitido', $motivo, $evidencia, $userId);
 
             return $afectados;
         });
@@ -71,15 +73,80 @@ class DecisionServicioService
      */
     public function mantenerBloqueo(Alerta $alerta, string $motivo, array $evidencia, int $userId): void
     {
-        $alerta->update([
-            'estado' => 'atendida',
-            'decision_servicio' => 'bloqueado',
-            'decision_at' => now(),
-            'notas' => $motivo,
-            'atendida_por' => $userId,
-            'fecha_atencion' => now(),
-            'evidencias' => $evidencia !== [] ? $evidencia : $alerta->evidencias,
-        ]);
+        DB::connection('mysql-sarlaft')->transaction(function () use ($alerta, $motivo, $evidencia, $userId): void {
+            $this->marcarAlertasDelEscenario($alerta, 'bloqueado', $motivo, $evidencia, $userId);
+        });
+    }
+
+    /**
+     * Marca con la decision (permitido/bloqueado) TODAS las alertas abiertas del
+     * mismo documento y mismo escenario (tipo_operacion del intento) que la alerta
+     * dada, incluida ella. Asi una sola decision aplica a las repeticiones del
+     * mismo caso, sin afectar otros escenarios del mismo documento.
+     *
+     * @param  array<int, array<string, mixed>>  $evidencia
+     */
+    private function marcarAlertasDelEscenario(Alerta $alerta, string $decision, string $motivo, array $evidencia, int $userId): int
+    {
+        $momento = now();
+        $evidenciaFinal = $evidencia !== [] ? $evidencia : null;
+
+        return $this->queryAlertasDelEscenario($alerta)
+            ->whereIn('estado', self::ESTADOS_ABIERTOS)
+            ->get()
+            ->each(function (Alerta $hermana) use ($decision, $motivo, $evidenciaFinal, $userId, $momento): void {
+                $hermana->update([
+                    'estado' => 'atendida',
+                    'decision_servicio' => $decision,
+                    'decision_at' => $momento,
+                    'notas' => $motivo,
+                    'atendida_por' => $userId,
+                    'fecha_atencion' => $momento,
+                    'evidencias' => $evidenciaFinal ?? $hermana->evidencias,
+                ]);
+            })
+            ->count();
+    }
+
+    /**
+     * Cuenta cuantas alertas abiertas hay del mismo documento + escenario que la
+     * dada (incluida ella). Util para la UI (saber cuantas se afectarian).
+     */
+    public function contarAlertasDelEscenario(Alerta $alerta): int
+    {
+        return $this->queryAlertasDelEscenario($alerta)
+            ->whereIn('estado', self::ESTADOS_ABIERTOS)
+            ->count();
+    }
+
+    /**
+     * Query base: alertas del mismo documento cuyo intento tiene el mismo
+     * tipo_operacion (escenario) que la alerta dada.
+     */
+    private function queryAlertasDelEscenario(Alerta $alerta): Builder
+    {
+        $documento = trim((string) $alerta->numero_documento);
+        $tipoOperacion = $this->tipoOperacionDe($alerta);
+
+        return Alerta::query()
+            ->where('numero_documento', $documento)
+            ->whereHas('intento', function (Builder $q) use ($tipoOperacion): void {
+                $q->where('tipo_operacion', $tipoOperacion);
+            });
+    }
+
+    /**
+     * tipo_operacion (escenario) de la alerta, leido de su intento.
+     */
+    private function tipoOperacionDe(Alerta $alerta): ?string
+    {
+        $intento = $alerta->relationLoaded('intento')
+            ? $alerta->intento
+            : IntentoOperacion::find($alerta->intento_id);
+
+        $tipo = $intento?->tipo_operacion;
+
+        return $tipo !== null ? trim((string) $tipo) : null;
     }
 
     /**

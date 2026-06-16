@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Sarlaft;
 
 use App\Modules\Sarlaft\Models\Alerta;
+use App\Modules\Sarlaft\Models\IntentoOperacion;
 use App\Modules\Sarlaft\Models\ListaNegraInterna;
 use App\Modules\Sarlaft\Models\NovedadExportacion;
 use App\Modules\Sarlaft\Models\RegistroLista;
@@ -112,6 +113,38 @@ class DecisionServicioTest extends TestCase
         $this->assertSame(1, RegistroLista::where('identificacion', '900111')->where('estado', 'activo')->count());
     }
 
+    public function test_decision_se_propaga_solo_a_las_alertas_del_mismo_escenario(): void
+    {
+        // Mismo documento, dos escenarios distintos (tipo_operacion).
+        $pasajes1 = $this->crearAlerta('900111', 'restrictiva', 'PASAJES');
+        $this->crearAlerta('900111', 'restrictiva', 'PASAJES');   // hermana mismo escenario
+        $cartera = $this->crearAlerta('900111', 'restrictiva', 'CARTERA'); // otro escenario
+
+        // Aplicar decision sobre una alerta de PASAJES.
+        $this->service->permitirServicio($pasajes1, 'Validado pasajes', [], 7);
+
+        // Las dos de PASAJES quedan decididas.
+        $this->assertSame(2, Alerta::where('numero_documento', '900111')
+            ->where('decision_servicio', 'permitido')->count());
+
+        // La de CARTERA sigue pendiente sin decision.
+        $carteraFresca = $cartera->fresh();
+        $this->assertSame('pendiente', $carteraFresca->estado);
+        $this->assertNull($carteraFresca->decision_servicio);
+    }
+
+    public function test_mantener_bloqueo_tambien_propaga_por_escenario(): void
+    {
+        $a1 = $this->crearAlerta('900111', 'restrictiva', 'PASAJES');
+        $this->crearAlerta('900111', 'restrictiva', 'PASAJES');
+        $this->crearAlerta('900111', 'restrictiva', 'CARTERA');
+
+        $this->service->mantenerBloqueo($a1, 'Riesgo confirmado', [], 7);
+
+        $this->assertSame(2, Alerta::where('decision_servicio', 'bloqueado')->count());
+        $this->assertSame(1, Alerta::whereNull('decision_servicio')->count());
+    }
+
     public function test_no_afecta_registros_ya_removidos(): void
     {
         $this->crearRegistroVinculante('900111', 'removido');
@@ -123,9 +156,18 @@ class DecisionServicioTest extends TestCase
         $this->assertSame(0, $afectados);
     }
 
-    private function crearAlerta(string $documento, string $nivel): Alerta
+    private function crearAlerta(string $documento, string $nivel, string $tipoOperacion = 'PASAJES'): Alerta
     {
+        $intento = IntentoOperacion::query()->create([
+            'numero_documento' => $documento,
+            'tipo_documento' => 'CC',
+            'tipo_operacion' => $tipoOperacion,
+            'modo_integracion' => 'db',
+            'fecha_operacion' => now(),
+        ]);
+
         return Alerta::query()->create([
+            'intento_id' => $intento->id,
             'numero_documento' => $documento,
             'tipo_documento' => 'CC',
             'nivel_riesgo' => $nivel,
@@ -177,6 +219,18 @@ class DecisionServicioTest extends TestCase
             $table->text('notas')->nullable();
             $table->text('evidencias')->nullable();
             $table->unsignedBigInteger('atendida_por')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::connection('mysql-sarlaft')->create('sarlaft_intentos_operacion', static function (Blueprint $table): void {
+            $table->id();
+            $table->unsignedBigInteger('sistema_id')->nullable();
+            $table->string('numero_documento')->nullable();
+            $table->string('tipo_documento')->nullable();
+            $table->string('tipo_operacion')->nullable();
+            $table->string('modo_integracion', 20)->nullable();
+            $table->string('sistema_origen')->nullable();
+            $table->timestamp('fecha_operacion')->nullable();
             $table->timestamps();
         });
 
